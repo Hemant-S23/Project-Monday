@@ -76,11 +76,23 @@ export class ChartManager {
     if (!container) return;
 
     let symbol = `BINANCE:${this.currentAsset}USDT`;
+    let timezone = "Etc/UTC";
+
     if (this.currentMarket === 'India') {
-      if (this.currentAsset.toUpperCase() === 'SENSEX') {
+      timezone = "Asia/Kolkata";
+      const assetUpper = this.currentAsset.toUpperCase();
+      if (assetUpper === 'NIFTY' || assetUpper === 'NIFTY50') {
+        symbol = 'NSE:NIFTY1!'; // TradingView live Nifty Futures — unrestricted embed!
+      } else if (assetUpper === 'BANKNIFTY' || assetUpper === 'NIFTYBANK') {
+        symbol = 'NSE:BANKNIFTY1!'; // TradingView live Bank Nifty Futures — unrestricted embed!
+      } else if (assetUpper === 'FINNIFTY') {
+        symbol = 'NSE:FINNIFTY1!';
+      } else if (assetUpper === 'MIDCPNIFTY') {
+        symbol = 'NSE:MIDCPNIFTY1!';
+      } else if (assetUpper === 'SENSEX') {
         symbol = 'BSE:SENSEX';
       } else {
-        symbol = `NSE:${this.currentAsset.toUpperCase()}`;
+        symbol = `NSE:${assetUpper}`;
       }
     }
     container.innerHTML = `
@@ -99,7 +111,7 @@ export class ChartManager {
       autosize: true,
       symbol: symbol,
       interval: this.currentTimeframe,
-      timezone: "Etc/UTC",
+      timezone: timezone,
       theme: this.currentTheme || "dark",
       style: "1",
       locale: "en",
@@ -129,20 +141,33 @@ export class ChartManager {
       return;
     }
 
-    const { entry, stopLoss, target, rrRatio } = levels;
+    const { entry, stopLoss, target, rrRatio, currencySymbol } = levels;
+    const curr = currencySymbol || (this.currentMarket === 'India' ? '₹' : '$');
+    const isIndia = this.currentMarket === 'India' || curr === '₹';
+
+    const formatVal = (val) => {
+      if (typeof val !== 'number') return `${curr}0.00`;
+      if (isIndia) {
+        return `${curr}${val.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}`;
+      }
+      return val >= 1
+        ? `${curr}${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        : `${curr}${val.toFixed(4)}`;
+    };
+
     overlay.innerHTML = `
       <div class="level-badge tp-badge">
         <span class="level-label">🎯 TARGET</span>
-        <span class="level-val">$${target.toFixed(1)}</span>
+        <span class="level-val">${formatVal(target)}</span>
         <span class="level-rr">RR 1:${rrRatio}</span>
       </div>
       <div class="level-badge entry-badge">
         <span class="level-label">📍 ENTRY</span>
-        <span class="level-val">$${entry.toFixed(1)}</span>
+        <span class="level-val">${formatVal(entry)}</span>
       </div>
       <div class="level-badge sl-badge">
         <span class="level-label">🛑 STOP LOSS</span>
-        <span class="level-val">$${stopLoss.toFixed(1)}</span>
+        <span class="level-val">${formatVal(stopLoss)}</span>
       </div>
     `;
   }

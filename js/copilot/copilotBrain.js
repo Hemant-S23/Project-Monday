@@ -270,6 +270,20 @@ export class CopilotBrain {
         `Aap kisi bhi specific Indian stock ya index ka structure freely poochh sakte ho!`;
     }
 
+    // 10.6. Recent Indian IPOs & New Listings ("ipo", "new ipo", "hyundai", "swiggy", "bajaj", "waree", "ola")
+    else if (this.matchesAny(clean, [
+      'ipo', 'new ipo', 'ipos', 'hyundai', 'swiggy', 'bajaj housing', 'bajajhfl',
+      'waree', 'waaree', 'ola', 'ola electric', 'premier', 'firstcry', 'afcons', 'ireda', 'tatatech'
+    ])) {
+      response = `Indian Market ke recent landmark IPOs aur fresh listings par mera radar fully updated hai! 🇮🇳🚀\n\n` +
+        `• **Hyundai Motor India (HYUNDAI):** India ke history ka sabse bada IPO (~₹27,870 Cr). Live NSE chart aur order flow active hai.\n` +
+        `• **Swiggy (SWIGGY):** Quick Commerce aur Food Delivery giant ki listing.\n` +
+        `• **Bajaj Housing Finance (BAJAJHFL):** Record subscription wala high-demand housing finance leader.\n` +
+        `• **Waaree Energies (WAREE) & Premier Energies:** Solar module aur green energy capex boom ke top leaders.\n` +
+        `• **NTPC Green, Ola Electric, FirstCry, Afcons, IREDA:** Sabhi terminal me 150+ stocks ke sath fully searchable aur tradeable hain.\n\n` +
+        `Search bar me koi bhi company name ya ticker type kijiye — direct TradingView chart aur strict 1% risk calculation ready hai!`;
+    }
+
     // 11. Who are you / Identity ("who are you", "naam kya hai", "fullform", "monday kya hai")
     else if (this.matchesAny(clean, ['who are you', 'kaun ho', 'naam kya', 'fullform', 'full form', 'monday kya hai'])) {
       response = `Main hoon **MONDAY** — **M**arket-**O**riented **N**eural **D**ecision **A**ssistant for **Y**ou! 🧠✨\n\n` +

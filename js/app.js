@@ -200,6 +200,7 @@ class App {
       levels.target,
       currencySymbol
     );
+    riskParams.asset = targetAsset;
 
     // 5. Update UI Telemetry
     const liveSnapshot = adapter.getSnapshot(targetAsset);
@@ -359,7 +360,7 @@ class App {
     this.currentAsset = defaultAsset;
 
     const defaultPills = market === 'India'
-      ? ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TCS', 'HDFCBANK']
+      ? ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'HYUNDAI', 'SWIGGY', 'ZOMATO', 'BAJAJHFL']
       : ['BTC', 'ETH', 'SOL'];
 
     this.ui.setMarket(market, defaultPills);

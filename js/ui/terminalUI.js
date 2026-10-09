@@ -133,6 +133,7 @@ export class TerminalUI {
           this.showToast(`Market: ${market}`, 'US Market scheduled for Phase 4. Crypto & Indian Markets are active!', 'info');
           return;
         }
+        this.currentMarket = market;
         document.querySelectorAll('.market-tab-btn').forEach(b => b.classList.remove('active'));
         e.currentTarget.classList.add('active');
         if (this.callbacks.onMarketChange) this.callbacks.onMarketChange(market);
@@ -417,7 +418,7 @@ export class TerminalUI {
     const searchInput = document.getElementById('crypto_search_input');
     if (searchInput) {
       searchInput.placeholder = market === 'India'
-        ? 'Search 60+ NSE/BSE stocks & indices (NIFTY, RELIANCE, TCS)...'
+        ? 'Search 150+ Indian stocks & IPOs (NIFTY, RELIANCE, SWIGGY, HYUNDAI)...'
         : 'Search 700+ cryptos (ETH, DOGE, SOL, BNB)...';
       searchInput.value = '';
     }
@@ -598,11 +599,29 @@ export class TerminalUI {
     const rrEl = document.getElementById('calc_rr');
     const metaRREl = document.getElementById('meta_rr');
 
-    if (entryEl) entryEl.textContent = this.formatPrice(riskParams.entry);
-    if (slEl) slEl.textContent = this.formatPrice(riskParams.stopLoss);
-    if (tpEl) tpEl.textContent = this.formatPrice(riskParams.target);
-    if (posSizeEl) posSizeEl.textContent = `${riskParams.positionSizeCoins} coins`;
-    if (maxRiskEl) maxRiskEl.textContent = `$${riskParams.maxRiskUSD} (1.0%)`;
+    const isIndia = this.currentMarket === 'India' || riskParams.currencySymbol === '₹';
+    const currSym = isIndia ? '₹' : '$';
+
+    let unit = 'coins';
+    if (isIndia) {
+      const assetUpper = (riskParams.asset || '').toUpperCase();
+      if (['NIFTY', 'BANKNIFTY', 'FINNIFTY', 'MIDCPNIFTY', 'SENSEX'].includes(assetUpper)) {
+        unit = 'contracts';
+      } else {
+        unit = 'shares';
+      }
+    }
+
+    if (entryEl) entryEl.textContent = this.formatPrice(riskParams.entry, currSym);
+    if (slEl) slEl.textContent = this.formatPrice(riskParams.stopLoss, currSym);
+    if (tpEl) tpEl.textContent = this.formatPrice(riskParams.target, currSym);
+    if (posSizeEl) posSizeEl.textContent = `${riskParams.positionSizeCoins} ${unit}`;
+    if (maxRiskEl) {
+      const riskVal = isIndia
+        ? `₹${(riskParams.maxRiskUSD * 83.5).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
+        : `$${riskParams.maxRiskUSD}`;
+      maxRiskEl.textContent = `${riskVal} (1.0%)`;
+    }
     if (rrEl) {
       rrEl.textContent = `1:${riskParams.rrRatio}`;
       rrEl.className = `calc-val ${riskParams.isRRValid ? 'text-bullish' : 'text-bearish'}`;

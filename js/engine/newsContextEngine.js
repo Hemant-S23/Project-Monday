@@ -96,6 +96,36 @@ export class NewsContextEngine {
         timeWindow: 'Post Market Today',
         affectedAssets: ['RELIANCE', 'TCS', 'INFY', 'NIFTY', 'India'],
         details: 'Focus on Jio ARPU & Retail expansion for Reliance; BFSI deal ramp-ups for TCS. High sectoral beta impact on benchmark indices.'
+      },
+      {
+        id: 'IND-06',
+        title: 'Historic Indian IPO Wave: Hyundai, Swiggy & Bajaj Housing Momentum',
+        category: 'Primary Market / IPOs',
+        impact: 'Market Moving',
+        riskLevel: 'Medium',
+        timeWindow: 'Recent Listings Active',
+        affectedAssets: ['HYUNDAI', 'SWIGGY', 'BAJAJHFL', 'ZOMATO', 'India'],
+        details: 'Historic ₹40,000+ Cr primary market listing activity. Record domestic retail and anchor subscriptions absorbing institutional order flow.'
+      },
+      {
+        id: 'IND-07',
+        title: 'Solar & Green Energy Order Boom: Waaree & NTPC Green Expansion',
+        category: 'Renewables / Cleantech',
+        impact: 'Relevant',
+        riskLevel: 'Low',
+        timeWindow: 'Current Trading Week',
+        affectedAssets: ['WAREE', 'NTPCGREEN', 'PREMIERENE', 'SUZLON', 'TATAPOWER', 'India'],
+        details: 'National green hydrogen and PLI solar module schemes driving massive capacity additions and strong order book backlogs.'
+      },
+      {
+        id: 'IND-08',
+        title: 'Defense Modernization: DAC Approvals for Indigenized Systems',
+        category: 'Defense / Aerospace',
+        impact: 'Relevant',
+        riskLevel: 'Low',
+        timeWindow: 'Ongoing Orders',
+        affectedAssets: ['HAL', 'BEL', 'MAZDOCK', 'COCHINSHIP', 'GRSE', 'BDL', 'India'],
+        details: 'Record export orders and Make-in-India capital acquisitions keeping defense order pipelines solid for multi-year revenue visibility.'
       }
     ];
   }

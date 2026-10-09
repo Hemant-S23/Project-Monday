@@ -39,6 +39,7 @@ class App {
       onSendMessage: (msg) => this.handleUserMessage(msg),
       onToggleVoice: () => this.toggleVoiceListening(),
       onToggleMute: () => this.voiceAssistant.toggleMute(),
+      onTestVoice: () => this.voiceAssistant.testVoice(),
       onExecuteTrade: () => this.executeCurrentTrade(),
       onCloseTrade: (id) => this.closeActiveTrade(id),
       onResetAccount: () => this.resetAccount()

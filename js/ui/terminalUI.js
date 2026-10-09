@@ -278,6 +278,14 @@ export class TerminalUI {
       });
     }
 
+    // Voice Audio Test
+    const testVoiceBtn = document.getElementById('voice_test_btn');
+    if (testVoiceBtn) {
+      testVoiceBtn.addEventListener('click', () => {
+        if (this.callbacks.onTestVoice) this.callbacks.onTestVoice();
+      });
+    }
+
     // Execute Paper Trade Button
     const execBtn = document.getElementById('execute_trade_btn');
     if (execBtn) {

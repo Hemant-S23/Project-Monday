@@ -18,34 +18,38 @@
 
   <div class="terminal-wrapper">
     <!-- Top Header & Global Telemetry Strip -->
+    <!-- Top Header & Global Telemetry Strip -->
     <header class="terminal-header">
-      <div class="header-brand">
-        <div class="brand-icon-halo">
-          <i class="ph ph-sparkle"></i>
+      <!-- Left Cluster: Brand & Market Selector -->
+      <div class="header-left-cluster">
+        <div class="header-brand">
+          <div class="brand-icon-halo">
+            <i class="ph ph-sparkle"></i>
+          </div>
+          <div>
+            <h1 class="brand-title">
+              MONDAY
+              <span class="brand-badge">AI COMPANION</span>
+            </h1>
+            <div class="brand-subtitle">Market-Oriented Neural Decision Assistant for You</div>
+          </div>
         </div>
-        <div>
-          <h1 class="brand-title">
-            MONDAY
-            <span class="brand-badge">AI COMPANION</span>
-          </h1>
-          <div class="brand-subtitle">Market-Oriented Neural Decision Assistant for You</div>
-        </div>
+
+        <!-- Market Selector (PRD Section 32) -->
+        <nav class="market-nav-group" aria-label="Market Selection">
+          <button class="market-tab-btn active" id="market_crypto_btn" data-market="Crypto">
+            <i class="ph ph-currency-btc"></i> Crypto
+          </button>
+          <button class="market-tab-btn" id="market_india_btn" data-market="India" title="Live Indian Market (NSE & BSE)">
+            <i class="ph ph-buildings"></i> India (NSE)
+          </button>
+          <button class="market-tab-btn phase-lock" id="market_us_btn" data-market="US">
+            <i class="ph ph-globe-stand"></i> US <span class="phase-tag">Phase 4</span>
+          </button>
+        </nav>
       </div>
 
-      <!-- Market Selector (PRD Section 32) -->
-      <nav class="market-nav-group" aria-label="Market Selection">
-        <button class="market-tab-btn active" id="market_crypto_btn" data-market="Crypto">
-          <i class="ph ph-currency-btc"></i> Crypto
-        </button>
-        <button class="market-tab-btn" id="market_india_btn" data-market="India" title="Live Indian Market (NSE & BSE)">
-          <i class="ph ph-buildings"></i> India (NSE)
-        </button>
-        <button class="market-tab-btn phase-lock" id="market_us_btn" data-market="US">
-          <i class="ph ph-globe-stand"></i> US <span class="phase-tag">Phase 4</span>
-        </button>
-      </nav>
-
-      <!-- Universal Crypto Search & Live Ticker -->
+      <!-- Center Cluster: Search, Watchlist Tray & Live Ticker Strip -->
       <div class="header-ticker-strip">
         <!-- Search Bar with Floating Auto-Complete Dropdown -->
         <div class="crypto-search-container" id="crypto_search_container">
@@ -55,7 +59,7 @@
               type="text" 
               id="crypto_search_input" 
               class="crypto-search-input" 
-              placeholder="Search 700+ cryptos (ETH, DOGE, BNB)..." 
+              placeholder="Search stock / crypto..." 
               autocomplete="off"
             />
             <button type="button" class="search-clear-btn" id="search_clear_btn" style="display: none;">
@@ -69,25 +73,47 @@
           </div>
         </div>
 
-        <!-- Quick Favorite Pills -->
-        <div class="asset-pills" id="quick_watchlist_pills">
-          <button class="asset-pill-btn active" data-asset="BTC">BTC</button>
-          <button class="asset-pill-btn" data-asset="ETH">ETH</button>
-          <button class="asset-pill-btn" data-asset="SOL">SOL</button>
+        <!-- Watchlist Hub: Pinned Pills + Dropdown Tray -->
+        <div class="watchlist-hub" id="watchlist_hub">
+          <div class="asset-pills" id="quick_watchlist_pills">
+            <button class="asset-pill-btn active" data-asset="BTC">BTC</button>
+            <button class="asset-pill-btn" data-asset="ETH">ETH</button>
+            <button class="asset-pill-btn" data-asset="SOL">SOL</button>
+          </div>
+
+          <!-- Watchlist Dropdown Tray Trigger -->
+          <div class="watchlist-tray-wrapper" id="watchlist_tray_wrapper">
+            <button class="watchlist-tray-btn" id="watchlist_tray_btn" type="button" aria-haspopup="true" aria-expanded="false" title="Quick Watchlist Hub">
+              <i class="ph ph-squares-four"></i>
+              <span class="tray-btn-label">Watchlist</span>
+              <i class="ph ph-caret-down tray-caret" id="watchlist_tray_caret"></i>
+            </button>
+
+            <!-- Floating Watchlist Popover Tray -->
+            <div class="watchlist-tray-popover" id="watchlist_tray_popover">
+              <div class="watchlist-tray-header">
+                <span class="tray-title"><i class="ph ph-sparkle"></i> Quick Watchlist Tray</span>
+                <button class="tray-close-btn" id="watchlist_tray_close" type="button"><i class="ph ph-x"></i></button>
+              </div>
+              <div class="watchlist-tray-body" id="watchlist_tray_body">
+                <!-- Dynamically loaded with categorized quick-access assets -->
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="live-ticker-box">
+        <div class="live-ticker-box" id="live_ticker_box">
           <span class="ticker-price" id="live_ticker_price">$64,850.00</span>
           <span class="ticker-change bullish" id="live_ticker_change">+2.15%</span>
         </div>
 
         <div class="feed-badge" id="feed_badge">
           <span class="feed-pulse"></span>
-          <span id="feed_source_badge">Live WebSocket</span>
+          <span id="feed_source_badge">Live Feed</span>
         </div>
       </div>
 
-      <!-- Account Balance & Live Equity HUD -->
+      <!-- Right Cluster: Account Balance & Live Equity HUD -->
       <div class="header-actions">
         <div class="account-pill" id="header_account_pill">
           <div class="account-pill-main">

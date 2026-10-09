@@ -93,7 +93,8 @@ class App {
       adapter.subscribe(pos.asset, (data) => this.onMarketDataTick(data));
     }
 
-    // 4. Run first full strategic evaluation
+    // 4. Run first full strategic evaluation & initialize watchlist tray
+    this.ui.renderWatchlistTray(this.currentMarket);
     await this.runFullEvaluation();
     this.ui.updateOpenPositions(this.paperTrader.openPositions);
     this.updateTradeJournalAndStats();
@@ -348,6 +349,7 @@ class App {
 
     this.chartManager.setAdapter(adapter);
     this.chartManager.setAsset(asset, this.currentMarket);
+    this.ui.setActiveWatchlistAsset(asset);
     await this.runFullEvaluation();
     this.ui.showToast('Asset Changed', `Active charting and analysis switched to ${asset}.`, 'info');
     this.voiceAssistant.speak(`Switched to ${asset}. Loading analysis.`);
@@ -363,7 +365,7 @@ class App {
     this.currentAsset = defaultAsset;
 
     const defaultPills = market === 'India'
-      ? ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'HYUNDAI', 'SWIGGY', 'ZOMATO', 'BAJAJHFL']
+      ? ['NIFTY', 'BANKNIFTY', 'RELIANCE']
       : ['BTC', 'ETH', 'SOL'];
 
     this.ui.setMarket(market, defaultPills);

@@ -164,6 +164,31 @@ export class TerminalUI {
       });
     });
 
+    // Watchlist Popover Tray Trigger & Close
+    const watchlistTrayWrapper = document.getElementById('watchlist_tray_wrapper');
+    const watchlistTrayBtn = document.getElementById('watchlist_tray_btn');
+    const watchlistTrayClose = document.getElementById('watchlist_tray_close');
+
+    if (watchlistTrayBtn && watchlistTrayWrapper) {
+      watchlistTrayBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        watchlistTrayWrapper.classList.toggle('open');
+      });
+    }
+
+    if (watchlistTrayClose && watchlistTrayWrapper) {
+      watchlistTrayClose.addEventListener('click', (e) => {
+        e.stopPropagation();
+        watchlistTrayWrapper.classList.remove('open');
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      if (watchlistTrayWrapper && !watchlistTrayWrapper.contains(e.target)) {
+        watchlistTrayWrapper.classList.remove('open');
+      }
+    });
+
     // Timeframe Tray & Pinned Buttons
     const dropdownContainer = document.querySelector('.tf-dropdown-container');
     const trayTriggerBtn = document.getElementById('tf_tray_trigger');
@@ -429,8 +454,9 @@ export class TerminalUI {
     }
 
     const container = document.getElementById('quick_watchlist_pills');
-    if (container && defaultAssets.length > 0) {
-      container.innerHTML = defaultAssets.map((asset, index) => `
+    const pinnedAssets = defaultAssets.slice(0, 3);
+    if (container && pinnedAssets.length > 0) {
+      container.innerHTML = pinnedAssets.map((asset, index) => `
         <button class="asset-pill-btn ${index === 0 ? 'active' : ''}" data-asset="${asset}">${asset}</button>
       `).join('');
 
@@ -441,6 +467,151 @@ export class TerminalUI {
           const asset = e.currentTarget.dataset.asset;
           if (this.callbacks.onAssetChange) this.callbacks.onAssetChange(asset);
         });
+      });
+    }
+
+    this.renderWatchlistTray(market);
+  }
+
+  renderWatchlistTray(market) {
+    const trayBody = document.getElementById('watchlist_tray_body');
+    if (!trayBody) return;
+
+    let sections = [];
+    if (market === 'India') {
+      sections = [
+        {
+          title: '🚀 Mega IPOs & New Leaders',
+          assets: [
+            { sym: 'HYUNDAI', name: 'Hyundai Auto' },
+            { sym: 'SWIGGY', name: 'Swiggy Quick' },
+            { sym: 'BAJAJHFL', name: 'Bajaj Housing' },
+            { sym: 'WAREE', name: 'Waaree Solar' },
+            { sym: 'ZOMATO', name: 'Zomato Blinkit' },
+            { sym: 'NTPCGREEN', name: 'NTPC Green' }
+          ]
+        },
+        {
+          title: '🏛️ Core Heavyweights',
+          assets: [
+            { sym: 'NIFTY', name: 'Nifty 50' },
+            { sym: 'BANKNIFTY', name: 'Bank Nifty' },
+            { sym: 'RELIANCE', name: 'Reliance Ind' },
+            { sym: 'TCS', name: 'Tata Consultancy' },
+            { sym: 'HDFCBANK', name: 'HDFC Bank' },
+            { sym: 'TATAMOTORS', name: 'Tata Motors' }
+          ]
+        },
+        {
+          title: '🛡️ Defense, Rail & Energy',
+          assets: [
+            { sym: 'HAL', name: 'Hindustan Aero' },
+            { sym: 'BEL', name: 'Bharat Elec' },
+            { sym: 'RVNL', name: 'Rail Vikas' },
+            { sym: 'IRFC', name: 'Indian Rail Fin' },
+            { sym: 'SUZLON', name: 'Suzlon Wind' },
+            { sym: 'BSE', name: 'BSE Exchange' }
+          ]
+        }
+      ];
+    } else {
+      sections = [
+        {
+          title: '💎 Major Cryptos',
+          assets: [
+            { sym: 'BTC', name: 'Bitcoin' },
+            { sym: 'ETH', name: 'Ethereum' },
+            { sym: 'SOL', name: 'Solana' },
+            { sym: 'BNB', name: 'BNB Chain' },
+            { sym: 'XRP', name: 'Ripple' },
+            { sym: 'ADA', name: 'Cardano' }
+          ]
+        },
+        {
+          title: '⚡ Layer 1 & DeFi',
+          assets: [
+            { sym: 'AVAX', name: 'Avalanche' },
+            { sym: 'LINK', name: 'Chainlink' },
+            { sym: 'NEAR', name: 'NEAR Protocol' },
+            { sym: 'SUI', name: 'Sui Network' },
+            { sym: 'APT', name: 'Aptos' },
+            { sym: 'RENDER', name: 'Render Token' }
+          ]
+        },
+        {
+          title: '🐕 Trending Tokens',
+          assets: [
+            { sym: 'DOGE', name: 'Dogecoin' },
+            { sym: 'SHIB', name: 'Shiba Inu' },
+            { sym: 'PEPE', name: 'Pepe' },
+            { sym: 'WIF', name: 'Dogwifhat' },
+            { sym: 'DOT', name: 'Polkadot' },
+            { sym: 'MATIC', name: 'Polygon' }
+          ]
+        }
+      ];
+    }
+
+    trayBody.innerHTML = sections.map(sec => `
+      <div class="tray-section">
+        <span class="tray-section-title">${sec.title}</span>
+        <div class="tray-pill-grid">
+          ${sec.assets.map(a => `
+            <button class="tray-asset-btn" data-asset="${a.sym}" type="button">
+              <span class="tray-asset-sym">${a.sym}</span>
+              <span class="tray-asset-sub">${a.name}</span>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+
+    trayBody.querySelectorAll('.tray-asset-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const asset = e.currentTarget.dataset.asset;
+        if (this.callbacks.onAssetChange) this.callbacks.onAssetChange(asset);
+        this.setActiveWatchlistAsset(asset);
+        const trayWrapper = document.getElementById('watchlist_tray_wrapper');
+        if (trayWrapper) trayWrapper.classList.remove('open');
+      });
+    });
+  }
+
+  setActiveWatchlistAsset(asset) {
+    if (!asset) return;
+    const symUpper = asset.toUpperCase();
+
+    // 1. Update quick pills bar: ensure active pill is highlighted or present
+    const container = document.getElementById('quick_watchlist_pills');
+    if (container) {
+      let existingBtn = container.querySelector(`[data-asset="${symUpper}"]`);
+      if (!existingBtn) {
+        const newBtn = document.createElement('button');
+        newBtn.className = 'asset-pill-btn active';
+        newBtn.dataset.asset = symUpper;
+        newBtn.textContent = symUpper;
+        newBtn.addEventListener('click', () => {
+          container.querySelectorAll('.asset-pill-btn').forEach(b => b.classList.remove('active'));
+          newBtn.classList.add('active');
+          if (this.callbacks.onAssetChange) this.callbacks.onAssetChange(symUpper);
+        });
+
+        if (container.children.length >= 4) {
+          container.removeChild(container.lastElementChild);
+        }
+        container.appendChild(newBtn);
+      }
+
+      container.querySelectorAll('.asset-pill-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.asset.toUpperCase() === symUpper);
+      });
+    }
+
+    // 2. Update tray buttons
+    const trayBody = document.getElementById('watchlist_tray_body');
+    if (trayBody) {
+      trayBody.querySelectorAll('.tray-asset-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.asset.toUpperCase() === symUpper);
       });
     }
   }

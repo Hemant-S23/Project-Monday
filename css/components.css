@@ -387,27 +387,31 @@
 }
 
 /* Real-time Level Overlay */
+/* Real-time Level Overlay (Docked on Top-Left safely away from candles & right price scale) */
 .chart-levels-overlay {
   position: absolute;
-  top: 14px;
-  right: 14px;
+  top: 40px;
+  left: 12px;
+  right: auto;
   z-index: 10;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 6px;
   pointer-events: none;
+  max-width: calc(100% - 150px);
 }
 
 .level-badge {
-  background: rgba(13, 19, 33, 0.9);
+  background: rgba(13, 19, 33, 0.88);
   backdrop-filter: blur(10px);
-  padding: 5px 10px;
+  padding: 4px 8px;
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 600;
   border: 1px solid var(--border-subtle);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
@@ -432,7 +436,148 @@
   background: rgba(255, 255, 255, 0.1);
   padding: 1px 5px;
   border-radius: 3px;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
+}
+
+/* Floating Watchlist Popover Tray */
+.watchlist-tray-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 360px;
+  max-height: 420px;
+  overflow-y: auto;
+  background: var(--bg-glass-heavy);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.85), 0 0 24px rgba(56, 189, 248, 0.15);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.watchlist-tray-wrapper.open .watchlist-tray-popover {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.watchlist-tray-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.tray-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-bright);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tray-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: var(--transition-fast);
+}
+
+.tray-close-btn:hover {
+  color: var(--text-bright);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.watchlist-tray-body {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tray-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tray-section-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+}
+
+.tray-pill-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.tray-asset-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  text-align: left;
+}
+
+.tray-asset-btn:hover {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.35);
+  transform: translateY(-1px);
+}
+
+.tray-asset-btn.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.4);
+}
+
+.tray-asset-sym {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.tray-asset-btn.active .tray-asset-sym {
+  color: #041017;
+}
+
+.tray-asset-sub {
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.tray-asset-btn.active .tray-asset-sub {
+  color: #082f49;
 }
 
 /* Lightweight Canvas Chart Header & Viewport */
@@ -449,13 +594,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 14px;
+  padding: 5px 12px;
   background: rgba(13, 19, 33, 0.85);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border-subtle);
   z-index: 5;
   font-family: var(--font-mono);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
+  height: 32px;
+  box-sizing: border-box;
 }
 
 [data-theme="light"] .lw-chart-header {

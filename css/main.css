@@ -286,20 +286,29 @@ h1, h2, h3, h4, h5, h6 {
   color: #94a3b8;
 }
 
-/* Asset Selector & Live Ticker */
+.header-left-cluster {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* Asset Selector & Live Ticker Strip */
 .header-ticker-strip {
   display: flex;
   align-items: center;
   gap: 10px;
   min-width: 0;
   justify-content: center;
+  flex-shrink: 0;
 }
 
-/* Universal Crypto Search Bar */
+/* Universal Search Bar */
 .crypto-search-container {
   position: relative;
-  width: clamp(140px, 13vw, 220px);
-  flex-shrink: 1;
+  width: 180px;
+  min-width: 160px;
+  flex-shrink: 0;
 }
 
 .crypto-search-box {
@@ -308,7 +317,7 @@ h1, h2, h3, h4, h5, h6 {
   background: rgba(0, 0, 0, 0.45);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 4px 10px;
+  padding: 5px 10px;
   gap: 8px;
   transition: var(--transition-fast);
 }
@@ -322,6 +331,7 @@ h1, h2, h3, h4, h5, h6 {
 .search-icon {
   color: var(--text-dim);
   font-size: 0.9rem;
+  flex-shrink: 0;
 }
 
 .crypto-search-input {
@@ -453,13 +463,21 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-dim);
 }
 
+.watchlist-hub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 .asset-pills {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   background: rgba(0, 0, 0, 0.3);
   padding: 3px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
+  flex-shrink: 0;
 }
 
 .asset-pill-btn {
@@ -467,12 +485,17 @@ h1, h2, h3, h4, h5, h6 {
   border: none;
   color: var(--text-muted);
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
-  padding: 4px 12px;
+  padding: 4px 10px;
   border-radius: 6px;
   cursor: pointer;
   transition: var(--transition-fast);
+  white-space: nowrap;
+}
+
+.asset-pill-btn:hover {
+  color: var(--text-bright);
 }
 
 .asset-pill-btn.active {
@@ -481,18 +504,63 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 0 12px rgba(6, 182, 212, 0.5);
 }
 
+/* Watchlist Dropdown Tray Trigger */
+.watchlist-tray-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.watchlist-tray-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+}
+
+.watchlist-tray-btn:hover,
+.watchlist-tray-wrapper.open .watchlist-tray-btn {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+}
+
+.tray-caret {
+  font-size: 0.72rem;
+  transition: transform 0.2s ease;
+}
+
+.watchlist-tray-wrapper.open .tray-caret {
+  transform: rotate(180deg);
+}
+
 .live-ticker-box {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  flex-shrink: 0;
 }
 
 .ticker-price {
   font-family: var(--font-mono);
-  font-size: 1.32rem;
+  font-size: 1.15rem;
   font-weight: 800;
   color: var(--text-bright);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
   transition: color 0.15s ease, text-shadow 0.15s ease;
 }
 
@@ -969,45 +1037,43 @@ h1, h2, h3, h4, h5, h6 {
    ========================================================================== */
 
 /* 1. Large Laptops & Standard 1080p Zoom (<= 1560px) */
-@media (max-width: 1560px) {
+/* 1. Standard Laptops & 1080p (<= 1440px): 2-Tier Adaptive Command Bar */
+@media (max-width: 1440px) {
   .terminal-header {
-    padding: 6px 12px;
-    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: 8px 14px;
+    gap: 8px 12px;
+  }
+  .header-left-cluster {
+    flex: 1 1 auto;
+  }
+  .header-actions {
+    flex: 0 0 auto;
+  }
+  .header-ticker-strip {
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
+    padding-top: 8px;
+    margin-top: 2px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    gap: 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .crypto-search-container {
+    width: 200px;
+    min-width: 180px;
+    flex-shrink: 0;
   }
   .brand-subtitle {
     display: none;
   }
-  .phase-tag {
-    display: none;
-  }
-  .crypto-search-container {
-    width: 160px;
-  }
-  .header-ticker-strip {
-    gap: 8px;
-  }
-  .account-pill {
-    padding: 4px 8px;
-    gap: 6px;
-  }
-  .account-stat-group {
-    padding-left: 6px;
-    gap: 4px;
-  }
-  .btn-journal-open {
-    padding: 6px 12px;
-    font-size: 0.8rem;
-  }
-  .feed-badge span:last-child {
-    display: none;
-  }
-  .feed-badge {
-    padding: 4px 6px;
-  }
 }
 
-/* 2. Compact Laptops & 1366x768 / 150% Zoom (<= 1380px) */
-@media (max-width: 1380px) {
+/* 2. Compact Laptops & 1366x768 / 125%-150% Zoom (<= 1300px) */
+@media (max-width: 1300px) {
   .terminal-wrapper {
     padding: 8px 10px 10px 10px;
     gap: 8px;
@@ -1015,9 +1081,6 @@ h1, h2, h3, h4, h5, h6 {
   .terminal-body {
     grid-template-columns: 250px 1fr 310px;
     gap: 8px;
-  }
-  .crypto-search-container {
-    width: 130px;
   }
   .market-tab-btn {
     padding: 4px 8px;
@@ -1029,15 +1092,8 @@ h1, h2, h3, h4, h5, h6 {
   .account-label {
     display: none;
   }
-  .r-usd-val {
-    display: none;
-  }
   .ticker-price {
-    font-size: 1.15rem;
-  }
-  .asset-pill-btn {
-    padding: 3px 8px;
-    font-size: 0.74rem;
+    font-size: 1.05rem;
   }
   .theme-toggle-text {
     display: none;
@@ -1045,28 +1101,20 @@ h1, h2, h3, h4, h5, h6 {
   .theme-toggle-btn {
     padding: 3px 6px;
   }
+  .btn-journal-open {
+    padding: 5px 10px;
+    font-size: 0.78rem;
+  }
 }
 
-/* 3. Small Laptops / Sub-Notebooks (<= 1180px) */
-@media (max-width: 1180px) {
-  .terminal-header {
-    flex-wrap: wrap;
-    justify-content: space-between;
-    padding: 8px 12px;
-  }
-  .header-ticker-strip {
-    order: 3;
-    width: 100%;
-    justify-content: space-between;
-    margin-top: 6px;
-    padding-top: 6px;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-  }
-  .crypto-search-container {
-    width: 180px;
-  }
+/* 3. Small Laptops / Sub-Notebooks (<= 1100px) */
+@media (max-width: 1100px) {
   .terminal-body {
     grid-template-columns: 240px 1fr 290px;
+  }
+  .crypto-search-container {
+    width: 170px;
+    min-width: 150px;
   }
 }
 

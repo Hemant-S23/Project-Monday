@@ -8,13 +8,21 @@ export class ChartManager {
     this.currentAsset = 'BTC';
     this.currentMarket = 'Crypto';
     this.currentTimeframe = '60'; // 60 = 1H, 5 = 5M
+    this.currentTheme = localStorage.getItem('monday_theme') || 'dark';
     this.activeLevels = null;
   }
 
-  init(asset = 'BTC', timeframe = '60', market = 'Crypto') {
+  init(asset = 'BTC', timeframe = '60', market = 'Crypto', theme = null) {
     this.currentAsset = asset;
     this.currentMarket = market;
     this.currentTimeframe = timeframe;
+    if (theme) this.currentTheme = theme;
+    this.renderTradingViewWidget();
+  }
+
+  setTheme(theme) {
+    if (this.currentTheme === theme) return;
+    this.currentTheme = theme;
     this.renderTradingViewWidget();
   }
 
@@ -92,7 +100,7 @@ export class ChartManager {
       symbol: symbol,
       interval: this.currentTimeframe,
       timezone: "Etc/UTC",
-      theme: "dark",
+      theme: this.currentTheme || "dark",
       style: "1",
       locale: "en",
       enable_publishing: false,

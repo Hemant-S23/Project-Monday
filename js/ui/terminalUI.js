@@ -14,7 +14,8 @@ export class TerminalUI {
     onToggleMute,
     onExecuteTrade,
     onCloseTrade,
-    onResetAccount
+    onResetAccount,
+    onThemeChange
   }) {
     this.callbacks = {
       onAssetChange,
@@ -26,7 +27,8 @@ export class TerminalUI {
       onToggleMute,
       onExecuteTrade,
       onCloseTrade,
-      onResetAccount
+      onResetAccount,
+      onThemeChange
     };
     this.currentMarket = 'Crypto';
 
@@ -345,6 +347,37 @@ export class TerminalUI {
     if (closeRBtn) closeRBtn.addEventListener('click', closeRModal);
     if (gotItRBtn) gotItRBtn.addEventListener('click', closeRModal);
     if (backdropR) backdropR.addEventListener('click', closeRModal);
+
+    // Dark / Light Mode Toggle
+    const themeBtn = document.getElementById('theme_toggle_btn');
+    const themeText = document.getElementById('theme_mode_text');
+
+    const updateThemeUI = (theme) => {
+      document.documentElement.setAttribute('data-theme', theme);
+      if (themeText) {
+        themeText.textContent = theme === 'light' ? 'Light' : 'Dark';
+      }
+      if (themeBtn) {
+        themeBtn.setAttribute('title', theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode');
+      }
+    };
+
+    // Apply saved or default theme
+    const savedTheme = localStorage.getItem('monday_theme') || 'dark';
+    updateThemeUI(savedTheme);
+
+    if (themeBtn) {
+      themeBtn.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        localStorage.setItem('monday_theme', newTheme);
+        updateThemeUI(newTheme);
+        if (this.callbacks.onThemeChange) {
+          this.callbacks.onThemeChange(newTheme);
+        }
+        this.showToast('Theme Updated', `Switched to ${newTheme.toUpperCase()} mode`, 'info');
+      });
+    }
   }
 
   setActiveWatchlistAsset(asset) {

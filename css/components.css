@@ -1321,3 +1321,353 @@
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ==========================================================================
+   Light Mode Component Overrides (Fintech Porcelain Clean Aesthetic)
+   ========================================================================== */
+[data-theme="light"] .telemetry-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+}
+
+[data-theme="light"] .telemetry-card:hover {
+  border-color: rgba(2, 132, 199, 0.35);
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08);
+}
+
+[data-theme="light"] .meta-val {
+  color: #0f172a;
+}
+
+[data-theme="light"] .chart-toolbar {
+  background: rgba(248, 250, 252, 0.95);
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .tf-pinned-btn {
+  background: rgba(2, 132, 199, 0.08);
+  border-color: rgba(2, 132, 199, 0.25);
+  color: #0284c7;
+}
+
+[data-theme="light"] .tf-pinned-btn:hover {
+  background: rgba(2, 132, 199, 0.16);
+  color: #0369a1;
+}
+
+[data-theme="light"] .tf-pinned-btn.active {
+  background: var(--color-primary);
+  color: #ffffff;
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
+}
+
+[data-theme="light"] .tf-tray-trigger-btn {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+}
+
+[data-theme="light"] .tf-tray-trigger-btn:hover {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.2);
+}
+
+[data-theme="light"] .tf-tray-menu {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12), 0 0 20px rgba(2, 132, 199, 0.08);
+}
+
+[data-theme="light"] .tf-tray-header {
+  background: #f8fafc;
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+  color: #475569;
+}
+
+[data-theme="light"] .tf-tray-item {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.06);
+  color: #1e293b;
+}
+
+[data-theme="light"] .tf-tray-item:hover {
+  background: rgba(2, 132, 199, 0.08);
+  border-color: rgba(2, 132, 199, 0.25);
+  color: #0284c7;
+}
+
+[data-theme="light"] .tf-tray-item.active {
+  background: rgba(2, 132, 199, 0.15);
+  border-color: var(--color-primary);
+  color: #0284c7;
+}
+
+[data-theme="light"] .tf-tray-item.strategy-item {
+  background: rgba(2, 132, 199, 0.06);
+  border-color: rgba(2, 132, 199, 0.2);
+}
+
+[data-theme="light"] .chart-viewport {
+  background: #ffffff;
+}
+
+[data-theme="light"] .level-badge {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .level-rr {
+  background: rgba(15, 23, 42, 0.06);
+  color: #475569;
+}
+
+[data-theme="light"] .voice-status-bar {
+  background: rgba(124, 58, 237, 0.06);
+  border-bottom-color: rgba(124, 58, 237, 0.12);
+}
+
+[data-theme="light"] .voice-wave {
+  background: rgba(124, 58, 237, 0.08);
+  border-color: rgba(124, 58, 237, 0.25);
+}
+
+[data-theme="light"] .eq-bar {
+  background: #7c3aed;
+}
+
+[data-theme="light"] .voice-status-text {
+  color: #6d28d9;
+}
+
+[data-theme="light"] .icon-btn {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.1);
+  color: #475569;
+}
+
+[data-theme="light"] .icon-btn:hover {
+  background: rgba(15, 23, 42, 0.1);
+  color: #0f172a;
+}
+
+[data-theme="light"] .copilot-bubble {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.08);
+  color: #1e293b;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+}
+
+[data-theme="light"] .copilot-bubble .bubble-header {
+  border-bottom-color: rgba(15, 23, 42, 0.06);
+  color: #64748b;
+}
+
+[data-theme="light"] .user-bubble {
+  background: rgba(2, 132, 199, 0.12);
+  border-color: rgba(2, 132, 199, 0.3);
+  color: #0369a1;
+}
+
+[data-theme="light"] .user-bubble .bubble-header {
+  border-bottom-color: rgba(2, 132, 199, 0.18);
+  color: #0284c7;
+}
+
+[data-theme="light"] .quick-chips-wrapper {
+  background: #f8fafc;
+  border-top-color: rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .quick-chip {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.1);
+  color: #475569;
+}
+
+[data-theme="light"] .quick-chip:hover {
+  background: rgba(2, 132, 199, 0.1);
+  border-color: var(--color-primary);
+  color: #0284c7;
+}
+
+[data-theme="light"] .chat-input-bar {
+  background: #f8fafc;
+  border-top-color: rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .mic-action-btn {
+  background: rgba(124, 58, 237, 0.1);
+  border-color: rgba(124, 58, 237, 0.3);
+  color: #6d28d9;
+}
+
+[data-theme="light"] .chat-text-input {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+}
+
+[data-theme="light"] .chat-text-input:focus {
+  border-color: var(--color-primary);
+  background: #ffffff;
+  box-shadow: 0 0 12px rgba(2, 132, 199, 0.2);
+}
+
+[data-theme="light"] .chat-send-btn {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+[data-theme="light"] .calc-table {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .calc-lbl {
+  color: #64748b;
+}
+
+[data-theme="light"] .calc-val {
+  color: #0f172a;
+}
+
+[data-theme="light"] .position-card {
+  background: #ffffff;
+  border-color: rgba(2, 132, 199, 0.25);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+[data-theme="light"] .position-card:hover {
+  border-color: rgba(2, 132, 199, 0.45);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+}
+
+[data-theme="light"] .pos-progress-wrapper {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.05);
+}
+
+[data-theme="light"] .pos-progress-track {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .pos-grid {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.05);
+}
+
+[data-theme="light"] .pos-grid-cell .val {
+  color: #0f172a;
+}
+
+[data-theme="light"] .empty-state {
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #64748b;
+  background: rgba(248, 250, 252, 0.5);
+}
+
+[data-theme="light"] .chart-context-deck {
+  background: rgba(248, 250, 252, 0.95);
+  border-top-color: rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .news-item {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-left-width: 3px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+}
+
+[data-theme="light"] .news-title {
+  color: #0f172a;
+}
+
+[data-theme="light"] .news-desc {
+  color: #475569;
+}
+
+[data-theme="light"] .news-radar-scroll::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.04);
+}
+
+[data-theme="light"] .news-radar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.15);
+}
+
+[data-theme="light"] .hist-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.06);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+}
+
+[data-theme="light"] .hist-title {
+  color: #0284c7;
+}
+
+[data-theme="light"] .hist-stats-row {
+  background: #f8fafc;
+  color: #1e293b;
+}
+
+[data-theme="light"] .hist-desc {
+  color: #475569;
+}
+
+[data-theme="light"] .modal-overlay {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+[data-theme="light"] .modal-window {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.15);
+}
+
+[data-theme="light"] .modal-header {
+  background: #f8fafc;
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+}
+
+[data-theme="light"] .metric-box {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .metric-title {
+  color: #64748b;
+}
+
+[data-theme="light"] .metric-value {
+  color: #0f172a;
+}
+
+[data-theme="light"] .journal-table th, 
+[data-theme="light"] .journal-table td {
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+  color: #1e293b;
+}
+
+[data-theme="light"] .journal-table th {
+  background: #f8fafc;
+  color: #64748b;
+}
+
+[data-theme="light"] .toast {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+}
+
+[data-theme="light"] .toast-title {
+  color: #0f172a;
+}
+
+[data-theme="light"] .toast-msg {
+  color: #475569;
+}
+

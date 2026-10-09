@@ -46,7 +46,8 @@ class App {
       onTestVoice: () => this.voiceAssistant.testVoice(),
       onExecuteTrade: () => this.executeCurrentTrade(),
       onCloseTrade: (id) => this.closeActiveTrade(id),
-      onResetAccount: () => this.resetAccount()
+      onResetAccount: () => this.resetAccount(),
+      onThemeChange: (theme) => this.chartManager.setTheme(theme)
     });
 
     // Voice Assistant with natural Indian and English profiles
@@ -66,8 +67,9 @@ class App {
   async init() {
     console.log('[App] Initializing AI Trading Co-Pilot for Crypto and Indian Markets...');
 
-    // 1. Initialize TradingView chart
-    this.chartManager.init(this.currentAsset, '60', this.currentMarket);
+    // 1. Initialize TradingView chart with saved theme
+    const activeTheme = localStorage.getItem('monday_theme') || 'dark';
+    this.chartManager.init(this.currentAsset, '60', this.currentMarket, activeTheme);
 
     // 2. Initialize Market Feeds in parallel
     await Promise.all([

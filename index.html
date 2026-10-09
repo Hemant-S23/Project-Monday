@@ -292,7 +292,7 @@
         </div>
 
         <!-- Lower Context Radar (Historical & Macro News) -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-top: 1px solid var(--border-subtle);">
+        <div class="chart-context-deck">
           <!-- Historical Intelligence -->
           <div class="hist-card" id="historical_pattern_card">
             <div class="hist-title"><i class="ph ph-git-commit"></i> Regime Pattern Matching</div>
@@ -305,7 +305,7 @@
           </div>
 
           <!-- Macro & News Radar -->
-          <div style="overflow-y: auto; max-height: 120px;" id="news_radar_list">
+          <div class="news-radar-scroll" id="news_radar_list">
             <!-- News items injected dynamically -->
           </div>
         </div>

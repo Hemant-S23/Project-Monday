@@ -232,13 +232,16 @@ h1, h2, h3, h4, h5, h6 {
 .header-ticker-strip {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
+  min-width: 0;
+  justify-content: center;
 }
 
 /* Universal Crypto Search Bar */
 .crypto-search-container {
   position: relative;
-  width: 250px;
+  width: clamp(140px, 13vw, 220px);
+  flex-shrink: 1;
 }
 
 .crypto-search-box {
@@ -566,9 +569,12 @@ h1, h2, h3, h4, h5, h6 {
 /* ==========================================================================
    Main Terminal Grid Workspace
    ========================================================================== */
+/* ==========================================================================
+   Main Terminal Grid Workspace
+   ========================================================================== */
 .terminal-body {
   display: grid;
-  grid-template-columns: 290px 1fr 390px;
+  grid-template-columns: minmax(260px, 280px) 1fr minmax(310px, 360px);
   gap: 10px;
   flex: 1;
   min-height: 0;
@@ -577,19 +583,20 @@ h1, h2, h3, h4, h5, h6 {
 /* Panels Common */
 .terminal-panel {
   background: var(--bg-glass);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   box-shadow: var(--shadow-card);
+  min-height: 0;
 }
 
 .panel-header {
-  padding: 10px 14px;
-  background: rgba(0, 0, 0, 0.25);
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.35);
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
@@ -598,8 +605,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .panel-title {
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.82rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-muted);
@@ -610,23 +617,61 @@ h1, h2, h3, h4, h5, h6 {
 
 .panel-title i {
   color: var(--color-primary);
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
 .panel-content {
-  padding: 12px;
+  padding: 8px 10px;
   overflow-y: auto;
+  overflow-x: hidden;
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(6, 182, 212, 0.3) rgba(0, 0, 0, 0.2);
+}
+
+.panel-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.panel-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.panel-content::-webkit-scrollbar-thumb {
+  background: rgba(6, 182, 212, 0.3);
+  border-radius: 4px;
+}
+
+.panel-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(6, 182, 212, 0.6);
+}
+
+/* Global scrollbar for whole app */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(6, 182, 212, 0.45);
 }
 
 /* ==========================================================================
-   Mobile Navigation Tabs & Android / Mobile Responsive Styles
+   Mobile Navigation Tabs (Default hidden on desktop)
    ========================================================================== */
-
-/* Mobile Navigation Tabs (Default hidden on desktop) */
 .mobile-nav-tabs {
   display: none;
   background: var(--bg-glass);
@@ -667,22 +712,100 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 0 12px rgba(6, 182, 212, 0.4);
 }
 
-/* Laptop / Medium Desktop (<= 1280px) */
-@media (max-width: 1280px) {
+/* ==========================================================================
+   RESPONSIVE DESIGN BREAKPOINTS (All Screen Resolutions)
+   ========================================================================== */
+
+/* 1. Large Laptops & Standard 1080p Zoom (<= 1560px) */
+@media (max-width: 1560px) {
   .terminal-header {
-    flex-wrap: wrap;
-    gap: 10px;
-    padding: 10px 14px;
+    padding: 6px 12px;
+    gap: 8px;
   }
-  .header-ticker-strip {
-    gap: 10px;
+  .brand-subtitle {
+    display: none;
+  }
+  .phase-tag {
+    display: none;
   }
   .crypto-search-container {
-    width: 200px;
+    width: 160px;
+  }
+  .header-ticker-strip {
+    gap: 8px;
+  }
+  .account-pill {
+    padding: 5px 10px;
+    gap: 6px;
+  }
+  .btn-journal-open {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+  .feed-badge span:last-child {
+    display: none;
+  }
+  .feed-badge {
+    padding: 4px 6px;
   }
 }
 
-/* Tablet & Mobile Landscape (<= 1024px) */
+/* 2. Compact Laptops & 1366x768 / 150% Zoom (<= 1380px) */
+@media (max-width: 1380px) {
+  .terminal-wrapper {
+    padding: 8px 10px 10px 10px;
+    gap: 8px;
+  }
+  .terminal-body {
+    grid-template-columns: 250px 1fr 310px;
+    gap: 8px;
+  }
+  .crypto-search-container {
+    width: 130px;
+  }
+  .market-tab-btn {
+    padding: 4px 8px;
+    font-size: 0.74rem;
+  }
+  .market-tab-btn.phase-lock {
+    display: none;
+  }
+  .account-label {
+    display: none;
+  }
+  .ticker-price {
+    font-size: 1.15rem;
+  }
+  .asset-pill-btn {
+    padding: 3px 8px;
+    font-size: 0.74rem;
+  }
+}
+
+/* 3. Small Laptops / Sub-Notebooks (<= 1180px) */
+@media (max-width: 1180px) {
+  .terminal-header {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: 8px 12px;
+  }
+  .header-ticker-strip {
+    order: 3;
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .crypto-search-container {
+    width: 180px;
+  }
+  .terminal-body {
+    grid-template-columns: 240px 1fr 290px;
+  }
+}
+
+/* 4. Tablets & iPad Landscape (<= 1024px) */
 @media (max-width: 1024px) {
   .terminal-wrapper {
     height: auto;
@@ -693,9 +816,13 @@ h1, h2, h3, h4, h5, h6 {
     grid-template-columns: 1fr;
     gap: 12px;
   }
+  .chart-panel {
+    height: 60vh;
+    min-height: 480px;
+  }
 }
 
-/* Mobile & Android Phones (<= 860px) */
+/* 5. Mobile & Android Devices (<= 860px) */
 @media (max-width: 860px) {
   .terminal-wrapper {
     padding: 6px;
@@ -723,6 +850,10 @@ h1, h2, h3, h4, h5, h6 {
     align-items: stretch;
     width: 100%;
     gap: 8px;
+    order: unset;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
   }
 
   .crypto-search-container {
@@ -779,12 +910,12 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   .chart-panel {
-    min-height: 500px;
+    min-height: 480px;
     height: 70vh;
   }
 
   .chart-viewport {
-    min-height: 360px;
+    min-height: 340px;
     flex: 1;
   }
 
@@ -804,5 +935,56 @@ h1, h2, h3, h4, h5, h6 {
     right: 12px;
     left: 12px;
     bottom: 12px;
+  }
+}
+
+/* ==========================================================================
+   VERTICAL HEIGHT OPTIMIZATION (Prevents clipping on short screens / zoom)
+   ========================================================================== */
+@media (max-height: 850px) {
+  .terminal-wrapper {
+    padding: 6px 10px;
+    gap: 6px;
+  }
+  .terminal-header {
+    padding: 5px 12px;
+  }
+  .panel-header {
+    padding: 6px 10px;
+  }
+  .panel-content {
+    padding: 6px 8px;
+    gap: 6px;
+  }
+  .telemetry-grid {
+    gap: 4px;
+  }
+  .telemetry-card {
+    padding: 4px 6px;
+  }
+  .meta-lbl {
+    font-size: 0.6rem;
+  }
+  .meta-val {
+    font-size: 0.74rem;
+  }
+  .calc-table {
+    padding: 5px 8px;
+    gap: 3px;
+  }
+  .calc-row {
+    font-size: 0.7rem;
+  }
+  .btn-exec-trade {
+    padding: 8px 12px;
+    font-size: 0.82rem;
+  }
+  .chart-context-deck {
+    min-height: 85px;
+    max-height: 110px;
+    padding: 6px 8px;
+  }
+  .news-radar-scroll {
+    max-height: 95px;
   }
 }

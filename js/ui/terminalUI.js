@@ -311,6 +311,25 @@ export class TerminalUI {
         journalModal.classList.remove('open');
       });
     }
+
+    // R-Multiple & Live Equity Explainer Modal Toggles
+    const explainRBtn = document.getElementById('btn_explain_r');
+    const rModal = document.getElementById('modal_r_explainer');
+    const closeRBtn = document.getElementById('close_r_explainer_btn');
+    const gotItRBtn = document.getElementById('btn_got_it_r');
+    const backdropR = document.getElementById('backdrop_r_explainer');
+
+    const openRModal = () => {
+      if (rModal) rModal.style.display = 'flex';
+    };
+    const closeRModal = () => {
+      if (rModal) rModal.style.display = 'none';
+    };
+
+    if (explainRBtn) explainRBtn.addEventListener('click', openRModal);
+    if (closeRBtn) closeRBtn.addEventListener('click', closeRModal);
+    if (gotItRBtn) gotItRBtn.addEventListener('click', closeRModal);
+    if (backdropR) backdropR.addEventListener('click', closeRModal);
   }
 
   setActiveWatchlistAsset(asset) {
@@ -629,16 +648,71 @@ export class TerminalUI {
     });
   }
 
-  updateJournalAndAnalytics(analytics, trades) {
-    // Header Balance & Stats
+  updateHeaderAccountHUD(liveMetrics) {
+    if (!liveMetrics) return;
+
+    const labelEl = document.getElementById('header_balance_label');
     const balEl = document.getElementById('header_balance');
     const totalREl = document.getElementById('header_total_r');
-    if (balEl) balEl.textContent = `$${analytics.balance.toLocaleString()}`;
+    const pnlUsdEl = document.getElementById('header_pnl_usd');
+    const liveChip = document.getElementById('header_live_chip');
+    const liveText = document.getElementById('header_live_text');
+    const pill = document.getElementById('header_account_pill');
+
+    if (liveMetrics.hasOpenPositions) {
+      // In active trade: Show Live Equity & Realtime Floating PnL
+      if (labelEl) labelEl.textContent = 'Equity (Live):';
+      if (balEl) {
+        balEl.textContent = `$${liveMetrics.equity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+      if (liveChip && liveText) {
+        liveChip.style.display = 'inline-flex';
+        const isPos = liveMetrics.unrealizedPnlUSD >= 0;
+        liveText.textContent = `${isPos ? '+' : ''}$${liveMetrics.unrealizedPnlUSD.toFixed(2)} (${isPos ? '+' : ''}${liveMetrics.unrealizedR.toFixed(2)}R)`;
+        liveChip.className = `account-live-chip ${isPos ? 'bullish' : 'bearish'}`;
+      }
+      if (pill) pill.classList.add('in-position');
+    } else {
+      // Settled state: Show Settled Paper Balance
+      if (labelEl) labelEl.textContent = 'Paper Balance:';
+      if (balEl) {
+        balEl.textContent = `$${liveMetrics.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+      if (liveChip) liveChip.style.display = 'none';
+      if (pill) pill.classList.remove('in-position');
+    }
+
+    // Always update net R and PnL
+    const activeTotalR = liveMetrics.netTotalR ?? liveMetrics.closedTotalR ?? 0;
+    const activeTotalPnl = liveMetrics.netTotalPnlUSD ?? liveMetrics.closedPnlUSD ?? 0;
+
     if (totalREl) {
-      const isPos = analytics.totalR >= 0;
-      totalREl.textContent = `${isPos ? '+' : ''}${analytics.totalR}R`;
+      const isPos = activeTotalR >= 0;
+      totalREl.textContent = `${isPos ? '+' : ''}${activeTotalR.toFixed(2)}R`;
       totalREl.className = `stat-num ${isPos ? 'bullish' : 'bearish'}`;
     }
+    if (pnlUsdEl) {
+      const isPos = activeTotalPnl >= 0;
+      pnlUsdEl.textContent = `(${isPos ? '+' : ''}$${activeTotalPnl.toFixed(2)})`;
+      pnlUsdEl.className = `r-usd-val ${isPos ? 'bullish' : 'bearish'}`;
+    }
+  }
+
+  updateJournalAndAnalytics(analytics, trades) {
+    // Header Live HUD Sync
+    const liveMetrics = {
+      balance: analytics.balance,
+      equity: analytics.equity || analytics.balance,
+      unrealizedPnlUSD: analytics.unrealizedPnlUSD || 0,
+      unrealizedR: analytics.unrealizedR || 0,
+      closedTotalR: analytics.totalR,
+      closedPnlUSD: analytics.totalPnlUSD,
+      netTotalR: analytics.netTotalR ?? analytics.totalR,
+      netTotalPnlUSD: +(analytics.totalPnlUSD + (analytics.unrealizedPnlUSD || 0)).toFixed(2),
+      hasOpenPositions: (analytics.openPositionsCount || 0) > 0,
+      openPositionsCount: analytics.openPositionsCount || 0
+    };
+    this.updateHeaderAccountHUD(liveMetrics);
 
     // Modal Analytics
     const mBal = document.getElementById('modal_stat_balance');
@@ -648,10 +722,10 @@ export class TerminalUI {
     const mPf = document.getElementById('modal_stat_pf');
     const mStreak = document.getElementById('modal_stat_streak');
 
-    if (mBal) mBal.textContent = `$${analytics.balance.toLocaleString()}`;
+    if (mBal) mBal.textContent = `$${analytics.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     if (mTrades) mTrades.textContent = `${analytics.totalTrades} (${analytics.winCount}W / ${analytics.lossCount}L)`;
     if (mWinRate) mWinRate.textContent = `${analytics.winRate}%`;
-    if (mTotalR) mTotalR.textContent = `${analytics.totalR >= 0 ? '+' : ''}${analytics.totalR}R`;
+    if (mTotalR) mTotalR.textContent = `${analytics.totalR >= 0 ? '+' : ''}${analytics.totalR}R (${analytics.totalPnlUSD >= 0 ? '+' : ''}$${analytics.totalPnlUSD})`;
     if (mPf) mPf.textContent = `${analytics.profitFactor}`;
     if (mStreak) mStreak.textContent = `${analytics.maxLosingStreak}`;
 

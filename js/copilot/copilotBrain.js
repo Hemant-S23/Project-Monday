@@ -225,6 +225,21 @@ export class CopilotBrain {
         `Matlab market kitna bhi turn kare, tumhara loss $${risk.maxRiskUSD || 20} se ek dollar bhi zyada nahi hoga!`;
     }
 
+    // 8.5. What is R / R-Multiple & Balance explanation ("r kya hai", "what is r", "4.2r", "balance kyu nahi badha")
+    else if (this.matchesAny(clean, [
+      'what is r', 'r kya hai', 'r multiple', 'r kya hota', '4.2r', '4.2 r', 'r ka matlab',
+      'balance kyu nahi badha', 'balance kyo nahi badha', 'balance change', 'balance same', 'balance badha nahi'
+    ])) {
+      response = `Bohot accha sawaal hai! Let me break it down simply:\n\n` +
+        `🎯 **"R" kya hota hai? (R-Multiple / Risk Unit):**\n` +
+        `Trading aur risk management me **1R = 1 Risk Unit** hota hai. Hamare account ka predefined 1% risk per trade $20.00 hai, isliye **1R = $20**.\n` +
+        `• Agar trade me +$50 profit banta hai toh wo **+2.5R** hua ($50 ÷ $20).\n` +
+        `• Agar stop loss hit hota hai toh exactly **-1.0R (-$20)** deduct hota hai.\n` +
+        `• **+4.20R** ka matlab past trades me risk ka **4.2× net profit (+$84.12)** banaya hai!\n\n` +
+        `📈 **Trade lene par balance kyu nahi badha/ghata tha?**\n` +
+        `Jab trade open hoti hai, tab settled cash balance freeze rehta hai jab tak trade close na ho — balki **Net Equity aur Live Floating PnL** price ke har tick ke sath move karta hai. Ab header me Live Equity aur floating profit/loss har Binance tick ke sath realtime me fluctuate hota hua dikhta hai!`;
+    }
+
     // 9. SMT Divergence / Correlation ("smt", "divergence", "eth")
     else if (this.matchesAny(clean, ['smt', 'divergence', 'smart money'])) {
       const smt = ctx.strategyState?.smtAnalysis;

@@ -87,12 +87,25 @@
         </div>
       </div>
 
-      <!-- Account Balance & Journal Button -->
+      <!-- Account Balance & Live Equity HUD -->
       <div class="header-actions">
-        <div class="account-pill">
-          <span class="account-label">Paper Balance:</span>
-          <span class="account-balance" id="header_balance">$2,000.00</span>
-          <span class="stat-num bullish" id="header_total_r">+5.2R</span>
+        <div class="account-pill" id="header_account_pill">
+          <div class="account-pill-main">
+            <span class="account-label" id="header_balance_label">Paper Balance:</span>
+            <span class="account-balance" id="header_balance">$2,084.12</span>
+          </div>
+          <div class="account-stat-group">
+            <span class="stat-num bullish" id="header_total_r">+4.20R</span>
+            <span class="stat-pnl-usd" id="header_pnl_usd">(+$84.12)</span>
+            <button class="r-info-btn" id="btn_explain_r" type="button" aria-label="What is R-Multiple?" title="What is R? Click to understand Risk Multiples & Live Equity">
+              <i class="ph ph-question"></i>
+            </button>
+          </div>
+          <!-- Live Floating PnL: updates in realtime when trade is open -->
+          <div class="account-live-chip" id="header_live_chip" style="display: none;" title="Realtime floating PnL updating on live market ticks">
+            <span class="live-dot-pulse"></span>
+            <span class="live-chip-text" id="header_live_text">+$0.00 (+0.00R)</span>
+          </div>
         </div>
         <button class="btn-journal-open" id="open_journal_btn">
           <i class="ph ph-notebook"></i> Trade Journal
@@ -440,6 +453,58 @@
               <!-- Dynamically rendered -->
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- R-Multiple & Equity Explainer Modal -->
+  <div class="terminal-modal" id="modal_r_explainer" style="display: none;">
+    <div class="modal-backdrop" id="backdrop_r_explainer"></div>
+    <div class="modal-card r-explainer-card">
+      <div class="modal-header">
+        <h2 style="font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+          <i class="ph ph-shield-check" style="color: #38bdf8;"></i> Trading Concepts: "R-Multiple" & Live Equity
+        </h2>
+        <button class="icon-btn" id="close_r_explainer_btn" title="Close Modal">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+      <div class="modal-body r-explainer-body">
+        <div class="explainer-section">
+          <h3><i class="ph ph-chart-line-up"></i> 1. "+4.20R" kya hota hai? (What is R?)</h3>
+          <p>Trading aur Quantitative Risk Management me <strong>"R"</strong> ka matlab hota hai <strong>R-Multiple (Risk Unit)</strong>.</p>
+          <div class="concept-callout">
+            <strong>1R = 1 Trade par maximum predefined risk (1% of $2,000 = $20.00)</strong>
+          </div>
+          <ul>
+            <li>Agar kisi trade par aapka $20 ka Stop Loss hai aur aap <strong>+$50 profit</strong> banate ho, toh wo <strong>+2.5R</strong> hota hai ($50 ÷ $20).</li>
+            <li>Agar trade Stop Loss hit karti hai, toh exactly <strong>-1.0R (-$20)</strong> loss hota hai.</li>
+            <li><strong>+4.20R</strong> ka matlab hai ki past closed trades me aapne apne 1R risk ka <strong>4.2× net profit (+$84.12)</strong> banaya hai!</li>
+          </ul>
+        </div>
+
+        <div class="explainer-section">
+          <h3><i class="ph ph-arrows-left-right"></i> 2. Trade lene par Balance badha/ghata kyu nahi?</h3>
+          <div class="concept-grid">
+            <div class="concept-box">
+              <h4>💵 Cash Balance (Settled)</h4>
+              <p>Yeh amount tabhi settle hota hai jab trade <strong>Close</strong> hoti hai (Take Profit, Stop Loss ya manual close button dabane par).</p>
+            </div>
+            <div class="concept-box">
+              <h4>📈 Net Equity (Live Floating)</h4>
+              <p>Jab trade <strong>Open</strong> hoti hai, toh price ke har tick ke sath aapka <strong>Live PnL aur Net Equity</strong> realtime me up/down move karta hai!</p>
+            </div>
+          </div>
+          <p style="margin-top: 10px; font-size: 0.82rem; color: #94a3b8;">
+            💡 Ab MONDAY terminal ke header me <strong>Active Live Floating PnL</strong> aur <strong>Net Equity</strong> har Binance live tick ke sath realtime me move karega!
+          </p>
+        </div>
+
+        <div class="explainer-footer">
+          <button class="btn-primary" id="btn_got_it_r" type="button" style="width: 100%; justify-content: center;">
+            Samajh aa gaya! (Got It)
+          </button>
         </div>
       </div>
     </div>

@@ -10,9 +10,28 @@ export class PaperTrader {
     this.balanceStorageKey = 'ai_copilot_paper_balance_v1';
     this.positionsStorageKey = 'ai_copilot_paper_positions_v1';
 
-    this.balance = parseFloat(localStorage.getItem(this.balanceStorageKey)) || initialBalance;
-    this.openPositions = this.loadOpenPositions();
     this.trades = this.loadTrades();
+    this.openPositions = this.loadOpenPositions();
+
+    // Calculate historical realized PnL from closed trades
+    const closedPnL = this.trades
+      .filter(t => t.status === 'CLOSED')
+      .reduce((sum, t) => sum + (t.pnlUSD || 0), 0);
+
+    const storedBalance = localStorage.getItem(this.balanceStorageKey);
+    if (storedBalance !== null && !isNaN(parseFloat(storedBalance))) {
+      const parsedBal = parseFloat(storedBalance);
+      // Auto-heal mathematically: if balance was left at initial 2000 while starter trades had +$84.12 profit, sync it!
+      if (parsedBal === initialBalance && closedPnL !== 0) {
+        this.balance = +(initialBalance + closedPnL).toFixed(2);
+        this.save();
+      } else {
+        this.balance = parsedBal;
+      }
+    } else {
+      this.balance = +(initialBalance + closedPnL).toFixed(2);
+      this.save();
+    }
   }
 
   loadOpenPositions() {
@@ -30,9 +49,10 @@ export class PaperTrader {
 
   loadTrades() {
     const raw = localStorage.getItem(this.storageKey);
-    if (raw) {
+    if (raw !== null) {
       try {
-        return JSON.parse(raw);
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
       } catch (e) {
         console.error('Failed to parse stored trades:', e);
       }
@@ -254,10 +274,49 @@ export class PaperTrader {
       closedAt: Date.now()
     };
 
-    this.balance += pnlUSD;
+    this.balance = +(this.balance + pnlUSD).toFixed(2);
     this.trades.unshift(closedTrade);
     this.save();
     return closedTrade;
+  }
+
+  getLiveEquity(currentPrices = {}) {
+    let unrealizedPnlUSD = 0;
+    let unrealizedR = 0;
+
+    this.openPositions.forEach(pos => {
+      const livePrice = currentPrices[pos.asset] || pos.currentPrice || pos.entry;
+      pos.currentPrice = livePrice;
+      const isLong = pos.direction === 'LONG';
+      const priceDelta = isLong ? (livePrice - pos.entry) : (pos.entry - livePrice);
+      const pnl = +(priceDelta * pos.positionSize).toFixed(2);
+      const r = pos.riskUSD > 0 ? +(pnl / pos.riskUSD).toFixed(2) : 0;
+      pos.unrealizedPnlUSD = pnl;
+      pos.unrealizedR = r;
+
+      unrealizedPnlUSD += pnl;
+      unrealizedR += r;
+    });
+
+    const closed = this.trades.filter(t => t.status === 'CLOSED');
+    const closedTotalR = +closed.reduce((acc, t) => acc + (t.rMultiple || 0), 0).toFixed(2);
+    const closedPnlUSD = +closed.reduce((acc, t) => acc + (t.pnlUSD || 0), 0).toFixed(2);
+    const equity = +(this.balance + unrealizedPnlUSD).toFixed(2);
+    const netTotalR = +(closedTotalR + unrealizedR).toFixed(2);
+    const netTotalPnlUSD = +(closedPnlUSD + unrealizedPnlUSD).toFixed(2);
+
+    return {
+      balance: +this.balance.toFixed(2),
+      equity,
+      unrealizedPnlUSD: +unrealizedPnlUSD.toFixed(2),
+      unrealizedR: +unrealizedR.toFixed(2),
+      closedTotalR,
+      closedPnlUSD,
+      netTotalR,
+      netTotalPnlUSD,
+      hasOpenPositions: this.openPositions.length > 0,
+      openPositionsCount: this.openPositions.length
+    };
   }
 
   getAnalytics() {
@@ -290,9 +349,16 @@ export class PaperTrader {
       }
     });
 
+    const unrealizedPnlUSD = +this.openPositions.reduce((acc, p) => acc + (p.unrealizedPnlUSD || 0), 0).toFixed(2);
+    const unrealizedR = +this.openPositions.reduce((acc, p) => acc + (p.unrealizedR || 0), 0).toFixed(2);
+
     return {
       balance: +this.balance.toFixed(2),
       initialBalance: this.initialBalance,
+      equity: +(this.balance + unrealizedPnlUSD).toFixed(2),
+      unrealizedPnlUSD,
+      unrealizedR,
+      netTotalR: +(totalR + unrealizedR).toFixed(2),
       totalTrades,
       winCount: wins.length,
       lossCount: losses.length,
@@ -308,12 +374,15 @@ export class PaperTrader {
     };
   }
 
-  resetAccount() {
+  resetAccount(clearTrades = true) {
     this.balance = this.initialBalance;
     this.openPositions = [];
-    this.trades = [];
-    localStorage.removeItem(this.storageKey);
-    localStorage.removeItem(this.balanceStorageKey);
-    localStorage.removeItem(this.positionsStorageKey);
+    if (clearTrades) {
+      this.trades = [];
+      localStorage.setItem(this.storageKey, JSON.stringify([]));
+    }
+    localStorage.setItem(this.balanceStorageKey, this.initialBalance.toFixed(2));
+    localStorage.setItem(this.positionsStorageKey, JSON.stringify([]));
+    this.save();
   }
 }

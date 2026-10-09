@@ -119,7 +119,12 @@ class App {
       });
       this.updateTradeJournalAndStats();
     }
+
     this.ui.updateOpenPositions(this.paperTrader.openPositions);
+
+    // Live Header Equity HUD: updates on every real-time price tick
+    const liveMetrics = this.paperTrader.getLiveEquity(currentPrices);
+    this.ui.updateHeaderAccountHUD(liveMetrics);
   }
 
   async runFullEvaluation() {
@@ -232,7 +237,7 @@ class App {
     }
   }
 
-  executeCurrentTrade() {
+  async executeCurrentTrade() {
     const ctx = this.copilotBrain.currentContext;
     if (!ctx || !ctx.riskParams) {
       this.ui.showToast('Execution Error', 'Risk parameters calculate nahi ho sake.', 'danger');
@@ -258,28 +263,35 @@ class App {
       aiReasoning: `Executed at $${riskParams.entry} with strict 1% risk ($${riskParams.maxRiskUSD}). RR 1:${riskParams.rrRatio}.`
     });
 
-    this.ui.showToast('🚀 Paper Trade Executed', `${targetAsset} ${newPos.direction} entered at $${newPos.entry}.`, 'success');
+    // Ensure live market tick listener is active for this asset
+    await this.cryptoAdapter.ensureAssetInitialized(newPos.asset);
+    this.cryptoAdapter.subscribe(newPos.asset, (data) => this.onMarketDataTick(data));
+
+    this.ui.showToast('🚀 Paper Trade Executed', `${targetAsset} ${newPos.direction} entered at $${newPos.entry}. Live tracking active!`, 'success');
     this.voiceAssistant.speak(`Paper trade executed. Entry $${newPos.entry}, Stop Loss $${newPos.stopLoss}.`);
 
     this.ui.updateOpenPositions(this.paperTrader.openPositions);
+    const liveMetrics = this.paperTrader.getLiveEquity();
+    this.ui.updateHeaderAccountHUD(liveMetrics);
     this.updateTradeJournalAndStats();
   }
 
   closeActiveTrade(tradeId) {
     const closed = this.paperTrader.closePosition(tradeId, 'MANUAL');
     if (closed) {
-      this.ui.showToast('Trade Closed', `${closed.asset} manually closed with PnL $${closed.pnlUSD}.`, 'info');
+      this.ui.showToast('Trade Closed', `${closed.asset} manually closed. PnL: ${closed.pnlUSD >= 0 ? '+' : ''}$${closed.pnlUSD} (${closed.rMultiple >= 0 ? '+' : ''}${closed.rMultiple}R).`, 'info');
+      this.voiceAssistant.speak(`Trade closed. PnL ${closed.pnlUSD} dollars.`);
       this.ui.updateOpenPositions(this.paperTrader.openPositions);
       this.updateTradeJournalAndStats();
     }
   }
 
   resetAccount() {
-    this.paperTrader.resetAccount();
+    this.paperTrader.resetAccount(true);
     this.riskEngine.setAccountBalance(2000);
     this.updateTradeJournalAndStats();
     this.ui.updateOpenPositions([]);
-    this.ui.showToast('Account Reset', 'Account balance restored to $2,000.', 'info');
+    this.ui.showToast('Account Reset', 'Clean account balance restored to $2,000.00 with 0 trades.', 'info');
   }
 
   updateTradeJournalAndStats() {

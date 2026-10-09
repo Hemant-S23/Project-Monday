@@ -525,6 +525,17 @@
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toast_container"></div>
 
+  <!-- TradingView Lightweight Charts (Local with CDN fallback for zero-dependency reliability) -->
+  <script src="js/vendor/lightweight-charts.js"></script>
+  <script>
+    if (!window.LightweightCharts) {
+      console.warn('[LightweightCharts] Local script not found, falling back to CDN...');
+      const fallbackScript = document.createElement('script');
+      fallbackScript.src = 'https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js';
+      document.head.appendChild(fallbackScript);
+    }
+  </script>
+
   <!-- App Script Entrypoint -->
   <script type="module" src="js/app.js"></script>
 </body>

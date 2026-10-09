@@ -435,6 +435,152 @@
   font-size: 0.7rem;
 }
 
+/* Lightweight Canvas Chart Header & Viewport */
+.lw-chart-wrapper {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-surface);
+}
+
+.lw-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: rgba(13, 19, 33, 0.85);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-subtle);
+  z-index: 5;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+[data-theme="light"] .lw-chart-header {
+  background: rgba(248, 250, 252, 0.95);
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+.lw-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.lw-asset-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  border-radius: var(--radius-sm);
+  color: #38bdf8;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+[data-theme="light"] .lw-asset-tag {
+  background: rgba(2, 132, 199, 0.1);
+  border-color: rgba(2, 132, 199, 0.25);
+  color: #0284c7;
+}
+
+.lw-live-price {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--color-bullish);
+  transition: color 0.3s ease;
+}
+
+.lw-live-change {
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.lw-live-change.bullish {
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--color-bullish);
+}
+
+.lw-live-change.bearish {
+  background: rgba(244, 63, 94, 0.12);
+  color: var(--color-bearish);
+}
+
+.lw-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lw-indicator-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.lw-indicator-pill {
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  font-weight: 500;
+}
+
+[data-theme="light"] .lw-indicator-pill {
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.tv-shortcut-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tv-shortcut-btn:hover {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  transform: translateY(-1px);
+}
+
+[data-theme="light"] .tv-shortcut-btn {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #475569;
+}
+
+[data-theme="light"] .tv-shortcut-btn:hover {
+  background: rgba(2, 132, 199, 0.1);
+  border-color: rgba(2, 132, 199, 0.3);
+  color: #0284c7;
+}
+
+.lw-canvas-container {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
 /* --------------------------------------------------------------------------
    AI Chat & Voice Panel
    -------------------------------------------------------------------------- */

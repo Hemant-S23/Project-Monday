@@ -67,9 +67,10 @@ class App {
   async init() {
     console.log('[App] Initializing AI Trading Co-Pilot for Crypto and Indian Markets...');
 
-    // 1. Initialize TradingView chart with saved theme
+    // 1. Initialize TradingView chart with saved theme and active adapter
     const activeTheme = localStorage.getItem('monday_theme') || 'dark';
-    this.chartManager.init(this.currentAsset, '60', this.currentMarket, activeTheme);
+    this.chartManager.setAdapter(this.getActiveAdapter());
+    this.chartManager.init(this.currentAsset, '60', this.currentMarket, activeTheme, this.getActiveAdapter());
 
     // 2. Initialize Market Feeds in parallel
     await Promise.all([
@@ -114,6 +115,7 @@ class App {
   async onMarketDataTick(data) {
     if (data.asset === this.currentAsset) {
       this.ui.updateTicker(data);
+      this.chartManager.onRealtimeTick(data);
     }
 
     // Check open positions for target or stop hit dynamically across all traded assets & markets
@@ -344,6 +346,7 @@ class App {
 
     adapter.subscribe(asset, (data) => this.onMarketDataTick(data));
 
+    this.chartManager.setAdapter(adapter);
     this.chartManager.setAsset(asset, this.currentMarket);
     await this.runFullEvaluation();
     this.ui.showToast('Asset Changed', `Active charting and analysis switched to ${asset}.`, 'info');
@@ -371,7 +374,8 @@ class App {
     const snapshot = adapter.getSnapshot(defaultAsset);
     this.ui.updateTicker(snapshot);
 
-    this.chartManager.setAsset(defaultAsset, market);
+    this.chartManager.setAdapter(adapter);
+    this.chartManager.setMarket(market, defaultAsset);
     await this.runFullEvaluation();
 
     const marketTitle = market === 'India' ? 'Indian Market (NSE/BSE)' : 'Crypto Market';

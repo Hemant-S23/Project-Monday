@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MONDAY — Market-Oriented Neural Decision Assistant for You</title>
+  <meta name="description" content="Meet MONDAY (Market-Oriented Neural Decision Assistant for You) — a real-time, multi-market AI trading companion combining live data, charts, historical context, and natural Hinglish/English voice interaction.">
+  
+  <!-- Phosphor Icons -->
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+  <div class="terminal-wrapper">
+    <!-- Top Header & Global Telemetry Strip -->
+    <header class="terminal-header">
+      <div class="header-brand">
+        <div class="brand-icon-halo">
+          <i class="ph ph-sparkle"></i>
+        </div>
+        <div>
+          <h1 class="brand-title">
+            MONDAY
+            <span class="brand-badge">AI COMPANION</span>
+          </h1>
+          <div class="brand-subtitle">Market-Oriented Neural Decision Assistant for You</div>
+        </div>
+      </div>
+
+      <!-- Market Selector (PRD Section 32) -->
+      <nav class="market-nav-group" aria-label="Market Selection">
+        <button class="market-tab-btn active" id="market_crypto_btn" data-market="Crypto">
+          <i class="ph ph-currency-btc"></i> Crypto
+        </button>
+        <button class="market-tab-btn phase-lock" id="market_india_btn" data-market="India">
+          <i class="ph ph-buildings"></i> India <span class="phase-tag">Phase 3</span>
+        </button>
+        <button class="market-tab-btn phase-lock" id="market_us_btn" data-market="US">
+          <i class="ph ph-globe-stand"></i> US <span class="phase-tag">Phase 4</span>
+        </button>
+      </nav>
+
+      <!-- Universal Crypto Search & Live Ticker -->
+      <div class="header-ticker-strip">
+        <!-- Search Bar with Floating Auto-Complete Dropdown -->
+        <div class="crypto-search-container" id="crypto_search_container">
+          <div class="crypto-search-box">
+            <i class="ph ph-magnifying-glass search-icon"></i>
+            <input 
+              type="text" 
+              id="crypto_search_input" 
+              class="crypto-search-input" 
+              placeholder="Search 700+ cryptos (ETH, DOGE, BNB)..." 
+              autocomplete="off"
+            />
+            <button type="button" class="search-clear-btn" id="search_clear_btn" style="display: none;">
+              <i class="ph ph-x"></i>
+            </button>
+          </div>
+
+          <!-- Floating Search Results Dropdown -->
+          <div class="crypto-search-results" id="crypto_search_results">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Quick Favorite Pills -->
+        <div class="asset-pills" id="quick_watchlist_pills">
+          <button class="asset-pill-btn active" data-asset="BTC">BTC</button>
+          <button class="asset-pill-btn" data-asset="ETH">ETH</button>
+          <button class="asset-pill-btn" data-asset="SOL">SOL</button>
+        </div>
+
+        <div class="live-ticker-box">
+          <span class="ticker-price" id="live_ticker_price">$64,850.00</span>
+          <span class="ticker-change bullish" id="live_ticker_change">+2.15%</span>
+        </div>
+
+        <div class="feed-badge" id="feed_badge">
+          <span class="feed-pulse"></span>
+          <span id="feed_source_badge">Live WebSocket</span>
+        </div>
+      </div>
+
+      <!-- Account Balance & Journal Button -->
+      <div class="header-actions">
+        <div class="account-pill">
+          <span class="account-label">Paper Balance:</span>
+          <span class="account-balance" id="header_balance">$2,000.00</span>
+          <span class="stat-num bullish" id="header_total_r">+5.2R</span>
+        </div>
+        <button class="btn-journal-open" id="open_journal_btn">
+          <i class="ph ph-notebook"></i> Trade Journal
+        </button>
+      </div>
+    </header>
+
+    <!-- Mobile / Android Responsive View Tabs -->
+    <nav class="mobile-nav-tabs" id="mobile_nav_tabs" aria-label="Mobile View Navigation">
+      <button class="mobile-tab-btn active" data-target="panel_chart" id="m_tab_chart" type="button">
+        <i class="ph ph-chart-bar"></i> <span>Live Chart</span>
+      </button>
+      <button class="mobile-tab-btn" data-target="panel_strategy" id="m_tab_strategy" type="button">
+        <i class="ph ph-crosshair"></i> <span>Strategy & Order</span>
+      </button>
+      <button class="mobile-tab-btn" data-target="panel_copilot" id="m_tab_copilot" type="button">
+        <i class="ph ph-sparkle"></i> <span>MONDAY AI</span>
+      </button>
+    </nav>
+
+    <!-- Main Terminal Workspace -->
+    <main class="terminal-body">
+
+      <!-- LEFT COLUMN: Strategy Engine, Telemetry & Order Execution -->
+      <section class="terminal-panel panel-strategy" id="panel_strategy" aria-label="Strategy & Order Panel">
+        <div class="panel-header">
+          <span class="panel-title"><i class="ph ph-crosshair"></i> Strategy Engine</span>
+          <div id="ai_state_badge" class="state-badge state-wait">
+            <i class="ph ph-clock"></i> <span>WAIT</span>
+          </div>
+        </div>
+
+        <div class="panel-content">
+          <!-- Market Summary Telemetry Grid (PRD Section 32) -->
+          <div class="telemetry-grid">
+            <div class="telemetry-card">
+              <span class="meta-lbl">1H Direction</span>
+              <span class="meta-val bullish" id="meta_htf_trend">BULLISH</span>
+            </div>
+            <div class="telemetry-card">
+              <span class="meta-lbl">Trade Bias</span>
+              <span class="meta-val bullish" id="meta_direction">LONG</span>
+            </div>
+            <div class="telemetry-card">
+              <span class="meta-lbl">5M Setup Area</span>
+              <span class="meta-val" id="meta_setup">Pullback In Zone</span>
+            </div>
+            <div class="telemetry-card">
+              <span class="meta-lbl">Confirmation</span>
+              <span class="meta-val" id="meta_confirmation">Pending Reaction</span>
+            </div>
+            <div class="telemetry-card">
+              <span class="meta-lbl">Historical Context</span>
+              <span class="meta-val tag-supportive" id="meta_hist_context">Supportive (64%)</span>
+            </div>
+            <div class="telemetry-card">
+              <span class="meta-lbl">Event Risk</span>
+              <span class="meta-val risk-medium" id="meta_event_risk">Medium Risk</span>
+            </div>
+            <div class="telemetry-card">
+              <span class="meta-lbl">Calculated RR</span>
+              <span class="meta-val text-bullish" id="meta_rr">1:2.65</span>
+            </div>
+            <div class="telemetry-card">
+              <span class="meta-lbl">Risk Rule</span>
+              <span class="meta-val">1.0% Max</span>
+            </div>
+          </div>
+
+          <!-- Trade Calculation & Execution Card -->
+          <div class="panel-header" style="margin: 0 -12px; padding: 6px 12px;">
+            <span class="panel-title"><i class="ph ph-calculator"></i> 1% Risk Parameters</span>
+          </div>
+
+          <div class="calc-table">
+            <div class="calc-row">
+              <span class="calc-lbl">Entry Price:</span>
+              <span class="calc-val" id="calc_entry">$64,850.00</span>
+            </div>
+            <div class="calc-row">
+              <span class="calc-lbl">Stop Loss:</span>
+              <span class="calc-val text-bearish" id="calc_sl">$64,150.00</span>
+            </div>
+            <div class="calc-row">
+              <span class="calc-lbl">Target (Take Profit):</span>
+              <span class="calc-val text-bullish" id="calc_tp">$66,700.00</span>
+            </div>
+            <div class="calc-row">
+              <span class="calc-lbl">Position Size:</span>
+              <span class="calc-val" id="calc_pos_size">0.0286 BTC</span>
+            </div>
+            <div class="calc-row">
+              <span class="calc-lbl">Max Risk:</span>
+              <span class="calc-val" id="calc_max_risk">$20.00 (1%)</span>
+            </div>
+            <div class="calc-row">
+              <span class="calc-lbl">Reward / Risk:</span>
+              <span class="calc-val text-bullish" id="calc_rr">1:2.65</span>
+            </div>
+          </div>
+
+          <button class="btn-exec-trade" id="execute_trade_btn">
+            <i class="ph ph-lightning"></i> <span>Execute Paper Trade</span>
+          </button>
+
+          <!-- Open Positions Section -->
+          <div class="panel-header" style="margin: 6px -12px 0 -12px; padding: 6px 12px;">
+            <span class="panel-title">
+              <i class="ph ph-chart-line-up"></i> Active Paper Trades 
+              (<span id="open_positions_count">0</span>)
+            </span>
+          </div>
+
+          <div id="open_positions_list" class="open-positions-container">
+            <div class="empty-state">No open positions. Setup awaiting confirmation.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CENTER COLUMN: TradingView Chart & Macro/Historical Context -->
+      <section class="terminal-panel chart-panel panel-chart active-mobile-panel" id="panel_chart" aria-label="Interactive Charting & Context">
+        <div class="chart-toolbar">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="panel-title"><i class="ph ph-chart-bar"></i> TradingView Live Chart</span>
+          </div>
+          <!-- Timeframe Selector Tray -->
+          <div class="tf-selector-wrapper">
+            <!-- Dropdown Tray Trigger -->
+            <div class="tf-dropdown-container">
+              <button class="tf-tray-trigger-btn" id="tf_tray_trigger" aria-haspopup="true" aria-expanded="false" title="Click to open Timeframe Tray">
+                <i class="ph ph-clock"></i>
+                <span id="current_tf_display">1H (Direction)</span>
+                <i class="ph ph-caret-down tf-caret" id="tf_tray_caret"></i>
+              </button>
+
+              <!-- Scrollable Timeframe Tray Popup -->
+              <div class="tf-tray-menu" id="tf_tray_menu">
+                <div class="tf-tray-header">
+                  <span><i class="ph ph-clock-countdown"></i> Select Timeframe</span>
+                  <button class="tf-tray-close" id="tf_tray_close_btn" type="button"><i class="ph ph-x"></i></button>
+                </div>
+
+                <div class="tf-tray-scroll-area">
+                  <!-- Section: Core Strategy -->
+                  <div class="tf-tray-section-title">Core Strategy Timeframes</div>
+                  <div class="tf-tray-group">
+                    <button class="tf-tray-item strategy-item active" data-tf="1H" data-label="1H (Direction)">
+                      <div class="tf-item-left">
+                        <span class="tf-item-name">1H (Direction)</span>
+                        <span class="tf-item-sub">Higher Timeframe Trend</span>
+                      </div>
+                      <span class="tf-item-badge">Core HTF</span>
+                    </button>
+                    <button class="tf-tray-item strategy-item" data-tf="5M" data-label="5M (Setup/Entry)">
+                      <div class="tf-item-left">
+                        <span class="tf-item-name">5M (Setup/Entry)</span>
+                        <span class="tf-item-sub">Lower Timeframe Reaction</span>
+                      </div>
+                      <span class="tf-item-badge">Core LTF</span>
+                    </button>
+                  </div>
+
+                  <!-- Section: Minutes -->
+                  <div class="tf-tray-section-title">Minutes</div>
+                  <div class="tf-tray-group grid-group">
+                    <button class="tf-tray-item" data-tf="1m" data-label="1m">1 minute</button>
+                    <button class="tf-tray-item" data-tf="3m" data-label="3m">3 minutes</button>
+                    <button class="tf-tray-item" data-tf="5m" data-label="5m">5 minutes</button>
+                    <button class="tf-tray-item" data-tf="15m" data-label="15m">15 minutes</button>
+                    <button class="tf-tray-item" data-tf="30m" data-label="30m">30 minutes</button>
+                    <button class="tf-tray-item" data-tf="45m" data-label="45m">45 minutes</button>
+                  </div>
+
+                  <!-- Section: Hours -->
+                  <div class="tf-tray-section-title">Hours</div>
+                  <div class="tf-tray-group grid-group">
+                    <button class="tf-tray-item" data-tf="1h" data-label="1h">1 hour</button>
+                    <button class="tf-tray-item" data-tf="2h" data-label="2h">2 hours</button>
+                    <button class="tf-tray-item" data-tf="3h" data-label="3h">3 hours</button>
+                    <button class="tf-tray-item" data-tf="4h" data-label="4h">4 hours</button>
+                  </div>
+
+                  <!-- Section: Days & Weeks -->
+                  <div class="tf-tray-section-title">Days & Weeks</div>
+                  <div class="tf-tray-group grid-group">
+                    <button class="tf-tray-item" data-tf="1D" data-label="1D">1 Day</button>
+                    <button class="tf-tray-item" data-tf="1W" data-label="1W">1 Week</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-viewport" id="tv_chart_container">
+          <!-- TradingView Widget & Overlays dynamically injected here -->
+        </div>
+
+        <!-- Lower Context Radar (Historical & Macro News) -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-top: 1px solid var(--border-subtle);">
+          <!-- Historical Intelligence -->
+          <div class="hist-card" id="historical_pattern_card">
+            <div class="hist-title"><i class="ph ph-git-commit"></i> Regime Pattern Matching</div>
+            <div class="hist-stats-row">
+              <div class="stat-col"><span class="k">Sample:</span> <span class="v">84 setups</span></div>
+              <div class="stat-col"><span class="k">Win Rate:</span> <span class="v text-bullish">64.3%</span></div>
+              <div class="stat-col"><span class="k">Avg RR:</span> <span class="v">1:2.65</span></div>
+            </div>
+            <div class="hist-desc">Evaluating similar discount pullback behavior following Asian liquidity sweeps.</div>
+          </div>
+
+          <!-- Macro & News Radar -->
+          <div style="overflow-y: auto; max-height: 120px;" id="news_radar_list">
+            <!-- News items injected dynamically -->
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN: Conversational AI Co-Pilot (Voice + Chat) -->
+      <section class="terminal-panel chat-panel panel-copilot" id="panel_copilot" aria-label="Conversational AI Co-Pilot">
+        <div class="panel-header">
+          <span class="panel-title"><i class="ph ph-sparkle"></i> MONDAY Companion</span>
+          <div class="voice-controls">
+            <button class="icon-btn" id="voice_mute_btn" title="Mute MONDAY Voice">
+              <i class="ph ph-speaker-high"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Voice Visualizer & Status -->
+        <div class="voice-status-bar" id="voice_activity_radar">
+          <div class="voice-radar-wrapper">
+            <div class="voice-wave" id="voice_wave_eq">
+              <span class="eq-bar bar-1"></span>
+              <span class="eq-bar bar-2"></span>
+              <span class="eq-bar bar-3"></span>
+              <span class="eq-bar bar-4"></span>
+              <span class="eq-bar bar-5"></span>
+            </div>
+            <span class="voice-status-text" id="voice_status_indicator">MONDAY Active • Ready</span>
+          </div>
+          <span style="font-size: 0.7rem; color: var(--text-dim);">Hinglish / English</span>
+        </div>
+
+        <!-- Chat Transcript -->
+        <div class="chat-transcript" id="chat_messages">
+          <!-- Chat bubbles injected dynamically -->
+        </div>
+
+        <!-- Quick Prompt Chips (PRD Section 22) -->
+        <div class="quick-chips-wrapper">
+          <button class="quick-chip" id="chip_what_happening">Abhi market me kya ho raha hai?</button>
+          <button class="quick-chip" id="chip_why_not_enter">Entry kyu nahi le rahe?</button>
+          <button class="quick-chip" id="chip_where_sl">SL aur Target kaha hai?</button>
+          <button class="quick-chip" id="chip_explain_risk">Risk simple language me samjhao</button>
+          <button class="quick-chip" id="chip_smt_diff">BTC aur ETH me kya difference hai?</button>
+          <button class="quick-chip" id="chip_past_event">Pichli baar aisa setup kab bana tha?</button>
+          <button class="quick-chip" id="chip_reject_scenario">Agar reject ho gaya toh kya scenario hai?</button>
+        </div>
+
+        <!-- Chat Input Form -->
+        <form class="chat-input-bar" id="chat_form">
+          <button type="button" class="mic-action-btn" id="voice_mic_btn" title="Speak to AI Co-Pilot">
+            <i class="ph ph-microphone"></i>
+          </button>
+          <input 
+            type="text" 
+            id="chat_input" 
+            class="chat-text-input" 
+            placeholder="Type or speak (e.g. 'Abhi trade kyu nahi le rahe?')..." 
+            autocomplete="off"
+          />
+          <button type="submit" class="chat-send-btn" id="chat_send_btn" title="Send message">
+            <i class="ph ph-paper-plane-right"></i>
+          </button>
+        </form>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- TRADE JOURNAL & PERFORMANCE ANALYTICS MODAL (PRD Sections 27 & 28) -->
+  <div class="modal-overlay" id="journal_modal">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h2 style="font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+          <i class="ph ph-notebook" style="color: #c084fc;"></i> Paper Trade Journal & Analytics
+        </h2>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <button class="icon-btn" id="reset_account_btn" title="Reset Paper Account" style="width: auto; padding: 4px 10px;">
+            <i class="ph ph-arrow-counter-clockwise"></i> Reset Balance
+          </button>
+          <button class="icon-btn" id="close_journal_btn" title="Close Modal">
+            <i class="ph ph-x"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <!-- Analytics Metrics Strip (PRD Section 28) -->
+        <div class="analytics-metrics-strip">
+          <div class="metric-box">
+            <div class="metric-title">Balance</div>
+            <div class="metric-value text-bullish" id="modal_stat_balance">$2,000.00</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-title">Total Trades</div>
+            <div class="metric-value" id="modal_stat_trades">3 (2W / 1L)</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-title">Win Rate</div>
+            <div class="metric-value text-bullish" id="modal_stat_winrate">66.7%</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-title">Total R</div>
+            <div class="metric-value text-bullish" id="modal_stat_total_r">+4.2R</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-title">Profit Factor</div>
+            <div class="metric-value" id="modal_stat_pf">5.2</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-title">Max Loss Streak</div>
+            <div class="metric-value" id="modal_stat_streak">1</div>
+          </div>
+        </div>
+
+        <!-- Full Trade Log Table (PRD Section 27) -->
+        <div style="overflow-x: auto; margin-top: 10px;">
+          <table class="journal-table">
+            <thead>
+              <tr>
+                <th>Trade ID</th>
+                <th>Date</th>
+                <th>Asset</th>
+                <th>Direction</th>
+                <th>Entry</th>
+                <th>Exit</th>
+                <th>RR</th>
+                <th>Outcome</th>
+                <th>PnL ($)</th>
+              </tr>
+            </thead>
+            <tbody id="journal_trades_tbody">
+              <!-- Dynamically rendered -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast_container"></div>
+
+  <!-- App Script Entrypoint -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

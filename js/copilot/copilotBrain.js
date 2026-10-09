@@ -9,14 +9,16 @@ export class CopilotBrain {
     this.currentContext = null;
   }
 
-  formatPrice(p) {
-    if (p === undefined || p === null || isNaN(p)) return '$0.00';
+  formatPrice(p, currencySymbol = null) {
+    const symbol = currencySymbol !== null ? currencySymbol : (this.currentContext?.market === 'India' ? '₹' : '$');
+    if (p === undefined || p === null || isNaN(p)) return `${symbol}0.00`;
     const num = Number(p);
-    if (num >= 1000) return `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    if (num >= 1) return `$${num.toFixed(2)}`;
-    if (num >= 0.001) return `$${num.toFixed(5)}`;
-    if (num >= 0.00001) return `$${num.toFixed(7)}`;
-    return `$${num.toFixed(8)}`;
+    const locale = this.currentContext?.market === 'India' ? 'en-IN' : 'en-US';
+    if (num >= 1000) return `${symbol}${num.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    if (num >= 1) return `${symbol}${num.toFixed(2)}`;
+    if (num >= 0.001) return `${symbol}${num.toFixed(5)}`;
+    if (num >= 0.00001) return `${symbol}${num.toFixed(7)}`;
+    return `${symbol}${num.toFixed(8)}`;
   }
 
   updateContext({
@@ -27,7 +29,8 @@ export class CopilotBrain {
     eventRisk,
     riskParams,
     openPositions,
-    analytics
+    analytics,
+    market = 'Crypto'
   }) {
     this.currentContext = {
       targetAsset,
@@ -38,6 +41,7 @@ export class CopilotBrain {
       riskParams,
       openPositions,
       analytics,
+      market,
       updatedAt: Date.now()
     };
   }
@@ -250,7 +254,20 @@ export class CopilotBrain {
     // 10. News & Macro Events ("news", "cpi", "fomc", "fed", "event")
     else if (this.matchesAny(clean, ['news', 'event', 'cpi', 'fomc', 'fed', 'macro'])) {
       response = `Macro radar par event risk abhi **${events.level || 'Low'}** hai. ${events.summary || 'Normal macroeconomic conditions.'}\n\n` +
-        `MONDAY Tip: High-impact economic news ke time volatility wicks aati hain jo stops ko trigger kar sakti hain, isliye key data release se 15 min pehle naye trades avoid karna better rehta hai.`;
+        `MONDAY Tip: Key economic news ke time volatility wicks aati hain jo stops ko trigger kar sakti hain, isliye key data release se pehle safe risk management rakhna zaroori hai.`;
+    }
+
+    // 10.5. Indian Market Specific Queries ("nifty", "banknifty", "indian market", "nse", "bse", "reliance", "timing", "expiry")
+    else if (this.matchesAny(clean, [
+      'nifty', 'banknifty', 'bank nifty', 'sensex', 'indian market', 'nse', 'bse',
+      'reliance', 'tcs', 'hdfc', 'market timing', 'expiry', 'fii', 'dii'
+    ])) {
+      response = `Indian Market (NSE/BSE) me main fully active hoon! 🇮🇳✨\n\n` +
+        `• **Current Instrument:** **${asset}** (${fmtPrice})\n` +
+        `• **Key Correlation:** NIFTY aur BANK NIFTY ke beech institutional SMT divergence continuously monitor kar rahi hoon.\n` +
+        `• **Market Timings:** 09:15 AM se 03:30 PM IST (09:00 - 09:08 AM Pre-Market).\n` +
+        `• **Expiry & FII Dynamics:** Weekly expiry par key strikes par Open Interest concentration track hota hai, aur DIIs ka continuous domestic support pullbacks ko sustain karta hai.\n\n` +
+        `Aap kisi bhi specific Indian stock ya index ka structure freely poochh sakte ho!`;
     }
 
     // 11. Who are you / Identity ("who are you", "naam kya hai", "fullform", "monday kya hai")

@@ -16,7 +16,7 @@ export class StrategyEngine {
   /**
    * Evaluates the strategy for a target asset (BTC or SOL) comparing with related asset (ETH)
    */
-  evaluate(targetAsset, targetCandles1H, targetCandles5M, relatedCandles5M, currentPrice) {
+  evaluate(targetAsset, targetCandles1H, targetCandles5M, relatedCandles5M, currentPrice, currencySymbol = '$', relatedAssetName = 'ETH') {
     if (!targetCandles1H || targetCandles1H.length < 10 || !targetCandles5M || targetCandles5M.length < 10) {
       return this.createState('NO SETUP', 'Insufficient candle data to form complete strategy assessment.');
     }
@@ -34,7 +34,7 @@ export class StrategyEngine {
     // --- STEP 2: Lower-Timeframe (5M) Pullback into key zone ---
     const ltfStructure = this.calculateLTFStructure(targetCandles5M, htfTrend.direction, currentPrice);
 
-    // --- STEP 3: Related-Asset SMT Divergence (BTC/ETH or SOL/ETH) ---
+    // --- STEP 3: Related-Asset SMT Divergence ---
     const smtAnalysis = this.calculateSMTDivergence(targetCandles5M, relatedCandles5M, htfTrend.direction);
 
     // --- STEP 4 & 5: Targets, Stop Loss, and Risk:Reward ---
@@ -46,23 +46,23 @@ export class StrategyEngine {
     let missingConditions = [];
 
     // Check 1: HTF Trend
-    reasoning.push(`1H Trend is ${htfTrend.direction} (EMA20: $${htfTrend.emaFast.toFixed(1)}, EMA50: $${htfTrend.emaSlow.toFixed(1)}).`);
+    reasoning.push(`1H Trend is ${htfTrend.direction} (EMA20: ${currencySymbol}${htfTrend.emaFast.toFixed(1)}, EMA50: ${currencySymbol}${htfTrend.emaSlow.toFixed(1)}).`);
 
     // Check 2: Pullback
     if (ltfStructure.inPullbackZone) {
-      reasoning.push(`5M price pulled back into ${ltfStructure.zoneName} ($${ltfStructure.zoneLow.toFixed(1)} - $${ltfStructure.zoneHigh.toFixed(1)}).`);
+      reasoning.push(`5M price pulled back into ${ltfStructure.zoneName} (${currencySymbol}${ltfStructure.zoneLow.toFixed(1)} - ${currencySymbol}${ltfStructure.zoneHigh.toFixed(1)}).`);
     } else {
-      missingConditions.push(`5M price is extended; waiting for pullback into reaction zone ($${ltfStructure.zoneLow.toFixed(1)} - $${ltfStructure.zoneHigh.toFixed(1)}).`);
+      missingConditions.push(`5M price is extended; waiting for pullback into reaction zone (${currencySymbol}${ltfStructure.zoneLow.toFixed(1)} - ${currencySymbol}${ltfStructure.zoneHigh.toFixed(1)}).`);
     }
 
     // Check 3: SMT Divergence
     if (smtAnalysis.divergenceDetected) {
       reasoning.push(`Bullish SMT Divergence detected: ${smtAnalysis.details}.`);
     } else {
-      missingConditions.push('Related asset (ETH) correlation is neutral; no SMT divergence clue yet.');
+      missingConditions.push(`Related asset (${relatedAssetName}) correlation is neutral; no SMT divergence clue yet.`);
     }
 
-    // Check 4: Confirmation Candle
+    // Check 4: Price Confirmation
     if (ltfStructure.hasConfirmation) {
       reasoning.push(`Price confirmation achieved via lower-timeframe reversal rejection candle.`);
     } else {
@@ -71,7 +71,7 @@ export class StrategyEngine {
 
     // Check 5: Risk / Reward
     if (levels.rrRatio >= 2.0) {
-      reasoning.push(`Risk/Reward is attractive at 1:${levels.rrRatio.toFixed(2)} (Target: $${levels.target.toFixed(1)}, SL: $${levels.stopLoss.toFixed(1)}).`);
+      reasoning.push(`Risk/Reward is attractive at 1:${levels.rrRatio.toFixed(2)} (Target: ${currencySymbol}${levels.target.toFixed(1)}, SL: ${currencySymbol}${levels.stopLoss.toFixed(1)}).`);
     } else {
       missingConditions.push(`Nearest structural target yields RR 1:${levels.rrRatio.toFixed(2)} (Below required 1:2.0 minimum).`);
     }

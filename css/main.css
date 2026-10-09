@@ -215,6 +215,13 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
+.market-tab-btn[data-market="India"].active {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.25), rgba(16, 185, 129, 0.2));
+  border: 1px solid rgba(249, 115, 22, 0.45);
+  color: #fed7aa;
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);
+}
+
 .market-tab-btn.phase-lock {
   opacity: 0.55;
   cursor: not-allowed;

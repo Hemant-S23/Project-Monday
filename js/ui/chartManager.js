@@ -6,24 +6,27 @@ export class ChartManager {
   constructor(containerId) {
     this.containerId = containerId;
     this.currentAsset = 'BTC';
+    this.currentMarket = 'Crypto';
     this.currentTimeframe = '60'; // 60 = 1H, 5 = 5M
     this.activeLevels = null;
-    this.symbolMap = {
-      'BTC': 'BINANCE:BTCUSDT',
-      'SOL': 'BINANCE:SOLUSDT',
-      'ETH': 'BINANCE:ETHUSDT'
-    };
   }
 
-  init(asset = 'BTC', timeframe = '60') {
+  init(asset = 'BTC', timeframe = '60', market = 'Crypto') {
     this.currentAsset = asset;
+    this.currentMarket = market;
     this.currentTimeframe = timeframe;
     this.renderTradingViewWidget();
   }
 
-  setAsset(asset) {
-    if (this.currentAsset === asset) return;
+  setAsset(asset, market = null) {
+    if (market) this.currentMarket = market;
     this.currentAsset = asset;
+    this.renderTradingViewWidget();
+  }
+
+  setMarket(market, defaultAsset = null) {
+    this.currentMarket = market;
+    if (defaultAsset) this.currentAsset = defaultAsset;
     this.renderTradingViewWidget();
   }
 
@@ -64,7 +67,14 @@ export class ChartManager {
     const container = document.getElementById(this.containerId);
     if (!container) return;
 
-    const symbol = `BINANCE:${this.currentAsset}USDT`;
+    let symbol = `BINANCE:${this.currentAsset}USDT`;
+    if (this.currentMarket === 'India') {
+      if (this.currentAsset.toUpperCase() === 'SENSEX') {
+        symbol = 'BSE:SENSEX';
+      } else {
+        symbol = `NSE:${this.currentAsset.toUpperCase()}`;
+      }
+    }
     container.innerHTML = `
       <div class="tradingview-widget-container" style="width: 100%; height: 100%; position: absolute; inset: 0;">
         <div class="tradingview-widget-container__widget" style="width: 100%; height: 100%;"></div>

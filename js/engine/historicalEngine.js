@@ -54,7 +54,7 @@ export class HistoricalContextEngine {
     ];
   }
 
-  evaluate(asset, direction, htfTrend, volatility = 'NORMAL') {
+  evaluate(asset, direction, htfTrend, volatility = 'NORMAL', market = 'Crypto') {
     let matchedPattern;
 
     if (volatility === 'HIGH' || volatility === 'EXTREME') {
@@ -67,15 +67,28 @@ export class HistoricalContextEngine {
       matchedPattern = this.historicalPatterns.find(p => p.id === 'REGIME_CHOP_DIVERGENCE');
     }
 
+    let patternName = matchedPattern.name;
+    let explanation = matchedPattern.description;
+
+    if (market === 'India') {
+      if (matchedPattern.id === 'REGIME_BULL_SWEEP') {
+        patternName = 'NSE Morning Opening Range Sweep (09:15-09:45 IST) in Bullish Expansion';
+        explanation = 'Price sweeps previous day low during opening 30-min window and reclaims 20 EMA. Historically reliable intraday continuation.';
+      } else if (matchedPattern.id === 'REGIME_CHOP_DIVERGENCE') {
+        patternName = 'Nifty/BankNifty SMT Divergence inside Expiry Range';
+        explanation = 'Nifty forms lower low while Bank Nifty defends swing low. Institutional absorption at key strike.';
+      }
+    }
+
     return {
       asset,
-      patternName: matchedPattern.name,
+      patternName,
       contextTag: matchedPattern.contextTag, // 'Supportive' | 'Mixed' | 'Weak'
       sampleSize: matchedPattern.historicalOccurrences,
       historicalWinRate: matchedPattern.continuationRate,
       averageDrawdownR: matchedPattern.averageDrawdownR,
       expectedRR: matchedPattern.averageRewardR,
-      explanation: matchedPattern.description,
+      explanation,
       disclaimer: 'Pichle historical data se pata chalta hai ki similar conditions me 60%+ cases me continuation mili hai, lekin sample size limited hai aur past performance future results ki guarantee nahi deta.'
     };
   }

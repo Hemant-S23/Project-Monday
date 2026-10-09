@@ -17,7 +17,7 @@ export class RiskEngine {
     this.riskPercentage = Math.min(5, Math.max(0.25, pct));
   }
 
-  calculateTradeParameters(entry, stopLoss, target) {
+  calculateTradeParameters(entry, stopLoss, target, currencySymbol = '$') {
     const maxRiskAmount = +(this.accountBalance * (this.riskPercentage / 100)).toFixed(2);
     const slDistance = Math.abs(entry - stopLoss);
     const tpDistance = Math.abs(target - entry);
@@ -29,7 +29,7 @@ export class RiskEngine {
       };
     }
 
-    // Units / Coins: Position Size = Max Risk / SL Distance
+    // Units / Shares: Position Size = Max Risk / SL Distance
     const positionSizeCoins = +(maxRiskAmount / slDistance).toFixed(4);
     const totalExposureUSD = +(positionSizeCoins * entry).toFixed(2);
     const potentialRewardUSD = +(positionSizeCoins * tpDistance).toFixed(2);
@@ -40,6 +40,7 @@ export class RiskEngine {
       isValid: true,
       accountBalance: this.accountBalance,
       riskPercentage: this.riskPercentage,
+      currencySymbol,
       maxRiskUSD: maxRiskAmount,
       entry,
       stopLoss,
@@ -51,7 +52,7 @@ export class RiskEngine {
       potentialRewardUSD,
       rrRatio,
       isRRValid,
-      riskExplanation: `1% account risk par tumhara maximum loss $${maxRiskAmount} fix hai. Position size exact ${positionSizeCoins} units banegi. Agar target hit hota hai to potential profit $${potentialRewardUSD} (1:${rrRatio} RR) milega.`
+      riskExplanation: `1% account risk par tumhara maximum loss ${currencySymbol}${maxRiskAmount} fix hai. Position size exact ${positionSizeCoins} units banegi. Agar target hit hota hai to potential profit ${currencySymbol}${potentialRewardUSD} (1:${rrRatio} RR) milega.`
     };
   }
 }

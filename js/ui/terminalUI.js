@@ -28,6 +28,7 @@ export class TerminalUI {
       onCloseTrade,
       onResetAccount
     };
+    this.currentMarket = 'Crypto';
 
     this.bindEvents();
   }
@@ -47,12 +48,18 @@ export class TerminalUI {
       }
       searchResults.innerHTML = items.map(m => {
         const isPos = m.changePercent >= 0;
-        const formattedPrice = m.price >= 1 ? `$${m.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `$${m.price.toFixed(6)}`;
+        const assetSymbol = m.baseAsset || m.symbol;
+        const pairSub = m.name ? `${m.name} • ${m.exchange || 'NSE'}` : m.symbol;
+        const isIndia = this.currentMarket === 'India' || m.exchange === 'NSE' || m.exchange === 'BSE';
+        const formattedPrice = isIndia
+          ? `₹${m.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          : (m.price >= 1 ? `$${m.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `$${m.price.toFixed(6)}`);
+
         return `
-          <button class="search-result-item" data-asset="${m.baseAsset}" type="button">
+          <button class="search-result-item" data-asset="${assetSymbol}" type="button">
             <div class="search-res-left">
-              <span class="search-res-symbol">${m.baseAsset}</span>
-              <span class="search-res-pair">${m.symbol}</span>
+              <span class="search-res-symbol">${assetSymbol}</span>
+              <span class="search-res-pair">${pairSub}</span>
             </div>
             <div class="search-res-right">
               <span class="search-res-price">${formattedPrice}</span>
@@ -116,12 +123,12 @@ export class TerminalUI {
       }
     });
 
-    // Market Selector
+    // Market Selector (Crypto / Indian Market)
     document.querySelectorAll('.market-tab-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const market = e.currentTarget.dataset.market;
-        if (market !== 'Crypto') {
-          this.showToast(`Market: ${market}`, 'Coming in Phase 3 & 4. Crypto is active for MVP.', 'info');
+        if (market !== 'Crypto' && market !== 'India') {
+          this.showToast(`Market: ${market}`, 'US Market scheduled for Phase 4. Crypto & Indian Markets are active!', 'info');
           return;
         }
         document.querySelectorAll('.market-tab-btn').forEach(b => b.classList.remove('active'));
@@ -367,19 +374,58 @@ export class TerminalUI {
     }
   }
 
-  formatPrice(price) {
-    if (price === undefined || price === null || isNaN(price)) return '$0.00';
+  setMarket(market, defaultAssets = []) {
+    this.currentMarket = market;
+
+    document.querySelectorAll('.market-tab-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.market === market);
+    });
+
+    const searchInput = document.getElementById('crypto_search_input');
+    if (searchInput) {
+      searchInput.placeholder = market === 'India'
+        ? 'Search 60+ NSE/BSE stocks & indices (NIFTY, RELIANCE, TCS)...'
+        : 'Search 700+ cryptos (ETH, DOGE, SOL, BNB)...';
+      searchInput.value = '';
+    }
+
+    const sourceBadge = document.getElementById('feed_source_badge');
+    if (sourceBadge) {
+      sourceBadge.textContent = market === 'India' ? 'NSE-Live Feed' : 'Live WebSocket';
+    }
+
+    const container = document.getElementById('quick_watchlist_pills');
+    if (container && defaultAssets.length > 0) {
+      container.innerHTML = defaultAssets.map((asset, index) => `
+        <button class="asset-pill-btn ${index === 0 ? 'active' : ''}" data-asset="${asset}">${asset}</button>
+      `).join('');
+
+      container.querySelectorAll('.asset-pill-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          container.querySelectorAll('.asset-pill-btn').forEach(b => b.classList.remove('active'));
+          e.currentTarget.classList.add('active');
+          const asset = e.currentTarget.dataset.asset;
+          if (this.callbacks.onAssetChange) this.callbacks.onAssetChange(asset);
+        });
+      });
+    }
+  }
+
+  formatPrice(price, currencySymbol = null) {
+    const symbol = currencySymbol !== null ? currencySymbol : (this.currentMarket === 'India' ? '₹' : '$');
+    if (price === undefined || price === null || isNaN(price)) return `${symbol}0.00`;
     const num = Number(price);
+    const locale = this.currentMarket === 'India' ? 'en-IN' : 'en-US';
     if (num >= 1000) {
-      return `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      return `${symbol}${num.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     } else if (num >= 1) {
-      return `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
+      return `${symbol}${num.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: (this.currentMarket === 'India' ? 2 : 4) })}`;
     } else if (num >= 0.001) {
-      return `$${num.toFixed(5)}`;
+      return `${symbol}${num.toFixed(5)}`;
     } else if (num >= 0.00001) {
-      return `$${num.toFixed(7)}`;
+      return `${symbol}${num.toFixed(7)}`;
     } else {
-      return `$${num.toFixed(8)}`;
+      return `${symbol}${num.toFixed(8)}`;
     }
   }
 

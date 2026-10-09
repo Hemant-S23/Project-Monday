@@ -43,18 +43,73 @@ export class NewsContextEngine {
         impact: 'Market Moving',
         riskLevel: 'Medium',
         timeWindow: 'Tomorrow, 19:30 UTC',
-        affectedAssets: ['BTC', 'ETH', 'SOL'],
+        affectedAssets: ['BTC', 'ETH', 'SOL', 'Crypto'],
         details: 'Rate cut expectations steady. Macro positioning cautious ahead of minutes release.'
+      },
+      // --- INDIAN MACROECONOMIC & F&O EVENTS ---
+      {
+        id: 'IND-01',
+        title: 'RBI Monetary Policy Committee (MPC) Rate Decision',
+        category: 'Monetary Policy',
+        impact: 'Market Moving',
+        riskLevel: 'High',
+        timeWindow: 'This Week, 10:00 IST',
+        affectedAssets: ['NIFTY', 'BANKNIFTY', 'FINNIFTY', 'HDFCBANK', 'SBIN', 'ICICIBANK', 'India'],
+        details: 'Repo rate steady at 6.50%. RBI neutral stance maintaining headline inflation target. High volatility in Bank Nifty.'
+      },
+      {
+        id: 'IND-02',
+        title: 'India CPI Inflation Prints at 3.65% (Within RBI Band)',
+        category: 'Macroeconomic',
+        impact: 'Relevant',
+        riskLevel: 'Low',
+        timeWindow: 'Last 24 hours',
+        affectedAssets: ['NIFTY', 'BANKNIFTY', 'SENSEX', 'India'],
+        details: 'Retail inflation comfortably within RBI 4% tolerance band. Solid baseline supporting Indian corporate capex.'
+      },
+      {
+        id: 'IND-03',
+        title: 'FII/DII Net Flow: Domestic DIIs Absorb +₹3,450 Cr',
+        category: 'Institutional Flows',
+        impact: 'Relevant',
+        riskLevel: 'Low',
+        timeWindow: 'Daily Cash Market',
+        affectedAssets: ['NIFTY', 'RELIANCE', 'TCS', 'HDFCBANK', 'India'],
+        details: 'Robust domestic mutual fund SIPs provide steady bids defending 20 EMA pullbacks across Nifty heavyweights.'
+      },
+      {
+        id: 'IND-04',
+        title: 'Nifty 50 & Bank Nifty Weekly Expiry Concentration',
+        category: 'Derivatives / F&O',
+        impact: 'Market Moving',
+        riskLevel: 'Medium',
+        timeWindow: 'Today, 14:00 - 15:30 IST',
+        affectedAssets: ['NIFTY', 'BANKNIFTY', 'India'],
+        details: 'Max pain strike at 24,850. Major call writing open interest at 25,000 resistance. Expect tight compression before 2 PM expansion.'
+      },
+      {
+        id: 'IND-05',
+        title: 'Corporate Earnings Preview: Reliance & TCS Q-Results',
+        category: 'Corporate Earnings',
+        impact: 'Market Moving',
+        riskLevel: 'Medium',
+        timeWindow: 'Post Market Today',
+        affectedAssets: ['RELIANCE', 'TCS', 'INFY', 'NIFTY', 'India'],
+        details: 'Focus on Jio ARPU & Retail expansion for Reliance; BFSI deal ramp-ups for TCS. High sectoral beta impact on benchmark indices.'
       }
     ];
   }
 
-  getEventsForAsset(asset) {
-    return this.events.filter(e => e.affectedAssets.includes(asset) || e.affectedAssets.includes('All'));
+  getEventsForAsset(asset, market = 'Crypto') {
+    const isIndian = market === 'India' || ['NIFTY', 'BANKNIFTY', 'SENSEX', 'FINNIFTY', 'RELIANCE', 'TCS', 'HDFCBANK'].includes(asset);
+    if (isIndian) {
+      return this.events.filter(e => e.affectedAssets.includes(asset) || e.affectedAssets.includes('India'));
+    }
+    return this.events.filter(e => e.affectedAssets.includes(asset) || e.affectedAssets.includes('Crypto') || e.affectedAssets.includes('All'));
   }
 
-  getOverallEventRisk(asset) {
-    const relevant = this.getEventsForAsset(asset);
+  getOverallEventRisk(asset, market = 'Crypto') {
+    const relevant = this.getEventsForAsset(asset, market);
     const hasHigh = relevant.some(e => e.riskLevel === 'High');
     const hasMedium = relevant.some(e => e.riskLevel === 'Medium');
 
@@ -62,7 +117,7 @@ export class NewsContextEngine {
       return {
         level: 'High',
         badge: 'High Event Risk',
-        summary: 'Major market-moving event (US CPI) approaching. Expect sharp liquidity sweeps.',
+        summary: market === 'India' ? 'Major RBI policy announcement pending. Expect sharp volatility in Bank Nifty.' : 'Major market-moving event (US CPI) approaching. Expect sharp liquidity sweeps.',
         activeEvents: relevant
       };
     }
@@ -70,7 +125,7 @@ export class NewsContextEngine {
       return {
         level: 'Medium',
         badge: 'Medium Event Risk',
-        summary: 'Moderate ecosystem/macro catalyst active. Exercise normal disciplined stop placement.',
+        summary: market === 'India' ? 'F&O expiry & earnings catalyst active. Exercise disciplined 1% risk allocation.' : 'Moderate ecosystem/macro catalyst active. Exercise normal disciplined stop placement.',
         activeEvents: relevant
       };
     }

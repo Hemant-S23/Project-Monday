@@ -4,32 +4,41 @@
  * and comprehensive performance analytics (Win Rate, Total R, Profit Factor, Drawdown).
  */
 export class PaperTrader {
-  constructor(initialBalance = 2000) {
+  constructor(initialBalance = 2000, userId = null) {
     this.initialBalance = initialBalance;
-    this.storageKey = 'ai_copilot_paper_trades_v1';
-    this.balanceStorageKey = 'ai_copilot_paper_balance_v1';
-    this.positionsStorageKey = 'ai_copilot_paper_positions_v1';
+    this.userId = userId || 'default';
+    this.storageKey = `ai_copilot_paper_trades_${this.userId}`;
+    this.balanceStorageKey = `ai_copilot_paper_balance_${this.userId}`;
+    this.positionsStorageKey = `ai_copilot_paper_positions_${this.userId}`;
 
     this.trades = this.loadTrades();
     this.openPositions = this.loadOpenPositions();
 
-    // Calculate historical realized PnL from closed trades
-    const closedPnL = this.trades
-      .filter(t => t.status === 'CLOSED')
-      .reduce((sum, t) => sum + (t.pnlUSD || 0), 0);
-
     const storedBalance = localStorage.getItem(this.balanceStorageKey);
     if (storedBalance !== null && !isNaN(parseFloat(storedBalance))) {
-      const parsedBal = parseFloat(storedBalance);
-      // Auto-heal mathematically: if balance was left at initial 2000 while starter trades had +$84.12 profit, sync it!
-      if (parsedBal === initialBalance && closedPnL !== 0) {
-        this.balance = +(initialBalance + closedPnL).toFixed(2);
-        this.save();
-      } else {
-        this.balance = parsedBal;
-      }
+      this.balance = parseFloat(storedBalance);
     } else {
+      const closedPnL = this.trades
+        .filter(t => t.status === 'CLOSED')
+        .reduce((sum, t) => sum + (t.pnlUSD || 0), 0);
       this.balance = +(initialBalance + closedPnL).toFixed(2);
+      this.save();
+    }
+  }
+
+  setUser(userId) {
+    if (this.userId === userId) return;
+    this.userId = userId || 'default';
+    this.storageKey = `ai_copilot_paper_trades_${this.userId}`;
+    this.balanceStorageKey = `ai_copilot_paper_balance_${this.userId}`;
+    this.positionsStorageKey = `ai_copilot_paper_positions_${this.userId}`;
+    this.trades = this.loadTrades();
+    this.openPositions = this.loadOpenPositions();
+    const storedBalance = localStorage.getItem(this.balanceStorageKey);
+    if (storedBalance !== null && !isNaN(parseFloat(storedBalance))) {
+      this.balance = parseFloat(storedBalance);
+    } else {
+      this.balance = this.initialBalance;
       this.save();
     }
   }
@@ -57,8 +66,15 @@ export class PaperTrader {
         console.error('Failed to parse stored trades:', e);
       }
     }
-    // Default starter trades to immediately demonstrate journal & analytics (PRD Section 27)
-    const starterTrades = [
+    // Only load starter demo trades if explicitly previewing demo account
+    if (this.userId === 'demo_preview') {
+      return this.getStarterTrades();
+    }
+    return [];
+  }
+
+  getStarterTrades() {
+    return [
       {
         id: 'TRADE-001',
         market: 'Crypto',

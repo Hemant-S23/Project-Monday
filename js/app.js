@@ -9,6 +9,7 @@ import { CopilotBrain } from './copilot/copilotBrain.js';
 import { VoiceAssistant } from './copilot/voiceAssistant.js';
 import { ChartManager } from './ui/chartManager.js';
 import { TerminalUI } from './ui/terminalUI.js';
+import { AuthManager } from './auth/authManager.js';
 
 /**
  * Main Application Orchestrator
@@ -25,12 +26,16 @@ class App {
     this.cryptoAdapter = new CryptoAdapter();
     this.indiaAdapter = new IndiaAdapter();
 
+    // User Authentication & Session Management
+    this.authManager = new AuthManager();
+    const activeUserId = this.authManager.getUserId();
+
     // Core analysis & risk modules
     this.strategyEngine = new StrategyEngine();
     this.historicalEngine = new HistoricalContextEngine();
     this.newsEngine = new NewsContextEngine();
-    this.riskEngine = new RiskEngine(2000, 1.0); // $2000 balance, 1% risk default
-    this.paperTrader = new PaperTrader(2000);
+    this.paperTrader = new PaperTrader(2000, activeUserId);
+    this.riskEngine = new RiskEngine(this.paperTrader.balance, 1.0);
     this.copilotBrain = new CopilotBrain();
     this.chartManager = new ChartManager('tv_chart_container');
 
@@ -47,7 +52,41 @@ class App {
       onExecuteTrade: () => this.executeCurrentTrade(),
       onCloseTrade: (id) => this.closeActiveTrade(id),
       onResetAccount: () => this.resetAccount(),
-      onThemeChange: (theme) => this.chartManager.setTheme(theme)
+      onThemeChange: (theme) => this.chartManager.setTheme(theme),
+      onSignIn: async (email, password) => {
+        const res = await this.authManager.signInWithEmail(email, password);
+        if (!res.success) {
+          this.ui.showAuthAlert(res.error, 'error');
+        } else {
+          this.handleAuthSuccess(res.user);
+        }
+      },
+      onSignUp: async (email, password, name) => {
+        const res = await this.authManager.signUpWithEmail(email, password, name);
+        if (!res.success) {
+          this.ui.showAuthAlert(res.error, 'error');
+        } else {
+          this.handleAuthSuccess(res.user);
+        }
+      },
+      onGoogleSignIn: async () => {
+        const res = await this.authManager.signInWithGoogle();
+        if (res && res.user) {
+          this.handleAuthSuccess(res.user);
+        }
+      },
+      onGuestLogin: async () => {
+        const res = await this.authManager.loginAsGuest();
+        this.handleAuthSuccess(res.user);
+      },
+      onSignOut: () => {
+        this.authManager.signOut();
+        this.ui.updateUserProfile(null);
+        this.ui.showAuthOverlay();
+      },
+      onSaveSupabaseConfig: (url, anonKey) => {
+        this.authManager.setSupabaseConfig(url, anonKey);
+      }
     });
 
     // Voice Assistant with natural Indian and English profiles
@@ -60,12 +99,35 @@ class App {
     });
   }
 
+  handleAuthSuccess(user) {
+    this.ui.updateUserProfile(user);
+    this.ui.hideAuthOverlay();
+    this.paperTrader.setUser(user.id);
+    this.riskEngine.setAccountBalance(this.paperTrader.balance);
+    this.updateTradeJournalAndStats();
+    this.ui.updateOpenPositions(this.paperTrader.openPositions);
+    const liveMetrics = this.paperTrader.getLiveEquity();
+    this.ui.updateHeaderAccountHUD(liveMetrics);
+    this.ui.showToast('Welcome!', `${user.name || 'Trader'}, trading session active.`, 'success');
+  }
+
   getActiveAdapter() {
     return this.currentMarket === 'India' ? this.indiaAdapter : this.cryptoAdapter;
   }
 
   async init() {
     console.log('[App] Initializing AI Trading Co-Pilot for Crypto and Indian Markets...');
+
+    // 0. Verify Auth Session & update UI state
+    const currentUser = this.authManager.getUser();
+    if (currentUser) {
+      this.ui.updateUserProfile(currentUser);
+      this.ui.hideAuthOverlay();
+      this.paperTrader.setUser(currentUser.id);
+      this.riskEngine.setAccountBalance(this.paperTrader.balance);
+    } else {
+      this.ui.showAuthOverlay();
+    }
 
     // 1. Initialize TradingView chart with saved theme and active adapter
     const activeTheme = localStorage.getItem('monday_theme') || 'dark';

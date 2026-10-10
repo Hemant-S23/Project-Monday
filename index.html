@@ -13,11 +13,209 @@
   <!-- Stylesheets -->
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/auth.css">
+
+  <!-- Supabase JS Client (Optional cloud auth & database sync) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-  <div class="terminal-wrapper">
-    <!-- Top Header & Global Telemetry Strip -->
+  <!-- =========================================================================
+       TWO-WAY SPLIT AUTH & LOGIN VIEW (Financial Intelligence & Multi-User)
+       ========================================================================= -->
+  <div class="auth-view-overlay" id="auth_view_overlay">
+    <div class="auth-split-container">
+      
+      <!-- LEFT SIDE: Trading Intelligence & Philosophy Hero -->
+      <div class="auth-hero-panel">
+        <div class="auth-brand-pill">
+          <div class="auth-brand-dot"></div>
+          <i class="ph ph-sparkle"></i>
+          <span>MONDAY AI COMPANION</span>
+        </div>
+
+        <h1 class="auth-hero-title">
+          Trade with the discipline you <span class="auth-gradient-text">promised yourself</span> you'd keep.
+        </h1>
+
+        <p class="auth-hero-desc">
+          Small rules. Kept every trade. Strict 1% quantitative risk management, live NSE & Crypto dual-market feeds, and natural Hinglish/English neural guidance.
+        </p>
+
+        <!-- Feature Discipline Checklist Card (Inspired by Reference UI) -->
+        <div class="auth-discipline-card">
+          <div class="discipline-card-header">
+            <span class="discipline-status">
+              <span class="live-pulse-dot"></span> Quantitative Rules Engine
+            </span>
+            <span class="discipline-badge">+1.0% Max Risk</span>
+          </div>
+
+          <div class="discipline-checklist">
+            <div class="discipline-item">
+              <div class="discipline-check"><i class="ph-bold ph-check"></i></div>
+              <div class="discipline-text">HTF 1H Directional Trend Alignment</div>
+              <span class="discipline-tag">Trend</span>
+            </div>
+            <div class="discipline-item">
+              <div class="discipline-check"><i class="ph-bold ph-check"></i></div>
+              <div class="discipline-text">5M Pullback in Zone & SMT Divergence</div>
+              <span class="discipline-tag">Reaction</span>
+            </div>
+            <div class="discipline-item">
+              <div class="discipline-check"><i class="ph-bold ph-check"></i></div>
+              <div class="discipline-text">Pre-Calculated Stop Loss & Target Levels</div>
+              <span class="discipline-tag">Risk</span>
+            </div>
+          </div>
+
+          <div class="discipline-progress-bar">
+            <div class="discipline-progress-fill" style="width: 100%;"></div>
+          </div>
+          <div class="discipline-score">100% Strategy Conformance</div>
+        </div>
+
+        <!-- Metric Stat Boxes -->
+        <div class="auth-stats-row">
+          <div class="auth-stat-box">
+            <div class="auth-stat-icon fire"><i class="ph ph-fire"></i></div>
+            <div class="auth-stat-info">
+              <span class="auth-stat-val">1:2.65 Avg RR</span>
+              <span class="auth-stat-sub">Strict Risk Multiples (+R)</span>
+            </div>
+          </div>
+          <div class="auth-stat-box">
+            <div class="auth-stat-icon lightning"><i class="ph ph-lightning"></i></div>
+            <div class="auth-stat-info">
+              <span class="auth-stat-val">NSE & Crypto</span>
+              <span class="auth-stat-sub">150+ Stocks, IPOs & Coins</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quote -->
+        <div class="auth-quote">
+          "You don't need emotional guesses. You need unbroken trading discipline."
+        </div>
+      </div>
+
+      <!-- RIGHT SIDE: Modern Auth Card -->
+      <div class="auth-card-panel">
+        <div class="auth-card">
+          <div class="auth-card-header">
+            <h2 class="auth-card-title" id="auth_card_title">Welcome Back</h2>
+            <p class="auth-card-subtitle" id="auth_card_subtitle">
+              Sign in or create your account to sync your trades
+            </p>
+          </div>
+
+          <!-- Segmented Tab Switcher -->
+          <div class="auth-segmented-control" role="tablist">
+            <button class="auth-segment-btn active" id="auth_tab_signin" type="button">Sign In</button>
+            <button class="auth-segment-btn" id="auth_tab_signup" type="button">Create Account</button>
+          </div>
+
+          <!-- Alert Box -->
+          <div class="auth-alert-box" id="auth_alert_box" style="display: none;"></div>
+
+          <!-- Auth Form -->
+          <form class="auth-form" id="auth_form">
+            <!-- Full Name (Only visible for Signup) -->
+            <div class="auth-input-group" id="auth_group_name" style="display: none;">
+              <label for="auth_input_name" class="auth-label">FULL NAME</label>
+              <input 
+                type="text" 
+                id="auth_input_name" 
+                class="auth-input" 
+                placeholder="Trader Name" 
+                autocomplete="name"
+              />
+            </div>
+
+            <div class="auth-input-group">
+              <label for="auth_input_email" class="auth-label">EMAIL ADDRESS</label>
+              <input 
+                type="email" 
+                id="auth_input_email" 
+                class="auth-input" 
+                placeholder="name@example.com" 
+                required 
+                autocomplete="email"
+              />
+            </div>
+
+            <div class="auth-input-group">
+              <div class="auth-label-row">
+                <label for="auth_input_password" class="auth-label">PASSWORD</label>
+                <a href="#" class="auth-forgot-link" id="auth_forgot_link">Forgot password?</a>
+              </div>
+              <div class="auth-password-wrapper">
+                <input 
+                  type="password" 
+                  id="auth_input_password" 
+                  class="auth-input" 
+                  placeholder="••••••••" 
+                  required 
+                  autocomplete="current-password"
+                />
+                <button type="button" class="auth-pwd-toggle" id="auth_pwd_toggle" title="Show/Hide password">
+                  <i class="ph ph-eye" id="auth_pwd_eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" class="auth-btn-primary" id="auth_submit_btn">
+              <span id="auth_submit_text">Sign In with Email</span>
+              <i class="ph ph-arrow-right"></i>
+            </button>
+          </form>
+
+          <div class="auth-divider">
+            <span>OR</span>
+          </div>
+
+          <!-- Social & Guest Buttons -->
+          <div class="auth-social-group">
+            <button class="auth-btn-social" id="auth_google_btn" type="button">
+              <svg class="google-icon" viewBox="0 0 24 24" width="18" height="18">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+              <span>Continue with Google</span>
+            </button>
+
+            <button class="auth-btn-guest" id="auth_guest_btn" type="button" title="Start instant trading session with fresh $2,000 paper balance">
+              <i class="ph ph-user"></i>
+              <span>Continue as Guest (Instant $2,000)</span>
+            </button>
+          </div>
+
+          <!-- Supabase Setup Link -->
+          <div class="auth-card-footer">
+            <button class="supabase-setup-link" id="btn_open_supabase_modal" type="button">
+              <i class="ph ph-database"></i> Connect Your Free Supabase (Optional)
+            </button>
+          </div>
+        </div>
+
+        <!-- Floating Corner Badge (Matching sample QR badge) -->
+        <div class="auth-corner-badge">
+          <div class="badge-qr-box">
+            <i class="ph ph-qr-code"></i>
+          </div>
+          <div class="badge-text-box">
+            <span class="badge-title">PROJECT MONDAY</span>
+            <span class="badge-sub">Web Terminal v2.5 • Dual Market</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="terminal-wrapper" id="terminal_wrapper">
     <!-- Top Header & Global Telemetry Strip -->
     <header class="terminal-header">
       <!-- Left Cluster: Brand & Market Selector -->
@@ -145,6 +343,16 @@
         <button class="btn-journal-open" id="open_journal_btn">
           <i class="ph ph-notebook"></i> Trade Journal
         </button>
+        <!-- Active User Profile & Sign Out Button -->
+        <div class="header-user-profile" id="header_user_profile" title="Active Account">
+          <div class="user-chip-avatar">
+            <i class="ph ph-user" id="user_avatar_icon"></i>
+          </div>
+          <span class="user-chip-name" id="user_display_name">Guest Trader</span>
+          <button class="btn-logout" id="header_logout_btn" type="button" title="Sign Out / Switch Account">
+            <i class="ph ph-sign-out"></i>
+          </button>
+        </div>
       </div>
     </header>
 
@@ -543,6 +751,59 @@
           <button class="btn-primary" id="btn_got_it_r" type="button" style="width: 100%; justify-content: center;">
             Samajh aa gaya! (Got It)
           </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Supabase Cloud Setup Modal (Beginner Friendly) -->
+  <div class="terminal-modal" id="modal_supabase_setup" style="display: none;">
+    <div class="modal-backdrop" id="backdrop_supabase_setup"></div>
+    <div class="modal-card r-explainer-card" style="max-width: 520px;">
+      <div class="modal-header">
+        <h2 style="font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+          <i class="ph ph-database" style="color: #3ecf8e;"></i> Connect Free Supabase Project
+        </h2>
+        <button class="icon-btn" id="close_supabase_modal_btn" title="Close">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+      <div class="modal-body r-explainer-body">
+        <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">
+          Connect your free Supabase project to sync multi-user trades, auth, and journals to the cloud. (Optional — local multi-user isolation works automatically without this!)
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 14px;">
+          <div class="auth-input-group">
+            <label class="auth-label">SUPABASE PROJECT URL</label>
+            <input 
+              type="url" 
+              id="input_supabase_url" 
+              class="auth-input" 
+              placeholder="https://your-project.supabase.co" 
+            />
+          </div>
+
+          <div class="auth-input-group">
+            <label class="auth-label">SUPABASE ANON / PUBLIC KEY</label>
+            <input 
+              type="password" 
+              id="input_supabase_key" 
+              class="auth-input" 
+              placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." 
+            />
+          </div>
+
+          <div id="supabase_status_msg" style="font-size: 0.8rem; display: none;"></div>
+
+          <div style="display: flex; gap: 10px; margin-top: 8px;">
+            <button class="btn-primary" id="btn_save_supabase" type="button" style="flex: 1; justify-content: center;">
+              <i class="ph ph-check"></i> Save & Connect
+            </button>
+            <button class="btn-secondary" id="btn_clear_supabase" type="button" style="padding: 0 14px;">
+              Clear
+            </button>
+          </div>
         </div>
       </div>
     </div>

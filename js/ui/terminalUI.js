@@ -404,6 +404,202 @@ export class TerminalUI {
         this.showToast('Theme Updated', `Switched to ${newTheme.toUpperCase()} mode`, 'info');
       });
     }
+
+    // =========================================================================
+    // AUTHENTICATION & LOGIN SCREEN EVENT HANDLERS
+    // =========================================================================
+    let currentAuthMode = 'signin';
+    const tabSignIn = document.getElementById('auth_tab_signin');
+    const tabSignUp = document.getElementById('auth_tab_signup');
+    const nameGroup = document.getElementById('auth_group_name');
+    const authSubmitText = document.getElementById('auth_submit_text');
+    const authCardTitle = document.getElementById('auth_card_title');
+    const authCardSubtitle = document.getElementById('auth_card_subtitle');
+    const authForm = document.getElementById('auth_form');
+    const emailInput = document.getElementById('auth_input_email');
+    const pwdInput = document.getElementById('auth_input_password');
+    const nameInput = document.getElementById('auth_input_name');
+    const pwdToggle = document.getElementById('auth_pwd_toggle');
+    const pwdEye = document.getElementById('auth_pwd_eye');
+    const googleBtn = document.getElementById('auth_google_btn');
+    const guestBtn = document.getElementById('auth_guest_btn');
+    const headerLogoutBtn = document.getElementById('header_logout_btn');
+
+    const setAuthMode = (mode) => {
+      currentAuthMode = mode;
+      this.showAuthAlert(null);
+      if (mode === 'signup') {
+        if (tabSignIn) tabSignIn.classList.remove('active');
+        if (tabSignUp) tabSignUp.classList.add('active');
+        if (nameGroup) nameGroup.style.display = 'flex';
+        if (authSubmitText) authSubmitText.textContent = 'Create Trading Account';
+        if (authCardTitle) authCardTitle.textContent = 'Create Account';
+        if (authCardSubtitle) authCardSubtitle.textContent = 'Start your disciplined trading journey';
+      } else {
+        if (tabSignUp) tabSignUp.classList.remove('active');
+        if (tabSignIn) tabSignIn.classList.add('active');
+        if (nameGroup) nameGroup.style.display = 'none';
+        if (authSubmitText) authSubmitText.textContent = 'Sign In with Email';
+        if (authCardTitle) authCardTitle.textContent = 'Welcome Back';
+        if (authCardSubtitle) authCardSubtitle.textContent = 'Sign in or create your account to sync your trades';
+      }
+    };
+
+    if (tabSignIn) tabSignIn.addEventListener('click', () => setAuthMode('signin'));
+    if (tabSignUp) tabSignUp.addEventListener('click', () => setAuthMode('signup'));
+
+    // Password Show/Hide Toggle
+    if (pwdToggle && pwdInput && pwdEye) {
+      pwdToggle.addEventListener('click', () => {
+        const isPwd = pwdInput.type === 'password';
+        pwdInput.type = isPwd ? 'text' : 'password';
+        pwdEye.className = isPwd ? 'ph ph-eye-slash' : 'ph ph-eye';
+      });
+    }
+
+    // Auth Form Submission
+    if (authForm) {
+      authForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = emailInput ? emailInput.value.trim() : '';
+        const password = pwdInput ? pwdInput.value : '';
+        const name = nameInput ? nameInput.value.trim() : '';
+
+        if (currentAuthMode === 'signup') {
+          if (this.callbacks.onSignUp) this.callbacks.onSignUp(email, password, name);
+        } else {
+          if (this.callbacks.onSignIn) this.callbacks.onSignIn(email, password);
+        }
+      });
+    }
+
+    // Google Sign In
+    if (googleBtn) {
+      googleBtn.addEventListener('click', () => {
+        if (this.callbacks.onGoogleSignIn) this.callbacks.onGoogleSignIn();
+      });
+    }
+
+    // Continue as Guest
+    if (guestBtn) {
+      guestBtn.addEventListener('click', () => {
+        if (this.callbacks.onGuestLogin) this.callbacks.onGuestLogin();
+      });
+    }
+
+    // Header Logout Button
+    if (headerLogoutBtn) {
+      headerLogoutBtn.addEventListener('click', () => {
+        if (confirm('Kya aap logout karke account switch karna chahte hain?')) {
+          if (this.callbacks.onSignOut) this.callbacks.onSignOut();
+        }
+      });
+    }
+
+    // Supabase Cloud Setup Modal
+    const openSupabaseBtn = document.getElementById('btn_open_supabase_modal');
+    const supabaseModal = document.getElementById('modal_supabase_setup');
+    const closeSupabaseBtn = document.getElementById('close_supabase_modal_btn');
+    const backdropSupabase = document.getElementById('backdrop_supabase_setup');
+    const saveSupabaseBtn = document.getElementById('btn_save_supabase');
+    const clearSupabaseBtn = document.getElementById('btn_clear_supabase');
+    const urlInput = document.getElementById('input_supabase_url');
+    const keyInput = document.getElementById('input_supabase_key');
+    const statusMsg = document.getElementById('supabase_status_msg');
+
+    const toggleSupabaseModal = (show) => {
+      if (supabaseModal) supabaseModal.style.display = show ? 'flex' : 'none';
+      if (show) {
+        const cfg = JSON.parse(localStorage.getItem('monday_supabase_config') || '{}');
+        if (urlInput) urlInput.value = cfg.url || '';
+        if (keyInput) keyInput.value = cfg.anonKey || '';
+        if (statusMsg) {
+          if (cfg.url) {
+            statusMsg.style.display = 'block';
+            statusMsg.style.color = '#34d399';
+            statusMsg.textContent = '✓ Supabase project credentials saved locally.';
+          } else {
+            statusMsg.style.display = 'none';
+          }
+        }
+      }
+    };
+
+    if (openSupabaseBtn) openSupabaseBtn.addEventListener('click', () => toggleSupabaseModal(true));
+    if (closeSupabaseBtn) closeSupabaseBtn.addEventListener('click', () => toggleSupabaseModal(false));
+    if (backdropSupabase) backdropSupabase.addEventListener('click', () => toggleSupabaseModal(false));
+
+    if (saveSupabaseBtn) {
+      saveSupabaseBtn.addEventListener('click', () => {
+        const url = urlInput ? urlInput.value.trim() : '';
+        const key = keyInput ? keyInput.value.trim() : '';
+        if (!url || !key) {
+          if (statusMsg) {
+            statusMsg.style.display = 'block';
+            statusMsg.style.color = '#fb7185';
+            statusMsg.textContent = 'Please fill both Project URL and Anon Public Key.';
+          }
+          return;
+        }
+        if (this.callbacks.onSaveSupabaseConfig) {
+          this.callbacks.onSaveSupabaseConfig(url, key);
+        }
+        toggleSupabaseModal(false);
+        this.showToast('Supabase Connected', 'Project credentials saved successfully!', 'success');
+      });
+    }
+
+    if (clearSupabaseBtn) {
+      clearSupabaseBtn.addEventListener('click', () => {
+        localStorage.removeItem('monday_supabase_config');
+        if (urlInput) urlInput.value = '';
+        if (keyInput) keyInput.value = '';
+        if (statusMsg) {
+          statusMsg.style.display = 'block';
+          statusMsg.style.color = '#94a3b8';
+          statusMsg.textContent = 'Supabase credentials cleared. Using local multi-user storage.';
+        }
+        this.showToast('Supabase Cleared', 'Using local multi-user session storage.', 'info');
+      });
+    }
+  }
+
+  showAuthOverlay() {
+    const overlay = document.getElementById('auth_view_overlay');
+    if (overlay) overlay.classList.remove('hidden');
+  }
+
+  hideAuthOverlay() {
+    const overlay = document.getElementById('auth_view_overlay');
+    if (overlay) overlay.classList.add('hidden');
+  }
+
+  updateUserProfile(user) {
+    const nameEl = document.getElementById('user_display_name');
+    const avatarIcon = document.getElementById('user_avatar_icon');
+    if (!nameEl) return;
+    if (user) {
+      nameEl.textContent = user.name || (user.email ? user.email.split('@')[0] : 'Guest Trader');
+      if (avatarIcon) {
+        avatarIcon.className = user.isGuest ? 'ph ph-user' : 'ph ph-check-circle';
+      }
+    } else {
+      nameEl.textContent = 'Sign In';
+      if (avatarIcon) avatarIcon.className = 'ph ph-user-circle';
+    }
+  }
+
+  showAuthAlert(message, type = 'error') {
+    const alertBox = document.getElementById('auth_alert_box');
+    if (!alertBox) return;
+    if (!message) {
+      alertBox.style.display = 'none';
+      alertBox.textContent = '';
+      return;
+    }
+    alertBox.className = `auth-alert-box ${type}`;
+    alertBox.textContent = message;
+    alertBox.style.display = 'block';
   }
 
   setActiveWatchlistAsset(asset) {

@@ -52,14 +52,14 @@ export class TerminalUI {
 
   isStarred(asset, market = this.currentMarket) {
     if (!asset) return false;
-    const cleanSym = asset.toUpperCase().replace('USDT', '');
+    const cleanSym = asset.toUpperCase().replace(/(\/USD|USDT|USD)$/, '');
     const list = this.getStarredAssets(market);
     return list.some(item => item.toUpperCase() === cleanSym || item.toUpperCase() === asset.toUpperCase());
   }
 
   toggleStar(asset, market = this.currentMarket) {
     if (!asset) return false;
-    const cleanSym = asset.toUpperCase().replace('USDT', '');
+    const cleanSym = asset.toUpperCase().replace(/(\/USD|USDT|USD)$/, '');
     const list = this.getStarredAssets(market);
     const index = list.findIndex(item => item.toUpperCase() === cleanSym || item.toUpperCase() === asset.toUpperCase());
     let added = false;
@@ -77,7 +77,7 @@ export class TerminalUI {
 
     // Synchronize any star buttons currently visible in search results or elsewhere
     document.querySelectorAll(`.search-star-btn`).forEach(btn => {
-      const bAsset = (btn.dataset.asset || '').toUpperCase().replace('USDT', '');
+      const bAsset = (btn.dataset.asset || '').toUpperCase().replace(/(\/USD|USDT|USD)$/, '');
       if (bAsset === cleanSym) {
         btn.classList.toggle('starred', added);
         const icon = btn.querySelector('i');
@@ -107,9 +107,9 @@ export class TerminalUI {
       }
       searchResults.innerHTML = items.map(m => {
         const isPos = m.changePercent >= 0;
-        const assetSymbol = m.baseAsset || m.symbol;
-        const pairSub = m.name ? `${m.name} • ${m.exchange || 'NSE'}` : m.symbol;
+        const assetSymbol = m.baseAsset || (m.symbol ? m.symbol.replace(/(\/USD|USDT|USD)$/, '') : 'BTC');
         const isIndia = this.currentMarket === 'India' || m.exchange === 'NSE' || m.exchange === 'BSE';
+        const pairSub = m.name ? `${m.name} • ${m.exchange || 'NSE'}` : (isIndia ? m.symbol : `${assetSymbol}/USD`);
         const formattedPrice = isIndia
           ? `₹${m.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
           : (m.price >= 1 ? `$${m.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `$${m.price.toFixed(6)}`);
@@ -1151,7 +1151,7 @@ export class TerminalUI {
   setActiveWatchlistAsset(asset) {
     if (!asset) return;
     this.currentAsset = asset;
-    const symUpper = asset.toUpperCase().replace('USDT', '');
+    const symUpper = asset.toUpperCase().replace(/(\/USD|USDT|USD)$/, '');
 
     const trayBody = document.getElementById('watchlist_tray_body');
     if (trayBody) {
@@ -1452,7 +1452,7 @@ export class TerminalUI {
         <div class="position-card">
           <div class="pos-top">
             <div class="pos-badge-group">
-              <span class="pos-asset-pill">${pos.asset}/USDT</span>
+              <span class="pos-asset-pill">${pos.asset}/USD</span>
               <span class="pos-lev-pill">${lev}x Isolated</span>
               <span class="pos-direction-pill ${pos.direction.toLowerCase()}">${pos.direction}</span>
             </div>

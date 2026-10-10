@@ -49,7 +49,7 @@ export class DerivativesEngine {
     if (market === 'India') {
       return this.indianEquityLimit;
     }
-    const clean = (asset || '').toUpperCase().replace(/USDT$/, '');
+    const clean = (asset || '').toUpperCase().replace(/(\/USD|USDT|USD)$/, '');
     return this.leverageLimits[clean] || this.defaultCryptoLimit;
   }
 

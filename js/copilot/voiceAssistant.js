@@ -184,7 +184,7 @@ export class VoiceAssistant {
       .replace(/\bDOGE\b/gi, 'Dogecoin')
       .replace(/\bAI\b/g, 'A.I.')
       .replace(/\bSMT\b/gi, 'S.M.T.')
-      .replace(/\bUSDT\b/gi, 'Tether')
+      .replace(/\b(USDT|USD)\b/gi, 'US Dollars')
       .replace(/\bCPI\b/gi, 'C.P.I.')
       .replace(/\bFOMC\b/gi, 'F.O.M.C.')
       .replace(/([+-]?[0-9.]+)R\b/g, '$1 R-Multiple');

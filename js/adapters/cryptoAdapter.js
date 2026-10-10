@@ -53,7 +53,8 @@ export class CryptoAdapter extends MarketAdapter {
           const base = item.symbol.replace('USDT', '');
           return {
             baseAsset: base,
-            symbol: item.symbol,
+            symbol: `${base}/USD`,
+            rawSymbol: item.symbol,
             price: parseFloat(item.lastPrice),
             changePercent: parseFloat(item.priceChangePercent),
             high24h: parseFloat(item.highPrice),
@@ -63,22 +64,22 @@ export class CryptoAdapter extends MarketAdapter {
         })
         .sort((a, b) => b.volume - a.volume); // Rank by 24h volume so top coins appear first
 
-      console.log(`[CryptoAdapter] Loaded ${this.allMarkets.length} crypto USDT markets.`);
+      console.log(`[CryptoAdapter] Loaded ${this.allMarkets.length} crypto USD markets.`);
     } catch (err) {
       console.warn('[CryptoAdapter] Failed to fetch all tickers, using top default cryptos:', err.message);
       this.allMarkets = [
-        { baseAsset: 'BTC', symbol: 'BTCUSDT', price: 65420.5, changePercent: 2.15, volume: 5000000000 },
-        { baseAsset: 'ETH', symbol: 'ETHUSDT', price: 3480.2, changePercent: 1.84, volume: 2500000000 },
-        { baseAsset: 'SOL', symbol: 'SOLUSDT', price: 154.8, changePercent: 4.12, volume: 1800000000 },
-        { baseAsset: 'BNB', symbol: 'BNBUSDT', price: 590.3, changePercent: 0.95, volume: 900000000 },
-        { baseAsset: 'XRP', symbol: 'XRPUSDT', price: 0.58, changePercent: -0.45, volume: 750000000 },
-        { baseAsset: 'DOGE', symbol: 'DOGEUSDT', price: 0.12, changePercent: 3.25, volume: 600000000 },
-        { baseAsset: 'ADA', symbol: 'ADAUSDT', price: 0.36, changePercent: 1.15, volume: 450000000 },
-        { baseAsset: 'AVAX', symbol: 'AVAXUSDT', price: 28.4, changePercent: 2.40, volume: 380000000 },
-        { baseAsset: 'NEAR', symbol: 'NEARUSDT', price: 5.25, changePercent: 5.10, volume: 320000000 },
-        { baseAsset: 'SUI', symbol: 'SUIUSDT', price: 1.95, changePercent: 6.80, volume: 300000000 },
-        { baseAsset: 'LINK', symbol: 'LINKUSDT', price: 12.1, changePercent: 1.30, volume: 280000000 },
-        { baseAsset: 'PEPE', symbol: 'PEPEUSDT', price: 0.0000105, changePercent: 8.50, volume: 260000000 }
+        { baseAsset: 'BTC', symbol: 'BTC/USD', rawSymbol: 'BTCUSDT', price: 65420.5, changePercent: 2.15, volume: 5000000000 },
+        { baseAsset: 'ETH', symbol: 'ETH/USD', rawSymbol: 'ETHUSDT', price: 3480.2, changePercent: 1.84, volume: 2500000000 },
+        { baseAsset: 'SOL', symbol: 'SOL/USD', rawSymbol: 'SOLUSDT', price: 154.8, changePercent: 4.12, volume: 1800000000 },
+        { baseAsset: 'BNB', symbol: 'BNB/USD', rawSymbol: 'BNBUSDT', price: 590.3, changePercent: 0.95, volume: 900000000 },
+        { baseAsset: 'XRP', symbol: 'XRP/USD', rawSymbol: 'XRPUSDT', price: 0.58, changePercent: -0.45, volume: 750000000 },
+        { baseAsset: 'DOGE', symbol: 'DOGE/USD', rawSymbol: 'DOGEUSDT', price: 0.12, changePercent: 3.25, volume: 600000000 },
+        { baseAsset: 'ADA', symbol: 'ADA/USD', rawSymbol: 'ADAUSDT', price: 0.36, changePercent: 1.15, volume: 450000000 },
+        { baseAsset: 'AVAX', symbol: 'AVAX/USD', rawSymbol: 'AVAXUSDT', price: 28.4, changePercent: 2.40, volume: 380000000 },
+        { baseAsset: 'NEAR', symbol: 'NEAR/USD', rawSymbol: 'NEARUSDT', price: 5.25, changePercent: 5.10, volume: 320000000 },
+        { baseAsset: 'SUI', symbol: 'SUI/USD', rawSymbol: 'SUIUSDT', price: 1.95, changePercent: 6.80, volume: 300000000 },
+        { baseAsset: 'LINK', symbol: 'LINK/USD', rawSymbol: 'LINKUSDT', price: 12.1, changePercent: 1.30, volume: 280000000 },
+        { baseAsset: 'PEPE', symbol: 'PEPE/USD', rawSymbol: 'PEPEUSDT', price: 0.0000105, changePercent: 8.50, volume: 260000000 }
       ];
     }
   }

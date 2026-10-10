@@ -124,7 +124,16 @@ export class ChartManager {
     const container = document.getElementById(this.containerId);
     if (!container) return;
 
-    let symbol = `BINANCE:${this.currentAsset}USDT`;
+    const cleanAsset = (this.currentAsset || 'BTC').toUpperCase().replace(/(\/USD|USDT|USD)$/, '');
+    // Institutional USD feeds on TradingView (Coinbase / Bitstamp USD)
+    const majorCoinbaseUsd = [
+      'BTC', 'ETH', 'SOL', 'DOGE', 'XRP', 'ADA', 'AVAX', 'LINK', 'NEAR', 
+      'SUI', 'APT', 'DOT', 'MATIC', 'SHIB', 'LTC', 'BCH', 'UNI', 'ATOM', 
+      'XLM', 'ALGO', 'FIL', 'ICP', 'AAVE', 'RENDER', 'INJ', 'TIA', 'OP', 'ARB'
+    ];
+    let symbol = majorCoinbaseUsd.includes(cleanAsset)
+      ? `COINBASE:${cleanAsset}USD`
+      : (cleanAsset === 'BNB' ? 'BINANCE:BNBUSD' : `CRYPTO:${cleanAsset}USD`);
     let timezone = "Etc/UTC";
 
     if (this.currentMarket === 'India') {

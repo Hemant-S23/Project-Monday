@@ -448,41 +448,124 @@
             </div>
           </div>
 
-          <!-- Trade Calculation & Execution Card -->
-          <div class="panel-header" style="margin: 0 -12px; padding: 6px 12px;">
-            <span class="panel-title"><i class="ph ph-calculator"></i> 1% Risk Parameters</span>
-          </div>
+          <!-- DELTA EXCHANGE PRO DERIVATIVES ORDER DESK -->
+          <div class="derivatives-order-desk">
+            <!-- Order Direction Segment (Long vs Short) -->
+            <div class="order-dir-segmented" role="tablist">
+              <button class="dir-btn long active" id="btn_order_dir_long" type="button">
+                <i class="ph-bold ph-trend-up"></i> Buy / Long
+              </button>
+              <button class="dir-btn short" id="btn_order_dir_short" type="button">
+                <i class="ph-bold ph-trend-down"></i> Sell / Short
+              </button>
+            </div>
 
-          <div class="calc-table">
-            <div class="calc-row">
-              <span class="calc-lbl">Entry Price:</span>
-              <span class="calc-val" id="calc_entry">$64,850.00</span>
+            <!-- Margin Mode & Order Type Bar -->
+            <div class="order-sub-modes">
+              <div class="mode-pill isolated" id="pill_margin_mode" title="Isolated margin locks only assigned trade margin">
+                <i class="ph ph-shield"></i> Isolated Margin
+              </div>
+              <div class="order-type-tabs">
+                <button class="type-tab active" id="tab_order_market" type="button">Market</button>
+                <button class="type-tab" id="tab_order_limit" type="button">Limit</button>
+              </div>
             </div>
-            <div class="calc-row">
-              <span class="calc-lbl">Stop Loss:</span>
-              <span class="calc-val text-bearish" id="calc_sl">$64,150.00</span>
-            </div>
-            <div class="calc-row">
-              <span class="calc-lbl">Target (Take Profit):</span>
-              <span class="calc-val text-bullish" id="calc_tp">$66,700.00</span>
-            </div>
-            <div class="calc-row">
-              <span class="calc-lbl">Position Size:</span>
-              <span class="calc-val" id="calc_pos_size">0.0286 BTC</span>
-            </div>
-            <div class="calc-row">
-              <span class="calc-lbl">Max Risk:</span>
-              <span class="calc-val" id="calc_max_risk">$20.00 (1%)</span>
-            </div>
-            <div class="calc-row">
-              <span class="calc-lbl">Reward / Risk:</span>
-              <span class="calc-val text-bullish" id="calc_rr">1:2.65</span>
-            </div>
-          </div>
 
-          <button class="btn-exec-trade" id="execute_trade_btn">
-            <i class="ph ph-lightning"></i> <span>Execute Paper Trade</span>
-          </button>
+            <!-- Dual-Control Leverage Selector (Slider + Numeric Input) -->
+            <div class="leverage-control-card">
+              <div class="lev-header">
+                <span class="lev-title"><i class="ph ph-sliders"></i> Leverage Selector</span>
+                <span class="lev-max-badge" id="leverage_max_badge">Max 200x</span>
+              </div>
+              <div class="lev-dual-row">
+                <div class="lev-input-wrapper">
+                  <input type="number" id="order_leverage_input" min="1" max="200" value="20" step="1" />
+                  <span class="lev-suffix">x</span>
+                </div>
+                <div class="lev-slider-wrapper">
+                  <input type="range" id="order_leverage_slider" min="1" max="200" value="20" step="1" class="custom-range-slider" />
+                </div>
+              </div>
+              <!-- Quick Preset Leverage Chips -->
+              <div class="lev-chips-row" id="lev_chips_container">
+                <button class="lev-chip" data-lev="5" type="button">5x</button>
+                <button class="lev-chip" data-lev="10" type="button">10x</button>
+                <button class="lev-chip active" data-lev="20" type="button">20x</button>
+                <button class="lev-chip" data-lev="50" type="button">50x</button>
+                <button class="lev-chip" data-lev="100" type="button">100x</button>
+                <button class="lev-chip" data-lev="200" type="button">200x</button>
+              </div>
+            </div>
+
+            <!-- Size / Margin Input & Balance Percentages -->
+            <div class="order-size-card">
+              <div class="size-header">
+                <span class="size-label">Order Size & Margin</span>
+                <span class="avail-balance">Avail: <strong id="order_avail_balance">$2,000.00</strong></span>
+              </div>
+              <div class="size-inputs-grid">
+                <div class="size-input-box">
+                  <span class="size-affix">$</span>
+                  <input type="number" id="order_margin_usdt" value="20" min="1" step="1" placeholder="Margin (USDT)" />
+                  <span class="size-unit">USDT</span>
+                </div>
+                <div class="size-input-box">
+                  <span class="size-affix"><i class="ph ph-coins"></i></span>
+                  <input type="number" id="order_size_qty" value="0.006" step="0.0001" placeholder="Quantity" />
+                  <span class="size-unit" id="order_qty_unit">BTC</span>
+                </div>
+              </div>
+              <!-- Quick Balance % Chips -->
+              <div class="pct-chips-row">
+                <button class="pct-chip active" data-pct="1" type="button">1% (Safe)</button>
+                <button class="pct-chip" data-pct="5" type="button">5%</button>
+                <button class="pct-chip" data-pct="10" type="button">10%</button>
+                <button class="pct-chip" data-pct="25" type="button">25%</button>
+                <button class="pct-chip" data-pct="50" type="button">50%</button>
+                <button class="pct-chip" data-pct="100" type="button">Max</button>
+              </div>
+            </div>
+
+            <!-- TP / SL Protective Inputs -->
+            <div class="tpsl-inputs-grid">
+              <div class="tpsl-input-box">
+                <div class="tpsl-lbl text-bullish">Take Profit (TP)</div>
+                <input type="number" id="order_tp_input" placeholder="TP Price" step="any" />
+                <span class="tpsl-roe text-bullish" id="order_tp_roe">+0.0% ROE</span>
+              </div>
+              <div class="tpsl-input-box">
+                <div class="tpsl-lbl text-bearish">Stop Loss (SL)</div>
+                <input type="number" id="order_sl_input" placeholder="SL Price" step="any" />
+                <span class="tpsl-roe text-bearish" id="order_sl_roe">-0.0% ROE</span>
+              </div>
+            </div>
+
+            <!-- Real-Time Delta Exchange Order Summary Telemetry -->
+            <div class="derivatives-telemetry-slip">
+              <div class="slip-row">
+                <span class="slip-k">Margin Required:</span>
+                <span class="slip-v" id="slip_cost_margin">$20.00</span>
+              </div>
+              <div class="slip-row">
+                <span class="slip-k">Notional Value:</span>
+                <span class="slip-v highlight" id="slip_notional_val">$400.00</span>
+              </div>
+              <div class="slip-row">
+                <span class="slip-k">Est. Liq Price:</span>
+                <span class="slip-v text-warning" id="slip_liq_price">$61,650.00</span>
+              </div>
+              <div class="slip-row">
+                <span class="slip-k">Risk / Reward:</span>
+                <span class="slip-v text-bullish" id="slip_rr_ratio">1:2.65</span>
+              </div>
+            </div>
+
+            <!-- Big Execution Trigger Button -->
+            <button class="btn-exec-trade long" id="execute_trade_btn">
+              <i class="ph-bold ph-lightning"></i> 
+              <span id="exec_btn_label">Buy / Long BTC [20x]</span>
+            </button>
+          </div>
 
           <!-- Open Positions Section -->
           <div class="panel-header" style="margin: 6px -12px 0 -12px; padding: 6px 12px;">

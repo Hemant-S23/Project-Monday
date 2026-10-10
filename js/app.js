@@ -49,7 +49,7 @@ class App {
       onToggleVoice: () => this.toggleVoiceListening(),
       onToggleMute: () => this.voiceAssistant.toggleMute(),
       onTestVoice: () => this.voiceAssistant.testVoice(),
-      onExecuteTrade: () => this.executeCurrentTrade(),
+      onExecuteTrade: (orderPacket) => this.executeCurrentTrade(orderPacket),
       onCloseTrade: (id) => this.closeActiveTrade(id),
       onResetAccount: () => this.resetAccount(),
       onThemeChange: (theme) => this.chartManager.setTheme(theme),
@@ -108,6 +108,10 @@ class App {
     this.ui.updateOpenPositions(this.paperTrader.openPositions);
     const liveMetrics = this.paperTrader.getLiveEquity();
     this.ui.updateHeaderAccountHUD(liveMetrics);
+    if (this.ui.orderState) {
+      this.ui.orderState.availableBalance = this.paperTrader.balance;
+      this.ui.refreshDerivativesOrderDesk();
+    }
     this.ui.showToast('Welcome!', `${user.name || 'Trader'}, trading session active.`, 'success');
   }
 
@@ -179,6 +183,10 @@ class App {
     if (data.asset === this.currentAsset) {
       this.ui.updateTicker(data);
       this.chartManager.onRealtimeTick(data);
+      if (this.ui.orderState && data.price) {
+        this.ui.orderState.entryPrice = data.price;
+        this.ui.refreshDerivativesOrderDesk();
+      }
     }
 
     // Check open positions for target or stop hit dynamically across all traded assets & markets
@@ -329,41 +337,70 @@ class App {
     }
   }
 
-  async executeCurrentTrade() {
+  async executeCurrentTrade(customOrder = null) {
     const ctx = this.copilotBrain.currentContext;
-    if (!ctx || !ctx.riskParams) {
-      this.ui.showToast('Execution Error', 'Risk parameters calculate nahi ho sake.', 'danger');
-      return;
-    }
-
-    const { targetAsset, strategyState, historicalContext, eventRisk, riskParams } = ctx;
     const adapter = this.getActiveAdapter();
     const currency = this.currentMarket === 'India' ? '₹' : '$';
 
-    const newPos = this.paperTrader.executePaperTrade({
-      asset: targetAsset,
-      market: this.currentMarket,
-      direction: strategyState.direction || 'LONG',
-      entry: riskParams.entry,
-      stopLoss: riskParams.stopLoss,
-      target: riskParams.target,
-      positionSize: riskParams.positionSizeCoins,
-      riskUSD: riskParams.maxRiskUSD,
-      rewardUSD: riskParams.potentialRewardUSD,
-      rrRatio: riskParams.rrRatio,
-      conditions: strategyState.reasoning,
-      historicalContext: historicalContext.contextTag,
-      eventRisk: eventRisk.level,
-      aiReasoning: `Executed at ${currency}${riskParams.entry} with strict 1% risk (${currency}${riskParams.maxRiskUSD}). RR 1:${riskParams.rrRatio}.`
-    });
+    let orderParams;
+    if (customOrder && customOrder.entry) {
+      orderParams = {
+        asset: customOrder.asset || this.currentAsset,
+        market: this.currentMarket,
+        direction: customOrder.direction || 'LONG',
+        entry: customOrder.entry,
+        stopLoss: customOrder.stopLoss,
+        target: customOrder.target,
+        positionSize: customOrder.positionSize,
+        riskUSD: customOrder.riskUSD,
+        rewardUSD: customOrder.rewardUSD,
+        rrRatio: customOrder.rrRatio,
+        leverage: customOrder.leverage || 20,
+        marginUSD: customOrder.marginUSD,
+        notionalUSD: customOrder.notionalUSD,
+        liquidationPrice: customOrder.liquidationPrice,
+        conditions: ctx?.strategyState?.reasoning || ['Delta Derivatives Desk Execution'],
+        historicalContext: ctx?.historicalContext?.contextTag || 'Supportive',
+        eventRisk: ctx?.eventRisk?.level || 'Low',
+        aiReasoning: `Executed at ${currency}${customOrder.entry} with ${customOrder.leverage}x leverage. Margin: ${currency}${customOrder.marginUSD}. Est Liq: ${currency}${customOrder.liquidationPrice}.`
+      };
+    } else {
+      if (!ctx || !ctx.riskParams) {
+        this.ui.showToast('Execution Error', 'Risk parameters calculate nahi ho sake.', 'danger');
+        return;
+      }
+      const { targetAsset, strategyState, historicalContext, eventRisk, riskParams } = ctx;
+      orderParams = {
+        asset: targetAsset,
+        market: this.currentMarket,
+        direction: strategyState.direction || 'LONG',
+        entry: riskParams.entry,
+        stopLoss: riskParams.stopLoss,
+        target: riskParams.target,
+        positionSize: riskParams.positionSizeCoins,
+        riskUSD: riskParams.maxRiskUSD,
+        rewardUSD: riskParams.potentialRewardUSD,
+        rrRatio: riskParams.rrRatio,
+        leverage: 20,
+        marginUSD: riskParams.maxRiskUSD,
+        notionalUSD: +(riskParams.entry * riskParams.positionSizeCoins).toFixed(2),
+        liquidationPrice: null,
+        conditions: strategyState.reasoning,
+        historicalContext: historicalContext.contextTag,
+        eventRisk: eventRisk.level,
+        aiReasoning: `Executed at ${currency}${riskParams.entry} with strict 1% risk.`
+      };
+    }
+
+    const newPos = this.paperTrader.executePaperTrade(orderParams);
 
     // Ensure live market tick listener is active for this asset
     await adapter.ensureAssetInitialized(newPos.asset);
     adapter.subscribe(newPos.asset, (data) => this.onMarketDataTick(data));
 
     const formattedEntry = this.ui.formatPrice(newPos.entry);
-    this.ui.showToast('🚀 Paper Trade Executed', `${targetAsset} ${newPos.direction} entered at ${formattedEntry}. Live tracking active!`, 'success');
-    this.voiceAssistant.speak(`Paper trade executed for ${targetAsset}. Entry ${formattedEntry}.`);
+    this.ui.showToast('🚀 Order Executed', `${newPos.asset} ${newPos.direction} [${newPos.leverage}x] entered at ${formattedEntry}. Live tracking active!`, 'success');
+    this.voiceAssistant.speak(`${newPos.asset} ${newPos.direction} entered with ${newPos.leverage}x leverage.`);
 
     this.ui.updateOpenPositions(this.paperTrader.openPositions);
     const liveMetrics = this.paperTrader.getLiveEquity();
@@ -412,6 +449,8 @@ class App {
     this.chartManager.setAdapter(adapter);
     this.chartManager.setAsset(asset, this.currentMarket);
     this.ui.setActiveWatchlistAsset(asset);
+    this.ui.currentAsset = asset;
+    this.ui.refreshDerivativesOrderDesk();
     await this.runFullEvaluation();
     this.ui.showToast('Asset Changed', `Active charting and analysis switched to ${asset}.`, 'info');
     this.voiceAssistant.speak(`Switched to ${asset}. Loading analysis.`);
@@ -440,6 +479,9 @@ class App {
 
     this.chartManager.setAdapter(adapter);
     this.chartManager.setMarket(market, defaultAsset);
+    this.ui.currentMarket = market;
+    this.ui.currentAsset = defaultAsset;
+    this.ui.refreshDerivativesOrderDesk();
     await this.runFullEvaluation();
 
     const marketTitle = market === 'India' ? 'Indian Market (NSE/BSE)' : 'Crypto Market';

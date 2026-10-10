@@ -195,21 +195,34 @@ export class PaperTrader {
     riskUSD,
     rewardUSD,
     rrRatio,
+    leverage = 20,
+    marginUSD = null,
+    notionalUSD = null,
+    liquidationPrice = null,
     conditions = [],
     historicalContext = 'Supportive',
     eventRisk = 'Low',
     aiReasoning = ''
   }) {
     const tradeId = `TRADE-${String(this.trades.length + this.openPositions.length + 1).padStart(3, '0')}`;
+    const lev = Math.max(1, Number(leverage) || 1);
+    const posSize = Number(positionSize) || 0;
+    const notional = notionalUSD !== null ? Number(notionalUSD) : +(Number(entry) * posSize).toFixed(2);
+    const margin = marginUSD !== null ? Number(marginUSD) : +(notional / lev).toFixed(2);
+
     const newPosition = {
       id: tradeId,
       market,
       asset,
-      direction,
+      direction: (direction || 'LONG').toUpperCase(),
       entry: Number(entry),
       stopLoss: Number(stopLoss),
       target: Number(target),
-      positionSize,
+      positionSize: posSize,
+      leverage: lev,
+      marginUSD: margin,
+      notionalUSD: notional,
+      liquidationPrice: liquidationPrice !== null ? Number(liquidationPrice) : null,
       riskUSD: +riskUSD.toFixed(2),
       rewardUSD: +rewardUSD.toFixed(2),
       rrRatio: +rrRatio.toFixed(2),
@@ -217,8 +230,9 @@ export class PaperTrader {
       currentPrice: Number(entry),
       unrealizedPnlUSD: 0,
       unrealizedR: 0,
+      roePercent: 0,
       timeframe: '1H / 5M',
-      strategy: 'HTF-Trend Pullback & SMT Divergence',
+      strategy: `${lev}x Isolated Perpetual`,
       conditions,
       historicalContext,
       eventRisk,
@@ -241,16 +255,26 @@ export class PaperTrader {
       pos.currentPrice = livePrice;
       const isLong = pos.direction === 'LONG';
 
-      // Calculate unrealized PnL
+      // Calculate unrealized PnL & ROE %
       const priceDelta = isLong ? (livePrice - pos.entry) : (pos.entry - livePrice);
       pos.unrealizedPnlUSD = +(priceDelta * pos.positionSize).toFixed(2);
       pos.unrealizedR = pos.riskUSD > 0 ? +(pos.unrealizedPnlUSD / pos.riskUSD).toFixed(2) : 0;
+      pos.roePercent = pos.marginUSD > 0 ? +((pos.unrealizedPnlUSD / pos.marginUSD) * 100).toFixed(1) : 0;
 
-      // Check SL or TP Hit
+      // 1. Check Liquidation (Delta Exchange Standard)
+      let hitLiquidation = false;
+      if (pos.liquidationPrice && pos.liquidationPrice > 0) {
+        hitLiquidation = isLong ? (livePrice <= pos.liquidationPrice) : (livePrice >= pos.liquidationPrice);
+      }
+
+      // 2. Check SL or TP Hit
       let hitTarget = isLong ? (livePrice >= pos.target) : (livePrice <= pos.target);
       let hitStop = isLong ? (livePrice <= pos.stopLoss) : (livePrice >= pos.stopLoss);
 
-      if (hitTarget) {
+      if (hitLiquidation) {
+        this.closePosition(pos.id, 'LIQUIDATED', pos.liquidationPrice);
+        closedList.push({ pos, result: 'LIQUIDATED', price: pos.liquidationPrice });
+      } else if (hitTarget) {
         this.closePosition(pos.id, 'WIN', pos.target);
         closedList.push({ pos, result: 'WIN', price: pos.target });
       } else if (hitStop) {
@@ -272,12 +296,21 @@ export class PaperTrader {
     const actualExit = exitPrice !== null ? exitPrice : pos.currentPrice;
     const isLong = pos.direction === 'LONG';
     const priceDelta = isLong ? (actualExit - pos.entry) : (pos.entry - actualExit);
-    const pnlUSD = +(priceDelta * pos.positionSize).toFixed(2);
-    const rMultiple = pos.riskUSD > 0 ? +(pnlUSD / pos.riskUSD).toFixed(2) : 0;
-
+    
+    let pnlUSD;
+    let rMultiple;
     let result = resultType;
-    if (resultType === 'MANUAL') {
-      result = pnlUSD > 0 ? 'WIN' : pnlUSD < 0 ? 'LOSS' : 'BREAKEVEN';
+
+    if (resultType === 'LIQUIDATED') {
+      pnlUSD = -pos.marginUSD;
+      rMultiple = -1.0;
+      result = 'LIQUIDATED';
+    } else {
+      pnlUSD = +(priceDelta * pos.positionSize).toFixed(2);
+      rMultiple = pos.riskUSD > 0 ? +(pnlUSD / pos.riskUSD).toFixed(2) : 0;
+      if (resultType === 'MANUAL') {
+        result = pnlUSD > 0 ? 'WIN' : pnlUSD < 0 ? 'LOSS' : 'BREAKEVEN';
+      }
     }
 
     const closedTrade = {

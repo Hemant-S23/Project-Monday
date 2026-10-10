@@ -1047,6 +1047,513 @@
 .text-bullish { color: var(--color-bullish); }
 .text-bearish { color: var(--color-bearish); }
 
+/* ==========================================================================
+   DELTA EXCHANGE PRO DERIVATIVES ORDER DESK
+   ========================================================================== */
+.derivatives-order-desk {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(13, 19, 33, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  margin-top: 4px;
+}
+
+/* Direction Segment: Long vs Short */
+.order-dir-segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 3px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dir-btn {
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-family: var(--font-main);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.dir-btn.long.active {
+  background: rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.35);
+}
+
+.dir-btn.short.active {
+  background: rgba(244, 63, 94, 0.25);
+  color: #f87171;
+  border: 1px solid rgba(244, 63, 94, 0.5);
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.35);
+}
+
+/* Sub-modes bar */
+.order-sub-modes {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.72rem;
+}
+
+.mode-pill {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mode-pill.isolated {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.order-type-tabs {
+  display: flex;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px;
+  border-radius: 4px;
+}
+
+.type-tab {
+  background: transparent;
+  border: none;
+  font-family: var(--font-main);
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 2px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.type-tab.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-bright);
+}
+
+/* Dual-Control Leverage Selector */
+.leverage-control-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.lev-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.lev-title {
+  font-family: var(--font-main);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.lev-max-badge {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.lev-dual-row {
+  display: grid;
+  grid-template-columns: 75px 1fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.lev-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.lev-input-wrapper input {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  font-weight: 800;
+  text-align: center;
+  padding: 4px 18px 4px 6px;
+  border-radius: 4px;
+  outline: none;
+}
+
+.lev-input-wrapper input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+}
+
+.lev-suffix {
+  position: absolute;
+  right: 6px;
+  color: #94a3b8;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.lev-slider-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+/* Custom Range Slider */
+.custom-range-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 99px;
+  outline: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.custom-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #38bdf8;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+  cursor: grab;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.custom-range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.custom-range-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #38bdf8;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+  cursor: grab;
+}
+
+/* Leverage Chips */
+.lev-chips-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.lev-chip {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.lev-chip:hover {
+  background: rgba(56, 189, 248, 0.1);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.lev-chip.active {
+  background: rgba(56, 189, 248, 0.25);
+  color: #ffffff;
+  border-color: #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+}
+
+/* Order Size Card */
+.order-size-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.size-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.73rem;
+}
+
+.size-label {
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.avail-balance {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.avail-balance strong {
+  color: var(--text-bright);
+}
+
+.size-inputs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.size-input-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 0 6px;
+}
+
+.size-input-box:focus-within {
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.25);
+}
+
+.size-affix {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-right: 4px;
+}
+
+.size-input-box input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-bright);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  outline: none;
+  padding: 5px 0;
+}
+
+.size-unit {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  margin-left: 4px;
+}
+
+.pct-chips-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.pct-chip {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 3px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.pct-chip:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-bright);
+}
+
+.pct-chip.active {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+/* TP / SL Inputs Grid */
+.tpsl-inputs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.tpsl-input-box {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  padding: 5px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tpsl-lbl {
+  font-size: 0.65rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.tpsl-input-box input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-bright);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 2px 0;
+  outline: none;
+}
+
+.tpsl-roe {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-align: right;
+  margin-top: 1px;
+}
+
+/* Derivatives Telemetry Slip */
+.derivatives-telemetry-slip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.slip-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.72rem;
+}
+
+.slip-k {
+  color: var(--text-muted);
+}
+
+.slip-v {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.slip-v.highlight {
+  color: #38bdf8;
+}
+
+.text-warning {
+  color: #fb923c !important;
+}
+
+/* Execution Button Dynamic Direction States */
+.btn-exec-trade.long {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.4);
+}
+
+.btn-exec-trade.short {
+  background: linear-gradient(135deg, #e11d48 0%, #f43f5e 100%);
+  box-shadow: 0 4px 18px rgba(244, 63, 94, 0.4);
+}
+
+/* Leverage & Liquidation Badges in Position Cards */
+.pos-lev-pill {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.pos-liq-chip {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #fb923c;
+  background: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.pos-roe-badge {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.pos-roe-badge.bullish {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.pos-roe-badge.bearish {
+  background: rgba(244, 63, 94, 0.15);
+  color: #f87171;
+}
+
 .btn-exec-trade {
   width: 100%;
   padding: 11px 16px;

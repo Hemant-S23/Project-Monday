@@ -1,3 +1,5 @@
+import { DerivativesEngine } from '../engine/derivativesEngine.js';
+
 /**
  * Terminal UI Coordinator
  * Handles DOM rendering, interactive panels, chat transcript, voice visualizer,
@@ -7,8 +9,23 @@ export class TerminalUI {
   constructor(callbacks = {}) {
     this.callbacks = { ...callbacks };
     this.currentMarket = 'Crypto';
+    this.currentAsset = 'BTC';
+    this.derivativesEngine = new DerivativesEngine();
+
+    // Active order state for Delta Exchange derivatives desk
+    this.orderState = {
+      direction: 'LONG',
+      leverage: 20,
+      marginUSD: 20,
+      orderType: 'MARKET',
+      entryPrice: 65000,
+      tpPrice: 66800,
+      slPrice: 64150,
+      availableBalance: 2000
+    };
 
     this.bindEvents();
+    this.bindDerivativesOrderDesk();
   }
 
   bindEvents() {
@@ -297,11 +314,12 @@ export class TerminalUI {
       });
     }
 
-    // Execute Paper Trade Button
+    // Execute Paper Trade Button (Delta Exchange Derivatives Execution)
     const execBtn = document.getElementById('execute_trade_btn');
     if (execBtn) {
       execBtn.addEventListener('click', () => {
-        if (this.callbacks.onExecuteTrade) this.callbacks.onExecuteTrade();
+        const orderPacket = this.getOrderDeskPacket();
+        if (this.callbacks.onExecuteTrade) this.callbacks.onExecuteTrade(orderPacket);
       });
     }
 
@@ -545,6 +563,229 @@ export class TerminalUI {
       });
     }
   }
+
+  bindDerivativesOrderDesk() {
+    const dirLongBtn = document.getElementById('btn_order_dir_long');
+    const dirShortBtn = document.getElementById('btn_order_dir_short');
+    const levInput = document.getElementById('order_leverage_input');
+    const levSlider = document.getElementById('order_leverage_slider');
+    const marginInput = document.getElementById('order_margin_usdt');
+    const qtyInput = document.getElementById('order_size_qty');
+    const tpInput = document.getElementById('order_tp_input');
+    const slInput = document.getElementById('order_sl_input');
+    const execBtn = document.getElementById('execute_trade_btn');
+
+    // 1. Long / Short Direction Toggle
+    if (dirLongBtn && dirShortBtn) {
+      dirLongBtn.addEventListener('click', () => {
+        this.orderState.direction = 'LONG';
+        dirLongBtn.classList.add('active');
+        dirShortBtn.classList.remove('active');
+        if (execBtn) {
+          execBtn.classList.remove('short');
+          execBtn.classList.add('long');
+        }
+        this.refreshDerivativesOrderDesk();
+      });
+
+      dirShortBtn.addEventListener('click', () => {
+        this.orderState.direction = 'SHORT';
+        dirShortBtn.classList.add('active');
+        dirLongBtn.classList.remove('active');
+        if (execBtn) {
+          execBtn.classList.remove('long');
+          execBtn.classList.add('short');
+        }
+        this.refreshDerivativesOrderDesk();
+      });
+    }
+
+    // 2. Dual Leverage Controls (Slider & Numeric Input Sync)
+    const setLeverage = (val) => {
+      const sanitized = this.derivativesEngine.sanitizeLeverage(this.currentAsset, this.currentMarket, val);
+      this.orderState.leverage = sanitized;
+      if (levInput) levInput.value = sanitized;
+      if (levSlider) levSlider.value = sanitized;
+
+      // Update active chip
+      document.querySelectorAll('.lev-chip').forEach(chip => {
+        chip.classList.toggle('active', parseInt(chip.dataset.lev, 10) === sanitized);
+      });
+
+      this.refreshDerivativesOrderDesk();
+    };
+
+    if (levSlider) {
+      levSlider.addEventListener('input', (e) => setLeverage(e.target.value));
+    }
+    if (levInput) {
+      levInput.addEventListener('input', (e) => setLeverage(e.target.value));
+      levInput.addEventListener('change', (e) => setLeverage(e.target.value));
+    }
+
+    // 3. Leverage Preset Chips
+    document.querySelectorAll('.lev-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const val = parseInt(chip.dataset.lev, 10);
+        setLeverage(val);
+      });
+    });
+
+    // 4. Dual Size Inputs (Margin USDT <-> Coin Qty Sync)
+    if (marginInput) {
+      marginInput.addEventListener('input', (e) => {
+        const m = parseFloat(e.target.value) || 0;
+        this.orderState.marginUSD = m;
+        const entry = this.orderState.entryPrice || 1;
+        const qty = this.derivativesEngine.calcQuantityFromMargin(m, this.orderState.leverage, entry);
+        if (qtyInput) qtyInput.value = qty;
+        this.refreshDerivativesOrderDesk();
+      });
+    }
+
+    if (qtyInput) {
+      qtyInput.addEventListener('input', (e) => {
+        const q = parseFloat(e.target.value) || 0;
+        const entry = this.orderState.entryPrice || 1;
+        const notional = q * entry;
+        const m = this.derivativesEngine.calcRequiredMargin(notional, this.orderState.leverage);
+        this.orderState.marginUSD = m;
+        if (marginInput) marginInput.value = m;
+        this.refreshDerivativesOrderDesk();
+      });
+    }
+
+    // 5. Balance Percentage Chips (1%, 5%, 10%, 25%, 50%, 100%)
+    document.querySelectorAll('.pct-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.pct-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const pct = parseFloat(chip.dataset.pct) || 1;
+        const avail = this.orderState.availableBalance || 2000;
+        const calculatedMargin = +((avail * pct) / 100).toFixed(2);
+        this.orderState.marginUSD = Math.max(1, calculatedMargin);
+        if (marginInput) marginInput.value = this.orderState.marginUSD;
+        // Recalculate Qty
+        const entry = this.orderState.entryPrice || 1;
+        const qty = this.derivativesEngine.calcQuantityFromMargin(this.orderState.marginUSD, this.orderState.leverage, entry);
+        if (qtyInput) qtyInput.value = qty;
+        this.refreshDerivativesOrderDesk();
+      });
+    });
+
+    // 6. TP & SL Input Changes
+    if (tpInput) {
+      tpInput.addEventListener('input', (e) => {
+        this.orderState.tpPrice = parseFloat(e.target.value) || 0;
+        this.refreshDerivativesOrderDesk();
+      });
+    }
+
+    if (slInput) {
+      slInput.addEventListener('input', (e) => {
+        this.orderState.slPrice = parseFloat(e.target.value) || 0;
+        this.refreshDerivativesOrderDesk();
+      });
+    }
+
+    this.refreshDerivativesOrderDesk();
+  }
+
+  refreshDerivativesOrderDesk() {
+    const spec = this.derivativesEngine.getAssetSpec(this.currentAsset, this.currentMarket);
+    
+    // Update max leverage badge and slider max bounds
+    const maxBadge = document.getElementById('leverage_max_badge');
+    const levInput = document.getElementById('order_leverage_input');
+    const levSlider = document.getElementById('order_leverage_slider');
+    const qtyUnit = document.getElementById('order_qty_unit');
+
+    if (maxBadge) maxBadge.textContent = `Max ${spec.maxLeverage}x`;
+    if (levSlider) levSlider.max = spec.maxLeverage;
+    if (levInput) levInput.max = spec.maxLeverage;
+    if (qtyUnit) qtyUnit.textContent = this.currentAsset;
+
+    // Enable/disable chips above max leverage
+    document.querySelectorAll('.lev-chip').forEach(chip => {
+      const chipLev = parseInt(chip.dataset.lev, 10);
+      const isAllowed = chipLev <= spec.maxLeverage;
+      chip.style.display = isAllowed ? 'block' : 'none';
+    });
+
+    // Calculate full telemetry
+    const telemetry = this.derivativesEngine.calculateOrderTelemetry({
+      asset: this.currentAsset,
+      market: this.currentMarket,
+      direction: this.orderState.direction,
+      entryPrice: this.orderState.entryPrice,
+      leverage: this.orderState.leverage,
+      marginUSD: this.orderState.marginUSD,
+      stopLoss: this.orderState.slPrice,
+      target: this.orderState.tpPrice
+    });
+
+    // Update telemetry slip
+    const costEl = document.getElementById('slip_cost_margin');
+    const notionalEl = document.getElementById('slip_notional_val');
+    const liqEl = document.getElementById('slip_liq_price');
+    const rrEl = document.getElementById('slip_rr_ratio');
+    const tpRoeEl = document.getElementById('order_tp_roe');
+    const slRoeEl = document.getElementById('order_sl_roe');
+    const execLabel = document.getElementById('exec_btn_label');
+
+    const curr = this.currentMarket === 'India' ? '₹' : '$';
+
+    if (costEl) costEl.textContent = `${curr}${telemetry.marginUSD.toLocaleString()}`;
+    if (notionalEl) notionalEl.textContent = `${curr}${telemetry.notionalUSD.toLocaleString()}`;
+    if (liqEl) liqEl.textContent = telemetry.liquidationPrice > 0 ? this.formatPrice(telemetry.liquidationPrice) : 'N/A';
+    if (rrEl) rrEl.textContent = telemetry.rrRatio > 0 ? `1:${telemetry.rrRatio}` : '1:2.65';
+
+    if (tpRoeEl) {
+      tpRoeEl.textContent = telemetry.tpROE > 0 
+        ? `+${telemetry.tpROE}% ROE (+${curr}${telemetry.tpPnL})`
+        : '+0.0% ROE';
+    }
+
+    if (slRoeEl) {
+      slRoeEl.textContent = telemetry.slROE !== 0 
+        ? `${telemetry.slROE}% ROE (-${curr}${Math.abs(telemetry.slPnL)})`
+        : '-0.0% ROE';
+    }
+
+    if (execLabel) {
+      const isLong = this.orderState.direction === 'LONG';
+      execLabel.textContent = `${isLong ? 'Buy / Long' : 'Sell / Short'} ${this.currentAsset} [${telemetry.leverage}x]`;
+    }
+  }
+
+  getOrderDeskPacket() {
+    const telemetry = this.derivativesEngine.calculateOrderTelemetry({
+      asset: this.currentAsset,
+      market: this.currentMarket,
+      direction: this.orderState.direction,
+      entryPrice: this.orderState.entryPrice,
+      leverage: this.orderState.leverage,
+      marginUSD: this.orderState.marginUSD,
+      stopLoss: this.orderState.slPrice,
+      target: this.orderState.tpPrice
+    });
+
+    return {
+      asset: this.currentAsset,
+      market: this.currentMarket,
+      direction: this.orderState.direction,
+      entry: telemetry.entryPrice,
+      stopLoss: telemetry.slPrice,
+      target: telemetry.tpPrice,
+      positionSize: telemetry.quantity,
+      leverage: telemetry.leverage,
+      marginUSD: telemetry.marginUSD,
+      notionalUSD: telemetry.notionalUSD,
+      liquidationPrice: telemetry.liquidationPrice,
+      riskUSD: Math.abs(telemetry.slPnL) || telemetry.marginUSD,
+      rewardUSD: telemetry.tpPnL || (telemetry.marginUSD * 2.5),
+      rrRatio: telemetry.rrRatio || 2.5
+    };
 
   showAuthOverlay() {
     const overlay = document.getElementById('auth_view_overlay');
@@ -984,6 +1225,22 @@ export class TerminalUI {
     if (metaRREl) {
       metaRREl.textContent = `1:${riskParams.rrRatio}`;
     }
+
+    // Feed parameters into Delta Exchange order desk
+    if (riskParams.entry) this.orderState.entryPrice = riskParams.entry;
+    if (riskParams.stopLoss) this.orderState.slPrice = riskParams.stopLoss;
+    if (riskParams.target) this.orderState.tpPrice = riskParams.target;
+
+    const tpInput = document.getElementById('order_tp_input');
+    const slInput = document.getElementById('order_sl_input');
+    if (tpInput && !tpInput.matches(':focus') && riskParams.target) {
+      tpInput.value = riskParams.target;
+    }
+    if (slInput && !slInput.matches(':focus') && riskParams.stopLoss) {
+      slInput.value = riskParams.stopLoss;
+    }
+
+    this.refreshDerivativesOrderDesk();
   }
 
   appendChatMessage(sender, text) {
@@ -1057,16 +1314,26 @@ export class TerminalUI {
         ? Math.min(100, Math.max(0, ((pos.currentPrice - pos.stopLoss) / range) * 100))
         : Math.min(100, Math.max(0, ((pos.stopLoss - pos.currentPrice) / range) * 100));
 
+      const lev = pos.leverage || 20;
+      const roe = pos.roePercent !== undefined ? pos.roePercent : (pos.marginUSD > 0 ? ((pos.unrealizedPnlUSD / pos.marginUSD) * 100).toFixed(1) : 0);
+      const liqText = pos.liquidationPrice ? this.formatPrice(pos.liquidationPrice) : 'N/A';
+
       return `
         <div class="position-card">
           <div class="pos-top">
             <div class="pos-badge-group">
-              <span class="pos-asset-pill">${pos.asset}</span>
+              <span class="pos-asset-pill">${pos.asset}/USDT</span>
+              <span class="pos-lev-pill">${lev}x Isolated</span>
               <span class="pos-direction-pill ${pos.direction.toLowerCase()}">${pos.direction}</span>
             </div>
-            <span class="pos-pnl-chip ${isPos ? 'bullish' : 'bearish'}">
-              ${isPos ? '+' : ''}$${pos.unrealizedPnlUSD.toFixed(2)} (${isPos ? '+' : ''}${pos.unrealizedR}R)
-            </span>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+              <span class="pos-pnl-chip ${isPos ? 'bullish' : 'bearish'}">
+                ${isPos ? '+' : ''}$${pos.unrealizedPnlUSD.toFixed(2)} (${isPos ? '+' : ''}${pos.unrealizedR}R)
+              </span>
+              <span class="pos-roe-badge ${isPos ? 'bullish' : 'bearish'}">
+                ${isPos ? '+' : ''}${roe}% ROE
+              </span>
+            </div>
           </div>
 
           <!-- Target/SL Progress Bar -->
@@ -1083,11 +1350,11 @@ export class TerminalUI {
 
           <div class="pos-grid">
             <div class="pos-grid-cell"><span class="lbl">Entry</span><span class="val">${this.formatPrice(pos.entry)}</span></div>
-            <div class="pos-grid-cell"><span class="lbl">Current</span><span class="val highlight">${this.formatPrice(pos.currentPrice)}</span></div>
-            <div class="pos-grid-cell"><span class="lbl">Size</span><span class="val">${pos.positionSize}</span></div>
-            <div class="pos-grid-cell"><span class="lbl">Max Risk</span><span class="val">$${pos.riskUSD} (1%)</span></div>
+            <div class="pos-grid-cell"><span class="lbl">Mark Price</span><span class="val highlight">${this.formatPrice(pos.currentPrice)}</span></div>
+            <div class="pos-grid-cell"><span class="lbl">Est. Liq Price</span><span class="val text-warning">${liqText}</span></div>
+            <div class="pos-grid-cell"><span class="lbl">Margin / Value</span><span class="val">$${pos.marginUSD || pos.riskUSD} / $${pos.notionalUSD || (pos.entry * pos.positionSize).toFixed(0)}</span></div>
+            <div class="pos-grid-cell"><span class="lbl">Size</span><span class="val">${pos.positionSize} ${pos.asset}</span></div>
             <div class="pos-grid-cell"><span class="lbl">RR Ratio</span><span class="val">1:${pos.rrRatio}</span></div>
-            <div class="pos-grid-cell"><span class="lbl">Strategy</span><span class="val">1H/5M SMT</span></div>
           </div>
 
           <div class="pos-footer">

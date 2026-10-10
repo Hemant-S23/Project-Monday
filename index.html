@@ -335,18 +335,12 @@
           </div>
         </div>
 
-        <!-- Watchlist Hub: Pinned Pills + Dropdown Tray -->
+        <!-- Watchlist Hub: Starred & Quick Asset Hub -->
         <div class="watchlist-hub" id="watchlist_hub">
-          <div class="asset-pills" id="quick_watchlist_pills">
-            <button class="asset-pill-btn active" data-asset="BTC">BTC</button>
-            <button class="asset-pill-btn" data-asset="ETH">ETH</button>
-            <button class="asset-pill-btn" data-asset="SOL">SOL</button>
-          </div>
-
           <!-- Watchlist Dropdown Tray Trigger -->
           <div class="watchlist-tray-wrapper" id="watchlist_tray_wrapper">
-            <button class="watchlist-tray-btn" id="watchlist_tray_btn" type="button" aria-haspopup="true" aria-expanded="false" title="Quick Watchlist Hub">
-              <i class="ph ph-squares-four"></i>
+            <button class="watchlist-tray-btn" id="watchlist_tray_btn" type="button" aria-haspopup="true" aria-expanded="false" title="Your Starred Watchlist Hub">
+              <i class="ph-fill ph-star text-gold"></i>
               <span class="tray-btn-label">Watchlist</span>
               <i class="ph ph-caret-down tray-caret" id="watchlist_tray_caret"></i>
             </button>
@@ -354,11 +348,11 @@
             <!-- Floating Watchlist Popover Tray -->
             <div class="watchlist-tray-popover" id="watchlist_tray_popover">
               <div class="watchlist-tray-header">
-                <span class="tray-title"><i class="ph ph-sparkle"></i> Quick Watchlist Tray</span>
+                <span class="tray-title"><i class="ph-fill ph-star text-gold"></i> Watchlist & Quick Assets</span>
                 <button class="tray-close-btn" id="watchlist_tray_close" type="button"><i class="ph ph-x"></i></button>
               </div>
               <div class="watchlist-tray-body" id="watchlist_tray_body">
-                <!-- Dynamically loaded with categorized quick-access assets -->
+                <!-- Dynamically loaded with starred assets + categorized market explorer -->
               </div>
             </div>
           </div>

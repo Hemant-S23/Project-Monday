@@ -170,6 +170,8 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
   width: 100%;
+  position: relative;
+  z-index: 9999;
 }
 
 .header-brand {
@@ -236,6 +238,7 @@ h1, h2, h3, h4, h5, h6 {
 .market-dropdown-wrapper {
   position: relative;
   flex-shrink: 0;
+  z-index: 10001;
 }
 
 .market-dropdown-trigger {
@@ -292,7 +295,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--radius-md);
   padding: 6px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 20px rgba(6, 182, 212, 0.15);
-  z-index: 1000;
+  z-index: 10005;
   opacity: 0;
   pointer-events: none;
   transform: translateY(-6px);
@@ -428,6 +431,8 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   gap: 12px;
   flex: 0 0 auto;
+  position: relative;
+  z-index: 10001;
 }
 
 /* Asset Selector & Live Ticker Strip (Tier-2 Row) */
@@ -443,8 +448,9 @@ h1, h2, h3, h4, h5, h6 {
   padding-top: 6px;
   margin-top: 2px;
   border-top: 1px solid rgba(255, 255, 255, 0.07);
-  overflow-x: auto;
-  scrollbar-width: none;
+  overflow: visible;
+  position: relative;
+  z-index: 10000;
 }
 
 .header-ticker-strip::-webkit-scrollbar {
@@ -454,9 +460,10 @@ h1, h2, h3, h4, h5, h6 {
 /* Universal Search Bar */
 .crypto-search-container {
   position: relative;
-  width: 180px;
-  min-width: 160px;
-  flex-shrink: 0;
+  flex: 1 1 240px;
+  max-width: 380px;
+  min-width: 170px;
+  z-index: 10002;
 }
 
 .crypto-search-box {
@@ -527,7 +534,7 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-lg);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(6, 182, 212, 0.15);
-  z-index: 1000;
+  z-index: 10005;
   display: flex;
   flex-direction: column;
   padding: 6px;
@@ -656,6 +663,7 @@ h1, h2, h3, h4, h5, h6 {
 .watchlist-tray-wrapper {
   position: relative;
   flex-shrink: 0;
+  z-index: 10002;
 }
 
 .watchlist-tray-btn {
@@ -1227,8 +1235,10 @@ h1, h2, h3, h4, h5, h6 {
     padding: 4px 6px;
   }
   .crypto-search-container {
-    width: 200px;
+    flex: 1 1 200px;
+    max-width: 320px;
     min-width: 160px;
+    width: auto;
   }
   .user-chip-name {
     max-width: 90px;
@@ -1270,8 +1280,10 @@ h1, h2, h3, h4, h5, h6 {
     grid-template-columns: 270px 1fr 280px;
   }
   .crypto-search-container {
-    width: 160px;
+    flex: 1 1 180px;
+    max-width: 260px;
     min-width: 140px;
+    width: auto;
   }
 }
 

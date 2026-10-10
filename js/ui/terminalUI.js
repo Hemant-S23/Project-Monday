@@ -24,8 +24,59 @@ export class TerminalUI {
       availableBalance: 2000
     };
 
+    // User Starred Watchlist state (Persisted in localStorage)
+    try {
+      const savedWatchlist = localStorage.getItem('monday_user_watchlist');
+      this.userWatchlist = savedWatchlist ? JSON.parse(savedWatchlist) : {
+        Crypto: ['BTC', 'ETH', 'SOL'],
+        India: ['NIFTY', 'RELIANCE', 'SWIGGY']
+      };
+    } catch (e) {
+      this.userWatchlist = {
+        Crypto: ['BTC', 'ETH', 'SOL'],
+        India: ['NIFTY', 'RELIANCE', 'SWIGGY']
+      };
+    }
+
     this.bindEvents();
     this.bindDerivativesOrderDesk();
+  }
+
+  getStarredAssets(market = this.currentMarket) {
+    if (!this.userWatchlist) this.userWatchlist = {};
+    if (!this.userWatchlist[market]) {
+      this.userWatchlist[market] = market === 'India' ? ['NIFTY', 'RELIANCE', 'SWIGGY'] : ['BTC', 'ETH', 'SOL'];
+    }
+    return this.userWatchlist[market];
+  }
+
+  isStarred(asset, market = this.currentMarket) {
+    if (!asset) return false;
+    const cleanSym = asset.toUpperCase().replace('USDT', '');
+    const list = this.getStarredAssets(market);
+    return list.some(item => item.toUpperCase() === cleanSym || item.toUpperCase() === asset.toUpperCase());
+  }
+
+  toggleStar(asset, market = this.currentMarket) {
+    if (!asset) return false;
+    const cleanSym = asset.toUpperCase().replace('USDT', '');
+    const list = this.getStarredAssets(market);
+    const index = list.findIndex(item => item.toUpperCase() === cleanSym || item.toUpperCase() === asset.toUpperCase());
+    let added = false;
+    if (index >= 0) {
+      list.splice(index, 1);
+      this.showToast('Watchlist', `Removed ${cleanSym} from Watchlist`, 'info');
+    } else {
+      list.push(cleanSym);
+      this.showToast('Watchlist', `⭐ Added ${cleanSym} to Watchlist`, 'success');
+      added = true;
+    }
+    try {
+      localStorage.setItem('monday_user_watchlist', JSON.stringify(this.userWatchlist));
+    } catch (e) {}
+
+    this.renderWatchlistTray(market);
+    return added;
   }
 
   bindEvents() {
@@ -38,7 +89,7 @@ export class TerminalUI {
     const renderSearchResults = (items) => {
       if (!searchResults) return;
       if (!items || items.length === 0) {
-        searchResults.innerHTML = `<div class="search-empty-msg">No cryptocurrencies found matching query.</div>`;
+        searchResults.innerHTML = `<div class="search-empty-msg">No cryptocurrencies or stocks found matching query.</div>`;
         return;
       }
       searchResults.innerHTML = items.map(m => {
@@ -49,9 +100,10 @@ export class TerminalUI {
         const formattedPrice = isIndia
           ? `₹${m.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
           : (m.price >= 1 ? `$${m.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `$${m.price.toFixed(6)}`);
+        const isStarred = this.isStarred(assetSymbol);
 
         return `
-          <button class="search-result-item" data-asset="${assetSymbol}" type="button">
+          <div class="search-result-item" data-asset="${assetSymbol}">
             <div class="search-res-left">
               <span class="search-res-symbol">${assetSymbol}</span>
               <span class="search-res-pair">${pairSub}</span>
@@ -62,12 +114,30 @@ export class TerminalUI {
                 ${isPos ? '+' : ''}${m.changePercent.toFixed(2)}%
               </span>
             </div>
-          </button>
+            <button class="search-star-btn ${isStarred ? 'starred' : ''}" data-asset="${assetSymbol}" title="${isStarred ? 'Remove from Watchlist' : 'Add to Watchlist'}" type="button">
+              <i class="${isStarred ? 'ph-fill ph-star text-gold' : 'ph ph-star'}"></i>
+            </button>
+          </div>
         `;
       }).join('');
 
+      searchResults.querySelectorAll('.search-star-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const asset = btn.dataset.asset;
+          const isNowStarred = this.toggleStar(asset);
+          btn.classList.toggle('starred', isNowStarred);
+          const icon = btn.querySelector('i');
+          if (icon) {
+            icon.className = isNowStarred ? 'ph-fill ph-star text-gold' : 'ph ph-star';
+          }
+          btn.title = isNowStarred ? 'Remove from Watchlist' : 'Add to Watchlist';
+        });
+      });
+
       searchResults.querySelectorAll('.search-result-item').forEach(item => {
-        item.addEventListener('click', () => {
+        item.addEventListener('click', (e) => {
+          if (e.target.closest('.search-star-btn')) return;
           const asset = item.dataset.asset;
           if (this.callbacks.onAssetChange) this.callbacks.onAssetChange(asset);
           if (searchContainer) searchContainer.classList.remove('open');
@@ -854,33 +924,6 @@ export class TerminalUI {
     alertBox.style.display = 'block';
   }
 
-  setActiveWatchlistAsset(asset) {
-    let matched = false;
-    document.querySelectorAll('.asset-pill-btn').forEach(b => {
-      const isMatch = b.dataset.asset === asset;
-      b.classList.toggle('active', isMatch);
-      if (isMatch) matched = true;
-    });
-
-    // If selected asset is not already in top quick pills, dynamically add it and make it active
-    if (!matched) {
-      const container = document.getElementById('quick_watchlist_pills');
-      if (container) {
-        document.querySelectorAll('.asset-pill-btn').forEach(b => b.classList.remove('active'));
-        const newBtn = document.createElement('button');
-        newBtn.className = 'asset-pill-btn active';
-        newBtn.dataset.asset = asset;
-        newBtn.textContent = asset;
-        newBtn.addEventListener('click', () => {
-          document.querySelectorAll('.asset-pill-btn').forEach(b => b.classList.remove('active'));
-          newBtn.classList.add('active');
-          if (this.callbacks.onAssetChange) this.callbacks.onAssetChange(asset);
-        });
-        container.appendChild(newBtn);
-      }
-    }
-  }
-
   updateMarketTriggerUI(market) {
     const triggerLabel = document.getElementById('market_trigger_label');
     const triggerIcon = document.getElementById('market_trigger_icon');
@@ -902,7 +945,7 @@ export class TerminalUI {
     const searchInput = document.getElementById('crypto_search_input');
     if (searchInput) {
       searchInput.placeholder = market === 'India'
-        ? 'Search 150+ Indian stocks & IPOs (NIFTY, RELIANCE, SWIGGY, HYUNDAI)...'
+        ? 'Search 150+ Indian stocks & IPOs (NIFTY, RELIANCE, SWIGGY)...'
         : 'Search 700+ cryptos (ETH, DOGE, SOL, BNB)...';
       searchInput.value = '';
     }
@@ -910,23 +953,6 @@ export class TerminalUI {
     const sourceBadge = document.getElementById('feed_source_badge');
     if (sourceBadge) {
       sourceBadge.textContent = market === 'India' ? 'NSE-Live Feed' : 'Live WebSocket';
-    }
-
-    const container = document.getElementById('quick_watchlist_pills');
-    const pinnedAssets = defaultAssets.slice(0, 3);
-    if (container && pinnedAssets.length > 0) {
-      container.innerHTML = pinnedAssets.map((asset, index) => `
-        <button class="asset-pill-btn ${index === 0 ? 'active' : ''}" data-asset="${asset}">${asset}</button>
-      `).join('');
-
-      container.querySelectorAll('.asset-pill-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          container.querySelectorAll('.asset-pill-btn').forEach(b => b.classList.remove('active'));
-          e.currentTarget.classList.add('active');
-          const asset = e.currentTarget.dataset.asset;
-          if (this.callbacks.onAssetChange) this.callbacks.onAssetChange(asset);
-        });
-      });
     }
 
     this.renderWatchlistTray(market);
@@ -1011,21 +1037,57 @@ export class TerminalUI {
       ];
     }
 
-    trayBody.innerHTML = sections.map(sec => `
+    const starredHtml = `
+      <div class="tray-section tray-starred-section">
+        <span class="tray-section-title"><i class="ph-fill ph-star text-gold"></i> My Starred Watchlist (${starred.length})</span>
+        ${starred.length === 0
+          ? `<div class="tray-empty-starred"><i class="ph ph-star"></i> No coins bookmarked yet. Search any coin & tap the star (⭐) to pin it here!</div>`
+          : `<div class="tray-pill-grid">
+              ${starred.map(sym => {
+                const isActive = sym.toUpperCase() === (this.currentAsset || '').toUpperCase().replace('USDT', '');
+                return `
+                  <div class="tray-starred-card ${isActive ? 'active' : ''}">
+                    <button class="tray-starred-select" data-asset="${sym}" type="button" title="View chart for ${sym}">
+                      <span class="tray-asset-sym">${sym}</span>
+                    </button>
+                    <button class="tray-unstar-btn" data-asset="${sym}" type="button" title="Remove from Watchlist">
+                      <i class="ph-fill ph-star"></i>
+                    </button>
+                  </div>
+                `;
+              }).join('')}
+             </div>`
+        }
+      </div>
+    `;
+
+    const sectionsHtml = sections.map(sec => `
       <div class="tray-section">
         <span class="tray-section-title">${sec.title}</span>
         <div class="tray-pill-grid">
-          ${sec.assets.map(a => `
-            <button class="tray-asset-btn" data-asset="${a.sym}" type="button">
-              <span class="tray-asset-sym">${a.sym}</span>
-              <span class="tray-asset-sub">${a.name}</span>
-            </button>
-          `).join('')}
+          ${sec.assets.map(a => {
+            const isStarred = this.isStarred(a.sym, market);
+            const isActive = a.sym.toUpperCase() === (this.currentAsset || '').toUpperCase().replace('USDT', '');
+            return `
+              <div class="tray-asset-card ${isActive ? 'active' : ''}">
+                <button class="tray-asset-btn" data-asset="${a.sym}" type="button" title="View chart for ${a.sym}">
+                  <span class="tray-asset-sym">${a.sym}</span>
+                  <span class="tray-asset-sub">${a.name}</span>
+                </button>
+                <button class="tray-star-btn ${isStarred ? 'starred' : ''}" data-asset="${a.sym}" type="button" title="${isStarred ? 'Remove from Watchlist' : 'Add to Watchlist'}">
+                  <i class="${isStarred ? 'ph-fill ph-star text-gold' : 'ph ph-star'}"></i>
+                </button>
+              </div>
+            `;
+          }).join('')}
         </div>
       </div>
     `).join('');
 
-    trayBody.querySelectorAll('.tray-asset-btn').forEach(btn => {
+    trayBody.innerHTML = starredHtml + sectionsHtml;
+
+    // Bind clicks for selecting assets
+    trayBody.querySelectorAll('.tray-starred-select, .tray-asset-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const asset = e.currentTarget.dataset.asset;
         if (this.callbacks.onAssetChange) this.callbacks.onAssetChange(asset);
@@ -1034,43 +1096,40 @@ export class TerminalUI {
         if (trayWrapper) trayWrapper.classList.remove('open');
       });
     });
+
+    // Bind unstar buttons
+    trayBody.querySelectorAll('.tray-unstar-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const asset = btn.dataset.asset;
+        this.toggleStar(asset, market);
+      });
+    });
+
+    // Bind suggestion star toggle buttons
+    trayBody.querySelectorAll('.tray-star-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const asset = btn.dataset.asset;
+        this.toggleStar(asset, market);
+      });
+    });
   }
 
   setActiveWatchlistAsset(asset) {
     if (!asset) return;
-    const symUpper = asset.toUpperCase();
+    this.currentAsset = asset;
+    const symUpper = asset.toUpperCase().replace('USDT', '');
 
-    // 1. Update quick pills bar: ensure active pill is highlighted or present
-    const container = document.getElementById('quick_watchlist_pills');
-    if (container) {
-      let existingBtn = container.querySelector(`[data-asset="${symUpper}"]`);
-      if (!existingBtn) {
-        const newBtn = document.createElement('button');
-        newBtn.className = 'asset-pill-btn active';
-        newBtn.dataset.asset = symUpper;
-        newBtn.textContent = symUpper;
-        newBtn.addEventListener('click', () => {
-          container.querySelectorAll('.asset-pill-btn').forEach(b => b.classList.remove('active'));
-          newBtn.classList.add('active');
-          if (this.callbacks.onAssetChange) this.callbacks.onAssetChange(symUpper);
-        });
-
-        if (container.children.length >= 4) {
-          container.removeChild(container.lastElementChild);
-        }
-        container.appendChild(newBtn);
-      }
-
-      container.querySelectorAll('.asset-pill-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.asset.toUpperCase() === symUpper);
-      });
-    }
-
-    // 2. Update tray buttons
     const trayBody = document.getElementById('watchlist_tray_body');
     if (trayBody) {
-      trayBody.querySelectorAll('.tray-asset-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.asset.toUpperCase() === symUpper);
+      trayBody.querySelectorAll('.tray-starred-card').forEach(card => {
+        const btn = card.querySelector('.tray-starred-select');
+        if (btn) card.classList.toggle('active', btn.dataset.asset.toUpperCase() === symUpper);
+      });
+      trayBody.querySelectorAll('.tray-asset-card').forEach(card => {
+        const btn = card.querySelector('.tray-asset-btn');
+        if (btn) card.classList.toggle('active', btn.dataset.asset.toUpperCase() === symUpper);
       });
     }
   }

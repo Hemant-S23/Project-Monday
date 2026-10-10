@@ -4,32 +4,8 @@
  * paper trade modals, and real-time state telemetry.
  */
 export class TerminalUI {
-  constructor({
-    onAssetChange,
-    onMarketChange,
-    onTimeframeChange,
-    onSearchCrypto,
-    onSendMessage,
-    onToggleVoice,
-    onToggleMute,
-    onExecuteTrade,
-    onCloseTrade,
-    onResetAccount,
-    onThemeChange
-  }) {
-    this.callbacks = {
-      onAssetChange,
-      onMarketChange,
-      onTimeframeChange,
-      onSearchCrypto,
-      onSendMessage,
-      onToggleVoice,
-      onToggleMute,
-      onExecuteTrade,
-      onCloseTrade,
-      onResetAccount,
-      onThemeChange
-    };
+  constructor(callbacks = {}) {
+    this.callbacks = { ...callbacks };
     this.currentMarket = 'Crypto';
 
     this.bindEvents();
@@ -482,8 +458,14 @@ export class TerminalUI {
 
     // Continue as Guest
     if (guestBtn) {
-      guestBtn.addEventListener('click', () => {
-        if (this.callbacks.onGuestLogin) this.callbacks.onGuestLogin();
+      guestBtn.addEventListener('click', (e) => {
+        if (e) e.preventDefault();
+        console.log('[TerminalUI] Guest login button clicked.');
+        if (this.callbacks.onGuestLogin) {
+          this.callbacks.onGuestLogin();
+        } else {
+          console.error('[TerminalUI] onGuestLogin callback missing!');
+        }
       });
     }
 
@@ -566,12 +548,18 @@ export class TerminalUI {
 
   showAuthOverlay() {
     const overlay = document.getElementById('auth_view_overlay');
-    if (overlay) overlay.classList.remove('hidden');
+    if (overlay) {
+      overlay.classList.remove('hidden');
+      overlay.style.display = 'flex';
+    }
   }
 
   hideAuthOverlay() {
     const overlay = document.getElementById('auth_view_overlay');
-    if (overlay) overlay.classList.add('hidden');
+    if (overlay) {
+      overlay.classList.add('hidden');
+      overlay.style.display = 'none';
+    }
   }
 
   updateUserProfile(user) {

@@ -25,12 +25,26 @@ export class AuthManager {
    */
   initSupabase() {
     const config = this.getSupabaseConfig();
-    if (config && config.url && config.anonKey && window.supabase) {
-      try {
-        this.supabaseClient = window.supabase.createClient(config.url, config.anonKey);
-        console.log('[AuthManager] Supabase client initialized successfully.');
-      } catch (err) {
-        console.warn('[AuthManager] Failed to initialize Supabase client:', err);
+    if (config && config.url && config.anonKey) {
+      if (window.supabase) {
+        try {
+          this.supabaseClient = window.supabase.createClient(config.url, config.anonKey);
+          console.log('[AuthManager] Supabase client initialized successfully.');
+        } catch (err) {
+          console.warn('[AuthManager] Failed to initialize Supabase client:', err);
+        }
+      } else {
+        // Retry if supabase CDN script is still downloading
+        const checkInterval = setInterval(() => {
+          if (window.supabase) {
+            clearInterval(checkInterval);
+            try {
+              this.supabaseClient = window.supabase.createClient(config.url, config.anonKey);
+              console.log('[AuthManager] Supabase client initialized on CDN ready.');
+            } catch (err) {}
+          }
+        }, 150);
+        setTimeout(() => clearInterval(checkInterval), 5000);
       }
     }
   }

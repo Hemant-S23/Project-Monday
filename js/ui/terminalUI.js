@@ -118,17 +118,35 @@ export class TerminalUI {
       }
     });
 
-    // Market Selector (Crypto / Indian Market)
-    document.querySelectorAll('.market-tab-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+    // Compact Market Dropdown Selector (Crypto / Indian Market)
+    const marketDropdownWrapper = document.getElementById('market_dropdown_wrapper');
+    const marketDropdownTrigger = document.getElementById('market_dropdown_trigger');
+
+    if (marketDropdownTrigger && marketDropdownWrapper) {
+      marketDropdownTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        marketDropdownWrapper.classList.toggle('open');
+      });
+    }
+
+    // Close market dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (marketDropdownWrapper && !marketDropdownWrapper.contains(e.target)) {
+        marketDropdownWrapper.classList.remove('open');
+      }
+    });
+
+    // Market Menu Items
+    document.querySelectorAll('.market-menu-item').forEach(item => {
+      item.addEventListener('click', (e) => {
         const market = e.currentTarget.dataset.market;
         if (market !== 'Crypto' && market !== 'India') {
           this.showToast(`Market: ${market}`, 'US Market scheduled for Phase 4. Crypto & Indian Markets are active!', 'info');
           return;
         }
         this.currentMarket = market;
-        document.querySelectorAll('.market-tab-btn').forEach(b => b.classList.remove('active'));
-        e.currentTarget.classList.add('active');
+        this.updateMarketTriggerUI(market);
+        if (marketDropdownWrapper) marketDropdownWrapper.classList.remove('open');
         if (this.callbacks.onMarketChange) this.callbacks.onMarketChange(market);
       });
     });
@@ -863,12 +881,23 @@ export class TerminalUI {
     }
   }
 
-  setMarket(market, defaultAssets = []) {
-    this.currentMarket = market;
-
-    document.querySelectorAll('.market-tab-btn').forEach(b => {
+  updateMarketTriggerUI(market) {
+    const triggerLabel = document.getElementById('market_trigger_label');
+    const triggerIcon = document.getElementById('market_trigger_icon');
+    if (triggerLabel) {
+      triggerLabel.textContent = market === 'India' ? 'India (NSE)' : 'Crypto';
+    }
+    if (triggerIcon) {
+      triggerIcon.className = market === 'India' ? 'ph ph-buildings' : 'ph ph-currency-btc';
+    }
+    document.querySelectorAll('.market-menu-item').forEach(b => {
       b.classList.toggle('active', b.dataset.market === market);
     });
+  }
+
+  setMarket(market, defaultAssets = []) {
+    this.currentMarket = market;
+    this.updateMarketTriggerUI(market);
 
     const searchInput = document.getElementById('crypto_search_input');
     if (searchInput) {

@@ -232,52 +232,186 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 0 10px rgba(139, 92, 246, 0.25);
 }
 
-/* Market Selector Tabs */
-.market-nav-group {
-  display: flex;
-  background: rgba(0, 0, 0, 0.4);
-  padding: 3px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-subtle);
-  gap: 2px;
+/* Compact Market Dropdown Selector */
+.market-dropdown-wrapper {
+  position: relative;
+  flex-shrink: 0;
 }
 
-.market-tab-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-family: var(--font-main);
-  font-size: 0.82rem;
-  font-weight: 500;
-  padding: 6px 14px;
-  border-radius: 6px;
-  cursor: pointer;
+.market-dropdown-trigger {
   display: flex;
   align-items: center;
-  gap: 6px;
-  transition: var(--transition-fast);
-}
-
-.market-tab-btn:hover {
+  gap: 7px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--border-subtle);
   color: var(--text-bright);
-}
-
-.market-tab-btn.active {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-bright);
+  font-family: var(--font-main);
+  font-size: 0.82rem;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  user-select: none;
 }
 
-.market-tab-btn[data-market="India"].active {
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.25), rgba(16, 185, 129, 0.2));
-  border: 1px solid rgba(249, 115, 22, 0.45);
-  color: #fed7aa;
-  box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);
+.market-dropdown-trigger:hover,
+.market-dropdown-wrapper.open .market-dropdown-trigger {
+  border-color: var(--color-primary);
+  background: rgba(6, 182, 212, 0.12);
+  box-shadow: 0 0 14px rgba(6, 182, 212, 0.35);
 }
 
-.market-tab-btn.phase-lock {
-  opacity: 0.55;
+.market-trigger-label {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.market-caret {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  transition: transform 0.2s ease;
+}
+
+.market-dropdown-wrapper.open .market-caret {
+  transform: rotate(180deg);
+  color: var(--color-primary);
+}
+
+/* Market Dropdown Popover Menu */
+.market-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 270px;
+  background: linear-gradient(145deg, rgba(13, 19, 33, 0.98), rgba(9, 14, 28, 0.99));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: var(--radius-md);
+  padding: 6px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 20px rgba(6, 182, 212, 0.15);
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.market-dropdown-wrapper.open .market-dropdown-menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.market-menu-header {
+  padding: 6px 10px 4px;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 3px;
+}
+
+.market-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.market-menu-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.market-menu-item.active {
+  background: rgba(6, 182, 212, 0.14);
+  border-color: rgba(6, 182, 212, 0.4);
+  color: #38bdf8;
+}
+
+.market-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.market-icon-box {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+
+.market-icon-box.crypto {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.market-icon-box.india {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.market-icon-box.us {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.market-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.market-name {
+  font-family: var(--font-main);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.market-menu-item.active .market-name {
+  color: #38bdf8;
+}
+
+.market-sub {
+  font-size: 0.67rem;
+  color: var(--text-dim);
+}
+
+.market-check {
+  font-size: 0.95rem;
+  color: #38bdf8;
+  display: none;
+}
+
+.market-menu-item.active .market-check {
+  display: block;
+}
+
+.market-menu-item.phase-lock {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 

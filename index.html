@@ -256,18 +256,59 @@
           </div>
         </div>
 
-        <!-- Market Selector (PRD Section 32) -->
-        <nav class="market-nav-group" aria-label="Market Selection">
-          <button class="market-tab-btn active" id="market_crypto_btn" data-market="Crypto">
-            <i class="ph ph-currency-btc"></i> Crypto
+        <!-- Compact Market Dropdown Selector -->
+        <div class="market-dropdown-wrapper" id="market_dropdown_wrapper">
+          <button class="market-dropdown-trigger" id="market_dropdown_trigger" type="button" aria-haspopup="true" aria-expanded="false" title="Switch Market">
+            <i class="ph ph-currency-btc" id="market_trigger_icon"></i>
+            <span class="market-trigger-label" id="market_trigger_label">Crypto</span>
+            <i class="ph ph-caret-down market-caret" id="market_trigger_caret"></i>
           </button>
-          <button class="market-tab-btn" id="market_india_btn" data-market="India" title="Live Indian Market (NSE & BSE)">
-            <i class="ph ph-buildings"></i> India (NSE)
-          </button>
-          <button class="market-tab-btn phase-lock" id="market_us_btn" data-market="US">
-            <i class="ph ph-globe-stand"></i> US <span class="phase-tag">Phase 4</span>
-          </button>
-        </nav>
+
+          <!-- Dropdown Popover Menu -->
+          <div class="market-dropdown-menu" id="market_dropdown_menu">
+            <div class="market-menu-header">
+              <span>Switch Trading Market</span>
+            </div>
+            <button class="market-menu-item active" data-market="Crypto" type="button">
+              <div class="market-item-left">
+                <div class="market-icon-box crypto">
+                  <i class="ph ph-currency-btc"></i>
+                </div>
+                <div class="market-item-text">
+                  <span class="market-name">Crypto Market</span>
+                  <span class="market-sub">Binance Live • 700+ Pairs</span>
+                </div>
+              </div>
+              <i class="ph ph-check market-check"></i>
+            </button>
+
+            <button class="market-menu-item" data-market="India" type="button">
+              <div class="market-item-left">
+                <div class="market-icon-box india">
+                  <i class="ph ph-buildings"></i>
+                </div>
+                <div class="market-item-text">
+                  <span class="market-name">India (NSE/BSE)</span>
+                  <span class="market-sub">NIFTY 50, Bank Nifty, Stocks</span>
+                </div>
+              </div>
+              <i class="ph ph-check market-check"></i>
+            </button>
+
+            <button class="market-menu-item phase-lock" data-market="US" type="button" title="Scheduled for Phase 4">
+              <div class="market-item-left">
+                <div class="market-icon-box us">
+                  <i class="ph ph-globe-stand"></i>
+                </div>
+                <div class="market-item-text">
+                  <span class="market-name">US Market</span>
+                  <span class="market-sub">NASDAQ, S&P 500</span>
+                </div>
+              </div>
+              <span class="phase-tag">Phase 4</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Center Cluster: Search, Watchlist Tray & Live Ticker Strip -->

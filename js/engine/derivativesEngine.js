@@ -6,7 +6,7 @@
  * 2. Cross & Isolated Initial Margin calculation
  * 3. Exact Mathematical Liquidation Price determination based on Maintenance Margin Rate (MMR)
  * 4. ROE % (Return on Equity) & Notional Value calculations
- * 5. Bidirectional Size Sync (USDT Margin <-> Coin Quantity)
+ * 5. Bidirectional Size Sync (USD Margin <-> Coin Quantity)
  */
 
 export class DerivativesEngine {
@@ -85,7 +85,7 @@ export class DerivativesEngine {
   }
 
   /**
-   * Convert USDT Margin to Coin Quantity at given leverage
+   * Convert USD Margin to Coin Quantity at given leverage
    * Qty = (Margin * Leverage) / Price
    */
   calcQuantityFromMargin(marginUSD, leverage, price) {

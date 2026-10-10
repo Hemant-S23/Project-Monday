@@ -749,7 +749,7 @@ export class TerminalUI {
       });
     });
 
-    // 4. Dual Size Inputs (Margin USDT <-> Coin Qty Sync)
+    // 4. Dual Size Inputs (Margin USD <-> Coin Qty Sync)
     if (marginInput) {
       marginInput.addEventListener('input', (e) => {
         const m = parseFloat(e.target.value) || 0;
@@ -1076,7 +1076,7 @@ export class TerminalUI {
           ? `<div class="tray-empty-starred"><i class="ph ph-star"></i> No coins bookmarked yet. Search any coin & tap the star (⭐) to pin it here!</div>`
           : `<div class="tray-pill-grid">
               ${starred.map(sym => {
-                const isActive = sym.toUpperCase() === (this.currentAsset || '').toUpperCase().replace('USDT', '');
+                const isActive = sym.toUpperCase() === (this.currentAsset || '').toUpperCase().replace(/(\/USD|USDT|USD)$/, '');
                 return `
                   <div class="tray-starred-card ${isActive ? 'active' : ''}">
                     <button class="tray-starred-select" data-asset="${sym}" type="button" title="View chart for ${sym}">
@@ -1099,7 +1099,7 @@ export class TerminalUI {
         <div class="tray-pill-grid">
           ${sec.assets.map(a => {
             const isStarred = this.isStarred(a.sym, market);
-            const isActive = a.sym.toUpperCase() === (this.currentAsset || '').toUpperCase().replace('USDT', '');
+            const isActive = a.sym.toUpperCase() === (this.currentAsset || '').toUpperCase().replace(/(\/USD|USDT|USD)$/, '');
             return `
               <div class="tray-asset-card ${isActive ? 'active' : ''}">
                 <button class="tray-asset-btn" data-asset="${a.sym}" type="button" title="View chart for ${a.sym}">

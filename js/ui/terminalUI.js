@@ -434,14 +434,14 @@ export class TerminalUI {
         if (nameGroup) nameGroup.style.display = 'flex';
         if (authSubmitText) authSubmitText.textContent = 'Create Trading Account';
         if (authCardTitle) authCardTitle.textContent = 'Create Account';
-        if (authCardSubtitle) authCardSubtitle.textContent = 'Start your disciplined trading journey';
+        if (authCardSubtitle) authCardSubtitle.textContent = 'Unlock your neural dual-market trading cockpit';
       } else {
         if (tabSignUp) tabSignUp.classList.remove('active');
         if (tabSignIn) tabSignIn.classList.add('active');
         if (nameGroup) nameGroup.style.display = 'none';
         if (authSubmitText) authSubmitText.textContent = 'Sign In with Email';
         if (authCardTitle) authCardTitle.textContent = 'Welcome Back';
-        if (authCardSubtitle) authCardSubtitle.textContent = 'Sign in or create your account to sync your trades';
+        if (authCardSubtitle) authCardSubtitle.textContent = 'Access your neural terminal and sync live trades';
       }
     };
 

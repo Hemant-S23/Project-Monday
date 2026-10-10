@@ -786,6 +786,7 @@ export class TerminalUI {
       rewardUSD: telemetry.tpPnL || (telemetry.marginUSD * 2.5),
       rrRatio: telemetry.rrRatio || 2.5
     };
+  }
 
   showAuthOverlay() {
     const overlay = document.getElementById('auth_view_overlay');

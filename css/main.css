@@ -608,7 +608,46 @@ h1, h2, h3, h4, h5, h6 {
 .search-res-change {
   font-family: var(--font-mono);
   font-size: 0.68rem;
-  font-weight: 600;
+  font-weight: 700;
+}
+
+.search-res-change.bullish {
+  color: #10b981 !important;
+}
+
+.search-res-change.bearish {
+  color: #ef4444 !important;
+}
+
+/* Search Results Star Bookmark Button */
+.search-star-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.15rem;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+
+.search-star-btn:hover {
+  color: #f59e0b !important;
+  transform: scale(1.18);
+  background: rgba(245, 158, 11, 0.14);
+}
+
+.search-star-btn.starred {
+  color: #f59e0b !important;
+}
+
+.search-star-btn.starred i {
+  color: #f59e0b !important;
 }
 
 .search-empty-msg {

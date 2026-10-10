@@ -75,6 +75,19 @@ export class TerminalUI {
       localStorage.setItem('monday_user_watchlist', JSON.stringify(this.userWatchlist));
     } catch (e) {}
 
+    // Synchronize any star buttons currently visible in search results or elsewhere
+    document.querySelectorAll(`.search-star-btn`).forEach(btn => {
+      const bAsset = (btn.dataset.asset || '').toUpperCase().replace('USDT', '');
+      if (bAsset === cleanSym) {
+        btn.classList.toggle('starred', added);
+        const icon = btn.querySelector('i');
+        if (icon) {
+          icon.className = added ? 'ph-fill ph-star text-gold' : 'ph ph-star';
+        }
+        btn.title = added ? 'Remove from Watchlist' : 'Add to Watchlist';
+      }
+    });
+
     this.renderWatchlistTray(market);
     return added;
   }
@@ -150,6 +163,12 @@ export class TerminalUI {
 
     if (searchInput && searchContainer) {
       searchInput.addEventListener('focus', () => {
+        // Mutual auto-close other dropdowns
+        const wlWrapper = document.getElementById('watchlist_tray_wrapper');
+        if (wlWrapper) wlWrapper.classList.remove('open');
+        const mktWrapper = document.getElementById('market_dropdown_wrapper');
+        if (mktWrapper) mktWrapper.classList.remove('open');
+
         if (this.callbacks.onSearchCrypto) {
           const items = this.callbacks.onSearchCrypto(searchInput.value.trim());
           renderSearchResults(items);
@@ -158,6 +177,12 @@ export class TerminalUI {
       });
 
       searchInput.addEventListener('input', () => {
+        // Mutual auto-close other dropdowns
+        const wlWrapper = document.getElementById('watchlist_tray_wrapper');
+        if (wlWrapper) wlWrapper.classList.remove('open');
+        const mktWrapper = document.getElementById('market_dropdown_wrapper');
+        if (mktWrapper) mktWrapper.classList.remove('open');
+
         const query = searchInput.value.trim();
         if (searchClearBtn) {
           searchClearBtn.style.display = query ? 'flex' : 'none';
@@ -195,6 +220,11 @@ export class TerminalUI {
     if (marketDropdownTrigger && marketDropdownWrapper) {
       marketDropdownTrigger.addEventListener('click', (e) => {
         e.stopPropagation();
+        // Mutual auto-close other dropdowns
+        if (searchContainer) searchContainer.classList.remove('open');
+        const wlWrapper = document.getElementById('watchlist_tray_wrapper');
+        if (wlWrapper) wlWrapper.classList.remove('open');
+
         marketDropdownWrapper.classList.toggle('open');
       });
     }
@@ -235,16 +265,6 @@ export class TerminalUI {
       });
     });
 
-    // Quick Watchlist Pills
-    document.querySelectorAll('.asset-pill-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        document.querySelectorAll('.asset-pill-btn').forEach(b => b.classList.remove('active'));
-        e.currentTarget.classList.add('active');
-        const asset = e.currentTarget.dataset.asset;
-        if (this.callbacks.onAssetChange) this.callbacks.onAssetChange(asset);
-      });
-    });
-
     // Watchlist Popover Tray Trigger & Close
     const watchlistTrayWrapper = document.getElementById('watchlist_tray_wrapper');
     const watchlistTrayBtn = document.getElementById('watchlist_tray_btn');
@@ -253,7 +273,17 @@ export class TerminalUI {
     if (watchlistTrayBtn && watchlistTrayWrapper) {
       watchlistTrayBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        watchlistTrayWrapper.classList.toggle('open');
+        // Mutual auto-close other dropdowns
+        if (searchContainer) searchContainer.classList.remove('open');
+        if (marketDropdownWrapper) marketDropdownWrapper.classList.remove('open');
+
+        const isOpen = watchlistTrayWrapper.classList.contains('open');
+        if (!isOpen) {
+          this.renderWatchlistTray(this.currentMarket);
+          watchlistTrayWrapper.classList.add('open');
+        } else {
+          watchlistTrayWrapper.classList.remove('open');
+        }
       });
     }
 
@@ -961,6 +991,8 @@ export class TerminalUI {
   renderWatchlistTray(market) {
     const trayBody = document.getElementById('watchlist_tray_body');
     if (!trayBody) return;
+
+    const starred = this.getStarredAssets(market);
 
     let sections = [];
     if (market === 'India') {

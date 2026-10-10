@@ -157,6 +157,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Top App Header & Telemetry Bar */
 .terminal-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   background: var(--bg-glass);
@@ -164,9 +165,11 @@ h1, h2, h3, h4, h5, h6 {
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: var(--radius-lg);
-  padding: 8px 18px;
+  padding: 8px 14px;
+  gap: 8px 12px;
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
+  width: 100%;
 }
 
 .header-brand {
@@ -290,17 +293,28 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-shrink: 0;
+  flex: 0 0 auto;
 }
 
-/* Asset Selector & Live Ticker Strip */
+/* Asset Selector & Live Ticker Strip (Tier-2 Row) */
 .header-ticker-strip {
+  order: 3;
+  width: 100%;
+  flex: 1 1 100%;
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: flex-start;
+  gap: 12px;
   min-width: 0;
-  justify-content: center;
-  flex-shrink: 0;
+  padding-top: 6px;
+  margin-top: 2px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.header-ticker-strip::-webkit-scrollbar {
+  display: none;
 }
 
 /* Universal Search Bar */
@@ -604,11 +618,13 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 0 10px rgba(244, 63, 94, 0.2);
 }
 
-/* Header Account & Actions */
+/* Header Account & Actions (Tier-1 Right Group) */
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .account-pill {
@@ -947,27 +963,28 @@ h1, h2, h3, h4, h5, h6 {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(6, 182, 212, 0.3) rgba(0, 0, 0, 0.2);
+  scrollbar-color: rgba(6, 182, 212, 0.5) rgba(0, 0, 0, 0.25);
 }
 
 .panel-content::-webkit-scrollbar {
-  width: 4px;
+  width: 5px;
 }
 
 .panel-content::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.25);
   border-radius: 4px;
 }
 
 .panel-content::-webkit-scrollbar-thumb {
-  background: rgba(6, 182, 212, 0.3);
+  background: rgba(6, 182, 212, 0.45);
   border-radius: 4px;
+  box-shadow: 0 0 6px rgba(6, 182, 212, 0.35);
 }
 
 .panel-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(6, 182, 212, 0.6);
+  background: rgba(6, 182, 212, 0.8);
 }
 
 /* Global scrollbar for whole app */
@@ -1033,53 +1050,65 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ==========================================================================
-   RESPONSIVE DESIGN BREAKPOINTS (All Screen Resolutions)
+   RESPONSIVE DESIGN ARCHITECTURE (Pure Fluid Across All Form Factors)
    ========================================================================== */
 
-/* 1. Large Laptops & Standard 1080p Zoom (<= 1560px) */
-/* 1. Standard Laptops & 1080p (<= 1440px): 2-Tier Adaptive Command Bar */
-@media (max-width: 1440px) {
+/* Ultrawide & 4K Displays (> 1880px): Single-Row Unified Command Bar */
+@media (min-width: 1881px) {
   .terminal-header {
-    flex-wrap: wrap;
-    justify-content: space-between;
-    padding: 8px 14px;
-    gap: 8px 12px;
+    flex-wrap: nowrap;
+    padding: 8px 18px;
+    gap: 16px;
   }
   .header-left-cluster {
-    flex: 1 1 auto;
-  }
-  .header-actions {
     flex: 0 0 auto;
   }
   .header-ticker-strip {
+    order: 2;
+    width: auto;
+    flex: 1 1 auto;
+    justify-content: center;
+    padding-top: 0;
+    margin-top: 0;
+    border-top: none;
+  }
+  .header-actions {
     order: 3;
-    width: 100%;
-    justify-content: flex-start;
-    padding-top: 8px;
-    margin-top: 2px;
-    border-top: 1px solid rgba(255, 255, 255, 0.07);
-    gap: 12px;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .crypto-search-container {
-    width: 200px;
-    min-width: 180px;
-    flex-shrink: 0;
-  }
-  .brand-subtitle {
-    display: none;
+    margin-left: 0;
   }
 }
 
-/* 2. Compact Laptops & 1366x768 / 125%-150% Zoom (<= 1300px) */
+/* 1. Standard Laptops, 1080p with Windows 125%/150% Scale, 1366x768 (<= 1536px) */
+@media (max-width: 1536px) {
+  .brand-subtitle {
+    display: none;
+  }
+  .account-label {
+    display: none;
+  }
+  .theme-toggle-text {
+    display: none;
+  }
+  .theme-toggle-btn {
+    padding: 4px 6px;
+  }
+  .crypto-search-container {
+    width: 200px;
+    min-width: 160px;
+  }
+  .user-chip-name {
+    max-width: 90px;
+  }
+}
+
+/* 2. Compact Laptops, 1366x768 & Scaled Screens (<= 1300px) */
 @media (max-width: 1300px) {
   .terminal-wrapper {
-    padding: 8px 10px 10px 10px;
+    padding: 6px 10px 10px 10px;
     gap: 8px;
   }
   .terminal-body {
-    grid-template-columns: 250px 1fr 310px;
+    grid-template-columns: 250px 1fr 300px;
     gap: 8px;
   }
   .market-tab-btn {
@@ -1089,32 +1118,26 @@ h1, h2, h3, h4, h5, h6 {
   .market-tab-btn.phase-lock {
     display: none;
   }
-  .account-label {
-    display: none;
-  }
   .ticker-price {
     font-size: 1.05rem;
-  }
-  .theme-toggle-text {
-    display: none;
-  }
-  .theme-toggle-btn {
-    padding: 3px 6px;
   }
   .btn-journal-open {
     padding: 5px 10px;
     font-size: 0.78rem;
+  }
+  .user-chip-name {
+    max-width: 75px;
   }
 }
 
 /* 3. Small Laptops / Sub-Notebooks (<= 1100px) */
 @media (max-width: 1100px) {
   .terminal-body {
-    grid-template-columns: 240px 1fr 290px;
+    grid-template-columns: 240px 1fr 280px;
   }
   .crypto-search-container {
-    width: 170px;
-    min-width: 150px;
+    width: 160px;
+    min-width: 140px;
   }
 }
 
@@ -1132,6 +1155,10 @@ h1, h2, h3, h4, h5, h6 {
   .chart-panel {
     height: 60vh;
     min-height: 480px;
+  }
+  .btn-journal-open {
+    padding: 4px 8px;
+    font-size: 0.75rem;
   }
 }
 

@@ -1053,12 +1053,12 @@
 .derivatives-order-desk {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 7px;
   background: rgba(13, 19, 33, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
-  padding: 10px;
-  margin-top: 4px;
+  padding: 8px;
+  margin-top: 3px;
 }
 
 /* Direction Segment: Long vs Short */
@@ -1556,23 +1556,25 @@
 
 .btn-exec-trade {
   width: 100%;
-  padding: 11px 16px;
+  padding: 10px 14px;
   border-radius: var(--radius-md);
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: linear-gradient(135deg, #06b6d4 0%, #10b981 100%);
   color: #ffffff;
   font-family: var(--font-main);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  position: relative;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
   overflow: hidden;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6), 0 0 15px rgba(16, 185, 129, 0.35);
   letter-spacing: 0.02em;
 }
 
@@ -2008,7 +2010,7 @@
 
 .analytics-metrics-strip {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   gap: 10px;
 }
 

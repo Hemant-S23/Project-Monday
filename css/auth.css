@@ -980,11 +980,23 @@
   }
 }
 
+@media (max-width: 768px) {
+  .auth-hero-panel {
+    display: none;
+  }
+  .auth-corner-badge {
+    display: none;
+  }
+}
+
 @media (max-width: 480px) {
   .auth-card {
-    padding: 24px 18px;
+    padding: 22px 16px;
   }
   .auth-stats-row {
     grid-template-columns: 1fr;
+  }
+  .auth-social-group {
+    flex-direction: column;
   }
 }

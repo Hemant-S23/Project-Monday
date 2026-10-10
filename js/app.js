@@ -263,9 +263,9 @@ class App {
 
     // 4. Risk & Position Calculation
     const levels = strategyResult.levels || {
-      entry: currentPrice,
-      stopLoss: currentPrice * 0.99,
-      target: currentPrice * 1.025
+      entry: +(Number(currentPrice).toFixed(2)),
+      stopLoss: +((Number(currentPrice) * 0.99).toFixed(2)),
+      target: +((Number(currentPrice) * 1.025).toFixed(2))
     };
     const riskParams = this.riskEngine.calculateTradeParameters(
       levels.entry,

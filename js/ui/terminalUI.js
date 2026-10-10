@@ -735,21 +735,25 @@ export class TerminalUI {
 
     const curr = this.currentMarket === 'India' ? '₹' : '$';
 
-    if (costEl) costEl.textContent = `${curr}${telemetry.marginUSD.toLocaleString()}`;
-    if (notionalEl) notionalEl.textContent = `${curr}${telemetry.notionalUSD.toLocaleString()}`;
+    if (costEl) costEl.textContent = `${curr}${Number(telemetry.marginUSD).toFixed(2)}`;
+    if (notionalEl) notionalEl.textContent = `${curr}${Number(telemetry.notionalUSD).toFixed(2)}`;
     if (liqEl) liqEl.textContent = telemetry.liquidationPrice > 0 ? this.formatPrice(telemetry.liquidationPrice) : 'N/A';
-    if (rrEl) rrEl.textContent = telemetry.rrRatio > 0 ? `1:${telemetry.rrRatio}` : '1:2.65';
+    if (rrEl) rrEl.textContent = telemetry.rrRatio > 0 ? `1:${Number(telemetry.rrRatio).toFixed(2)}` : '1:2.65';
 
     if (tpRoeEl) {
+      const tpRoeFormatted = Number(telemetry.tpROE).toFixed(2);
+      const tpPnLFormatted = Number(telemetry.tpPnL).toFixed(2);
       tpRoeEl.textContent = telemetry.tpROE > 0 
-        ? `+${telemetry.tpROE}% ROE (+${curr}${telemetry.tpPnL})`
-        : '+0.0% ROE';
+        ? `+${tpRoeFormatted}% ROE (+${curr}${tpPnLFormatted})`
+        : '+0.00% ROE';
     }
 
     if (slRoeEl) {
+      const slRoeFormatted = Number(telemetry.slROE).toFixed(2);
+      const slPnLFormatted = Number(Math.abs(telemetry.slPnL)).toFixed(2);
       slRoeEl.textContent = telemetry.slROE !== 0 
-        ? `${telemetry.slROE}% ROE (-${curr}${Math.abs(telemetry.slPnL)})`
-        : '-0.0% ROE';
+        ? `${slRoeFormatted}% ROE (-${curr}${slPnLFormatted})`
+        : '-0.00% ROE';
     }
 
     if (execLabel) {
@@ -1228,17 +1232,22 @@ export class TerminalUI {
     }
 
     // Feed parameters into Delta Exchange order desk
-    if (riskParams.entry) this.orderState.entryPrice = riskParams.entry;
-    if (riskParams.stopLoss) this.orderState.slPrice = riskParams.stopLoss;
-    if (riskParams.target) this.orderState.tpPrice = riskParams.target;
+    const cleanPrice = (val) => {
+      const n = Number(val);
+      return isNaN(n) ? 0 : +(n.toFixed(2));
+    };
+
+    if (riskParams.entry) this.orderState.entryPrice = cleanPrice(riskParams.entry);
+    if (riskParams.stopLoss) this.orderState.slPrice = cleanPrice(riskParams.stopLoss);
+    if (riskParams.target) this.orderState.tpPrice = cleanPrice(riskParams.target);
 
     const tpInput = document.getElementById('order_tp_input');
     const slInput = document.getElementById('order_sl_input');
     if (tpInput && !tpInput.matches(':focus') && riskParams.target) {
-      tpInput.value = riskParams.target;
+      tpInput.value = cleanPrice(riskParams.target);
     }
     if (slInput && !slInput.matches(':focus') && riskParams.stopLoss) {
-      slInput.value = riskParams.stopLoss;
+      slInput.value = cleanPrice(riskParams.stopLoss);
     }
 
     this.refreshDerivativesOrderDesk();

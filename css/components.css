@@ -1438,21 +1438,28 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 
 .tpsl-lbl {
   font-size: 0.65rem;
   font-weight: 700;
   font-family: var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tpsl-input-box input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   background: transparent;
   border: none;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-bright);
   font-family: var(--font-mono);
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 700;
   padding: 2px 0;
   outline: none;
@@ -1460,10 +1467,13 @@
 
 .tpsl-roe {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.64rem;
   font-weight: 700;
   text-align: right;
   margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Derivatives Telemetry Slip */

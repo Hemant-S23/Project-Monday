@@ -125,15 +125,8 @@ export class ChartManager {
     if (!container) return;
 
     const cleanAsset = (this.currentAsset || 'BTC').toUpperCase().replace(/(\/USD|USDT|USD)$/, '');
-    // Institutional USD feeds on TradingView (Coinbase / Bitstamp USD)
-    const majorCoinbaseUsd = [
-      'BTC', 'ETH', 'SOL', 'DOGE', 'XRP', 'ADA', 'AVAX', 'LINK', 'NEAR', 
-      'SUI', 'APT', 'DOT', 'MATIC', 'SHIB', 'LTC', 'BCH', 'UNI', 'ATOM', 
-      'XLM', 'ALGO', 'FIL', 'ICP', 'AAVE', 'RENDER', 'INJ', 'TIA', 'OP', 'ARB'
-    ];
-    let symbol = majorCoinbaseUsd.includes(cleanAsset)
-      ? `COINBASE:${cleanAsset}USD`
-      : (cleanAsset === 'BNB' ? 'BINANCE:BNBUSD' : `CRYPTO:${cleanAsset}USD`);
+    // 100% 1:1 Synchronized with Binance WebSocket feed (Zero price gap between chart & header)
+    let symbol = `BINANCE:${cleanAsset}USDT`;
     let timezone = "Etc/UTC";
 
     if (this.currentMarket === 'India') {

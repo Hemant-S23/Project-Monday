@@ -587,6 +587,10 @@
                 <span class="slip-k">Risk / Reward:</span>
                 <span class="slip-v text-bullish" id="slip_rr_ratio">1:2.65</span>
               </div>
+              <div class="slip-row">
+                <span class="slip-k">Delta Fee (Est.):</span>
+                <span class="slip-v text-muted" id="slip_est_fee">$0.40 (0.05%)</span>
+              </div>
             </div>
 
             <!-- Big Execution Trigger Button -->
@@ -819,6 +823,10 @@
             <div class="metric-title">Max Loss Streak</div>
             <div class="metric-value" id="modal_stat_streak">1</div>
           </div>
+          <div class="metric-box">
+            <div class="metric-title">Delta Fees Paid</div>
+            <div class="metric-value text-muted" id="modal_stat_fees">$0.00</div>
+          </div>
         </div>
 
         <!-- Full Trade Log Table (PRD Section 27) -->
@@ -834,7 +842,7 @@
                 <th>Exit</th>
                 <th>RR</th>
                 <th>Outcome</th>
-                <th>PnL ($)</th>
+                <th>Net PnL ($)</th>
               </tr>
             </thead>
             <tbody id="journal_trades_tbody">

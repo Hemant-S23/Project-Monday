@@ -858,6 +858,11 @@ export class TerminalUI {
     if (liqEl) liqEl.textContent = telemetry.liquidationPrice > 0 ? this.formatPrice(telemetry.liquidationPrice) : 'N/A';
     if (rrEl) rrEl.textContent = telemetry.rrRatio > 0 ? `1:${Number(telemetry.rrRatio).toFixed(2)}` : '1:2.65';
 
+    const feeEl = document.getElementById('slip_est_fee');
+    if (feeEl) {
+      feeEl.textContent = `${curr}${Number(telemetry.estDeltaFeeUSD || 0).toFixed(2)} (Delta 0.05%)`;
+    }
+
     if (tpRoeEl) {
       const tpRoeFormatted = Number(telemetry.tpROE).toFixed(2);
       const tpPnLFormatted = Number(telemetry.tpPnL).toFixed(2);
@@ -1485,6 +1490,7 @@ export class TerminalUI {
             <div class="pos-grid-cell"><span class="lbl">Margin / Value</span><span class="val">$${pos.marginUSD || pos.riskUSD} / $${pos.notionalUSD || (pos.entry * pos.positionSize).toFixed(0)}</span></div>
             <div class="pos-grid-cell"><span class="lbl">Size</span><span class="val">${pos.positionSize} ${pos.asset}</span></div>
             <div class="pos-grid-cell"><span class="lbl">RR Ratio</span><span class="val">1:${pos.rrRatio}</span></div>
+            <div class="pos-grid-cell"><span class="lbl">Delta Fee (Est.)</span><span class="val text-muted">-$${Number(pos.feesUSD || 0).toFixed(2)}</span></div>
           </div>
 
           <div class="pos-footer">
@@ -1586,6 +1592,8 @@ export class TerminalUI {
     if (mTotalR) mTotalR.textContent = `${analytics.totalR >= 0 ? '+' : ''}${analytics.totalR}R (${analytics.totalPnlUSD >= 0 ? '+' : ''}$${analytics.totalPnlUSD})`;
     if (mPf) mPf.textContent = `${analytics.profitFactor}`;
     if (mStreak) mStreak.textContent = `${analytics.maxLosingStreak}`;
+    const mFees = document.getElementById('modal_stat_fees');
+    if (mFees) mFees.textContent = `-$${Number(analytics.totalFeesUSD || 0).toFixed(2)}`;
 
     // Journal Trades Table / Cards
     const tableBody = document.getElementById('journal_trades_tbody');
@@ -1609,7 +1617,10 @@ export class TerminalUI {
           <td>$${t.exitPrice || t.currentPrice}</td>
           <td>1:${t.rrRatio}</td>
           <td><span class="result-tag ${resultClass}">${t.result} (${t.rMultiple >= 0 ? '+' : ''}${t.rMultiple}R)</span></td>
-          <td><span class="pnl-val ${resultClass}">${t.pnlUSD >= 0 ? '+' : ''}$${t.pnlUSD}</span></td>
+          <td>
+            <span class="pnl-val ${resultClass}">${t.pnlUSD >= 0 ? '+' : ''}$${t.pnlUSD}</span>
+            <div style="font-size: 0.65rem; color: var(--text-muted);">(Fee: -$${Number(t.totalFeesUSD || t.feesUSD || 0).toFixed(2)})</div>
+          </td>
         </tr>
       `;
     }).join('');

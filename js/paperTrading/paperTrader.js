@@ -184,6 +184,12 @@ export class PaperTrader {
     }
   }
 
+// Delta Exchange Futures Fee Matrix (Standard Tier-1 Derivatives)
+export const DELTA_FEE_RATES = {
+  TAKER: 0.0005, // 0.05% for Market / Taker orders
+  MAKER: 0.0002  // 0.02% for Limit / Maker orders
+};
+
   executePaperTrade({
     asset,
     market = 'Crypto',
@@ -210,6 +216,11 @@ export class PaperTrader {
     const notional = notionalUSD !== null ? Number(notionalUSD) : +(Number(entry) * posSize).toFixed(2);
     const margin = marginUSD !== null ? Number(marginUSD) : +(notional / lev).toFixed(2);
 
+    // Delta Exchange Entry Fee (0.05% Taker on Notional)
+    const entryFeeUSD = +(notional * DELTA_FEE_RATES.TAKER).toFixed(2);
+    const estExitFeeUSD = +(notional * DELTA_FEE_RATES.TAKER).toFixed(2);
+    const estTotalFeesUSD = +(entryFeeUSD + estExitFeeUSD).toFixed(2);
+
     const newPosition = {
       id: tradeId,
       market,
@@ -222,15 +233,20 @@ export class PaperTrader {
       leverage: lev,
       marginUSD: margin,
       notionalUSD: notional,
+      entryFeeUSD,
+      estExitFeeUSD,
+      feesUSD: estTotalFeesUSD,
+      feeModel: 'Delta Exchange (0.05% Taker / 0.02% Maker)',
       liquidationPrice: liquidationPrice !== null ? Number(liquidationPrice) : null,
       riskUSD: +riskUSD.toFixed(2),
       rewardUSD: +rewardUSD.toFixed(2),
       rrRatio: +rrRatio.toFixed(2),
       status: 'OPEN',
       currentPrice: Number(entry),
-      unrealizedPnlUSD: 0,
-      unrealizedR: 0,
-      roePercent: 0,
+      unrealizedGrossPnlUSD: 0,
+      unrealizedPnlUSD: -estTotalFeesUSD,
+      unrealizedR: riskUSD > 0 ? +((-estTotalFeesUSD) / riskUSD).toFixed(2) : 0,
+      roePercent: margin > 0 ? +(((-estTotalFeesUSD) / margin) * 100).toFixed(1) : 0,
       timeframe: '1H / 5M',
       strategy: `${lev}x Isolated Perpetual`,
       conditions,
@@ -255,11 +271,18 @@ export class PaperTrader {
       pos.currentPrice = livePrice;
       const isLong = pos.direction === 'LONG';
 
-      // Calculate unrealized PnL & ROE %
+      // Real-time Delta fee deduction
       const priceDelta = isLong ? (livePrice - pos.entry) : (pos.entry - livePrice);
-      pos.unrealizedPnlUSD = +(priceDelta * pos.positionSize).toFixed(2);
-      pos.unrealizedR = pos.riskUSD > 0 ? +(pos.unrealizedPnlUSD / pos.riskUSD).toFixed(2) : 0;
-      pos.roePercent = pos.marginUSD > 0 ? +((pos.unrealizedPnlUSD / pos.marginUSD) * 100).toFixed(1) : 0;
+      const grossPnl = +(priceDelta * pos.positionSize).toFixed(2);
+      const estExitFee = +(livePrice * pos.positionSize * DELTA_FEE_RATES.TAKER).toFixed(2);
+      const totalFees = +( (pos.entryFeeUSD || 0) + estExitFee ).toFixed(2);
+      const netPnl = +(grossPnl - totalFees).toFixed(2);
+
+      pos.unrealizedGrossPnlUSD = grossPnl;
+      pos.feesUSD = totalFees;
+      pos.unrealizedPnlUSD = netPnl;
+      pos.unrealizedR = pos.riskUSD > 0 ? +(netPnl / pos.riskUSD).toFixed(2) : 0;
+      pos.roePercent = pos.marginUSD > 0 ? +((netPnl / pos.marginUSD) * 100).toFixed(1) : 0;
 
       // 1. Check Liquidation (Delta Exchange Standard)
       let hitLiquidation = false;
@@ -297,16 +320,27 @@ export class PaperTrader {
     const isLong = pos.direction === 'LONG';
     const priceDelta = isLong ? (actualExit - pos.entry) : (pos.entry - actualExit);
     
+    // Delta Exchange Execution Fees
+    const entryFee = pos.entryFeeUSD || +(pos.notionalUSD * DELTA_FEE_RATES.TAKER).toFixed(2);
+    // TP exit is Maker (0.02%), SL / Manual exit is Taker (0.05%)
+    const exitRate = resultType === 'WIN' ? DELTA_FEE_RATES.MAKER : DELTA_FEE_RATES.TAKER;
+    const exitNotional = +(actualExit * pos.positionSize).toFixed(2);
+    const exitFee = +(exitNotional * exitRate).toFixed(2);
+    const totalFees = +(entryFee + exitFee).toFixed(2);
+
+    let grossPnlUSD;
     let pnlUSD;
     let rMultiple;
     let result = resultType;
 
     if (resultType === 'LIQUIDATED') {
+      grossPnlUSD = -pos.marginUSD;
       pnlUSD = -pos.marginUSD;
       rMultiple = -1.0;
       result = 'LIQUIDATED';
     } else {
-      pnlUSD = +(priceDelta * pos.positionSize).toFixed(2);
+      grossPnlUSD = +(priceDelta * pos.positionSize).toFixed(2);
+      pnlUSD = +(grossPnlUSD - totalFees).toFixed(2); // Net Realized PnL (Fees Deducted)
       rMultiple = pos.riskUSD > 0 ? +(pnlUSD / pos.riskUSD).toFixed(2) : 0;
       if (resultType === 'MANUAL') {
         result = pnlUSD > 0 ? 'WIN' : pnlUSD < 0 ? 'LOSS' : 'BREAKEVEN';
@@ -318,7 +352,13 @@ export class PaperTrader {
       status: 'CLOSED',
       result,
       exitPrice: +actualExit.toFixed(2),
-      pnlUSD,
+      grossPnlUSD,
+      entryFeeUSD: entryFee,
+      exitFeeUSD: exitFee,
+      totalFeesUSD: totalFees,
+      feesUSD: totalFees,
+      feeModel: 'Delta Exchange (0.05% Taker / 0.02% Maker)',
+      pnlUSD, // Net Realized PnL
       rMultiple,
       closedAt: Date.now()
     };
@@ -331,6 +371,8 @@ export class PaperTrader {
 
   getLiveEquity(currentPrices = {}) {
     let unrealizedPnlUSD = 0;
+    let unrealizedGrossPnlUSD = 0;
+    let unrealizedFeesUSD = 0;
     let unrealizedR = 0;
 
     this.openPositions.forEach(pos => {
@@ -338,12 +380,20 @@ export class PaperTrader {
       pos.currentPrice = livePrice;
       const isLong = pos.direction === 'LONG';
       const priceDelta = isLong ? (livePrice - pos.entry) : (pos.entry - livePrice);
-      const pnl = +(priceDelta * pos.positionSize).toFixed(2);
-      const r = pos.riskUSD > 0 ? +(pnl / pos.riskUSD).toFixed(2) : 0;
-      pos.unrealizedPnlUSD = pnl;
+      const grossPnl = +(priceDelta * pos.positionSize).toFixed(2);
+      const estExitFee = +(livePrice * pos.positionSize * DELTA_FEE_RATES.TAKER).toFixed(2);
+      const fees = +( (pos.entryFeeUSD || 0) + estExitFee ).toFixed(2);
+      const netPnl = +(grossPnl - fees).toFixed(2);
+      const r = pos.riskUSD > 0 ? +(netPnl / pos.riskUSD).toFixed(2) : 0;
+
+      pos.unrealizedGrossPnlUSD = grossPnl;
+      pos.feesUSD = fees;
+      pos.unrealizedPnlUSD = netPnl;
       pos.unrealizedR = r;
 
-      unrealizedPnlUSD += pnl;
+      unrealizedGrossPnlUSD += grossPnl;
+      unrealizedFeesUSD += fees;
+      unrealizedPnlUSD += netPnl;
       unrealizedR += r;
     });
 
@@ -358,6 +408,8 @@ export class PaperTrader {
       balance: +this.balance.toFixed(2),
       equity,
       unrealizedPnlUSD: +unrealizedPnlUSD.toFixed(2),
+      unrealizedGrossPnlUSD: +unrealizedGrossPnlUSD.toFixed(2),
+      unrealizedFeesUSD: +unrealizedFeesUSD.toFixed(2),
       unrealizedR: +unrealizedR.toFixed(2),
       closedTotalR,
       closedPnlUSD,
@@ -378,6 +430,8 @@ export class PaperTrader {
     const winRate = totalTrades > 0 ? +((wins.length / totalTrades) * 100).toFixed(1) : 0;
     const totalR = +closed.reduce((acc, t) => acc + (t.rMultiple || 0), 0).toFixed(2);
     const totalPnlUSD = +closed.reduce((acc, t) => acc + (t.pnlUSD || 0), 0).toFixed(2);
+    const totalFeesUSD = +closed.reduce((acc, t) => acc + (t.totalFeesUSD || t.feesUSD || 0), 0).toFixed(2);
+    const grossPnlUSD = +closed.reduce((acc, t) => acc + (t.grossPnlUSD !== undefined ? t.grossPnlUSD : (t.pnlUSD + (t.totalFeesUSD || 0))), 0).toFixed(2);
 
     const grossProfit = wins.reduce((acc, t) => acc + t.pnlUSD, 0);
     const grossLoss = Math.abs(losses.reduce((acc, t) => acc + t.pnlUSD, 0));
@@ -415,6 +469,8 @@ export class PaperTrader {
       winRate,
       totalR,
       totalPnlUSD,
+      totalFeesUSD,
+      grossPnlUSD,
       profitFactor,
       avgWinR,
       avgLossR,

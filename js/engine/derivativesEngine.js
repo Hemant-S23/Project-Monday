@@ -199,6 +199,9 @@ export class DerivativesEngine {
       rrRatio = +(Math.abs(tpPnL) / Math.abs(slPnL)).toFixed(2);
     }
 
+    // Delta Exchange Realistic Fees (Taker: 0.05% Entry + 0.05% Exit on Notional)
+    const deltaFees = this.calcDeltaFees({ notionalUSD: notional });
+
     return {
       asset,
       market,
@@ -216,7 +219,28 @@ export class DerivativesEngine {
       tpPrice: target,
       tpPnL,
       tpROE,
-      rrRatio
+      rrRatio,
+      estDeltaFeeUSD: deltaFees.totalFeesUSD
+    };
+  }
+
+  /**
+   * Delta Exchange Fee Model
+   * Taker (Market order): 0.05% (0.0005)
+   * Maker (Limit order): 0.02% (0.0002)
+   */
+  calcDeltaFees({ notionalUSD, orderType = 'MARKET', exitOrderType = 'MARKET' }) {
+    const notional = Number(notionalUSD) || 0;
+    const entryRate = orderType === 'LIMIT' ? 0.0002 : 0.0005;
+    const exitRate = exitOrderType === 'LIMIT' ? 0.0002 : 0.0005;
+    const entryFee = +(notional * entryRate).toFixed(2);
+    const exitFee = +(notional * exitRate).toFixed(2);
+    return {
+      entryFeeUSD: entryFee,
+      exitFeeUSD: exitFee,
+      totalFeesUSD: +(entryFee + exitFee).toFixed(2),
+      entryRate,
+      exitRate
     };
   }
 }

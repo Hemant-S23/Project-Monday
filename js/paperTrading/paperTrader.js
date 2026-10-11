@@ -3,6 +3,12 @@
  * Manages virtual account, active positions, automated journal recording,
  * and comprehensive performance analytics (Win Rate, Total R, Profit Factor, Drawdown).
  */
+// Delta Exchange Futures Fee Matrix (Standard Tier-1 Derivatives)
+export const DELTA_FEE_RATES = {
+  TAKER: 0.0005, // 0.05% for Market / Taker orders
+  MAKER: 0.0002  // 0.02% for Limit / Maker orders
+};
+
 export class PaperTrader {
   constructor(initialBalance = 2000, userId = null) {
     this.initialBalance = initialBalance;
@@ -183,12 +189,6 @@ export class PaperTrader {
       console.error('Failed to save paper trading state:', e);
     }
   }
-
-// Delta Exchange Futures Fee Matrix (Standard Tier-1 Derivatives)
-export const DELTA_FEE_RATES = {
-  TAKER: 0.0005, // 0.05% for Market / Taker orders
-  MAKER: 0.0002  // 0.02% for Limit / Maker orders
-};
 
   executePaperTrade({
     asset,

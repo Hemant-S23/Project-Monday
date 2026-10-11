@@ -390,27 +390,91 @@
             <span class="live-chip-text" id="header_live_text">+$0.00 (+0.00R)</span>
           </div>
         </div>
-        <button class="theme-toggle-btn" id="theme_toggle_btn" type="button" aria-label="Toggle Theme" title="Switch Theme (Dark / Light)">
-          <div class="theme-toggle-track">
-            <div class="theme-toggle-thumb">
-              <i class="ph ph-moon theme-thumb-icon moon-icon"></i>
-              <i class="ph ph-sun theme-thumb-icon sun-icon"></i>
+        <!-- Google-Style User Profile & Utilities Popover Hub -->
+        <div class="profile-popover-wrapper" id="profile_popover_wrapper">
+          <button class="profile-avatar-btn" id="profile_avatar_btn" type="button" aria-haspopup="true" aria-expanded="false" title="Account, Portfolio & Settings">
+            <div class="avatar-circle" id="profile_avatar_circle">
+              <span class="avatar-initials" id="profile_avatar_initials">GT</span>
+            </div>
+            <i class="ph ph-caret-down avatar-caret" id="profile_avatar_caret"></i>
+          </button>
+
+          <!-- Floating Profile Dropdown Popover Menu -->
+          <div class="profile-popover-menu" id="profile_popover_menu" role="menu">
+            <!-- User Header Card -->
+            <div class="popover-user-card">
+              <div class="popover-user-avatar">
+                <span class="popover-avatar-initials" id="popover_avatar_initials">GT</span>
+              </div>
+              <div class="popover-user-meta">
+                <span class="popover-user-name" id="user_display_name">Guest Trader</span>
+                <span class="popover-account-badge"><i class="ph-fill ph-shield-check"></i> Pro Paper Account</span>
+              </div>
+            </div>
+
+            <!-- Portfolio & Capital Allocation Snapshot -->
+            <div class="popover-portfolio-card" id="popover_portfolio_card">
+              <div class="popover-card-header">
+                <span class="popover-card-title"><i class="ph ph-briefcase"></i> My Portfolio</span>
+                <span class="popover-equity-tag" id="popover_equity_tag">$2,000.00</span>
+              </div>
+              <div class="popover-portfolio-grid">
+                <div class="portfolio-stat-cell">
+                  <span class="p-stat-lbl">Available Cash</span>
+                  <span class="p-stat-val" id="popover_avail_bal">$2,000.00</span>
+                </div>
+                <div class="portfolio-stat-cell">
+                  <span class="p-stat-lbl">Margin in Trades</span>
+                  <span class="p-stat-val" id="popover_used_margin">$0.00</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Popover Menu Actions -->
+            <div class="popover-menu-section">
+              <!-- Trade Journal Trigger -->
+              <button class="popover-menu-item" id="open_journal_btn" type="button">
+                <div class="menu-item-left">
+                  <i class="ph ph-notebook item-icon purple"></i>
+                  <span>Trade Journal & Analytics</span>
+                </div>
+                <i class="ph ph-arrow-right item-arrow"></i>
+              </button>
+
+              <!-- Dark / Light Theme Toggle Row -->
+              <div class="popover-menu-item theme-row">
+                <div class="menu-item-left">
+                  <i class="ph ph-sun-dim item-icon amber" id="popover_theme_icon"></i>
+                  <span>Theme</span>
+                </div>
+                <button class="theme-toggle-btn" id="theme_toggle_btn" type="button" aria-label="Toggle Theme" title="Switch Theme (Dark / Light)">
+                  <div class="theme-toggle-track">
+                    <div class="theme-toggle-thumb">
+                      <i class="ph ph-moon theme-thumb-icon moon-icon"></i>
+                      <i class="ph ph-sun theme-thumb-icon sun-icon"></i>
+                    </div>
+                  </div>
+                  <span class="theme-toggle-text" id="theme_mode_text">Dark</span>
+                </button>
+              </div>
+
+              <!-- Audio Copilot Mute / Unmute Toggle -->
+              <button class="popover-menu-item" id="popover_voice_toggle" type="button">
+                <div class="menu-item-left">
+                  <i class="ph ph-speaker-high item-icon cyan" id="popover_voice_icon"></i>
+                  <span>Hinglish Audio Copilot</span>
+                </div>
+                <span class="popover-toggle-badge active" id="popover_voice_badge">ON</span>
+              </button>
+            </div>
+
+            <div class="popover-footer">
+              <button class="popover-logout-btn" id="header_logout_btn" type="button">
+                <i class="ph ph-sign-out"></i>
+                <span id="popover_logout_text">Sign Out / Switch Account</span>
+              </button>
             </div>
           </div>
-          <span class="theme-toggle-text" id="theme_mode_text">Dark</span>
-        </button>
-        <button class="btn-journal-open" id="open_journal_btn">
-          <i class="ph ph-notebook"></i> Trade Journal
-        </button>
-        <!-- Active User Profile & Sign Out Button -->
-        <div class="header-user-profile" id="header_user_profile" title="Active Account">
-          <div class="user-chip-avatar">
-            <i class="ph ph-user" id="user_avatar_icon"></i>
-          </div>
-          <span class="user-chip-name" id="user_display_name">Guest Trader</span>
-          <button class="btn-logout" id="header_logout_btn" type="button" title="Sign Out / Switch Account">
-            <i class="ph ph-sign-out"></i>
-          </button>
         </div>
       </div>
     </header>

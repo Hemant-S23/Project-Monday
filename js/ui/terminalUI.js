@@ -451,6 +451,49 @@ export class TerminalUI {
       });
     }
 
+    // Google-Style User Profile & Utilities Popover Hub Toggles
+    const profilePopoverWrapper = document.getElementById('profile_popover_wrapper');
+    const profileAvatarBtn = document.getElementById('profile_avatar_btn');
+    const popoverVoiceToggle = document.getElementById('popover_voice_toggle');
+    const popoverVoiceBadge = document.getElementById('popover_voice_badge');
+    const popoverVoiceIcon = document.getElementById('popover_voice_icon');
+    const popoverThemeIcon = document.getElementById('popover_theme_icon');
+
+    if (profileAvatarBtn && profilePopoverWrapper) {
+      profileAvatarBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = profilePopoverWrapper.classList.toggle('open');
+        profileAvatarBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      });
+
+      // Outside click listener to auto-close popover
+      document.addEventListener('click', (e) => {
+        if (!profilePopoverWrapper.contains(e.target)) {
+          profilePopoverWrapper.classList.remove('open');
+          profileAvatarBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+
+    // Audio Copilot Quick Voice Switcher in Popover
+    if (popoverVoiceToggle) {
+      popoverVoiceToggle.addEventListener('click', () => {
+        if (this.callbacks.onToggleMute) {
+          const isMuted = this.callbacks.onToggleMute();
+          if (popoverVoiceBadge) {
+            popoverVoiceBadge.textContent = isMuted ? 'OFF' : 'ON';
+            popoverVoiceBadge.classList.toggle('active', !isMuted);
+          }
+          if (popoverVoiceIcon) {
+            popoverVoiceIcon.className = isMuted
+              ? 'ph ph-speaker-slash item-icon cyan'
+              : 'ph ph-speaker-high item-icon cyan';
+          }
+          this.showToast('Audio Copilot', isMuted ? 'Voice speech muted' : 'Voice speech active', 'info');
+        }
+      });
+    }
+
     // Journal Modal Toggles
     const journalBtn = document.getElementById('open_journal_btn');
     const journalModal = document.getElementById('journal_modal');
@@ -458,6 +501,10 @@ export class TerminalUI {
 
     if (journalBtn && journalModal) {
       journalBtn.addEventListener('click', () => {
+        if (profilePopoverWrapper) {
+          profilePopoverWrapper.classList.remove('open');
+          if (profileAvatarBtn) profileAvatarBtn.setAttribute('aria-expanded', 'false');
+        }
         journalModal.classList.add('open');
       });
     }
@@ -497,6 +544,11 @@ export class TerminalUI {
       }
       if (themeBtn) {
         themeBtn.setAttribute('title', theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode');
+      }
+      if (popoverThemeIcon) {
+        popoverThemeIcon.className = theme === 'light'
+          ? 'ph ph-sun item-icon amber'
+          : 'ph ph-sun-dim item-icon amber';
       }
     };
 
@@ -608,6 +660,10 @@ export class TerminalUI {
     // Header Logout Button
     if (headerLogoutBtn) {
       headerLogoutBtn.addEventListener('click', () => {
+        if (profilePopoverWrapper) {
+          profilePopoverWrapper.classList.remove('open');
+          if (profileAvatarBtn) profileAvatarBtn.setAttribute('aria-expanded', 'false');
+        }
         if (confirm('Kya aap logout karke account switch karna chahte hain?')) {
           if (this.callbacks.onSignOut) this.callbacks.onSignOut();
         }
@@ -933,15 +989,43 @@ export class TerminalUI {
 
   updateUserProfile(user) {
     const nameEl = document.getElementById('user_display_name');
+    const headerInitials = document.getElementById('profile_avatar_initials');
+    const popoverInitials = document.getElementById('popover_avatar_initials');
+    const logoutText = document.getElementById('popover_logout_text');
+    const badgeEl = document.querySelector('.popover-account-badge');
     const avatarIcon = document.getElementById('user_avatar_icon');
-    if (!nameEl) return;
+
     if (user) {
-      nameEl.textContent = user.name || (user.email ? user.email.split('@')[0] : 'Guest Trader');
+      const displayName = user.name || (user.email ? user.email.split('@')[0] : 'Guest Trader');
+      if (nameEl) nameEl.textContent = displayName;
+
+      let initials = 'GT';
+      if (user.isGuest) {
+        initials = 'GT';
+        if (badgeEl) badgeEl.innerHTML = '<i class="ph-fill ph-shield-check"></i> Pro Paper Account';
+        if (logoutText) logoutText.textContent = 'Sign Out / Switch Account';
+      } else {
+        const parts = displayName.trim().split(/\s+/);
+        if (parts.length >= 2) {
+          initials = (parts[0][0] + parts[1][0]).toUpperCase();
+        } else {
+          initials = displayName.slice(0, 2).toUpperCase();
+        }
+        if (badgeEl) badgeEl.innerHTML = '<i class="ph-fill ph-shield-check"></i> Verified Account';
+        if (logoutText) logoutText.textContent = 'Sign Out';
+      }
+
+      if (headerInitials) headerInitials.textContent = initials;
+      if (popoverInitials) popoverInitials.textContent = initials;
       if (avatarIcon) {
         avatarIcon.className = user.isGuest ? 'ph ph-user' : 'ph ph-check-circle';
       }
     } else {
-      nameEl.textContent = 'Sign In';
+      if (nameEl) nameEl.textContent = 'Sign In';
+      if (headerInitials) headerInitials.textContent = '?';
+      if (popoverInitials) popoverInitials.textContent = '?';
+      if (logoutText) logoutText.textContent = 'Sign In / Register';
+      if (badgeEl) badgeEl.innerHTML = '<i class="ph ph-user"></i> Not Logged In';
       if (avatarIcon) avatarIcon.className = 'ph ph-user-circle';
     }
   }
@@ -1560,6 +1644,23 @@ export class TerminalUI {
       pnlUsdEl.textContent = `(${isPos ? '+' : ''}$${activeTotalPnl.toFixed(2)})`;
       pnlUsdEl.className = `r-usd-val ${isPos ? 'bullish' : 'bearish'}`;
     }
+
+    // Live Portfolio & Margin Snapshot in Profile Popover Hub
+    const popoverEquity = document.getElementById('popover_equity_tag');
+    const popoverAvail = document.getElementById('popover_avail_bal');
+    const popoverMargin = document.getElementById('popover_used_margin');
+
+    if (popoverEquity) {
+      const eq = liveMetrics.equity !== undefined ? liveMetrics.equity : liveMetrics.balance;
+      popoverEquity.textContent = `$${eq.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    if (popoverAvail) {
+      popoverAvail.textContent = `$${(liveMetrics.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    if (popoverMargin) {
+      const margin = liveMetrics.usedMargin !== undefined ? liveMetrics.usedMargin : 0;
+      popoverMargin.textContent = `$${margin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
   }
 
   updateJournalAndAnalytics(analytics, trades) {
@@ -1567,6 +1668,7 @@ export class TerminalUI {
     const liveMetrics = {
       balance: analytics.balance,
       equity: analytics.equity || analytics.balance,
+      usedMargin: analytics.usedMargin || 0,
       unrealizedPnlUSD: analytics.unrealizedPnlUSD || 0,
       unrealizedR: analytics.unrealizedR || 0,
       closedTotalR: analytics.totalR,

@@ -403,10 +403,12 @@ export class PaperTrader {
     const equity = +(this.balance + unrealizedPnlUSD).toFixed(2);
     const netTotalR = +(closedTotalR + unrealizedR).toFixed(2);
     const netTotalPnlUSD = +(closedPnlUSD + unrealizedPnlUSD).toFixed(2);
+    const usedMargin = +this.openPositions.reduce((acc, p) => acc + (p.marginUSD || 0), 0).toFixed(2);
 
     return {
       balance: +this.balance.toFixed(2),
       equity,
+      usedMargin,
       unrealizedPnlUSD: +unrealizedPnlUSD.toFixed(2),
       unrealizedGrossPnlUSD: +unrealizedGrossPnlUSD.toFixed(2),
       unrealizedFeesUSD: +unrealizedFeesUSD.toFixed(2),
@@ -454,11 +456,13 @@ export class PaperTrader {
 
     const unrealizedPnlUSD = +this.openPositions.reduce((acc, p) => acc + (p.unrealizedPnlUSD || 0), 0).toFixed(2);
     const unrealizedR = +this.openPositions.reduce((acc, p) => acc + (p.unrealizedR || 0), 0).toFixed(2);
+    const usedMargin = +this.openPositions.reduce((acc, p) => acc + (p.marginUSD || 0), 0).toFixed(2);
 
     return {
       balance: +this.balance.toFixed(2),
       initialBalance: this.initialBalance,
       equity: +(this.balance + unrealizedPnlUSD).toFixed(2),
+      usedMargin,
       unrealizedPnlUSD,
       unrealizedR,
       netTotalR: +(totalR + unrealizedR).toFixed(2),

@@ -1525,6 +1525,10 @@ export class TerminalUI {
       return;
     }
 
+    if (!this.expandedPositionIds) {
+      this.expandedPositionIds = new Set();
+    }
+
     container.innerHTML = positions.map(pos => {
       const isPos = pos.unrealizedPnlUSD >= 0;
       const isLong = pos.direction === 'LONG';
@@ -1536,60 +1540,110 @@ export class TerminalUI {
       const lev = pos.leverage || 20;
       const roe = pos.roePercent !== undefined ? pos.roePercent : (pos.marginUSD > 0 ? ((pos.unrealizedPnlUSD / pos.marginUSD) * 100).toFixed(1) : 0);
       const liqText = pos.liquidationPrice ? this.formatPrice(pos.liquidationPrice) : 'N/A';
+      const isExpanded = this.expandedPositionIds.has(pos.id);
 
       return `
-        <div class="position-card">
-          <div class="pos-top">
-            <div class="pos-badge-group">
+        <div class="position-card compact-strip ${isExpanded ? 'expanded' : ''}" data-trade-id="${pos.id}">
+          <!-- Compact One-Line Summary Strip (Tap to Expand Details) -->
+          <div class="pos-strip-summary" data-trade-id="${pos.id}" role="button" tabindex="0" aria-expanded="${isExpanded ? 'true' : 'false'}" title="Tap to expand / collapse full trade details">
+            <div class="pos-strip-left">
               <span class="pos-asset-pill">${pos.asset}/USD</span>
-              <span class="pos-lev-pill">${lev}x Isolated</span>
               <span class="pos-direction-pill ${pos.direction.toLowerCase()}">${pos.direction}</span>
+              <span class="pos-lev-pill">${lev}x</span>
             </div>
-            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
-              <span class="pos-pnl-chip ${isPos ? 'bullish' : 'bearish'}">
-                ${isPos ? '+' : ''}$${pos.unrealizedPnlUSD.toFixed(2)} (${isPos ? '+' : ''}${pos.unrealizedR}R)
+
+            <div class="pos-strip-prices">
+              <span class="strip-price-item" title="Entry Price">
+                <span class="strip-lbl">E:</span><span class="strip-val">${this.formatPrice(pos.entry)}</span>
               </span>
-              <span class="pos-roe-badge ${isPos ? 'bullish' : 'bearish'}">
-                ${isPos ? '+' : ''}${roe}% ROE
+              <i class="ph ph-arrow-right strip-arrow"></i>
+              <span class="strip-price-item" title="Mark / Live Price">
+                <span class="strip-lbl">M:</span><span class="strip-val highlight">${this.formatPrice(pos.currentPrice)}</span>
               </span>
             </div>
-          </div>
 
-          <!-- Target/SL Progress Bar -->
-          <div class="pos-progress-wrapper" title="Progress towards Target (SL on left, TP on right)">
-            <div class="pos-progress-track">
-              <div class="pos-progress-fill ${isPos ? 'bullish' : 'bearish'}" style="width: ${progress}%;"></div>
-              <div class="pos-progress-marker" style="left: ${progress}%;"></div>
-            </div>
-            <div class="pos-progress-labels">
-              <span>SL ${this.formatPrice(pos.stopLoss)}</span>
-              <span>TP ${this.formatPrice(pos.target)}</span>
+            <div class="pos-strip-right">
+              <span class="pos-pnl-chip ${isPos ? 'bullish' : 'bearish'}" title="Floating PnL & Return on Equity">
+                ${isPos ? '+' : ''}$${pos.unrealizedPnlUSD.toFixed(2)} (${isPos ? '+' : ''}${roe}%)
+              </span>
+              <button class="btn-quick-close-pos" data-trade-id="${pos.id}" type="button" title="Quick Close Trade" aria-label="Quick Close Trade">
+                <i class="ph ph-x"></i>
+              </button>
+              <i class="ph ph-caret-down strip-expand-caret"></i>
             </div>
           </div>
 
-          <div class="pos-grid">
-            <div class="pos-grid-cell"><span class="lbl">Entry</span><span class="val">${this.formatPrice(pos.entry)}</span></div>
-            <div class="pos-grid-cell"><span class="lbl">Mark Price</span><span class="val highlight">${this.formatPrice(pos.currentPrice)}</span></div>
-            <div class="pos-grid-cell"><span class="lbl">Est. Liq Price</span><span class="val text-warning">${liqText}</span></div>
-            <div class="pos-grid-cell"><span class="lbl">Margin / Value</span><span class="val">$${pos.marginUSD || pos.riskUSD} / $${pos.notionalUSD || (pos.entry * pos.positionSize).toFixed(0)}</span></div>
-            <div class="pos-grid-cell"><span class="lbl">Size</span><span class="val">${pos.positionSize} ${pos.asset}</span></div>
-            <div class="pos-grid-cell"><span class="lbl">RR Ratio</span><span class="val">1:${pos.rrRatio}</span></div>
-            <div class="pos-grid-cell"><span class="lbl">Delta Fee (Est.)</span><span class="val text-muted">-$${Number(pos.feesUSD || 0).toFixed(2)}</span></div>
-          </div>
+          <!-- Collapsible Full Detail Card (Reveals on Tap) -->
+          <div class="pos-strip-details">
+            <!-- Target/SL Progress Bar -->
+            <div class="pos-progress-wrapper" title="Progress towards Target (SL on left, TP on right)">
+              <div class="pos-progress-track">
+                <div class="pos-progress-fill ${isPos ? 'bullish' : 'bearish'}" style="width: ${progress}%;"></div>
+                <div class="pos-progress-marker" style="left: ${progress}%;"></div>
+              </div>
+              <div class="pos-progress-labels">
+                <span>SL ${this.formatPrice(pos.stopLoss)}</span>
+                <span class="pos-roe-tag ${isPos ? 'bullish' : 'bearish'}">${isPos ? '+' : ''}${pos.unrealizedR}R (${isPos ? '+' : ''}${roe}% ROE)</span>
+                <span>TP ${this.formatPrice(pos.target)}</span>
+              </div>
+            </div>
 
-          <div class="pos-footer">
-            <span class="pos-time"><i class="ph ph-clock"></i> ${new Date(pos.openedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-            <button class="btn-close-pos" data-trade-id="${pos.id}" type="button">
-              <i class="ph ph-x-circle"></i> Close Trade
-            </button>
+            <!-- Deep Metrics Grid -->
+            <div class="pos-grid">
+              <div class="pos-grid-cell"><span class="lbl">Entry</span><span class="val">${this.formatPrice(pos.entry)}</span></div>
+              <div class="pos-grid-cell"><span class="lbl">Mark Price</span><span class="val highlight">${this.formatPrice(pos.currentPrice)}</span></div>
+              <div class="pos-grid-cell"><span class="lbl">Est. Liq Price</span><span class="val text-warning">${liqText}</span></div>
+              <div class="pos-grid-cell"><span class="lbl">Margin / Value</span><span class="val">$${pos.marginUSD || pos.riskUSD} / $${pos.notionalUSD || (pos.entry * pos.positionSize).toFixed(0)}</span></div>
+              <div class="pos-grid-cell"><span class="lbl">Size</span><span class="val">${pos.positionSize} ${pos.asset}</span></div>
+              <div class="pos-grid-cell"><span class="lbl">RR Ratio</span><span class="val">1:${pos.rrRatio}</span></div>
+              <div class="pos-grid-cell"><span class="lbl">Delta Fee (Est.)</span><span class="val text-muted">-$${Number(pos.feesUSD || 0).toFixed(2)}</span></div>
+              <div class="pos-grid-cell"><span class="lbl">Strategy</span><span class="val text-muted">${pos.strategy || `${lev}x Iso`}</span></div>
+            </div>
+
+            <div class="pos-footer">
+              <span class="pos-time"><i class="ph ph-clock"></i> Opened: ${new Date(pos.openedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              <button class="btn-close-pos" data-trade-id="${pos.id}" type="button">
+                <i class="ph ph-x-circle"></i> Close Trade
+              </button>
+            </div>
           </div>
         </div>
       `;
     }).join('');
 
-    // Attach close buttons
+    // Attach summary click to toggle accordion
+    container.querySelectorAll('.pos-strip-summary').forEach(strip => {
+      strip.addEventListener('click', (e) => {
+        if (e.target.closest('.btn-quick-close-pos')) return;
+        const tradeId = strip.dataset.tradeId;
+        const card = strip.closest('.position-card');
+        if (!card) return;
+
+        if (this.expandedPositionIds.has(tradeId)) {
+          this.expandedPositionIds.delete(tradeId);
+          card.classList.remove('expanded');
+          strip.setAttribute('aria-expanded', 'false');
+        } else {
+          this.expandedPositionIds.add(tradeId);
+          card.classList.add('expanded');
+          strip.setAttribute('aria-expanded', 'true');
+        }
+      });
+    });
+
+    // Attach quick-close button
+    container.querySelectorAll('.btn-quick-close-pos').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const tradeId = e.currentTarget.dataset.tradeId;
+        if (this.callbacks.onCloseTrade) this.callbacks.onCloseTrade(tradeId);
+      });
+    });
+
+    // Attach full close button
     container.querySelectorAll('.btn-close-pos').forEach(btn => {
       btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const tradeId = e.currentTarget.dataset.tradeId;
         if (this.callbacks.onCloseTrade) this.callbacks.onCloseTrade(tradeId);
       });

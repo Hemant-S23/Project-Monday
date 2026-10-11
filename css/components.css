@@ -389,17 +389,7 @@
 /* Real-time Level Overlay */
 /* Real-time Level Overlay (Docked on Top-Left safely away from candles & right price scale) */
 .chart-levels-overlay {
-  position: absolute;
-  top: 40px;
-  left: 12px;
-  right: auto;
-  z-index: 10;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 6px;
-  pointer-events: none;
-  max-width: calc(100% - 150px);
+  display: none !important;
 }
 
 .level-badge {

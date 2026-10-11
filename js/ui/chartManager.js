@@ -158,7 +158,6 @@ export class ChartManager {
       <div class="tradingview-widget-container" style="width: 100%; height: 100%; position: absolute; inset: 0;">
         <div class="tradingview-widget-container__widget" style="width: 100%; height: 100%;"></div>
       </div>
-      <div id="chart_levels_overlay" class="chart-levels-overlay"></div>
     `;
 
     const widgetWrapper = container.querySelector('.tradingview-widget-container');
@@ -277,7 +276,6 @@ export class ChartManager {
           </div>
         </div>
         <div class="lw-canvas-container" id="lw_canvas_container"></div>
-        <div id="chart_levels_overlay" class="chart-levels-overlay"></div>
       </div>
     `;
 
@@ -503,44 +501,5 @@ export class ChartManager {
         });
       }
     }
-
-    // 2. HTML Level Badges Overlay
-    const overlay = document.getElementById('chart_levels_overlay');
-    if (!overlay) return;
-
-    if (!levels || !levels.entry) {
-      overlay.innerHTML = '';
-      return;
-    }
-
-    const { entry, stopLoss, target, rrRatio, currencySymbol } = levels;
-    const curr = currencySymbol || (this.currentMarket === 'India' ? '₹' : '$');
-    const isIndia = this.currentMarket === 'India' || curr === '₹';
-
-    const formatVal = (val) => {
-      if (typeof val !== 'number') return `${curr}0.00`;
-      if (isIndia) {
-        return `${curr}${val.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}`;
-      }
-      return val >= 1
-        ? `${curr}${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        : `${curr}${val.toFixed(4)}`;
-    };
-
-    overlay.innerHTML = `
-      <div class="level-badge tp-badge">
-        <span class="level-label">🎯 TARGET</span>
-        <span class="level-val">${formatVal(target)}</span>
-        <span class="level-rr">RR 1:${rrRatio}</span>
-      </div>
-      <div class="level-badge entry-badge">
-        <span class="level-label">📍 ENTRY</span>
-        <span class="level-val">${formatVal(entry)}</span>
-      </div>
-      <div class="level-badge sl-badge">
-        <span class="level-label">🛑 STOP LOSS</span>
-        <span class="level-val">${formatVal(stopLoss)}</span>
-      </div>
-    `;
   }
 }

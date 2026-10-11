@@ -657,10 +657,19 @@
               </div>
             </div>
 
-            <!-- Big Execution Trigger Button -->
+            <!-- Counter-Trend / Bias Indicator Pill (Hidden when matched, shows when counter-trend) -->
+            <div class="bias-indicator-pill" id="bias_indicator_pill" style="display: none;">
+              <i class="ph-bold ph-warning-circle"></i>
+              <span id="bias_indicator_text">Counter-Trend • AI Bias is Bullish</span>
+            </div>
+
+            <!-- Sleek Modern Execution Trigger Button -->
             <button class="btn-exec-trade long" id="execute_trade_btn">
-              <i class="ph-bold ph-lightning"></i> 
-              <span id="exec_btn_label">Buy / Long BTC [20x]</span>
+              <div class="exec-btn-content">
+                <i class="ph-bold ph-lightning" id="exec_btn_icon"></i>
+                <span class="exec-btn-action" id="exec_btn_action">Open Long</span>
+                <span class="exec-btn-status-badge confirmed" id="exec_btn_badge">Confirmed</span>
+              </div>
             </button>
           </div>
 

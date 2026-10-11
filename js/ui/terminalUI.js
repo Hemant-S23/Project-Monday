@@ -24,6 +24,9 @@ export class TerminalUI {
       availableBalance: 2000
     };
 
+    // Cached strategy state for order desk synchronization
+    this.latestStrategyState = null;
+
     // User Starred Watchlist state (Persisted in localStorage)
     try {
       const savedWatchlist = localStorage.getItem('monday_user_watchlist');
@@ -436,6 +439,19 @@ export class TerminalUI {
     const execBtn = document.getElementById('execute_trade_btn');
     if (execBtn) {
       execBtn.addEventListener('click', () => {
+        const aiState = this.latestStrategyState?.state || 'WAIT';
+        const aiDirection = (this.latestStrategyState?.direction || 
+          (this.latestStrategyState?.htfTrend?.direction === 'BULLISH' ? 'LONG' : 
+          (this.latestStrategyState?.htfTrend?.direction === 'BEARISH' ? 'SHORT' : '')) || '').toUpperCase();
+        const userDirection = (this.orderState.direction || 'LONG').toUpperCase();
+
+        if (aiState === 'CONFIRMED' && aiDirection && aiDirection !== userDirection) {
+          const proceed = window.confirm(
+            `⚠️ Counter-Trend Warning:\n\nMonday AI has an institutional ${aiDirection} bias for ${this.currentAsset}.\nYou are opening an opposite ${userDirection} position against the confirmed trend.\n\nDo you want to proceed anyway?`
+          );
+          if (!proceed) return;
+        }
+
         const orderPacket = this.getOrderDeskPacket();
         if (this.callbacks.onExecuteTrade) this.callbacks.onExecuteTrade(orderPacket);
       });
@@ -752,24 +768,20 @@ export class TerminalUI {
     // 1. Long / Short Direction Toggle
     if (dirLongBtn && dirShortBtn) {
       dirLongBtn.addEventListener('click', () => {
+        if (this.orderState.direction === 'LONG') return;
         this.orderState.direction = 'LONG';
         dirLongBtn.classList.add('active');
         dirShortBtn.classList.remove('active');
-        if (execBtn) {
-          execBtn.classList.remove('short');
-          execBtn.classList.add('long');
-        }
+        this.recalibrateOrderDeskLevels('LONG');
         this.refreshDerivativesOrderDesk();
       });
 
       dirShortBtn.addEventListener('click', () => {
+        if (this.orderState.direction === 'SHORT') return;
         this.orderState.direction = 'SHORT';
         dirShortBtn.classList.add('active');
         dirLongBtn.classList.remove('active');
-        if (execBtn) {
-          execBtn.classList.remove('long');
-          execBtn.classList.add('short');
-        }
+        this.recalibrateOrderDeskLevels('SHORT');
         this.refreshDerivativesOrderDesk();
       });
     }
@@ -865,6 +877,58 @@ export class TerminalUI {
     this.refreshDerivativesOrderDesk();
   }
 
+  /**
+   * Recalibrates SL & TP when toggling direction between Long & Short,
+   * ensuring stop-loss and targets are never mathematically inverted.
+   */
+  recalibrateOrderDeskLevels(newDirection) {
+    const entry = this.orderState.entryPrice || 1;
+    const aiDir = (this.latestStrategyState?.direction || '').toUpperCase();
+    const tpInput = document.getElementById('order_tp_input');
+    const slInput = document.getElementById('order_sl_input');
+
+    // If switching back to the AI-confirmed direction and AI levels exist, restore them
+    if (this.latestStrategyState?.levels && aiDir === newDirection) {
+      const { stopLoss, target } = this.latestStrategyState.levels;
+      if (stopLoss && target) {
+        this.orderState.slPrice = stopLoss;
+        this.orderState.tpPrice = target;
+        if (slInput) slInput.value = stopLoss;
+        if (tpInput) tpInput.value = target;
+        return;
+      }
+    }
+
+    const currentSL = this.orderState.slPrice || 0;
+    const currentTP = this.orderState.tpPrice || 0;
+
+    const isInverted = newDirection === 'LONG'
+      ? (currentSL >= entry || currentTP <= entry)
+      : (currentSL <= entry || currentTP >= entry);
+
+    if (isInverted || !currentSL || !currentTP) {
+      const prevDist = Math.abs(entry - currentSL);
+      const slDist = (prevDist > 0 && prevDist < entry * 0.15) ? prevDist : +(entry * 0.008).toFixed(2);
+      const rr = 2.5;
+
+      if (newDirection === 'LONG') {
+        const newSL = +(Math.max(0, entry - slDist)).toFixed(2);
+        const newTP = +(entry + (slDist * rr)).toFixed(2);
+        this.orderState.slPrice = newSL;
+        this.orderState.tpPrice = newTP;
+        if (slInput) slInput.value = newSL;
+        if (tpInput) tpInput.value = newTP;
+      } else {
+        const newSL = +(entry + slDist).toFixed(2);
+        const newTP = +(Math.max(0, entry - (slDist * rr))).toFixed(2);
+        this.orderState.slPrice = newSL;
+        this.orderState.tpPrice = newTP;
+        if (slInput) slInput.value = newSL;
+        if (tpInput) tpInput.value = newTP;
+      }
+    }
+  }
+
   refreshDerivativesOrderDesk() {
     const spec = this.derivativesEngine.getAssetSpec(this.currentAsset, this.currentMarket);
     
@@ -935,9 +999,80 @@ export class TerminalUI {
         : '-0.00% ROE';
     }
 
-    if (execLabel) {
-      const isLong = this.orderState.direction === 'LONG';
-      execLabel.textContent = `${isLong ? 'Buy / Long' : 'Sell / Short'} ${this.currentAsset} [${telemetry.leverage}x]`;
+    // Dynamic Direction, Bias Indicator Pill & Minimal Button Presentation
+    const execBtn = document.getElementById('execute_trade_btn');
+    const execActionEl = document.getElementById('exec_btn_action');
+    const execBadgeEl = document.getElementById('exec_btn_badge');
+    const execIconEl = document.getElementById('exec_btn_icon');
+    const biasPill = document.getElementById('bias_indicator_pill');
+    const biasText = document.getElementById('bias_indicator_text');
+
+    const userDirection = (this.orderState.direction || 'LONG').toUpperCase();
+    const isLong = userDirection === 'LONG';
+
+    const aiState = this.latestStrategyState?.state || 'WAIT';
+    const aiDirection = (this.latestStrategyState?.direction || 
+      (this.latestStrategyState?.htfTrend?.direction === 'BULLISH' ? 'LONG' : 
+      (this.latestStrategyState?.htfTrend?.direction === 'BEARISH' ? 'SHORT' : '')) || '').toUpperCase();
+
+    const isCounterTrend = Boolean(aiDirection && userDirection !== aiDirection);
+
+    // 1. Counter-Trend Glassmorphic Bias Pill
+    if (biasPill && biasText) {
+      if (isCounterTrend) {
+        biasPill.style.display = 'inline-flex';
+        const aiBiasName = aiDirection === 'LONG' ? 'Bullish' : (aiDirection === 'SHORT' ? 'Bearish' : 'Neutral');
+        biasText.textContent = `Counter-Trend • AI bias is ${aiBiasName}`;
+      } else {
+        biasPill.style.display = 'none';
+      }
+    }
+
+    // 2. Action text
+    if (execActionEl) {
+      execActionEl.textContent = isLong ? 'Open Long' : 'Open Short';
+    }
+
+    // 3. Execution Button Styling & Status Badge
+    if (execBtn) {
+      execBtn.classList.remove('long', 'short', 'counter-trend', 'pulse-ready');
+      execBtn.classList.add(isLong ? 'long' : 'short');
+
+      if (isCounterTrend) {
+        execBtn.classList.add('counter-trend');
+        if (execBadgeEl) {
+          execBadgeEl.className = 'exec-btn-status-badge counter';
+          execBadgeEl.textContent = 'Unconfirmed';
+        }
+        if (execIconEl) {
+          execIconEl.className = 'ph-bold ph-warning-circle';
+        }
+      } else if (aiState === 'CONFIRMED') {
+        execBtn.classList.add('pulse-ready');
+        if (execBadgeEl) {
+          execBadgeEl.className = 'exec-btn-status-badge confirmed';
+          execBadgeEl.textContent = 'Confirmed';
+        }
+        if (execIconEl) {
+          execIconEl.className = 'ph-bold ph-lightning';
+        }
+      } else if (aiState === 'DEVELOPING') {
+        if (execBadgeEl) {
+          execBadgeEl.className = 'exec-btn-status-badge pending';
+          execBadgeEl.textContent = 'Developing';
+        }
+        if (execIconEl) {
+          execIconEl.className = 'ph-bold ph-hourglass-high';
+        }
+      } else {
+        if (execBadgeEl) {
+          execBadgeEl.className = 'exec-btn-status-badge pending';
+          execBadgeEl.textContent = 'Setup Pending';
+        }
+        if (execIconEl) {
+          execIconEl.className = 'ph-bold ph-paper-plane-tilt';
+        }
+      }
     }
   }
 
@@ -1339,18 +1474,9 @@ export class TerminalUI {
       confirmEl.textContent = strategyState.ltfStructure?.hasConfirmation ? 'Confirmed (Wick Close)' : 'Pending Reaction';
     }
 
-    // Enable/disable execution button depending on state
-    if (execBtn) {
-      if (state === 'CONFIRMED') {
-        execBtn.disabled = false;
-        execBtn.classList.add('pulse-ready');
-        execBtn.innerHTML = `<i class="ph ph-lightning"></i> <span>Execute Paper Trade (Confirmed)</span>`;
-      } else {
-        execBtn.disabled = false; // allow demo testing even if waiting
-        execBtn.classList.remove('pulse-ready');
-        execBtn.innerHTML = `<i class="ph ph-paper-plane-tilt"></i> <span>Execute Paper Trade (${state})</span>`;
-      }
-    }
+    // Synchronize latest strategy state with Order Desk
+    this.latestStrategyState = strategyState;
+    this.refreshDerivativesOrderDesk();
   }
 
   updateContextTelemetry({ historicalContext, eventRisk }) {

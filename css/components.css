@@ -1671,52 +1671,39 @@
 .btn-exec-trade.long {
   background: linear-gradient(135deg, #059669 0%, #10b981 100%);
   box-shadow: 0 4px 18px rgba(16, 185, 129, 0.4);
+  border-color: rgba(52, 211, 153, 0.5);
 }
 
 .btn-exec-trade.short {
   background: linear-gradient(135deg, #e11d48 0%, #f43f5e 100%);
   box-shadow: 0 4px 18px rgba(244, 63, 94, 0.4);
+  border-color: rgba(251, 113, 133, 0.5);
 }
 
-/* Leverage & Liquidation Badges in Position Cards */
-.pos-lev-pill {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: #fbbf24;
-  background: rgba(245, 158, 11, 0.15);
+.btn-exec-trade.counter-trend {
+  animation: none !important;
+  opacity: 0.95;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+
+/* Bias Indicator Callout Pill (Sleek Glassmorphic SaaS style) */
+.bias-indicator-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 5px 10px;
+  margin-bottom: 6px;
+  border-radius: var(--radius-full);
+  background: rgba(245, 158, 11, 0.1);
   border: 1px solid rgba(245, 158, 11, 0.35);
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.pos-liq-chip {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: #fb923c;
-  background: rgba(249, 115, 22, 0.12);
-  border: 1px solid rgba(249, 115, 22, 0.3);
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.pos-roe-badge {
-  font-family: var(--font-mono);
+  color: #fbbf24;
   font-size: 0.72rem;
   font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.pos-roe-badge.bullish {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-}
-
-.pos-roe-badge.bearish {
-  background: rgba(244, 63, 94, 0.15);
-  color: #f87171;
+  font-family: var(--font-main);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);
+  letter-spacing: 0.01em;
 }
 
 .btn-exec-trade {
@@ -1743,6 +1730,50 @@
   letter-spacing: 0.02em;
 }
 
+.exec-btn-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.exec-btn-action {
+  font-size: 0.9rem;
+  font-weight: 800;
+  font-family: var(--font-main);
+  letter-spacing: 0.02em;
+}
+
+.exec-btn-status-badge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.exec-btn-status-badge.confirmed {
+  background: rgba(0, 0, 0, 0.28);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+}
+
+.exec-btn-status-badge.counter {
+  background: rgba(0, 0, 0, 0.35);
+  color: #fca5a5;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.exec-btn-status-badge.pending {
+  background: rgba(0, 0, 0, 0.28);
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
 .btn-exec-trade::before {
   content: '';
   position: absolute;
@@ -1767,6 +1798,10 @@
 .btn-exec-trade:hover {
   box-shadow: 0 0 25px rgba(16, 185, 129, 0.6), 0 0 15px rgba(6, 182, 212, 0.4);
   transform: translateY(-1px);
+}
+
+.btn-exec-trade.short:hover {
+  box-shadow: 0 0 25px rgba(244, 63, 94, 0.6), 0 0 15px rgba(225, 29, 72, 0.4);
 }
 
 .btn-exec-trade:active {

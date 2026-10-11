@@ -1544,32 +1544,39 @@ export class TerminalUI {
 
       return `
         <div class="position-card compact-strip ${isExpanded ? 'expanded' : ''}" data-trade-id="${pos.id}">
-          <!-- Compact One-Line Summary Strip (Tap to Expand Details) -->
+          <!-- Compact 2-Row Summary Strip (Tap to Expand Details, ~46px) -->
           <div class="pos-strip-summary" data-trade-id="${pos.id}" role="button" tabindex="0" aria-expanded="${isExpanded ? 'true' : 'false'}" title="Tap to expand / collapse full trade details">
-            <div class="pos-strip-left">
-              <span class="pos-asset-pill">${pos.asset}/USD</span>
-              <span class="pos-direction-pill ${pos.direction.toLowerCase()}">${pos.direction}</span>
-              <span class="pos-lev-pill">${lev}x</span>
+            <!-- Row 1: Badges on Left, Prominent Bold PnL on Right -->
+            <div class="strip-row-top">
+              <div class="strip-badges">
+                <span class="pos-asset-pill">${pos.asset}/USD</span>
+                <span class="pos-direction-pill ${pos.direction.toLowerCase()}">${pos.direction}</span>
+                <span class="pos-lev-pill">${lev}x</span>
+              </div>
+
+              <div class="strip-pnl-wrapper">
+                <span class="pos-pnl-chip ${isPos ? 'bullish' : 'bearish'}" title="Floating PnL & Return on Equity">
+                  ${isPos ? '+' : ''}$${pos.unrealizedPnlUSD.toFixed(2)} (${isPos ? '+' : ''}${roe}%)
+                </span>
+                <i class="ph ph-caret-down strip-expand-caret"></i>
+              </div>
             </div>
 
-            <div class="pos-strip-prices">
-              <span class="strip-price-item" title="Entry Price">
-                <span class="strip-lbl">E:</span><span class="strip-val">${this.formatPrice(pos.entry)}</span>
-              </span>
-              <i class="ph ph-arrow-right strip-arrow"></i>
-              <span class="strip-price-item" title="Mark / Live Price">
-                <span class="strip-lbl">M:</span><span class="strip-val highlight">${this.formatPrice(pos.currentPrice)}</span>
-              </span>
-            </div>
+            <!-- Row 2: Entry vs Mark Price on Left, Quick Close Button on Right -->
+            <div class="strip-row-bottom">
+              <div class="strip-prices">
+                <span class="strip-price-item" title="Entry Price">
+                  <span class="strip-lbl">E:</span><span class="strip-val">${this.formatPrice(pos.entry)}</span>
+                </span>
+                <span class="strip-sep">•</span>
+                <span class="strip-price-item" title="Mark / Live Price">
+                  <span class="strip-lbl">M:</span><span class="strip-val highlight">${this.formatPrice(pos.currentPrice)}</span>
+                </span>
+              </div>
 
-            <div class="pos-strip-right">
-              <span class="pos-pnl-chip ${isPos ? 'bullish' : 'bearish'}" title="Floating PnL & Return on Equity">
-                ${isPos ? '+' : ''}$${pos.unrealizedPnlUSD.toFixed(2)} (${isPos ? '+' : ''}${roe}%)
-              </span>
               <button class="btn-quick-close-pos" data-trade-id="${pos.id}" type="button" title="Quick Close Trade" aria-label="Quick Close Trade">
-                <i class="ph ph-x"></i>
+                <i class="ph ph-x"></i> <span>Close</span>
               </button>
-              <i class="ph ph-caret-down strip-expand-caret"></i>
             </div>
           </div>
 

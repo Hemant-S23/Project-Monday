@@ -412,6 +412,12 @@
           </div>
         </div>
 
+        <!-- Quick Ledger & Financial Passbook Trigger -->
+        <button class="header-ledger-btn" id="btn_quick_passbook" type="button" title="View Financial Passbook & 18% GST Trade Ledger">
+          <i class="ph-bold ph-receipt"></i>
+          <span>Passbook</span>
+        </button>
+
         <!-- Modern Notification Center Hub -->
         <div class="notif-popover-wrapper" id="notif_popover_wrapper">
           <button class="notif-bell-btn" id="notif_bell_btn" type="button" aria-haspopup="true" aria-expanded="false" title="Trade Alerts & Notifications">
@@ -486,6 +492,16 @@
 
             <!-- Popover Menu Actions -->
             <div class="popover-menu-section">
+              <!-- Financial Passbook & History Trigger -->
+              <button class="popover-menu-item" id="open_history_btn" type="button">
+                <div class="menu-item-left">
+                  <i class="ph ph-receipt item-icon emerald"></i>
+                  <span>Financial Passbook & History</span>
+                </div>
+                <span class="passbook-chip-badge">18% GST</span>
+                <i class="ph ph-arrow-right item-arrow"></i>
+              </button>
+
               <!-- Trade Journal Trigger -->
               <button class="popover-menu-item" id="open_journal_btn" type="button">
                 <div class="menu-item-left">
@@ -1024,6 +1040,85 @@
               <!-- Dynamically rendered -->
             </tbody>
           </table>
+        </div>
+      </div>
+  </div>
+
+  <!-- FINANCIAL PASSBOOK & 18% GST TRADE LEDGER MODAL -->
+  <div class="modal-overlay" id="passbook_modal">
+    <div class="modal-window passbook-modal-window">
+      <div class="modal-header passbook-modal-header">
+        <div class="passbook-header-left">
+          <div class="passbook-icon-wrapper">
+            <i class="ph-bold ph-receipt"></i>
+          </div>
+          <div>
+            <h2 class="passbook-modal-title">Financial Passbook & Trade Ledger</h2>
+            <div class="passbook-compliance-row">
+              <span class="compliance-tag"><i class="ph-fill ph-shield-check"></i> Delta Exchange India Compliant</span>
+              <span class="compliance-sep">•</span>
+              <span class="compliance-gst-pill">18% GST Auto-Bifurcated</span>
+            </div>
+          </div>
+        </div>
+        <div class="passbook-header-right">
+          <button class="icon-btn" id="close_passbook_btn" title="Close Passbook">
+            <i class="ph ph-x"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-body passbook-modal-body">
+        <!-- Monthly Statement & Tax Summary Card -->
+        <div class="passbook-monthly-card">
+          <div class="passbook-filter-bar">
+            <div class="passbook-select-group">
+              <label for="passbook_month_filter"><i class="ph ph-calendar"></i> Statement Period:</label>
+              <select id="passbook_month_filter" class="passbook-month-dropdown">
+                <option value="ALL">All Time Statement</option>
+              </select>
+            </div>
+            <div class="passbook-type-filters">
+              <button class="passbook-filter-chip active" data-filter="ALL" type="button" id="passbook_filter_all">All (0)</button>
+              <button class="passbook-filter-chip" data-filter="PROFIT" type="button" id="passbook_filter_profit">🟢 Profit</button>
+              <button class="passbook-filter-chip" data-filter="LOSS" type="button" id="passbook_filter_loss">🔴 Loss</button>
+            </div>
+          </div>
+
+          <!-- 4-Pillar Financial Audit Grid -->
+          <div class="passbook-audit-grid">
+            <div class="audit-stat-box">
+              <span class="audit-lbl">Gross Realized PnL</span>
+              <span class="audit-val text-bullish" id="passbook_gross_pnl">$0.00</span>
+              <span class="audit-sub">Pure price difference</span>
+            </div>
+            <div class="audit-stat-box">
+              <span class="audit-lbl">Delta Brokerage</span>
+              <span class="audit-val text-muted" id="passbook_brokerage_total">$0.00</span>
+              <span class="audit-sub">0.05% Taker / 0.02% Maker</span>
+            </div>
+            <div class="audit-stat-box">
+              <span class="audit-lbl">18% GST on Fees</span>
+              <span class="audit-val text-warning" id="passbook_gst_total">$0.00</span>
+              <span class="audit-sub">Govt tax on brokerage</span>
+            </div>
+            <div class="audit-stat-box highlight-net">
+              <span class="audit-lbl">Net Settled to Wallet</span>
+              <span class="audit-val text-bullish" id="passbook_net_settled">$0.00</span>
+              <span class="audit-sub">Final pocket credited/debited</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ledger Statement Header -->
+        <div class="passbook-feed-heading">
+          <span><i class="ph ph-list-dashes"></i> Transaction Ledger & Receipts</span>
+          <span class="feed-count-tag" id="passbook_feed_count">0 Settlements</span>
+        </div>
+
+        <!-- Chronological Transaction Feed (Payment App Passbook Style) -->
+        <div class="passbook-transactions-feed" id="passbook_transactions_feed">
+          <!-- Dynamically populated transaction cards with expandable tax receipts -->
         </div>
       </div>
     </div>

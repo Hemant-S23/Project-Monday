@@ -579,6 +579,57 @@ export class TerminalUI {
       });
     }
 
+    // Financial Passbook & 18% GST Ledger Modal Toggles
+    const openHistoryBtn = document.getElementById('open_history_btn');
+    const quickPassbookBtn = document.getElementById('btn_quick_passbook');
+    const passbookModal = document.getElementById('passbook_modal');
+    const closePassbookBtn = document.getElementById('close_passbook_btn');
+
+    const openPassbook = () => {
+      if (profilePopoverWrapper) {
+        profilePopoverWrapper.classList.remove('open');
+        if (profileAvatarBtn) profileAvatarBtn.setAttribute('aria-expanded', 'false');
+      }
+      if (passbookModal) {
+        passbookModal.classList.add('open');
+        this.renderFinancialPassbook();
+      }
+    };
+
+    if (openHistoryBtn) openHistoryBtn.addEventListener('click', openPassbook);
+    if (quickPassbookBtn) quickPassbookBtn.addEventListener('click', openPassbook);
+    if (closePassbookBtn && passbookModal) {
+      closePassbookBtn.addEventListener('click', () => {
+        passbookModal.classList.remove('open');
+      });
+    }
+
+    if (passbookModal) {
+      passbookModal.addEventListener('click', (e) => {
+        if (e.target === passbookModal) {
+          passbookModal.classList.remove('open');
+        }
+      });
+    }
+
+    // Passbook Month Filter & Type Chips
+    const passbookMonthSelect = document.getElementById('passbook_month_filter');
+    if (passbookMonthSelect) {
+      passbookMonthSelect.addEventListener('change', () => {
+        this.passbookCurrentMonth = passbookMonthSelect.value;
+        this.renderFinancialPassbook();
+      });
+    }
+
+    document.querySelectorAll('.passbook-filter-chip').forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        document.querySelectorAll('.passbook-filter-chip').forEach(c => c.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+        this.passbookFilterType = e.currentTarget.dataset.filter || 'ALL';
+        this.renderFinancialPassbook();
+      });
+    });
+
     // R-Multiple & Live Equity Explainer Modal Toggles
     const explainRBtn = document.getElementById('btn_explain_r');
     const rModal = document.getElementById('modal_r_explainer');
@@ -1992,7 +2043,7 @@ export class TerminalUI {
               <div class="pos-grid-cell"><span class="lbl">Margin / Value</span><span class="val">$${pos.marginUSD || pos.riskUSD} / $${pos.notionalUSD || (pos.entry * pos.positionSize).toFixed(0)}</span></div>
               <div class="pos-grid-cell"><span class="lbl">Size</span><span class="val">${pos.positionSize} ${pos.asset}</span></div>
               <div class="pos-grid-cell"><span class="lbl">RR Ratio</span><span class="val">1:${pos.rrRatio}</span></div>
-              <div class="pos-grid-cell"><span class="lbl">Delta Fee (Est.)</span><span class="val text-muted">-$${Number(pos.feesUSD || 0).toFixed(2)}</span></div>
+              <div class="pos-grid-cell"><span class="lbl">Est. Fees + 18% GST</span><span class="val text-muted">-$${Number(pos.feesUSD || 0).toFixed(2)} (on close)</span></div>
               <div class="pos-grid-cell"><span class="lbl">Strategy</span><span class="val text-muted">${pos.strategy || `${lev}x Iso`}</span></div>
             </div>
 
@@ -2176,6 +2227,195 @@ export class TerminalUI {
         </tr>
       `;
     }).join('');
+
+    // Also re-render passbook if open
+    const passbookModal = document.getElementById('passbook_modal');
+    if (passbookModal && passbookModal.classList.contains('open')) {
+      this.renderFinancialPassbook();
+    }
+  }
+
+  renderFinancialPassbook() {
+    const feedContainer = document.getElementById('passbook_transactions_feed');
+    const monthSelect = document.getElementById('passbook_month_filter');
+    const grossEl = document.getElementById('passbook_gross_pnl');
+    const brokerageEl = document.getElementById('passbook_brokerage_total');
+    const gstEl = document.getElementById('passbook_gst_total');
+    const netEl = document.getElementById('passbook_net_settled');
+    const countTag = document.getElementById('passbook_feed_count');
+
+    if (!this.callbacks.onGetFinancialLedger) return;
+
+    const filterMonth = this.passbookCurrentMonth || 'ALL';
+    const ledger = this.callbacks.onGetFinancialLedger(filterMonth);
+    if (!ledger) return;
+
+    // 1. Populate Available Month Dropdown if options differ
+    if (monthSelect) {
+      const currentSelected = monthSelect.value;
+      const opts = [
+        '<option value="ALL">All Time Statement</option>',
+        ...ledger.availableMonths.map(m => `<option value="${m.key}" ${m.key === filterMonth ? 'selected' : ''}>${m.label}</option>`)
+      ];
+      monthSelect.innerHTML = opts.join('');
+      monthSelect.value = filterMonth;
+    }
+
+    // 2. Update 4-Pillar Financial Audit Grid
+    if (grossEl) {
+      const isPos = ledger.totalGrossPnl >= 0;
+      grossEl.textContent = `${isPos ? '+' : ''}$${ledger.totalGrossPnl.toFixed(2)}`;
+      grossEl.className = `audit-val ${isPos ? 'text-bullish' : 'text-bearish'}`;
+    }
+
+    if (brokerageEl) {
+      brokerageEl.textContent = `-$${ledger.totalBrokerage.toFixed(2)}`;
+    }
+
+    if (gstEl) {
+      gstEl.textContent = `-$${ledger.totalGST.toFixed(2)}`;
+    }
+
+    if (netEl) {
+      const isNetPos = ledger.netSettledPnl >= 0;
+      netEl.textContent = `${isNetPos ? '+' : ''}$${ledger.netSettledPnl.toFixed(2)}`;
+      netEl.className = `audit-val ${isNetPos ? 'text-bullish' : 'text-bearish'}`;
+    }
+
+    // 3. Filter Trades by Type (ALL, PROFIT, LOSS)
+    const filterType = this.passbookFilterType || 'ALL';
+    let filteredTrades = ledger.trades || [];
+    if (filterType === 'PROFIT') {
+      filteredTrades = filteredTrades.filter(t => t.result === 'WIN' || (t.pnlUSD || 0) > 0);
+    } else if (filterType === 'LOSS') {
+      filteredTrades = filteredTrades.filter(t => t.result === 'LOSS' || (t.pnlUSD || 0) < 0);
+    }
+
+    if (countTag) {
+      countTag.textContent = `${filteredTrades.length} Settlement${filteredTrades.length === 1 ? '' : 's'}`;
+    }
+
+    // Update filter chip counters
+    const chipAll = document.getElementById('passbook_filter_all');
+    const chipProfit = document.getElementById('passbook_filter_profit');
+    const chipLoss = document.getElementById('passbook_filter_loss');
+    if (chipAll) chipAll.textContent = `All (${ledger.totalTrades})`;
+    if (chipProfit) chipProfit.textContent = `🟢 Profit (${ledger.winCount})`;
+    if (chipLoss) chipLoss.textContent = `🔴 Loss (${ledger.lossCount})`;
+
+    // 4. Render Chronological Feed
+    if (!feedContainer) return;
+
+    if (filteredTrades.length === 0) {
+      feedContainer.innerHTML = `
+        <div class="passbook-empty-state">
+          <i class="ph ph-receipt"></i>
+          <div>No settled trades found for this period.</div>
+          <div style="font-size: 0.72rem; color: #64748b; margin-top: 4px;">Completed orders with Delta exchange fees & 18% GST will appear here.</div>
+        </div>
+      `;
+      return;
+    }
+
+    feedContainer.innerHTML = filteredTrades.map(trade => {
+      const isNetProfit = (trade.pnlUSD || 0) >= 0;
+      const typeClass = trade.result === 'WIN' || isNetProfit ? 'profit' : trade.result === 'BREAKEVEN' ? 'breakeven' : 'loss';
+      const icon = typeClass === 'profit' ? 'ph-arrow-down-left' : typeClass === 'loss' ? 'ph-arrow-up-right' : 'ph-arrows-left-right';
+      
+      const dateObj = new Date(trade.closedAt || Date.now());
+      const dateFormatted = dateObj.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+      const timeFormatted = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      const dirClass = (trade.direction || 'LONG').toLowerCase();
+      const gross = trade.grossPnlUSD !== undefined ? Number(trade.grossPnlUSD) : Number(trade.pnlUSD);
+      const isGrossProfit = gross >= 0;
+      
+      const entryFee = Number(trade.entryFeeUSD || 0);
+      const exitFee = Number(trade.exitFeeUSD || 0);
+      const brokerage = Number(trade.brokerageFeeUSD || (trade.totalFeesUSD ? +(trade.totalFeesUSD / 1.18).toFixed(2) : 0));
+      const gst = Number(trade.gstUSD || (trade.totalFeesUSD ? +(trade.totalFeesUSD - brokerage).toFixed(2) : 0));
+      const totalCharges = Number(trade.totalChargesUSD || trade.totalFeesUSD || 0);
+      const netPnl = Number(trade.pnlUSD || 0);
+      const postBal = trade.postTradeBalance ? Number(trade.postTradeBalance) : null;
+      
+      const reasonLabel = trade.result === 'WIN' ? '🎯 Take Profit Hit' : trade.result === 'LIQUIDATED' ? '⚠️ Liquidation Exit' : trade.result === 'LOSS' ? '🛑 Stop Loss Hit' : '✋ Manual Close';
+
+      return `
+        <div class="passbook-txn-card" data-trade-id="${trade.id}">
+          <div class="passbook-txn-header" role="button" tabindex="0" title="Tap to expand itemized tax & charge receipt">
+            <div class="txn-left-col">
+              <div class="txn-type-avatar ${typeClass}">
+                <i class="ph ${icon}"></i>
+              </div>
+              <div class="txn-meta-group">
+                <div class="txn-asset-row">
+                  <span class="txn-asset-name">${trade.asset}/USD</span>
+                  <span class="txn-direction-badge ${dirClass}">${trade.direction}</span>
+                  <span class="pos-lev-pill">${trade.leverage || 20}x</span>
+                </div>
+                <span class="txn-timestamp">${dateFormatted} • ${timeFormatted} • ${reasonLabel}</span>
+              </div>
+            </div>
+
+            <div class="txn-right-col">
+              <div class="txn-amount-group">
+                <span class="txn-net-amount ${typeClass}">
+                  ${isNetProfit ? '+' : ''}$${netPnl.toFixed(2)}
+                </span>
+                ${postBal !== null ? `<span class="txn-post-balance">Bal: $${postBal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>` : ''}
+              </div>
+              <i class="ph ph-caret-down txn-chevron"></i>
+            </div>
+          </div>
+
+          <!-- Expandable Itemized Tax & Charges Receipt Drawer -->
+          <div class="passbook-receipt-drawer">
+            <div class="receipt-title-row">
+              <span>Delta Exchange India Tax Invoice</span>
+              <span>Ref: #${(trade.id || '').substring(0, 8).toUpperCase()}</span>
+            </div>
+            <div class="receipt-itemized-list">
+              <div class="receipt-line">
+                <span>Gross Trading PnL (E: $${Number(trade.entry).toLocaleString()} → M: $${Number(trade.exitPrice || trade.entry).toLocaleString()})</span>
+                <span class="val ${isGrossProfit ? 'text-bullish' : 'text-bearish'}">${isGrossProfit ? '+' : ''}$${gross.toFixed(2)}</span>
+              </div>
+              <div class="receipt-line sub-fee">
+                <span>• Entry Brokerage Fee (${trade.orderType === 'LIMIT' ? '0.02% Maker' : '0.05% Taker'})</span>
+                <span class="val">-$${entryFee.toFixed(2)}</span>
+              </div>
+              <div class="receipt-line sub-fee">
+                <span>• Exit Brokerage Fee (${trade.result === 'WIN' ? '0.02% Maker TP' : '0.05% Taker'})</span>
+                <span class="val">-$${exitFee.toFixed(2)}</span>
+              </div>
+              <div class="receipt-line sub-fee">
+                <span>• Total Delta Brokerage</span>
+                <span class="val">-$${brokerage.toFixed(2)}</span>
+              </div>
+              <div class="receipt-line tax-line">
+                <span>• 18% GST on Exchange Brokerage (Central + State GST)</span>
+                <span class="val">-$${gst.toFixed(2)}</span>
+              </div>
+              <div class="receipt-divider"></div>
+              <div class="receipt-line total-line">
+                <span>Total Deductions Settled</span>
+                <span class="val text-bearish">-$${totalCharges.toFixed(2)}</span>
+              </div>
+              <div class="receipt-line total-line">
+                <span>Net Credited to Trading Account</span>
+                <span class="val ${isNetProfit ? 'text-bullish' : 'text-bearish'}">${isNetProfit ? '+' : ''}$${netPnl.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Attach click handler to toggle accordion drawers
+    feedContainer.querySelectorAll('.passbook-txn-card').forEach(card => {
+      card.querySelector('.passbook-txn-header').addEventListener('click', () => {
+        card.classList.toggle('expanded');
+      });
+    });
   }
 
   showToast(title, message, type = 'info') {

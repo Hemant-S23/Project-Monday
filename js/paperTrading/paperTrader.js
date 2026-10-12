@@ -6,7 +6,8 @@
 // Delta Exchange Futures Fee Matrix (Standard Tier-1 Derivatives)
 export const DELTA_FEE_RATES = {
   TAKER: 0.0005, // 0.05% for Market / Taker orders
-  MAKER: 0.0002  // 0.02% for Limit / Maker orders
+  MAKER: 0.0002, // 0.02% for Limit / Maker orders
+  GST_RATE: 0.18 // 18% GST on Delta Exchange Brokerage (Delta India compliance)
 };
 
 export class PaperTrader {
@@ -271,18 +272,24 @@ export class PaperTrader {
       pos.currentPrice = livePrice;
       const isLong = pos.direction === 'LONG';
 
-      // Real-time Delta fee deduction
+      // Real-time price movement (Gross Unrealized Floating PnL - Standard Exchange UX)
       const priceDelta = isLong ? (livePrice - pos.entry) : (pos.entry - livePrice);
       const grossPnl = +(priceDelta * pos.positionSize).toFixed(2);
       const estExitFee = +(livePrice * pos.positionSize * DELTA_FEE_RATES.TAKER).toFixed(2);
-      const totalFees = +( (pos.entryFeeUSD || 0) + estExitFee ).toFixed(2);
-      const netPnl = +(grossPnl - totalFees).toFixed(2);
+      const brokerageFee = +( (pos.entryFeeUSD || 0) + estExitFee ).toFixed(2);
+      const estGst = +(brokerageFee * DELTA_FEE_RATES.GST_RATE).toFixed(2);
+      const totalEstimatedCharges = +(brokerageFee + estGst).toFixed(2);
+      const netPnl = +(grossPnl - totalEstimatedCharges).toFixed(2);
 
+      // Open positions display Gross Floating PnL so price moves in trader direction show green immediately
       pos.unrealizedGrossPnlUSD = grossPnl;
-      pos.feesUSD = totalFees;
-      pos.unrealizedPnlUSD = netPnl;
-      pos.unrealizedR = pos.riskUSD > 0 ? +(netPnl / pos.riskUSD).toFixed(2) : 0;
-      pos.roePercent = pos.marginUSD > 0 ? +((netPnl / pos.marginUSD) * 100).toFixed(1) : 0;
+      pos.unrealizedPnlUSD = grossPnl;
+      pos.unrealizedNetPnlUSD = netPnl;
+      pos.brokerageFeeUSD = brokerageFee;
+      pos.gstUSD = estGst;
+      pos.feesUSD = totalEstimatedCharges;
+      pos.unrealizedR = pos.riskUSD > 0 ? +(grossPnl / pos.riskUSD).toFixed(2) : 0;
+      pos.roePercent = pos.marginUSD > 0 ? +((grossPnl / pos.marginUSD) * 100).toFixed(1) : 0;
 
       // 1. Check Liquidation (Delta Exchange Standard)
       let hitLiquidation = false;
@@ -320,13 +327,15 @@ export class PaperTrader {
     const isLong = pos.direction === 'LONG';
     const priceDelta = isLong ? (actualExit - pos.entry) : (pos.entry - actualExit);
     
-    // Delta Exchange Execution Fees
+    // Delta Exchange Execution Fees + 18% GST (Delta Exchange India Standard)
     const entryFee = pos.entryFeeUSD || +(pos.notionalUSD * DELTA_FEE_RATES.TAKER).toFixed(2);
     // TP exit is Maker (0.02%), SL / Manual exit is Taker (0.05%)
     const exitRate = resultType === 'WIN' ? DELTA_FEE_RATES.MAKER : DELTA_FEE_RATES.TAKER;
     const exitNotional = +(actualExit * pos.positionSize).toFixed(2);
     const exitFee = +(exitNotional * exitRate).toFixed(2);
-    const totalFees = +(entryFee + exitFee).toFixed(2);
+    const brokerageFee = +(entryFee + exitFee).toFixed(2);
+    const gstFee = +(brokerageFee * DELTA_FEE_RATES.GST_RATE).toFixed(2); // 18% GST on Delta Exchange Brokerage
+    const totalCharges = +(brokerageFee + gstFee).toFixed(2);
 
     let grossPnlUSD;
     let pnlUSD;
@@ -340,12 +349,14 @@ export class PaperTrader {
       result = 'LIQUIDATED';
     } else {
       grossPnlUSD = +(priceDelta * pos.positionSize).toFixed(2);
-      pnlUSD = +(grossPnlUSD - totalFees).toFixed(2); // Net Realized PnL (Fees Deducted)
+      pnlUSD = +(grossPnlUSD - totalCharges).toFixed(2); // Net Realized Settled to Wallet
       rMultiple = pos.riskUSD > 0 ? +(pnlUSD / pos.riskUSD).toFixed(2) : 0;
       if (resultType === 'MANUAL') {
         result = pnlUSD > 0 ? 'WIN' : pnlUSD < 0 ? 'LOSS' : 'BREAKEVEN';
       }
     }
+
+    const postTradeBalance = +(this.balance + pnlUSD).toFixed(2);
 
     const closedTrade = {
       ...pos,
@@ -355,15 +366,19 @@ export class PaperTrader {
       grossPnlUSD,
       entryFeeUSD: entryFee,
       exitFeeUSD: exitFee,
-      totalFeesUSD: totalFees,
-      feesUSD: totalFees,
-      feeModel: 'Delta Exchange (0.05% Taker / 0.02% Maker)',
-      pnlUSD, // Net Realized PnL
+      brokerageFeeUSD: brokerageFee,
+      gstUSD: gstFee,
+      totalFeesUSD: totalCharges,
+      totalChargesUSD: totalCharges,
+      feesUSD: totalCharges,
+      feeModel: 'Delta Exchange India (0.05% Taker / 0.02% Maker + 18% GST)',
+      pnlUSD, // Net Realized Settled PnL
+      postTradeBalance,
       rMultiple,
       closedAt: Date.now()
     };
 
-    this.balance = +(this.balance + pnlUSD).toFixed(2);
+    this.balance = postTradeBalance;
     this.trades.unshift(closedTrade);
     this.save();
     return closedTrade;
@@ -382,19 +397,22 @@ export class PaperTrader {
       const priceDelta = isLong ? (livePrice - pos.entry) : (pos.entry - livePrice);
       const grossPnl = +(priceDelta * pos.positionSize).toFixed(2);
       const estExitFee = +(livePrice * pos.positionSize * DELTA_FEE_RATES.TAKER).toFixed(2);
-      const fees = +( (pos.entryFeeUSD || 0) + estExitFee ).toFixed(2);
-      const netPnl = +(grossPnl - fees).toFixed(2);
-      const r = pos.riskUSD > 0 ? +(netPnl / pos.riskUSD).toFixed(2) : 0;
+      const brokerage = +( (pos.entryFeeUSD || 0) + estExitFee ).toFixed(2);
+      const estGst = +(brokerage * DELTA_FEE_RATES.GST_RATE).toFixed(2);
+      const totalFees = +(brokerage + estGst).toFixed(2);
+      const netPnl = +(grossPnl - totalFees).toFixed(2);
 
       pos.unrealizedGrossPnlUSD = grossPnl;
-      pos.feesUSD = fees;
-      pos.unrealizedPnlUSD = netPnl;
-      pos.unrealizedR = r;
+      pos.feesUSD = totalFees;
+      pos.unrealizedPnlUSD = grossPnl;
+      pos.unrealizedNetPnlUSD = netPnl;
+      pos.unrealizedR = pos.riskUSD > 0 ? +(grossPnl / pos.riskUSD).toFixed(2) : 0;
+      pos.roePercent = pos.marginUSD > 0 ? +((grossPnl / pos.marginUSD) * 100).toFixed(1) : 0;
 
       unrealizedGrossPnlUSD += grossPnl;
-      unrealizedFeesUSD += fees;
-      unrealizedPnlUSD += netPnl;
-      unrealizedR += r;
+      unrealizedFeesUSD += totalFees;
+      unrealizedPnlUSD += grossPnl;
+      unrealizedR += pos.unrealizedR;
     });
 
     const closed = this.trades.filter(t => t.status === 'CLOSED');
@@ -419,6 +437,61 @@ export class PaperTrader {
       netTotalPnlUSD,
       hasOpenPositions: this.openPositions.length > 0,
       openPositionsCount: this.openPositions.length
+    };
+  }
+
+  getFinancialLedger(filterMonth = 'ALL') {
+    const closed = this.trades.filter(t => t.status === 'CLOSED');
+    
+    // Group / filter by month if specified (Format: YYYY-MM)
+    const filtered = closed.filter(t => {
+      if (filterMonth === 'ALL') return true;
+      const d = new Date(t.closedAt || Date.now());
+      const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      return monthKey === filterMonth;
+    });
+
+    const totalTrades = filtered.length;
+    const wins = filtered.filter(t => t.result === 'WIN');
+    const losses = filtered.filter(t => t.result === 'LOSS');
+    const breakevens = filtered.filter(t => t.result === 'BREAKEVEN');
+
+    const totalGrossPnl = +filtered.reduce((acc, t) => acc + (t.grossPnlUSD !== undefined ? t.grossPnlUSD : t.pnlUSD), 0).toFixed(2);
+    const totalBrokerage = +filtered.reduce((acc, t) => acc + (t.brokerageFeeUSD || (t.totalFeesUSD ? +(t.totalFeesUSD / 1.18).toFixed(2) : 0)), 0).toFixed(2);
+    const totalGST = +filtered.reduce((acc, t) => acc + (t.gstUSD || (t.totalFeesUSD ? +(t.totalFeesUSD - (t.totalFeesUSD / 1.18)).toFixed(2) : 0)), 0).toFixed(2);
+    const totalCharges = +(totalBrokerage + totalGST).toFixed(2);
+    const netSettledPnl = +filtered.reduce((acc, t) => acc + (t.pnlUSD || 0), 0).toFixed(2);
+    const winRate = totalTrades > 0 ? +((wins.length / totalTrades) * 100).toFixed(1) : 0;
+
+    // Available month options extracted from history
+    const monthsSet = new Set();
+    closed.forEach(t => {
+      const d = new Date(t.closedAt || Date.now());
+      const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      monthsSet.add(monthKey);
+    });
+
+    const availableMonths = Array.from(monthsSet).sort().reverse().map(key => {
+      const [year, month] = key.split('-');
+      const dateObj = new Date(Number(year), Number(month) - 1, 1);
+      const label = dateObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      return { key, label };
+    });
+
+    return {
+      filterMonth,
+      availableMonths,
+      totalTrades,
+      winCount: wins.length,
+      lossCount: losses.length,
+      breakevenCount: breakevens.length,
+      winRate,
+      totalGrossPnl,
+      totalBrokerage,
+      totalGST,
+      totalCharges,
+      netSettledPnl,
+      trades: filtered
     };
   }
 

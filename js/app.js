@@ -52,6 +52,7 @@ class App {
       onExecuteTrade: (orderPacket) => this.executeCurrentTrade(orderPacket),
       onCloseTrade: (id) => this.closeActiveTrade(id),
       onResetAccount: () => this.resetAccount(),
+      onGetFinancialLedger: (month) => this.paperTrader.getFinancialLedger(month),
       onThemeChange: (theme) => this.chartManager.setTheme(theme),
       onSignIn: async (email, password) => {
         const res = await this.authManager.signInWithEmail(email, password);

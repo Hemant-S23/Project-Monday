@@ -1,4 +1,5 @@
 import { DerivativesEngine } from '../engine/derivativesEngine.js';
+import { NotificationManager } from './notificationManager.js';
 
 /**
  * Terminal UI Coordinator
@@ -43,6 +44,10 @@ export class TerminalUI {
 
     this.bindEvents();
     this.bindDerivativesOrderDesk();
+
+    // Initialize Trade & Alert Notification Center
+    this.notificationManager = new NotificationManager();
+    this.notificationManager.initDOM();
   }
 
   getStarredAssets(market = this.currentMarket) {
@@ -478,6 +483,15 @@ export class TerminalUI {
     if (profileAvatarBtn && profilePopoverWrapper) {
       profileAvatarBtn.addEventListener('click', (e) => {
         e.stopPropagation();
+
+        // Close notification popover if open
+        const notifWrapper = document.getElementById('notif_popover_wrapper');
+        if (notifWrapper) {
+          notifWrapper.classList.remove('open');
+          const nBtn = document.getElementById('notif_bell_btn');
+          if (nBtn) nBtn.setAttribute('aria-expanded', 'false');
+        }
+
         const isOpen = profilePopoverWrapper.classList.toggle('open');
         profileAvatarBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
       });
@@ -1932,4 +1946,11 @@ export class TerminalUI {
       setTimeout(() => toast.remove(), 400);
     }, 4500);
   }
+
+  addNotification(notif) {
+    if (this.notificationManager) {
+      this.notificationManager.addNotification(notif);
+    }
+  }
 }
+

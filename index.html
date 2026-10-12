@@ -390,6 +390,39 @@
             <span class="live-chip-text" id="header_live_text">+$0.00 (+0.00R)</span>
           </div>
         </div>
+
+        <!-- Modern Notification Center Hub -->
+        <div class="notif-popover-wrapper" id="notif_popover_wrapper">
+          <button class="notif-bell-btn" id="notif_bell_btn" type="button" aria-haspopup="true" aria-expanded="false" title="Trade Alerts & Notifications">
+            <i class="ph-bold ph-bell"></i>
+            <span class="notif-badge" id="notif_unread_badge" style="display: none;">0</span>
+          </button>
+
+          <!-- Floating Notification Popover Drawer -->
+          <div class="notif-popover-menu" id="notif_popover_menu" role="dialog" aria-label="Trade Notifications">
+            <div class="notif-popover-header">
+              <div class="notif-header-title">
+                <i class="ph-bold ph-bell-simple"></i>
+                <span>Alerts & Activity</span>
+                <span class="notif-count-pill" id="notif_header_count">0 alerts</span>
+              </div>
+              <div class="notif-header-actions">
+                <button class="notif-action-btn" id="notif_mark_read_btn" type="button" title="Mark all as read">
+                  <i class="ph ph-checks"></i> Mark read
+                </button>
+                <button class="notif-action-btn danger" id="notif_clear_btn" type="button" title="Clear all notifications">
+                  <i class="ph ph-trash"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Scrollable List of Notifications -->
+            <div class="notif-list" id="notif_list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
         <!-- Google-Style User Profile & Utilities Popover Hub -->
         <div class="profile-popover-wrapper" id="profile_popover_wrapper">
           <button class="profile-avatar-btn" id="profile_avatar_btn" type="button" aria-haspopup="true" aria-expanded="false" title="Account, Portfolio & Settings">

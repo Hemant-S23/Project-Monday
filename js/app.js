@@ -204,11 +204,22 @@ class App {
     const closedTrades = this.paperTrader.updateLivePositions(currentPrices);
     if (closedTrades.length > 0) {
       closedTrades.forEach(({ pos, result, price }) => {
-        const title = result === 'WIN' ? '🎯 TARGET HIT!' : '🛑 STOP LOSS HIT!';
+        const isWin = result === 'WIN';
+        const title = isWin ? '🎯 TARGET HIT!' : '🛑 STOP LOSS HIT!';
         const formattedPrice = this.ui.formatPrice(price, pos.market === 'India' ? '₹' : '$');
-        const msg = `${pos.asset} paper trade closed at ${formattedPrice} (${result}). PnL: ${pos.unrealizedPnlUSD >= 0 ? '+' : ''}$${pos.unrealizedPnlUSD}`;
-        this.ui.showToast(title, msg, result === 'WIN' ? 'success' : 'danger');
-        this.voiceAssistant.speak(`${pos.asset} trade hit ${result === 'WIN' ? 'Target' : 'Stop loss'}. Position closed.`);
+        const pnlSign = pos.unrealizedPnlUSD >= 0 ? '+' : '';
+        const msg = `${pos.asset} paper trade closed at ${formattedPrice} (${result}). PnL: ${pnlSign}$${pos.unrealizedPnlUSD}`;
+        this.ui.showToast(title, msg, isWin ? 'success' : 'danger');
+        this.voiceAssistant.speak(`${pos.asset} trade hit ${isWin ? 'Target' : 'Stop loss'}. Position closed.`);
+
+        // Dispatch persistent notification
+        const rStr = pos.unrealizedR !== undefined ? ` (${pos.unrealizedR >= 0 ? '+' : ''}${pos.unrealizedR}R)` : '';
+        this.ui.addNotification({
+          type: isWin ? 'target' : 'stop',
+          title: isWin ? `Target Hit • ${pos.asset} ${pos.direction}` : `Stop Loss Hit • ${pos.asset} ${pos.direction}`,
+          message: `${pnlSign}$${pos.unrealizedPnlUSD}${rStr} closed at ${formattedPrice}`,
+          tradeId: pos.id
+        });
       });
       this.updateTradeJournalAndStats();
     }
@@ -309,6 +320,12 @@ class App {
     if (newState === 'CONFIRMED') {
       this.ui.showToast(`🟢 ${asset} Setup CONFIRMED`, `Strategy conditions satisfied. 1:${strategyResult.levels?.rrRatio} RR available.`, 'success');
       this.voiceAssistant.speak(`Alert! ${asset} setup confirmed ho gaya hai. Required confirmation mil gaya hai.`);
+
+      this.ui.addNotification({
+        type: 'ai',
+        title: `AI Confirmed • ${asset} ${strategyResult.direction || 'LONG'}`,
+        message: `Displacement confirmed • 1:${strategyResult.levels?.rrRatio || '2.5'} RR available`
+      });
     } else if (newState === 'DEVELOPING') {
       this.ui.showToast(`🟠 ${asset} Setup DEVELOPING`, `Price 5M reaction zone me enter ho chuki hai. Awaiting confirmation.`, 'warning');
     } else if (newState === 'CANCELLED') {
@@ -402,6 +419,13 @@ class App {
     this.ui.showToast('🚀 Order Executed', `${newPos.asset} ${newPos.direction} [${newPos.leverage}x] entered at ${formattedEntry}. Live tracking active!`, 'success');
     this.voiceAssistant.speak(`${newPos.asset} ${newPos.direction} entered with ${newPos.leverage}x leverage.`);
 
+    this.ui.addNotification({
+      type: 'order',
+      title: `Order Executed • ${newPos.asset} ${newPos.direction} [${newPos.leverage}x]`,
+      message: `Entered at ${formattedEntry} • Margin: $${newPos.marginUSD}`,
+      tradeId: newPos.id
+    });
+
     this.ui.updateOpenPositions(this.paperTrader.openPositions);
     const liveMetrics = this.paperTrader.getLiveEquity();
     this.ui.updateHeaderAccountHUD(liveMetrics);
@@ -414,6 +438,15 @@ class App {
       const pnlPrefix = closed.pnlUSD >= 0 ? '+' : '';
       this.ui.showToast('Trade Closed', `${closed.asset} manually closed. PnL: ${pnlPrefix}$${closed.pnlUSD} (${closed.rMultiple >= 0 ? '+' : ''}${closed.rMultiple}R).`, 'info');
       this.voiceAssistant.speak(`Trade closed. Realized profit ${closed.pnlUSD} dollars.`);
+
+      const isWin = closed.pnlUSD >= 0;
+      this.ui.addNotification({
+        type: isWin ? 'target' : 'stop',
+        title: `Position Closed • ${closed.asset} ${closed.direction}`,
+        message: `${pnlPrefix}$${closed.pnlUSD} (${closed.rMultiple >= 0 ? '+' : ''}${closed.rMultiple}R) at ${this.ui.formatPrice(closed.exitPrice)}`,
+        tradeId: closed.id
+      });
+
       this.ui.updateOpenPositions(this.paperTrader.openPositions);
       this.updateTradeJournalAndStats();
     }

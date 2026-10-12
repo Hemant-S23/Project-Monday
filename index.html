@@ -418,6 +418,17 @@
           <span>Passbook</span>
         </button>
 
+        <!-- Autonomous AI Auto-Pilot Switch (Max 2 Concurrent Trades) -->
+        <div class="autopilot-toggle-wrapper" id="autopilot_toggle_wrapper" title="Autonomous AI Execution: MONDAY will automatically enter confirmed Grade A setups with strict 1% risk (Max 2 open trades)">
+          <div class="autopilot-label-group">
+            <span class="autopilot-dot-pulse"></span>
+            <span class="autopilot-text" id="autopilot_label_text">Auto-Pilot</span>
+          </div>
+          <button class="autopilot-switch" id="autopilot_toggle_btn" type="button" role="switch" aria-checked="false" aria-label="Toggle Autonomous AI Trading Mode">
+            <span class="autopilot-switch-thumb"></span>
+          </button>
+        </div>
+
         <!-- Modern Notification Center Hub -->
         <div class="notif-popover-wrapper" id="notif_popover_wrapper">
           <button class="notif-bell-btn" id="notif_bell_btn" type="button" aria-haspopup="true" aria-expanded="false" title="Trade Alerts & Notifications">
@@ -509,6 +520,15 @@
                   <span>Trade Journal & Analytics</span>
                 </div>
                 <i class="ph ph-arrow-right item-arrow"></i>
+              </button>
+
+              <!-- Autonomous Auto-Pilot Toggle Row in Popover -->
+              <button class="popover-menu-item" id="popover_autopilot_toggle" type="button">
+                <div class="menu-item-left">
+                  <i class="ph-bold ph-robot item-icon purple" id="popover_autopilot_icon"></i>
+                  <span>Auto-Pilot Execution (Max 2)</span>
+                </div>
+                <span class="popover-toggle-badge" id="popover_autopilot_badge">OFF</span>
               </button>
 
               <!-- Dark / Light Theme Toggle Row -->

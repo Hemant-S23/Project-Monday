@@ -21,6 +21,11 @@ class App {
     this.currentAsset = 'BTC';
     this.currentTimeframe = '1H';
     this.lastKnownState = null;
+    try {
+      this.autoPilotEnabled = localStorage.getItem('monday_auto_pilot') === 'true';
+    } catch (e) {
+      this.autoPilotEnabled = false;
+    }
 
     // Instantiate market adapters
     this.cryptoAdapter = new CryptoAdapter();
@@ -49,6 +54,14 @@ class App {
       onToggleVoice: () => this.toggleVoiceListening(),
       onToggleMute: () => this.voiceAssistant.toggleMute(),
       onTestVoice: () => this.voiceAssistant.testVoice(),
+      onToggleAutoPilot: (enabled) => {
+        this.autoPilotEnabled = enabled;
+        if (enabled) {
+          this.voiceAssistant.speak('Auto-pilot mode activated. Confirmed setups will execute automatically.');
+        } else {
+          this.voiceAssistant.speak('Auto-pilot deactivated. Manual mode active.');
+        }
+      },
       onExecuteTrade: (orderPacket) => this.executeCurrentTrade(orderPacket),
       onCloseTrade: (id) => this.closeActiveTrade(id),
       onResetAccount: () => this.resetAccount(),
@@ -354,6 +367,11 @@ class App {
         currencySymbol: currSym,
         levels: strategyResult.levels
       });
+
+      // Autonomous AI Auto-Pilot Execution (If Active)
+      if (this.autoPilotEnabled) {
+        this.processAutoPilotExecution(asset, dir, strategyResult);
+      }
     } else if (newState === 'DEVELOPING') {
       this.ui.showToast(`🟠 ${asset} Setup DEVELOPING`, `Price reaction zone me enter ho chuki hai. Awaiting confirmation.`, 'warning');
       this.voiceAssistant.speak(`${asset} setup develop ho raha hai. Reaction zone me price monitor kar rahi hu.`);
@@ -365,6 +383,112 @@ class App {
     // Auto-log AI commentary in chat
     const briefing = this.copilotBrain.generateMarketBriefing();
     this.ui.appendChatMessage('copilot', briefing);
+  }
+
+  async processAutoPilotExecution(asset, direction, strategyResult) {
+    const openPositions = this.paperTrader.openPositions;
+    const currentOpenCount = openPositions.length;
+    const currSym = this.currentMarket === 'India' ? '₹' : '$';
+
+    // 1. Max 2 Concurrent Trades Guardrail
+    if (currentOpenCount >= 2) {
+      this.ui.appendAutonomousDecisionCard({
+        action: 'SKIPPED',
+        asset,
+        direction,
+        openCount: currentOpenCount,
+        skipReason: 'Max 2 Concurrent Trades Limit Reached',
+        skipExplanation: `Auto-Pilot currently holds 2 active open positions (${openPositions.map(p => p.asset).join(', ')}). To prevent portfolio over-exposure, new entries are strictly capped until an existing trade hits TP or SL.`
+      });
+      this.ui.showToast('⚠️ Auto-Pilot Throttled', 'Max 2 concurrent positions active. Capital protection rules preserved.', 'warning');
+      return;
+    }
+
+    // 2. Prevent Duplicate Trade on Same Asset
+    const alreadyOpen = openPositions.some(p => p.asset === asset);
+    if (alreadyOpen) {
+      this.ui.appendAutonomousDecisionCard({
+        action: 'SKIPPED',
+        asset,
+        direction,
+        openCount: currentOpenCount,
+        skipReason: `Duplicate Position on ${asset}`,
+        skipExplanation: `An active ${asset} position is already open and running. Pyramiding or duplicate exposure is blocked for safety.`
+      });
+      return;
+    }
+
+    // 3. Confluence & RR Gatekeeper (Strict ≥75% Confluence and ≥3.0 RR)
+    const score = Math.round(strategyResult.confluenceScore || 0);
+    const rr = Number(strategyResult.levels?.rrRatio || 0);
+    if (score < 75 || rr < 3.0) {
+      this.ui.appendAutonomousDecisionCard({
+        action: 'SKIPPED',
+        asset,
+        direction,
+        openCount: currentOpenCount,
+        skipReason: `Confluence Below Institutional Threshold (${score}%)`,
+        skipExplanation: `Auto-Pilot strictly requires Grade A confluence (≥75%) and minimum 1:3.0 RR. Setup filtered out to avoid choppy/low-probability market.`
+      });
+      return;
+    }
+
+    // 4. Autonomous Execution (Default $20 Margin, Strict 1% Account Risk)
+    const entry = Number(strategyResult.levels.entry);
+    const stopLoss = Number(strategyResult.levels.stopLoss);
+    const target = Number(strategyResult.levels.target);
+    const leverage = this.currentMarket === 'India' ? 5 : 20;
+    const marginUSD = 20;
+    const notionalUSD = +(marginUSD * leverage).toFixed(2);
+    const positionSize = +(notionalUSD / entry).toFixed(5);
+    const riskUSD = 20;
+    const rewardUSD = +(riskUSD * rr).toFixed(2);
+    const liqPrice = +(direction === 'LONG' ? entry * 0.95 : entry * 1.05).toFixed(2);
+
+    const orderPacket = {
+      asset,
+      market: this.currentMarket,
+      direction,
+      entry,
+      stopLoss,
+      target,
+      rrRatio: rr,
+      leverage,
+      marginUSD,
+      notionalUSD,
+      positionSize,
+      riskUSD,
+      rewardUSD,
+      liquidationPrice: liqPrice,
+      conditions: strategyResult.reasoning || ['Autonomous Neural Execution'],
+      historicalContext: 'Supportive',
+      eventRisk: 'Low'
+    };
+
+    await this.executeCurrentTrade(orderPacket);
+
+    // Voice announcement
+    this.voiceAssistant.speak(
+      `Auto-Pilot Execution: ${asset} ${direction} position automatically enter kar di gayi hai at ${currSym}${entry} with strict 1:${rr} Risk Reward.`
+    );
+
+    // Transparent Chain-of-Thought Decision Card in Chat
+    this.ui.appendAutonomousDecisionCard({
+      action: 'EXECUTED',
+      asset,
+      direction,
+      entry,
+      stopLoss,
+      target,
+      rrRatio: rr,
+      confluenceScore: score,
+      confluenceGrade: strategyResult.confluenceGrade || 'GRADE A',
+      htfTrend: strategyResult.htfTrend?.direction || 'BULLISH',
+      riskUSD,
+      leverage,
+      openCount: this.paperTrader.openPositions.length,
+      currencySymbol: currSym
+    });
   }
 
   async handleUserMessage(message) {

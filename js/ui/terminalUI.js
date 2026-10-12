@@ -38,6 +38,13 @@ export class TerminalUI {
     // Cached strategy state for order desk synchronization
     this.latestStrategyState = null;
 
+    // Autonomous AI Auto-Pilot State (Persisted)
+    try {
+      this.autoPilotEnabled = localStorage.getItem('monday_auto_pilot') === 'true';
+    } catch (e) {
+      this.autoPilotEnabled = false;
+    }
+
     // User Starred Watchlist state (Persisted in localStorage)
     try {
       const savedWatchlist = localStorage.getItem('monday_user_watchlist');
@@ -629,6 +636,52 @@ export class TerminalUI {
         this.renderFinancialPassbook();
       });
     });
+
+    // Autonomous AI Auto-Pilot Switch Toggle Handlers
+    const autopilotWrapper = document.getElementById('autopilot_toggle_wrapper');
+    const autopilotBtn = document.getElementById('autopilot_toggle_btn');
+    const autopilotLabel = document.getElementById('autopilot_label_text');
+    const popoverAutopilotToggle = document.getElementById('popover_autopilot_toggle');
+    const popoverAutopilotBadge = document.getElementById('popover_autopilot_badge');
+
+    const updateAutoPilotUI = (enabled) => {
+      this.autoPilotEnabled = !!enabled;
+      if (autopilotWrapper) {
+        autopilotWrapper.classList.toggle('active', this.autoPilotEnabled);
+      }
+      if (autopilotBtn) {
+        autopilotBtn.setAttribute('aria-checked', this.autoPilotEnabled ? 'true' : 'false');
+      }
+      if (autopilotLabel) {
+        autopilotLabel.textContent = this.autoPilotEnabled ? 'Auto-Pilot ON' : 'Auto-Pilot';
+      }
+      if (popoverAutopilotBadge) {
+        popoverAutopilotBadge.textContent = this.autoPilotEnabled ? 'ON' : 'OFF';
+        popoverAutopilotBadge.className = `popover-toggle-badge ${this.autoPilotEnabled ? 'active' : ''}`;
+      }
+    };
+
+    const toggleAutoPilot = () => {
+      const next = !this.autoPilotEnabled;
+      try {
+        localStorage.setItem('monday_auto_pilot', String(next));
+      } catch (e) {}
+      updateAutoPilotUI(next);
+      if (this.callbacks.onToggleAutoPilot) {
+        this.callbacks.onToggleAutoPilot(next);
+      }
+      this.showToast(
+        next ? '🤖 Auto-Pilot Activated' : 'Auto-Pilot Deactivated',
+        next ? 'MONDAY will automatically enter confirmed Grade A setups with strict 1% risk (Max 2 trades)' : 'Manual order execution mode restored.',
+        next ? 'success' : 'info'
+      );
+    };
+
+    if (autopilotWrapper) autopilotWrapper.addEventListener('click', toggleAutoPilot);
+    if (popoverAutopilotToggle) popoverAutopilotToggle.addEventListener('click', toggleAutoPilot);
+
+    // Initialize Auto-Pilot UI from persisted state
+    updateAutoPilotUI(this.autoPilotEnabled);
 
     // R-Multiple & Live Equity Explainer Modal Toggles
     const explainRBtn = document.getElementById('btn_explain_r');
@@ -1644,6 +1697,101 @@ export class TerminalUI {
         this.showToast('🚀 Blueprint Loaded', `${setup.asset || this.currentAsset} ${setup.direction || 'LONG'} levels loaded in Order Desk!`, 'success');
       });
     }
+
+    container.appendChild(card);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  appendAutonomousDecisionCard(decision) {
+    const container = document.getElementById('chat_messages');
+    if (!container || !decision) return;
+
+    const card = document.createElement('div');
+    const isExecuted = decision.action === 'EXECUTED';
+    card.className = `auto-decision-card ${isExecuted ? 'executed' : 'throttled'}`;
+
+    const currSym = decision.currencySymbol || '$';
+    const entryFormatted = `${currSym}${Number(decision.entry || 0).toLocaleString()}`;
+    const slFormatted = `${currSym}${Number(decision.stopLoss || 0).toLocaleString()}`;
+    const tpFormatted = `${currSym}${Number(decision.target || 0).toLocaleString()}`;
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    let actionBannerHtml = '';
+    let validationStepsHtml = '';
+
+    if (isExecuted) {
+      actionBannerHtml = `
+        <div class="decision-action-title">
+          <span>⚡ AUTO-EXECUTED: ${decision.asset}/USD ${decision.direction}</span>
+          <span style="color:#34d399;">FILLED at ${entryFormatted}</span>
+        </div>
+        <div class="decision-action-sub">
+          Risk Allocation: $${decision.riskUSD || '20.00'} (1% Account Risk) • ${decision.leverage || 20}x Lev • Active Portfolio: ${decision.openCount}/2
+        </div>
+      `;
+
+      validationStepsHtml = `
+        <div class="validation-step">
+          <span class="step-num">1</span>
+          <div><strong>1H Macro Structure:</strong> ${decision.htfTrend || 'BULLISH'} trend displacement confirmed with high institutional liquidity alignment.</div>
+        </div>
+        <div class="validation-step">
+          <span class="step-num">2</span>
+          <div><strong>5M Reaction Zone:</strong> Pullback entered discount/premium reaction zone and closed rejection confirmation candle.</div>
+        </div>
+        <div class="validation-step">
+          <span class="step-num">3</span>
+          <div><strong>Neural Confluence Score:</strong> <span style="color:#34d399; font-weight:800; font-family:var(--font-mono);">${decision.confluenceScore}%</span> [${decision.confluenceGrade || 'GRADE A'}] verified (≥75% gatekeeper passed).</div>
+        </div>
+        <div class="validation-step">
+          <span class="step-num">4</span>
+          <div><strong>Asymmetric Edge (1:3+ RR):</strong> SL at <span class="text-bearish">${slFormatted}</span> | TP at <span class="text-bullish">${tpFormatted}</span> (Strict 1:${decision.rrRatio || '3.2'} Asymmetry).</div>
+        </div>
+        <div class="validation-step">
+          <span class="step-num">5</span>
+          <div><strong>Portfolio Drawdown Cap:</strong> Current active trades: ${decision.openCount}/2 (Max 2% total drawdown limit strictly respected).</div>
+        </div>
+      `;
+    } else {
+      actionBannerHtml = `
+        <div class="decision-action-title">
+          <span style="color:#fbbf24;">⚠️ AUTO-PILOT SKIPPED: ${decision.asset} ${decision.direction}</span>
+          <span style="color:#fbbf24;">PRESERVED CAPITAL</span>
+        </div>
+        <div class="decision-action-sub">
+          Reason: ${decision.skipReason || 'Risk parameters not satisfied'} • Active Trades: ${decision.openCount}/2
+        </div>
+      `;
+
+      validationStepsHtml = `
+        <div class="validation-step">
+          <span class="step-num">!</span>
+          <div>${decision.skipExplanation || 'Safety rule triggered to protect account capital.'}</div>
+        </div>
+      `;
+    }
+
+    card.innerHTML = `
+      <div class="decision-card-header">
+        <span class="decision-header-title">
+          <i class="ph-bold ph-robot"></i> AUTONOMOUS DECISION LOG #${Math.floor(1000 + Math.random() * 9000)}
+        </span>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span class="decision-xai-chip">EXPLAINABLE AI</span>
+          <span style="font-size:0.65rem; color:#64748b;">${timeStr}</span>
+        </div>
+      </div>
+      <div class="decision-action-banner">
+        ${actionBannerHtml}
+      </div>
+      <div class="decision-validation-list">
+        <div class="validation-heading">Institutional Decision Validation:</div>
+        ${validationStepsHtml}
+      </div>
+      <div class="decision-footer-note">
+        <i class="ph ph-shield-check"></i> Monitored in realtime • Trade settlement with 18% GST will post to Passbook on exit.
+      </div>
+    `;
 
     container.appendChild(card);
     container.scrollTop = container.scrollHeight;

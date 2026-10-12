@@ -19,35 +19,23 @@ export class NotificationManager {
   loadNotifications() {
     try {
       const data = localStorage.getItem(this.storageKey);
-      if (data) return JSON.parse(data);
+      if (data) {
+        const parsed = JSON.parse(data);
+        // Automatically purge any legacy mock notifications with obsolete placeholder prices
+        const cleaned = parsed.filter(item => !item.id?.startsWith('notif_init_'));
+        if (cleaned.length > 0) return cleaned;
+      }
     } catch (e) {
       console.warn('Failed to parse notifications:', e);
     }
 
-    // Default starter notifications matching trading terminal history
     return [
       {
-        id: 'notif_init_1',
-        type: 'target',
-        title: 'Target Hit • BTC/USD Long',
-        message: '+$53.90 (+2.69R) profit realized at $65,600',
-        timestamp: Date.now() - 3600000 * 5,
-        read: true
-      },
-      {
-        id: 'notif_init_2',
-        type: 'target',
-        title: 'Target Hit • SOL/USD Long',
-        message: '+$50.22 (+2.51R) profit realized at $157.50',
-        timestamp: Date.now() - 3600000 * 18,
-        read: true
-      },
-      {
-        id: 'notif_init_3',
-        type: 'stop',
-        title: 'Stop Loss Hit • BTC/USD Short',
-        message: '-$20.00 (-1.00R) risk protected at $66,700',
-        timestamp: Date.now() - 86400000,
+        id: 'notif_welcome',
+        type: 'ai',
+        title: 'Monday AI Copilot Active',
+        message: 'Live tracking active on Coinbase pure USD feeds • Zero delay',
+        timestamp: Date.now(),
         read: true
       }
     ];

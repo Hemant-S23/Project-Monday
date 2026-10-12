@@ -14,8 +14,17 @@ export class CryptoAdapter extends MarketAdapter {
       'SOL': 'SOL-USD'
     };
 
+    let lastBtc = 86500.0;
+    try {
+      const cached = localStorage.getItem('monday_last_known_ticker');
+      if (cached) {
+        const d = JSON.parse(cached);
+        if (d && d.price && !isNaN(d.price)) lastBtc = Number(d.price);
+      }
+    } catch (e) {}
+
     this.cache = {
-      'BTC': { price: 82963.8, '1H': [], '5M': [], lastUpdate: Date.now() },
+      'BTC': { price: lastBtc, '1H': [], '5M': [], lastUpdate: Date.now() },
       'ETH': { price: 3480.2, '1H': [], '5M': [], lastUpdate: Date.now() },
       'SOL': { price: 154.8, '1H': [], '5M': [], lastUpdate: Date.now() }
     };

@@ -14,14 +14,24 @@ export class TerminalUI {
     this.derivativesEngine = new DerivativesEngine();
 
     // Active order state for Delta Exchange derivatives desk
+    let initialEntry = 86500;
+    try {
+      const cached = localStorage.getItem('monday_last_known_ticker');
+      if (cached) {
+        const d = JSON.parse(cached);
+        if (d && d.price && !isNaN(d.price)) initialEntry = Number(d.price);
+      }
+    } catch (e) {}
+
+    const slDist = +(initialEntry * 0.008).toFixed(2);
     this.orderState = {
       direction: 'LONG',
       leverage: 20,
       marginUSD: 20,
       orderType: 'MARKET',
-      entryPrice: 65000,
-      tpPrice: 66800,
-      slPrice: 64150,
+      entryPrice: initialEntry,
+      tpPrice: +(initialEntry + slDist * 2.5).toFixed(2),
+      slPrice: +(initialEntry - slDist).toFixed(2),
       availableBalance: 2000
     };
 
@@ -1445,6 +1455,19 @@ export class TerminalUI {
     }
     if (sourceEl && source) {
       sourceEl.textContent = source;
+    }
+
+    // Persist latest price for instant zero-lag boot on future reloads
+    if (price && (!asset || asset === this.currentAsset)) {
+      try {
+        localStorage.setItem('monday_last_known_ticker', JSON.stringify({
+          asset: asset || this.currentAsset,
+          price,
+          formattedPrice: this.formatPrice(price),
+          changePercent: changePercent !== undefined ? changePercent : 0,
+          timestamp: Date.now()
+        }));
+      } catch (e) {}
     }
   }
 

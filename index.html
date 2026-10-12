@@ -360,9 +360,30 @@
         </div>
 
         <div class="live-ticker-box" id="live_ticker_box">
-          <span class="ticker-price" id="live_ticker_price">$64,850.00</span>
-          <span class="ticker-change bullish" id="live_ticker_change">+2.15%</span>
+          <span class="ticker-price" id="live_ticker_price">--</span>
+          <span class="ticker-change bullish" id="live_ticker_change">--%</span>
         </div>
+        <script>
+          // Instant Zero-Delay Rehydration: Restores last real live price before first browser paint
+          (function() {
+            try {
+              const cached = localStorage.getItem('monday_last_known_ticker');
+              if (cached) {
+                const data = JSON.parse(cached);
+                if (data && data.price) {
+                  const pEl = document.getElementById('live_ticker_price');
+                  const cEl = document.getElementById('live_ticker_change');
+                  if (pEl) pEl.textContent = data.formattedPrice || ('$' + Number(data.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                  if (cEl && data.changePercent !== undefined) {
+                    const isPos = Number(data.changePercent) >= 0;
+                    cEl.textContent = (isPos ? '+' : '') + Number(data.changePercent).toFixed(2) + '%';
+                    cEl.className = 'ticker-change ' + (isPos ? 'bullish' : 'bearish');
+                  }
+                }
+              }
+            } catch (e) {}
+          })();
+        </script>
 
         <div class="feed-badge" id="feed_badge">
           <span class="feed-pulse"></span>
@@ -403,12 +424,12 @@
             <div class="notif-popover-header">
               <div class="notif-header-title">
                 <i class="ph-bold ph-bell-simple"></i>
-                <span>Alerts & Activity</span>
+                <span class="notif-header-text">Alerts</span>
                 <span class="notif-count-pill" id="notif_header_count">0 alerts</span>
               </div>
               <div class="notif-header-actions">
                 <button class="notif-action-btn" id="notif_mark_read_btn" type="button" title="Mark all as read">
-                  <i class="ph ph-checks"></i> Mark read
+                  <i class="ph ph-checks"></i> <span>Mark read</span>
                 </button>
                 <button class="notif-action-btn danger" id="notif_clear_btn" type="button" title="Clear all notifications">
                   <i class="ph ph-trash"></i>

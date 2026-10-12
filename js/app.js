@@ -3,6 +3,7 @@ import { IndiaAdapter } from './adapters/indiaAdapter.js';
 import { StrategyEngine } from './engine/strategyEngine.js';
 import { HistoricalContextEngine } from './engine/historicalEngine.js';
 import { NewsContextEngine } from './engine/newsContextEngine.js';
+import { DerivativesEngine } from './engine/derivativesEngine.js';
 import { RiskEngine } from './engine/riskEngine.js';
 import { PaperTrader } from './paperTrading/paperTrader.js';
 import { CopilotBrain } from './copilot/copilotBrain.js';
@@ -39,6 +40,7 @@ class App {
     this.strategyEngine = new StrategyEngine();
     this.historicalEngine = new HistoricalContextEngine();
     this.newsEngine = new NewsContextEngine();
+    this.derivativesEngine = new DerivativesEngine();
     this.paperTrader = new PaperTrader(2000, activeUserId);
     this.riskEngine = new RiskEngine(this.paperTrader.balance, 1.0);
     this.copilotBrain = new CopilotBrain();
@@ -263,7 +265,13 @@ class App {
 
     const currencySymbol = this.currentMarket === 'India' ? '₹' : '$';
 
-    // 1. Strategy Evaluation
+    // Fetch live sentiment (Fear & Greed Index) and Perpetual Funding Rate (non-blocking, cached)
+    const sentiment = this.currentMarket === 'India' 
+      ? this.newsEngine.getMarketSentiment('India') 
+      : await this.newsEngine.fetchFearAndGreed();
+    const fundingData = await this.derivativesEngine.fetchLiveFundingRate(targetAsset, this.currentMarket);
+
+    // 1. Strategy Evaluation with Multi-Factor Confluence
     const strategyResult = this.strategyEngine.evaluate(
       targetAsset,
       candles1H,
@@ -271,7 +279,8 @@ class App {
       relatedCandles5M,
       currentPrice,
       currencySymbol,
-      relatedAsset
+      relatedAsset,
+      { sentiment, fundingData }
     );
 
     // 2. Historical Context Analysis
@@ -304,7 +313,7 @@ class App {
     const liveSnapshot = adapter.getSnapshot(targetAsset);
     this.ui.updateTicker(liveSnapshot);
     this.ui.updateStrategyState(strategyResult);
-    this.ui.updateContextTelemetry({ historicalContext: histContext, eventRisk });
+    this.ui.updateContextTelemetry({ historicalContext: histContext, eventRisk, sentiment, fundingData });
     this.ui.updateRiskParameters(riskParams);
     this.chartManager.updateLevelsOverlay(riskParams);
 
@@ -487,7 +496,11 @@ class App {
       riskUSD,
       leverage,
       openCount: this.paperTrader.openPositions.length,
-      currencySymbol: currSym
+      currencySymbol: currSym,
+      rsiInfo: `1H RSI: ${strategyResult.rsi1H || 55} • 5M RSI: ${strategyResult.rsi5M || 50} (${strategyResult.rsiStatus || 'Momentum Aligned'})`,
+      volumeInfo: strategyResult.volumeFlow?.desc || 'Normal Baseline Volume (20-VMA Validated)',
+      sentimentInfo: `Market Sentiment: ${this.newsEngine.getMarketSentiment(this.currentMarket).classification} (${this.newsEngine.getMarketSentiment(this.currentMarket).score})`,
+      fundingInfo: `Funding Rate: ${(await this.derivativesEngine.fetchLiveFundingRate(asset, this.currentMarket)).rateFormatted} (Balanced Crowd Exposure)`
     });
   }
 

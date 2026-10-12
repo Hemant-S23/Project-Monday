@@ -12,9 +12,9 @@
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/main.css?v=2.6">
-  <link rel="stylesheet" href="css/components.css?v=2.6">
-  <link rel="stylesheet" href="css/auth.css?v=2.6">
+  <link rel="stylesheet" href="css/main.css?v=2.7">
+  <link rel="stylesheet" href="css/components.css?v=2.7">
+  <link rel="stylesheet" href="css/auth.css?v=2.7">
 
   <!-- Supabase JS Client (Optional cloud auth & database sync) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -628,6 +628,22 @@
             <div class="telemetry-card">
               <span class="meta-lbl">Risk Rule</span>
               <span class="meta-val">1.0% Max</span>
+            </div>
+            <div class="telemetry-card" title="Real-time Crypto Fear & Greed Index from Alternative.me">
+              <span class="meta-lbl">Market Sentiment</span>
+              <span class="meta-val text-bullish" id="meta_sentiment_score">Greed (64)</span>
+            </div>
+            <div class="telemetry-card" title="Perpetual Contract Funding Rate (Delta / Binance Futures)">
+              <span class="meta-lbl">Funding / OI</span>
+              <span class="meta-val" id="meta_funding_rate">+0.0100% (Balanced)</span>
+            </div>
+            <div class="telemetry-card" title="14-Period Multi-Timeframe Wilder RSI Momentum">
+              <span class="meta-lbl">RSI Momentum</span>
+              <span class="meta-val text-bullish" id="meta_rsi_momentum">1H: 56.2 | 5M: 52.8</span>
+            </div>
+            <div class="telemetry-card" title="20-VMA Whale Volumetric Anomaly Filter">
+              <span class="meta-lbl">Whale Volume</span>
+              <span class="meta-val" id="meta_whale_volume">Normal (1.1x VMA)</span>
             </div>
           </div>
 
@@ -1268,6 +1284,6 @@
   <script src="js/config/supabaseConfig.js"></script>
 
   <!-- App Script Entrypoint -->
-  <script type="module" src="js/app.js?v=2.6"></script>
+  <script type="module" src="js/app.js?v=2.7"></script>
 </body>
 </html>

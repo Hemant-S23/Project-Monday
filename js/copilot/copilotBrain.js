@@ -61,24 +61,30 @@ export class CopilotBrain {
     const fmtPrice = this.formatPrice(currentPrice);
 
     if (state === 'CONFIRMED') {
+      const confScore = Math.round(strategyState.confluenceScore || 85);
+      const confGrade = strategyState.confluenceGrade || 'GRADE A';
       return `🟢 **${targetAsset} SETUP CONFIRMED (${direction})**\n\n` +
-        `1H trend **${htf}** hai aur 5M discount zone me confirmation candle mil chuki hai.\n` +
-        `• Entry: ${this.formatPrice(riskParams?.entry)} | SL: ${this.formatPrice(riskParams?.stopLoss)} | Target: ${this.formatPrice(riskParams?.target)}\n` +
-        `• 1:${riskParams?.rrRatio} Risk-to-Reward (1% Max Risk: $${riskParams?.maxRiskUSD})\n` +
-        `Tum Execute Paper Trade button se position initiate kar sakte ho.`;
+        `• **Edge:** ${confGrade} (${confScore}% Confluence)\n` +
+        `• **1H Trend:** ${htf} | 5M Displacement Verified\n` +
+        `• **Execution Blueprint:** Entry: ${this.formatPrice(riskParams?.entry)} | SL: ${this.formatPrice(riskParams?.stopLoss)} | TP: ${this.formatPrice(riskParams?.target)}\n` +
+        `• **Asymmetric Edge:** Strict 1:${riskParams?.rrRatio || '3.2'} RR (Max 1% Risk: $${riskParams?.maxRiskUSD})\n` +
+        `Order Desk me levels load ho chuke hain ya direct blueprint se execute kar sakte ho!`;
     } else if (state === 'DEVELOPING') {
       const zLow = strategyState.ltfStructure?.zoneLow ? this.formatPrice(strategyState.ltfStructure.zoneLow) : '--';
       const zHigh = strategyState.ltfStructure?.zoneHigh ? this.formatPrice(strategyState.ltfStructure.zoneHigh) : '--';
-      return `🟠 **${targetAsset} Reaction Zone Me Enter Hua**\n\n` +
-        `Price ${zLow} - ${zHigh} zone me trade kar rahi hai. Abhi confirmation candle close hona baaki hai. Jaldbazi me bina confirmation entry mat lena!`;
+      const confScore = Math.round(strategyState.confluenceScore || 50);
+      return `🟠 **${targetAsset} Reaction Zone Me Enter Hua (Developing)**\n\n` +
+        `• **Reaction Zone:** ${zLow} - ${zHigh}\n` +
+        `• **Confluence Meter:** ${confScore}% (Awaiting 75%+ confirmation)\n` +
+        `• Pinned radar card active ho gaya hai. Abhi confirmation candle close hone ka wait karein!`;
     } else if (state === 'WAIT') {
       return `🟡 **${targetAsset} WAIT State**\n\n` +
         `Live price ${fmtPrice} par hai. Trend ${htf} hai lekin required 5M pullback abhi pending hai. Patience ke saath wait karte hain.`;
     } else if (state === 'CANCELLED') {
-      return `🔴 **${targetAsset} Setup Cancelled**\n\n` +
-        `5M invalidation level break ho chuka hai. Level chase nahi karenge, fresh structure ka wait karenge.`;
+      return `🔴 **${targetAsset} Setup Cancelled / Invalidated**\n\n` +
+        `Key invalidation level break ho chuka hai. Pinned card unpin ho gaya hai. Fresh liquidity aur structure ka wait karenge.`;
     }
-    return `⚪ **${targetAsset} Observing Mode**\nAbhi koi clear edge nahi hai.`;
+    return `⚪ **${targetAsset} Observing Mode**\nAbhi koi high-probability edge nahi hai.`;
   }
 
   /**

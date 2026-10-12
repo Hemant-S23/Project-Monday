@@ -316,20 +316,49 @@ class App {
 
   handleStateTransition(oldState, newState, strategyResult) {
     const asset = this.currentAsset;
+    const currSym = this.currentMarket === 'India' ? '₹' : '$';
 
     if (newState === 'CONFIRMED') {
-      this.ui.showToast(`🟢 ${asset} Setup CONFIRMED`, `Strategy conditions satisfied. 1:${strategyResult.levels?.rrRatio} RR available.`, 'success');
-      this.voiceAssistant.speak(`Alert! ${asset} setup confirmed ho gaya hai. Required confirmation mil gaya hai.`);
+      const dir = strategyResult.direction || 'LONG';
+      const rr = strategyResult.levels?.rrRatio || '3.2';
+      const entry = strategyResult.levels ? Number(strategyResult.levels.entry).toLocaleString() : '';
+      const sl = strategyResult.levels ? Number(strategyResult.levels.stopLoss).toLocaleString() : '';
+      const tp = strategyResult.levels ? Number(strategyResult.levels.target).toLocaleString() : '';
+      const lev = this.currentMarket === 'India' ? '5x Intraday' : '15x-20x Isolated';
+
+      this.ui.showToast(`🟢 ${asset} Setup CONFIRMED`, `Grade A confluence satisfied. 1:${rr} RR ready to execute.`, 'success');
+
+      // Comprehensive actionable voice briefing with exact levels as requested by user
+      this.voiceAssistant.speak(
+        `Alert! ${asset} ${dir} confirm ho gaya hai! Entry ${currSym}${entry} pe lo, Stop Loss ${currSym}${sl} pe lock rakho, aur Target ${currSym}${tp} hai with 1:${rr} Risk Reward.`
+      );
 
       this.ui.addNotification({
         type: 'ai',
-        title: `AI Confirmed • ${asset} ${strategyResult.direction || 'LONG'}`,
-        message: `Displacement confirmed • 1:${strategyResult.levels?.rrRatio || '2.5'} RR available`
+        title: `AI Confirmed • ${asset} ${dir}`,
+        message: `Grade A (${strategyResult.confluenceScore || 85}%) • 1:${rr} RR • Entry: ${currSym}${entry} • SL: ${currSym}${sl} • TP: ${currSym}${tp}`
+      });
+
+      // Inject Interactive Trade Blueprint Card into chat transcript
+      this.ui.appendTradeBlueprintCard({
+        asset,
+        direction: dir,
+        entry: strategyResult.levels?.entry,
+        stopLoss: strategyResult.levels?.stopLoss,
+        target: strategyResult.levels?.target,
+        rrRatio: rr,
+        confluenceScore: strategyResult.confluenceScore || 85,
+        confluenceGrade: strategyResult.confluenceGrade || 'GRADE A',
+        recommendedLeverage: lev,
+        currencySymbol: currSym,
+        levels: strategyResult.levels
       });
     } else if (newState === 'DEVELOPING') {
-      this.ui.showToast(`🟠 ${asset} Setup DEVELOPING`, `Price 5M reaction zone me enter ho chuki hai. Awaiting confirmation.`, 'warning');
+      this.ui.showToast(`🟠 ${asset} Setup DEVELOPING`, `Price reaction zone me enter ho chuki hai. Awaiting confirmation.`, 'warning');
+      this.voiceAssistant.speak(`${asset} setup develop ho raha hai. Reaction zone me price monitor kar rahi hu.`);
     } else if (newState === 'CANCELLED') {
       this.ui.showToast(`🔴 ${asset} Setup CANCELLED`, `Key invalidation level break ho chuka hai.`, 'danger');
+      this.voiceAssistant.speak(`${asset} setup invalidate ho gaya hai. Trade cancelled.`);
     }
 
     // Auto-log AI commentary in chat

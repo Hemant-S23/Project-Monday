@@ -30,7 +30,7 @@ export class TerminalUI {
       marginUSD: 20,
       orderType: 'MARKET',
       entryPrice: initialEntry,
-      tpPrice: +(initialEntry + slDist * 2.5).toFixed(2),
+      tpPrice: +(initialEntry + slDist * 3.0).toFixed(2),
       slPrice: +(initialEntry - slDist).toFixed(2),
       availableBalance: 2000
     };
@@ -420,6 +420,31 @@ export class TerminalUI {
         if (this.callbacks.onSendMessage) this.callbacks.onSendMessage(prompt);
       });
     });
+
+    // Dynamic Pinned Live Setup Radar Handlers
+    const pinnedRadarDismiss = document.getElementById('pinned_radar_dismiss');
+    const btnPinnedAction = document.getElementById('btn_pinned_action');
+    const pinnedRadarCard = document.getElementById('chat_pinned_radar');
+
+    if (pinnedRadarDismiss && pinnedRadarCard) {
+      pinnedRadarDismiss.addEventListener('click', (e) => {
+        e.stopPropagation();
+        pinnedRadarCard.style.display = 'none';
+        this.pinnedRadarDismissedByUser = true;
+      });
+    }
+
+    if (btnPinnedAction) {
+      btnPinnedAction.addEventListener('click', () => {
+        if (!this.latestStrategyState || !this.latestStrategyState.levels) return;
+        this.loadSetupIntoOrderDesk(this.latestStrategyState.levels, this.latestStrategyState.direction);
+        if (this.latestStrategyState.state === 'CONFIRMED') {
+          this.showToast('⚡ Trade Loaded', `${this.latestStrategyState.direction || 'LONG'} trade levels loaded in Desk at 1:${this.latestStrategyState.levels.rrRatio} RR! Ready to execute.`, 'success');
+        } else {
+          this.showToast('📋 Setup Loaded', `Developing setup levels loaded in Desk. Awaiting final confirmation.`, 'info');
+        }
+      });
+    }
 
     // Voice Mic Button
     const voiceBtn = document.getElementById('voice_mic_btn');
@@ -933,7 +958,7 @@ export class TerminalUI {
     if (isInverted || !currentSL || !currentTP) {
       const prevDist = Math.abs(entry - currentSL);
       const slDist = (prevDist > 0 && prevDist < entry * 0.15) ? prevDist : +(entry * 0.008).toFixed(2);
-      const rr = 2.5;
+      const rr = 3.0;
 
       if (newDirection === 'LONG') {
         const newSL = +(Math.max(0, entry - slDist)).toFixed(2);
@@ -1471,13 +1496,114 @@ export class TerminalUI {
     }
   }
 
+  loadSetupIntoOrderDesk(levels, direction = 'LONG') {
+    if (!levels) return;
+    const dir = (direction || 'LONG').toUpperCase();
+    this.orderState.direction = dir;
+
+    const dirLongBtn = document.getElementById('order_dir_long');
+    const dirShortBtn = document.getElementById('order_dir_short');
+    if (dirLongBtn && dirShortBtn) {
+      dirLongBtn.classList.toggle('active', dir === 'LONG');
+      dirShortBtn.classList.toggle('active', dir === 'SHORT');
+    }
+
+    const entryVal = Number(levels.entry);
+    const slVal = Number(levels.stopLoss);
+    const tpVal = Number(levels.target);
+
+    this.orderState.entryPrice = entryVal;
+    this.orderState.slPrice = slVal;
+    this.orderState.tpPrice = tpVal;
+
+    const tpInput = document.getElementById('order_tp_input');
+    const slInput = document.getElementById('order_sl_input');
+    const entryInput = document.getElementById('order_entry_input');
+
+    if (entryInput) entryInput.value = entryVal;
+    if (slInput) slInput.value = slVal;
+    if (tpInput) tpInput.value = tpVal;
+
+    this.refreshDerivativesOrderDesk();
+
+    const deskContainer = document.querySelector('.derivatives-order-desk') || document.getElementById('strategy_panel');
+    if (deskContainer) {
+      deskContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      deskContainer.classList.add('pulse-highlight');
+      setTimeout(() => deskContainer.classList.remove('pulse-highlight'), 1200);
+    }
+  }
+
+  appendTradeBlueprintCard(setup) {
+    const container = document.getElementById('chat_messages');
+    if (!container || !setup) return;
+
+    const card = document.createElement('div');
+    card.className = 'trade-blueprint-card';
+
+    const dirClass = (setup.direction || 'LONG').toLowerCase();
+    const currSym = setup.currencySymbol || (this.currentMarket === 'India' ? '₹' : '$');
+    const grade = setup.confluenceGrade || (setup.confluenceScore >= 75 ? 'GRADE A' : 'GRADE B');
+    const score = Math.round(setup.confluenceScore || 85);
+    const lev = setup.recommendedLeverage || '10x - 20x Isolated';
+    const rr = setup.rrRatio || setup.levels?.rrRatio || '3.2';
+    const entryVal = setup.entry || setup.levels?.entry || 0;
+    const slVal = setup.stopLoss || setup.levels?.stopLoss || 0;
+    const tpVal = setup.target || setup.levels?.target || 0;
+
+    card.innerHTML = `
+      <div class="blueprint-header">
+        <span class="blueprint-title">
+          <i class="ph-bold ph-lightning"></i> INSTITUTIONAL TRADE BLUEPRINT
+        </span>
+        <span class="blueprint-grade-chip">${grade} (${score}%)</span>
+      </div>
+      <div class="blueprint-asset-row">
+        <span class="blueprint-asset-name">${setup.asset || this.currentAsset}</span>
+        <span class="blueprint-direction-tag ${dirClass}">${setup.direction || 'LONG'}</span>
+      </div>
+      <div class="blueprint-grid">
+        <div class="blueprint-metric">
+          <span class="b-lbl">Optimal Entry</span>
+          <span class="b-val">${currSym}${Number(entryVal).toLocaleString()}</span>
+        </div>
+        <div class="blueprint-metric">
+          <span class="b-lbl">Strict Stop Loss</span>
+          <span class="b-val text-bearish">${currSym}${Number(slVal).toLocaleString()}</span>
+        </div>
+        <div class="blueprint-metric">
+          <span class="b-lbl">Take Profit (1:3+ RR)</span>
+          <span class="b-val text-bullish">${currSym}${Number(tpVal).toLocaleString()} (1:${rr})</span>
+        </div>
+        <div class="blueprint-metric">
+          <span class="b-lbl">Rec. Leverage</span>
+          <span class="b-val text-warning">${lev}</span>
+        </div>
+      </div>
+      <button class="blueprint-cta-btn" type="button">
+        <i class="ph-bold ph-lightning"></i> Load Levels into Derivatives Desk
+      </button>
+    `;
+
+    const ctaBtn = card.querySelector('.blueprint-cta-btn');
+    if (ctaBtn) {
+      ctaBtn.addEventListener('click', () => {
+        const payload = setup.levels || { entry: entryVal, stopLoss: slVal, target: tpVal };
+        this.loadSetupIntoOrderDesk(payload, setup.direction);
+        this.showToast('🚀 Blueprint Loaded', `${setup.asset || this.currentAsset} ${setup.direction || 'LONG'} levels loaded in Order Desk!`, 'success');
+      });
+    }
+
+    container.appendChild(card);
+    container.scrollTop = container.scrollHeight;
+  }
+
   updateStrategyState(strategyState) {
     const badgeEl = document.getElementById('ai_state_badge');
     const directionEl = document.getElementById('meta_direction');
     const htfEl = document.getElementById('meta_htf_trend');
     const setupEl = document.getElementById('meta_setup');
     const confirmEl = document.getElementById('meta_confirmation');
-    const execBtn = document.getElementById('execute_trade_btn');
 
     if (!strategyState) return;
 
@@ -1509,6 +1635,106 @@ export class TerminalUI {
 
     if (confirmEl) {
       confirmEl.textContent = strategyState.ltfStructure?.hasConfirmation ? 'Confirmed (Wick Close)' : 'Pending Reaction';
+    }
+
+    // 1. Algorithmic Confluence Score Meter (0 - 100%)
+    const confValEl = document.getElementById('confluence_score_val');
+    const confBarEl = document.getElementById('confluence_fill_bar');
+    const confSubEl = document.getElementById('confluence_sub_text');
+    if (confValEl && confBarEl) {
+      const score = Math.round(strategyState.confluenceScore || 0);
+      const grade = strategyState.confluenceGrade || (score >= 75 ? 'GRADE A' : 'NO EDGE');
+      let gradeClass = 'confluence-grade';
+      if (score >= 85) gradeClass += ' grade-a';
+      else if (score >= 75) gradeClass += ' grade-a';
+      else if (score >= 50) gradeClass += ' grade-b';
+      else gradeClass += ' grade-c';
+
+      confValEl.innerHTML = `${score}% <span class="${gradeClass}">[${grade}]</span>`;
+      confBarEl.style.width = `${Math.min(100, Math.max(0, score))}%`;
+      if (score >= 75) {
+        confBarEl.style.background = 'linear-gradient(90deg, #00c6ff, #00f2fe, #10b981)';
+      } else if (score >= 50) {
+        confBarEl.style.background = 'linear-gradient(90deg, #f59e0b, #eab308)';
+      } else {
+        confBarEl.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
+      }
+
+      if (confSubEl) {
+        if (score >= 75) {
+          confSubEl.textContent = `Institutional edge confirmed (${score}%) • Strict 1:3+ RR verified`;
+        } else {
+          confSubEl.textContent = `Min 75% required for Grade A Institutional Execution (Current: ${score}%)`;
+        }
+      }
+    }
+
+    // 2. Dynamic Pinned Live Setup Radar Card (Anchored at Top of Chat)
+    const pinnedRadar = document.getElementById('chat_pinned_radar');
+    if (pinnedRadar) {
+      const isDeveloping = state === 'DEVELOPING';
+      const isConfirmed = state === 'CONFIRMED';
+
+      if (isDeveloping || isConfirmed) {
+        const currentTargetAsset = strategyState.asset || this.currentAsset;
+        if (this.lastPinnedRadarState !== state || this.lastPinnedRadarAsset !== currentTargetAsset) {
+          this.pinnedRadarDismissedByUser = false;
+          this.lastPinnedRadarState = state;
+          this.lastPinnedRadarAsset = currentTargetAsset;
+        }
+
+        if (!this.pinnedRadarDismissedByUser) {
+          pinnedRadar.style.display = 'flex';
+          pinnedRadar.classList.toggle('confirmed', isConfirmed);
+
+          const stateEl = document.getElementById('pinned_radar_state');
+          if (stateEl) {
+            stateEl.textContent = isConfirmed ? 'CONFIRMED SETUP' : 'DEVELOPING SETUP';
+          }
+
+          const assetEl = document.getElementById('pinned_radar_asset');
+          if (assetEl) {
+            assetEl.textContent = `${currentTargetAsset} ${strategyState.direction || 'LONG'}`;
+          }
+
+          const currSym = strategyState.currencySymbol || (this.currentMarket === 'India' ? '₹' : '$');
+          const entryEl = document.getElementById('pinned_radar_entry');
+          const slEl = document.getElementById('pinned_radar_sl');
+          const tpEl = document.getElementById('pinned_radar_tp');
+          const proxEl = document.getElementById('pinned_radar_proximity');
+          const btnText = document.getElementById('btn_pinned_action_text');
+
+          if (strategyState.levels) {
+            const entryVal = Number(strategyState.levels.entry);
+            const slVal = Number(strategyState.levels.stopLoss);
+            const tpVal = Number(strategyState.levels.target);
+            const rr = strategyState.levels.rrRatio || '3.2';
+
+            if (entryEl) entryEl.textContent = `${currSym}${entryVal.toLocaleString()}`;
+            if (slEl) slEl.textContent = `${currSym}${slVal.toLocaleString()}`;
+            if (tpEl) tpEl.textContent = `${currSym}${tpVal.toLocaleString()} (1:${rr})`;
+
+            if (proxEl) {
+              if (isConfirmed) {
+                proxEl.innerHTML = `<span style="color:var(--accent-bullish, #10b981);">⚡ TRIGGER FIRED: In Entry Zone! 1:${rr} RR</span>`;
+              } else {
+                const curP = Number(strategyState.currentPrice || entryVal);
+                const diff = Math.abs(curP - entryVal);
+                proxEl.innerHTML = `⏳ Price ${currSym}${diff.toFixed(2)} away from reaction zone`;
+              }
+            }
+          }
+
+          if (btnText) {
+            btnText.textContent = isConfirmed ? 'Execute Trade' : 'Load in Desk';
+          }
+        }
+      } else {
+        // Automatically unpins/hides when setup becomes CANCELLED, NO SETUP, or WAIT
+        pinnedRadar.style.display = 'none';
+        this.pinnedRadarDismissedByUser = false;
+        this.lastPinnedRadarState = state;
+      }
     }
 
     // Synchronize latest strategy state with Order Desk

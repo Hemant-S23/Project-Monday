@@ -34,7 +34,7 @@ export class RiskEngine {
     const totalExposureUSD = +(positionSizeCoins * entry).toFixed(2);
     const potentialRewardUSD = +(positionSizeCoins * tpDistance).toFixed(2);
     const rrRatio = +(tpDistance / slDistance).toFixed(2);
-    const isRRValid = rrRatio >= 2.0;
+    const isRRValid = rrRatio >= 3.0;
 
     return {
       isValid: true,

@@ -69,21 +69,36 @@ export class StrategyEngine {
       missingConditions.push('Waiting for 5M reversal displacement candle close.');
     }
 
-    // Check 5: Risk / Reward
-    if (levels.rrRatio >= 2.0) {
-      reasoning.push(`Risk/Reward is attractive at 1:${levels.rrRatio.toFixed(2)} (Target: ${currencySymbol}${levels.target.toFixed(1)}, SL: ${currencySymbol}${levels.stopLoss.toFixed(1)}).`);
+    // Check 5: Strict 1:3.0 Asymmetric Risk / Reward Rule
+    if (levels.rrRatio >= 3.0) {
+      reasoning.push(`Strict 1:3+ Asymmetric Risk/Reward verified at 1:${levels.rrRatio.toFixed(2)} (Target: ${currencySymbol}${levels.target.toFixed(1)}, SL: ${currencySymbol}${levels.stopLoss.toFixed(1)}).`);
     } else {
-      missingConditions.push(`Nearest structural target yields RR 1:${levels.rrRatio.toFixed(2)} (Below required 1:2.0 minimum).`);
+      missingConditions.push(`Nearest target yields RR 1:${levels.rrRatio.toFixed(2)} (Below required 1:3.0 asymmetric minimum).`);
     }
 
-    // State synthesis
+    // --- ALGORITHMIC CONFLUENCE SCORE (0 - 100%) ---
+    let confluenceScore = 0;
+    if (htfTrend.direction !== 'UNCLEAR') confluenceScore += 25;
+    if (ltfStructure.inPullbackZone) confluenceScore += 25;
+    if (ltfStructure.hasConfirmation) confluenceScore += 25;
+    if (levels.rrRatio >= 3.0) confluenceScore += 15;
+    else if (levels.rrRatio >= 2.5) confluenceScore += 10;
+    if (smtAnalysis.divergenceDetected) confluenceScore += 10;
+
+    let confluenceGrade = 'GRADE C [NO EDGE]';
+    if (confluenceScore >= 85) confluenceGrade = 'GRADE A+ [INSTITUTIONAL EDGE]';
+    else if (confluenceScore >= 75) confluenceGrade = 'GRADE A [HIGH CONFLUENCE]';
+    else if (confluenceScore >= 50) confluenceGrade = 'GRADE B [DEVELOPING]';
+
+    // State synthesis (Requires >= 75% Confluence and 1:3.0 RR)
     if (ltfStructure.isInvalidated) {
       state = 'CANCELLED';
-      reasoning.push(`Setup invalidated: 5M structure broke key invalidation level $${ltfStructure.invalidationLevel.toFixed(1)}.`);
+      reasoning.push(`Setup invalidated: 5M structure broke key invalidation level ${currencySymbol}${ltfStructure.invalidationLevel.toFixed(1)}.`);
     } else if (
       ltfStructure.inPullbackZone &&
       ltfStructure.hasConfirmation &&
-      levels.rrRatio >= 2.0
+      levels.rrRatio >= 3.0 &&
+      confluenceScore >= 75
     ) {
       state = 'CONFIRMED';
     } else if (ltfStructure.inPullbackZone) {
@@ -101,6 +116,8 @@ export class StrategyEngine {
       ltfStructure,
       smtAnalysis,
       levels,
+      confluenceScore,
+      confluenceGrade,
       reasoning,
       missingConditions,
       evaluatedAt: Date.now()
@@ -249,13 +266,13 @@ export class StrategyEngine {
       const swingLow = Math.min(...lows);
       stopLoss = swingLow * 0.9985; // 0.15% below swing low
       const recentHigh = Math.max(...highs);
-      const potentialTarget = Math.max(recentHigh, currentPrice + (currentPrice - stopLoss) * 2.5);
+      const potentialTarget = Math.max(recentHigh, currentPrice + (currentPrice - stopLoss) * 3.2);
       target = potentialTarget;
     } else {
       const swingHigh = Math.max(...highs);
       stopLoss = swingHigh * 1.0015;
       const recentLow = Math.min(...lows);
-      const potentialTarget = Math.min(recentLow, currentPrice - (stopLoss - currentPrice) * 2.5);
+      const potentialTarget = Math.min(recentLow, currentPrice - (stopLoss - currentPrice) * 3.2);
       target = potentialTarget;
     }
 

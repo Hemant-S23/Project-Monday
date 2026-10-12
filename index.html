@@ -587,11 +587,25 @@
             </div>
             <div class="telemetry-card">
               <span class="meta-lbl">Calculated RR</span>
-              <span class="meta-val text-bullish" id="meta_rr">1:2.65</span>
+              <span class="meta-val text-bullish" id="meta_rr">1:3.20</span>
             </div>
             <div class="telemetry-card">
               <span class="meta-lbl">Risk Rule</span>
               <span class="meta-val">1.0% Max</span>
+            </div>
+          </div>
+
+          <!-- Algorithmic Confluence Score Meter (0 - 100%) -->
+          <div class="confluence-meter-card" id="confluence_meter_card">
+            <div class="confluence-header">
+              <span class="confluence-title"><i class="ph-bold ph-lightning"></i> NEURAL CONFLUENCE</span>
+              <span class="confluence-score-val" id="confluence_score_val">0% <span class="confluence-grade" id="confluence_grade_badge">[NO EDGE]</span></span>
+            </div>
+            <div class="confluence-track">
+              <div class="confluence-fill" id="confluence_fill_bar" style="width: 0%;"></div>
+            </div>
+            <div class="confluence-footer">
+              <span class="confluence-sub" id="confluence_sub_text">Min 75% required for Grade A Institutional Execution</span>
             </div>
           </div>
 
@@ -867,6 +881,40 @@
             <span class="voice-status-text" id="voice_status_indicator">MONDAY Active • Ready</span>
           </div>
           <span style="font-size: 0.7rem; color: var(--text-dim);">Hinglish / English</span>
+        </div>
+
+        <!-- Dynamic Pinned Live Setup Radar Card -->
+        <div class="chat-pinned-radar" id="chat_pinned_radar" style="display: none;">
+          <div class="pinned-radar-header">
+            <div class="pinned-radar-badge">
+              <span class="pinned-dot-pulse"></span>
+              <span id="pinned_radar_state">DEVELOPING SETUP</span>
+            </div>
+            <span class="pinned-radar-asset" id="pinned_radar_asset">BTC/USD LONG</span>
+            <button class="pinned-radar-dismiss" id="pinned_radar_dismiss" type="button" title="Dismiss Pinned Setup">
+              <i class="ph ph-x"></i>
+            </button>
+          </div>
+          <div class="pinned-radar-levels">
+            <div class="pinned-level-cell">
+              <span class="p-lbl">Entry Zone</span>
+              <span class="p-val" id="pinned_radar_entry">$86,200 - $86,500</span>
+            </div>
+            <div class="pinned-level-cell">
+              <span class="p-lbl">Stop Loss</span>
+              <span class="p-val text-bearish" id="pinned_radar_sl">$85,600</span>
+            </div>
+            <div class="pinned-level-cell">
+              <span class="p-lbl">Take Profit (1:3+)</span>
+              <span class="p-val text-bullish" id="pinned_radar_tp">$89,100</span>
+            </div>
+          </div>
+          <div class="pinned-radar-footer">
+            <span class="pinned-proximity" id="pinned_radar_proximity">⏳ Price $180 away from reaction zone</span>
+            <button class="btn-pinned-action" id="btn_pinned_action" type="button">
+              <i class="ph-bold ph-lightning"></i> <span id="btn_pinned_action_text">Load in Desk</span>
+            </button>
+          </div>
         </div>
 
         <!-- Chat Transcript -->

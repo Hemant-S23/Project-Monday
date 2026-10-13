@@ -308,7 +308,9 @@ class App {
       eventRisk,
       sentiment,
       fundingData,
-      currencySymbol
+      currencySymbol,
+      candles5M,
+      candles1H
     };
   }
 
@@ -324,15 +326,18 @@ class App {
     const evalData = await this.evaluateAsset(targetAsset);
     if (!evalData) return;
 
-    const { currentPrice, strategyResult, eventRisk, sentiment, fundingData, currencySymbol } = evalData;
+    const { currentPrice, strategyResult, eventRisk, sentiment, fundingData, currencySymbol, candles5M, candles1H } = evalData;
 
-    // 2. Historical Context Analysis
+    // 2. Historical Context Analysis with Real-time Live Candles & Price
     const histContext = this.historicalEngine.evaluate(
       targetAsset,
       strategyResult.direction,
       strategyResult.htfTrend,
-      'NORMAL',
-      this.currentMarket
+      strategyResult.volatility || 'NORMAL',
+      this.currentMarket,
+      candles5M,
+      currentPrice,
+      strategyResult
     );
 
     // 4. Risk & Position Calculation

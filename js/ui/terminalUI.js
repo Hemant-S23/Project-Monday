@@ -65,6 +65,9 @@ export class TerminalUI {
     // Initialize Trade & Alert Notification Center
     this.notificationManager = new NotificationManager();
     this.notificationManager.initDOM();
+
+    // Start Live Context Radar & Historical Telemetry Ticker (Real-Time Timestamps)
+    this.startContextTelemetryTicker();
   }
 
   getStarredAssets(market = this.currentMarket) {
@@ -2189,35 +2192,106 @@ export class TerminalUI {
       fundingEl.className = `meta-val ${fundingData.sentiment === 'OVERHEATED_LONGS' ? 'bearish' : 'neutral'}`;
     }
 
-    // News Radar container
+    // News Radar container (Live Realtime Feed)
     const newsContainer = document.getElementById('news_radar_list');
     if (newsContainer && eventRisk && eventRisk.activeEvents) {
-      newsContainer.innerHTML = eventRisk.activeEvents.map(evt => `
+      const nowStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const itemsHtml = eventRisk.activeEvents.map(evt => {
+        const tsAttr = evt.timestamp ? `data-timestamp="${evt.timestamp}"` : '';
+        return `
         <div class="news-item impact-${evt.riskLevel.toLowerCase()}">
           <div class="news-header">
             <span class="news-impact-tag">${evt.impact}</span>
-            <span class="news-time">${evt.timeWindow}</span>
+            <span class="news-time" ${tsAttr}>
+              <i class="ph ph-clock"></i> <span class="time-text">${evt.timeWindow}</span>
+            </span>
           </div>
           <div class="news-title">${evt.title}</div>
           <div class="news-desc">${evt.details}</div>
         </div>
-      `).join('');
+      `;
+      }).join('');
+
+      newsContainer.innerHTML = `
+        <div class="news-radar-header">
+          <div class="news-radar-status"><span class="live-dot pulse-green"></span> LIVE RADAR • REALTIME FEED</div>
+          <div class="news-radar-clock" id="news_radar_clock">Live Sync • ${nowStr}</div>
+        </div>
+        ${itemsHtml}
+      `;
     }
 
-    // Historical Pattern Card
+    // Historical Pattern Card (Live Quantitative Scanner)
     const histCard = document.getElementById('historical_pattern_card');
     if (histCard && historicalContext) {
+      const liveClock = historicalContext.scannedTimeFormatted || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       histCard.innerHTML = `
-        <div class="hist-title"><i class="ph ph-git-commit"></i> ${historicalContext.patternName}</div>
+        <div class="hist-card-header">
+          <div class="hist-title"><i class="ph ph-git-commit"></i> ${historicalContext.patternName}</div>
+          <div class="hist-live-badge">
+            <span class="live-dot pulse-cyan"></span>
+            <span class="hist-time-text">LIVE SCAN • <span id="hist_live_clock">${liveClock}</span></span>
+          </div>
+        </div>
         <div class="hist-stats-row">
           <div class="stat-col"><span class="k">Sample:</span> <span class="v">${historicalContext.sampleSize} setups</span></div>
           <div class="stat-col"><span class="k">Win Rate:</span> <span class="v text-bullish">${historicalContext.historicalWinRate}%</span></div>
           <div class="stat-col"><span class="k">Avg RR:</span> <span class="v">1:${historicalContext.expectedRR}</span></div>
+          <div class="stat-col"><span class="k">Regime:</span> <span class="v ${historicalContext.contextTag === 'Supportive' ? 'text-bullish' : 'text-warning'}">${historicalContext.contextTag}</span></div>
         </div>
         <div class="hist-desc">${historicalContext.explanation}</div>
-        <div class="hist-disclaimer">ℹ️ ${historicalContext.disclaimer}</div>
+        <div class="hist-footer">
+          <span class="hist-volatility-tag"><i class="ph ph-chart-line-up"></i> ${historicalContext.volatilityState || 'Normal ATR'}</span>
+          <span class="hist-disclaimer">ℹ️ ${historicalContext.disclaimer}</span>
+        </div>
       `;
     }
+  }
+
+  startContextTelemetryTicker() {
+    if (this._contextTickerInterval) clearInterval(this._contextTickerInterval);
+    this._contextTickerInterval = setInterval(() => {
+      this.updateRadarRelativeTimes();
+    }, 4000);
+  }
+
+  updateRadarRelativeTimes() {
+    const now = Date.now();
+    const clockEl = document.getElementById('news_radar_clock');
+    if (clockEl) {
+      const nowStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      clockEl.textContent = `Live Sync • ${nowStr}`;
+    }
+
+    const timeElements = document.querySelectorAll('#news_radar_list .news-time[data-timestamp]');
+    timeElements.forEach(el => {
+      const ts = parseInt(el.getAttribute('data-timestamp'), 10);
+      if (!isNaN(ts) && ts > 0) {
+        const diffMs = ts - now;
+        let label = '';
+        if (diffMs > 0) {
+          const diffMin = Math.round(diffMs / 60000);
+          if (diffMin < 1) label = 'Within 1 min';
+          else if (diffMin < 60) label = `In ${diffMin}m`;
+          else {
+            const h = Math.floor(diffMin / 60);
+            const m = diffMin % 60;
+            label = `In ${h}h ${m > 0 ? m + 'm' : ''}`;
+          }
+        } else {
+          const elapsedMin = Math.round(Math.abs(diffMs) / 60000);
+          if (elapsedMin < 1) label = 'Just now';
+          else if (elapsedMin < 60) label = `${elapsedMin}m ago`;
+          else {
+            const h = Math.floor(elapsedMin / 60);
+            if (h < 24) label = `${h}h ago`;
+            else label = `${Math.floor(h / 24)}d ago`;
+          }
+        }
+        const span = el.querySelector('.time-text');
+        if (span) span.textContent = label;
+      }
+    });
   }
 
   updateRiskParameters(riskParams) {

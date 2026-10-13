@@ -12,9 +12,9 @@
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/main.css?v=2.9">
-  <link rel="stylesheet" href="css/components.css?v=2.9">
-  <link rel="stylesheet" href="css/auth.css?v=2.9">
+  <link rel="stylesheet" href="css/main.css?v=3.1">
+  <link rel="stylesheet" href="css/components.css?v=3.1">
+  <link rel="stylesheet" href="css/auth.css?v=3.1">
 
   <!-- Supabase JS Client (Optional cloud auth & database sync) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -468,7 +468,7 @@
         </div>
 
         <!-- Auto-Pilot Settings Trigger (Execution & Risk Standards) -->
-        <button class="autopilot-settings-btn" id="btn_autopilot_settings" type="button" title="Configure Auto-Pilot Risk & Execution Standards">
+        <button class="autopilot-settings-btn" id="btn_autopilot_settings" type="button" title="Configure Auto-Pilot Risk & Execution Standards" aria-label="Auto-Pilot Settings" onclick="if(window.openAutopilotSettings) window.openAutopilotSettings(event);">
           <i class="ph-bold ph-gear-six"></i>
         </button>
 
@@ -1513,6 +1513,6 @@
   <script src="js/config/supabaseConfig.js"></script>
 
   <!-- App Script Entrypoint -->
-  <script type="module" src="js/app.js?v=3.0"></script>
+  <script type="module" src="js/app.js?v=3.1"></script>
 </body>
 </html>

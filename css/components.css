@@ -4659,6 +4659,60 @@
 }
 
 /* ==========================================================================
+   TERMINAL MODAL OVERLAY & BACKDROP SYSTEM
+   ========================================================================== */
+.terminal-modal {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 999999 !important;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.terminal-modal[style*="display: flex"],
+.terminal-modal.open {
+  display: flex !important;
+}
+
+.terminal-modal .modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  z-index: 1 !important;
+}
+
+.terminal-modal .modal-card {
+  position: relative !important;
+  z-index: 2 !important;
+  width: 100% !important;
+  max-width: 580px !important;
+  max-height: 90vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+@keyframes modal-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ==========================================================================
    AUTO-PILOT SETTINGS GEAR & MODAL STYLES
    ========================================================================== */
 .autopilot-settings-btn {
@@ -4675,6 +4729,12 @@
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 0;
+  position: relative;
+  z-index: 5;
+}
+
+.autopilot-settings-btn i {
+  pointer-events: none;
 }
 
 .autopilot-settings-btn:hover {

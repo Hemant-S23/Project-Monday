@@ -739,18 +739,43 @@ export class TerminalUI {
       });
     }
 
-    const openAutopilotSettings = () => {
+    const openAutopilotSettings = (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
       populateForm(getSavedSettings());
-      if (autopilotSettingsModal) autopilotSettingsModal.style.display = 'flex';
+      if (autopilotSettingsModal) {
+        autopilotSettingsModal.style.display = 'flex';
+        autopilotSettingsModal.classList.add('open');
+      }
     };
 
-    const closeAutopilotSettings = () => {
-      if (autopilotSettingsModal) autopilotSettingsModal.style.display = 'none';
+    const closeAutopilotSettings = (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (autopilotSettingsModal) {
+        autopilotSettingsModal.style.display = 'none';
+        autopilotSettingsModal.classList.remove('open');
+      }
     };
+
+    // Expose globally so inline or external triggers can never fail
+    window.openAutopilotSettings = openAutopilotSettings;
+    window.closeAutopilotSettings = closeAutopilotSettings;
 
     if (autopilotSettingsBtn) autopilotSettingsBtn.addEventListener('click', openAutopilotSettings);
     if (closeAutopilotSettingsBtn) closeAutopilotSettingsBtn.addEventListener('click', closeAutopilotSettings);
     if (backdropAutopilotSettings) backdropAutopilotSettings.addEventListener('click', closeAutopilotSettings);
+
+    // Event delegation fallback
+    document.addEventListener('click', (e) => {
+      if (e.target && (e.target.id === 'btn_autopilot_settings' || e.target.closest('#btn_autopilot_settings'))) {
+        openAutopilotSettings(e);
+      }
+    });
 
     if (btnApplyRecommended) {
       btnApplyRecommended.addEventListener('click', () => {

@@ -12,9 +12,9 @@
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/main.css?v=2.7">
-  <link rel="stylesheet" href="css/components.css?v=2.7">
-  <link rel="stylesheet" href="css/auth.css?v=2.7">
+  <link rel="stylesheet" href="css/main.css?v=2.9">
+  <link rel="stylesheet" href="css/components.css?v=2.9">
+  <link rel="stylesheet" href="css/auth.css?v=2.9">
 
   <!-- Supabase JS Client (Optional cloud auth & database sync) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -396,11 +396,11 @@
         <div class="account-pill" id="header_account_pill">
           <div class="account-pill-main">
             <span class="account-label" id="header_balance_label">Paper Balance:</span>
-            <span class="account-balance" id="header_balance">$2,084.12</span>
+            <span class="account-balance" id="header_balance">$2,000.00</span>
           </div>
           <div class="account-stat-group">
-            <span class="stat-num bullish" id="header_total_r">+4.20R</span>
-            <span class="stat-pnl-usd" id="header_pnl_usd">(+$84.12)</span>
+            <span class="stat-num" id="header_total_r">+0.00R</span>
+            <span class="stat-pnl-usd" id="header_pnl_usd">(+$0.00)</span>
             <button class="r-info-btn" id="btn_explain_r" type="button" aria-label="What is R-Multiple?" title="What is R? Click to understand Risk Multiples & Live Equity">
               <i class="ph ph-question"></i>
             </button>
@@ -411,6 +411,44 @@
             <span class="live-chip-text" id="header_live_text">+$0.00 (+0.00R)</span>
           </div>
         </div>
+
+        <!-- Instant Zero-Lag Synchronous HUD Restoration Script -->
+        <script>
+          (function() {
+            try {
+              var userRaw = localStorage.getItem('monday_auth_user');
+              var uid = 'default';
+              if (userRaw) {
+                var u = JSON.parse(userRaw);
+                if (u && u.id) uid = u.id;
+              }
+              var savedBal = localStorage.getItem('ai_copilot_paper_balance_' + uid);
+              var balEl = document.getElementById('header_balance');
+              if (balEl && savedBal && !isNaN(parseFloat(savedBal))) {
+                balEl.textContent = '$' + parseFloat(savedBal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+              }
+              var savedTrades = localStorage.getItem('ai_copilot_paper_trades_' + uid);
+              if (savedTrades) {
+                var trs = JSON.parse(savedTrades);
+                if (Array.isArray(trs)) {
+                  var closed = trs.filter(function(t) { return t.status === 'CLOSED'; });
+                  var netPnl = closed.reduce(function(acc, t) { return acc + (t.pnlUSD || 0); }, 0);
+                  var totalR = closed.reduce(function(acc, t) { return acc + (t.rMultiple || 0); }, 0);
+                  var rEl = document.getElementById('header_total_r');
+                  var pnlEl = document.getElementById('header_pnl_usd');
+                  if (rEl) {
+                    rEl.textContent = (totalR >= 0 ? '+' : '') + totalR.toFixed(2) + 'R';
+                    rEl.className = 'stat-num ' + (totalR >= 0 ? 'bullish' : 'bearish');
+                  }
+                  if (pnlEl) {
+                    pnlEl.textContent = '(' + (netPnl >= 0 ? '+' : '') + '$' + netPnl.toFixed(2) + ')';
+                    pnlEl.className = 'stat-pnl-usd ' + (netPnl >= 0 ? 'bullish' : 'bearish');
+                  }
+                }
+              }
+            } catch (e) {}
+          })();
+        </script>
 
         <!-- Quick Ledger & Financial Passbook Trigger -->
         <button class="header-ledger-btn" id="btn_quick_passbook" type="button" title="View Financial Passbook & 18% GST Trade Ledger">
@@ -1284,6 +1322,6 @@
   <script src="js/config/supabaseConfig.js"></script>
 
   <!-- App Script Entrypoint -->
-  <script type="module" src="js/app.js?v=2.8"></script>
+  <script type="module" src="js/app.js?v=2.9"></script>
 </body>
 </html>

@@ -149,6 +149,16 @@ class App {
       this.ui.showAuthOverlay();
     }
 
+    // Immediate Synchronous State Sync (Zero-Lag HUD, Open Positions, and Journal Restoration)
+    this.updateTradeJournalAndStats();
+    this.ui.updateOpenPositions(this.paperTrader.openPositions);
+    const initialLiveMetrics = this.paperTrader.getLiveEquity();
+    this.ui.updateHeaderAccountHUD(initialLiveMetrics);
+    if (this.ui.orderState) {
+      this.ui.orderState.availableBalance = this.paperTrader.balance;
+      this.ui.refreshDerivativesOrderDesk();
+    }
+
     // 1. Initialize TradingView chart with saved theme and active adapter
     const activeTheme = localStorage.getItem('monday_theme') || 'dark';
     this.chartManager.setAdapter(this.getActiveAdapter());

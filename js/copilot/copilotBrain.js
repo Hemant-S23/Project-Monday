@@ -140,7 +140,7 @@ export class CopilotBrain {
     }
 
     // 2. Greetings & "How are you" ("hello", "kaisi ho", "kaise ho", "kya haal", "hru", "how are you", "namaste", "hey", "hi")
-    else if (this.matchesAny(clean, [
+    else if (!this.matchesAny(clean, ['fear', 'greed', 'funding', 'rsi', 'volume', 'market', 'chart', 'trade', 'setup']) && this.matchesAny(clean, [
       'kaisi ho', 'kaise ho', 'kya haal', 'kya haal chaal', 'how are you', 'how r u', 'hru',
       'kaisa hai', 'sab theek', 'sab badiya', 'sab kaisa hai', 'hello', 'hi', 'hey',
       'namaste', 'yo', 'sup', 'wassup', 'good morning', 'good evening', 'gm', 'gn'

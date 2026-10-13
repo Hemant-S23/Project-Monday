@@ -135,7 +135,8 @@ export class ChartManager {
     let symbol = majorCoinbaseUsd.includes(cleanAsset)
       ? `COINBASE:${cleanAsset}USD`
       : (cleanAsset === 'BNB' ? 'BINANCE:BNBUSD' : `CRYPTO:${cleanAsset}USD`);
-    let timezone = "Etc/UTC";
+    // Default to Indian Standard Time (IST / Asia/Kolkata) matching Delta Exchange and local clock
+    let timezone = "Asia/Kolkata";
 
     if (this.currentMarket === 'India') {
       timezone = "Asia/Kolkata";

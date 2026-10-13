@@ -279,17 +279,174 @@ export class TerminalUI {
       });
     });
 
-    // Mobile Navigation Tabs Handler
+    // Mobile Navigation Bottom Bar Handler
     document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
+        const action = e.currentTarget.dataset.action;
         const targetId = e.currentTarget.dataset.target;
-        document.querySelectorAll('.mobile-tab-btn').forEach(b => b.classList.remove('active'));
+
+        if (action === 'open_history') {
+          const histBtn = document.getElementById('open_history_btn');
+          if (histBtn) histBtn.click();
+          return;
+        }
+
+        if (action === 'open_journal') {
+          const journalBtn = document.getElementById('open_journal_btn');
+          if (journalBtn) journalBtn.click();
+          return;
+        }
+
+        if (targetId) {
+          document.querySelectorAll('.mobile-tab-btn[data-target]').forEach(b => b.classList.remove('active'));
+          e.currentTarget.classList.add('active');
+
+          // Toggle mobile active panel
+          document.querySelectorAll('.terminal-panel').forEach(panel => {
+            panel.classList.toggle('active-mobile-panel', panel.id === targetId);
+          });
+        }
+      });
+    });
+
+    // Mobile Slide-In Navigation Drawer Setup
+    const drawer = document.getElementById('mobile_drawer');
+    const drawerBackdrop = document.getElementById('mobile_drawer_backdrop');
+    const drawerToggle = document.getElementById('mobile_drawer_toggle');
+    const drawerClose = document.getElementById('drawer_close_btn');
+
+    const openMobileDrawer = () => {
+      if (drawer) drawer.classList.add('open');
+      if (drawerBackdrop) drawerBackdrop.classList.add('open');
+    };
+
+    const closeMobileDrawer = () => {
+      if (drawer) drawer.classList.remove('open');
+      if (drawerBackdrop) drawerBackdrop.classList.remove('open');
+    };
+
+    if (drawerToggle) drawerToggle.addEventListener('click', openMobileDrawer);
+    if (drawerClose) drawerClose.addEventListener('click', closeMobileDrawer);
+    if (drawerBackdrop) drawerBackdrop.addEventListener('click', closeMobileDrawer);
+
+    // Mobile Asset Pill: Tap to open Watchlist & Quick Search Hub
+    const mobileAssetPill = document.getElementById('mobile_asset_pill');
+    if (mobileAssetPill) {
+      mobileAssetPill.addEventListener('click', () => {
+        const watchlistBtn = document.getElementById('watchlist_tray_btn');
+        if (watchlistBtn) watchlistBtn.click();
+      });
+    }
+
+    // Drawer Menu Navigation Actions
+    const dOpenSearch = document.getElementById('d_open_search');
+    if (dOpenSearch) {
+      dOpenSearch.addEventListener('click', () => {
+        closeMobileDrawer();
+        const watchlistBtn = document.getElementById('watchlist_tray_btn');
+        if (watchlistBtn) watchlistBtn.click();
+      });
+    }
+
+    const dOpenPassbook = document.getElementById('d_open_passbook');
+    if (dOpenPassbook) {
+      dOpenPassbook.addEventListener('click', () => {
+        closeMobileDrawer();
+        const btn = document.getElementById('open_history_btn');
+        if (btn) btn.click();
+      });
+    }
+
+    const dOpenJournal = document.getElementById('d_open_journal');
+    if (dOpenJournal) {
+      dOpenJournal.addEventListener('click', () => {
+        closeMobileDrawer();
+        const btn = document.getElementById('open_journal_btn');
+        if (btn) btn.click();
+      });
+    }
+
+    const dToggleAutopilot = document.getElementById('d_toggle_autopilot');
+    if (dToggleAutopilot) {
+      dToggleAutopilot.addEventListener('click', () => {
+        const toggle = document.getElementById('popover_autopilot_toggle');
+        if (toggle) toggle.click();
+        const isAp = localStorage.getItem('monday_auto_pilot') === 'true';
+        const badge = document.getElementById('d_autopilot_badge');
+        if (badge) {
+          badge.textContent = isAp ? 'ON' : 'OFF';
+          badge.classList.toggle('active', isAp);
+        }
+      });
+    }
+
+    const dToggleVoice = document.getElementById('d_toggle_voice');
+    if (dToggleVoice) {
+      dToggleVoice.addEventListener('click', () => {
+        const toggle = document.getElementById('popover_voice_toggle');
+        if (toggle) toggle.click();
+        const vBadge = document.getElementById('popover_voice_badge');
+        const dBadge = document.getElementById('d_voice_badge');
+        if (vBadge && dBadge) {
+          dBadge.textContent = vBadge.textContent;
+          dBadge.className = vBadge.className;
+        }
+      });
+    }
+
+    const dThemeToggle = document.getElementById('d_theme_toggle_btn');
+    if (dThemeToggle) {
+      dThemeToggle.addEventListener('click', () => {
+        const btn = document.getElementById('theme_toggle_btn');
+        if (btn) btn.click();
+        const themeText = document.getElementById('theme_mode_text');
+        const dText = document.getElementById('d_theme_mode_text');
+        if (themeText && dText) dText.textContent = themeText.textContent;
+      });
+    }
+
+    // Drawer Market Switcher (Crypto ⇄ India)
+    const dMarketCrypto = document.getElementById('d_market_crypto');
+    const dMarketIndia = document.getElementById('d_market_india');
+    if (dMarketCrypto && dMarketIndia) {
+      dMarketCrypto.addEventListener('click', () => {
+        if (this.currentMarket !== 'Crypto') {
+          const item = document.querySelector('.market-menu-item[data-market="Crypto"]');
+          if (item) item.click();
+          dMarketCrypto.classList.add('active');
+          dMarketIndia.classList.remove('active');
+          closeMobileDrawer();
+        }
+      });
+      dMarketIndia.addEventListener('click', () => {
+        if (this.currentMarket !== 'India') {
+          const item = document.querySelector('.market-menu-item[data-market="India"]');
+          if (item) item.click();
+          dMarketIndia.classList.add('active');
+          dMarketCrypto.classList.remove('active');
+          closeMobileDrawer();
+        }
+      });
+    }
+
+    // Context Deck Mobile Segmented Switcher (Pattern Scan ⇄ Macro Radar)
+    document.querySelectorAll('.deck-m-tab').forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        const deckView = e.currentTarget.dataset.deckView;
+        document.querySelectorAll('.deck-m-tab').forEach(t => t.classList.remove('active'));
         e.currentTarget.classList.add('active');
 
-        // Toggle mobile active panel
-        document.querySelectorAll('.terminal-panel').forEach(panel => {
-          panel.classList.toggle('active-mobile-panel', panel.id === targetId);
-        });
+        const histCard = document.getElementById('historical_pattern_card');
+        const newsCard = document.getElementById('news_radar_list');
+        if (histCard && newsCard) {
+          if (deckView === 'hist') {
+            histCard.classList.add('active-deck-card');
+            newsCard.classList.remove('active-deck-card');
+          } else {
+            newsCard.classList.add('active-deck-card');
+            histCard.classList.remove('active-deck-card');
+          }
+        }
       });
     });
 
@@ -1502,6 +1659,11 @@ export class TerminalUI {
 
       if (headerInitials) headerInitials.textContent = initials;
       if (popoverInitials) popoverInitials.textContent = initials;
+      const dName = document.getElementById('drawer_user_name');
+      const dInit = document.getElementById('drawer_avatar_initials');
+      if (dName) dName.textContent = displayName;
+      if (dInit) dInit.textContent = initials;
+
       if (avatarIcon) {
         avatarIcon.className = user.isGuest ? 'ph ph-user' : 'ph ph-check-circle';
       }
@@ -1781,6 +1943,18 @@ export class TerminalUI {
     }
     if (sourceEl && source) {
       sourceEl.textContent = source;
+    }
+
+    // Synchronize Mobile Native Asset Pill
+    const mSym = document.getElementById('m_asset_sym');
+    const mPrice = document.getElementById('m_asset_price');
+    const mChg = document.getElementById('m_asset_chg');
+    if (mSym && (asset || this.currentAsset)) mSym.textContent = asset || this.currentAsset;
+    if (mPrice && price !== undefined) mPrice.textContent = this.formatPrice(price);
+    if (mChg && changePercent !== undefined) {
+      const isPos = changePercent >= 0;
+      mChg.textContent = `${isPos ? '+' : ''}${changePercent.toFixed(2)}%`;
+      mChg.className = `m-asset-chg ${isPos ? 'text-bullish' : 'text-bearish'}`;
     }
 
     // Persist latest price for instant zero-lag boot on future reloads
@@ -2617,6 +2791,22 @@ export class TerminalUI {
     if (popoverMargin) {
       const margin = liveMetrics.usedMargin !== undefined ? liveMetrics.usedMargin : 0;
       popoverMargin.textContent = `$${margin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
+    // Live Mobile Drawer Balance Cards
+    const dEquity = document.getElementById('drawer_total_equity');
+    const dAvail = document.getElementById('drawer_avail_cash');
+    const dMargin = document.getElementById('drawer_used_margin');
+    if (dEquity) {
+      const eq = liveMetrics.equity !== undefined ? liveMetrics.equity : liveMetrics.balance;
+      dEquity.textContent = `$${eq.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    if (dAvail) {
+      dAvail.textContent = `$${(liveMetrics.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    if (dMargin) {
+      const margin = liveMetrics.usedMargin !== undefined ? liveMetrics.usedMargin : 0;
+      dMargin.textContent = `$${margin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
   }
 

@@ -12,9 +12,9 @@
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/main.css?v=4.0">
-  <link rel="stylesheet" href="css/components.css?v=4.0">
-  <link rel="stylesheet" href="css/auth.css?v=4.0">
+  <link rel="stylesheet" href="css/main.css?v=4.1">
+  <link rel="stylesheet" href="css/components.css?v=4.1">
+  <link rel="stylesheet" href="css/auth.css?v=4.1">
 
   <!-- Supabase JS Client (Optional cloud auth & database sync) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -239,9 +239,104 @@
     </div>
   </div>
 
+  <!-- Slide-In Mobile Drawer (Android Native APK Drawer) -->
+  <div class="mobile-drawer-backdrop" id="mobile_drawer_backdrop"></div>
+  <aside class="mobile-drawer" id="mobile_drawer" aria-label="Navigation Drawer">
+    <div class="drawer-header">
+      <div class="drawer-user-info">
+        <div class="drawer-avatar"><span id="drawer_avatar_initials">GT</span></div>
+        <div class="drawer-user-meta">
+          <span class="drawer-user-name" id="drawer_user_name">Guest Trader</span>
+          <span class="drawer-badge"><i class="ph-fill ph-shield-check"></i> Pro Paper Account</span>
+        </div>
+      </div>
+      <button class="drawer-close-btn" id="drawer_close_btn" type="button" aria-label="Close Drawer"><i class="ph ph-x"></i></button>
+    </div>
+
+    <div class="drawer-balance-card">
+      <div class="d-bal-lbl">Total Paper Equity</div>
+      <div class="d-bal-val" id="drawer_total_equity">$2,000.00</div>
+      <div class="d-bal-sub">
+        <span>Available: <strong id="drawer_avail_cash">$2,000.00</strong></span>
+        <span>Margin: <strong id="drawer_used_margin">$0.00</strong></span>
+      </div>
+    </div>
+
+    <!-- Quick Market Switch Segment -->
+    <div class="drawer-section-title">Trading Market</div>
+    <div class="drawer-market-selector">
+      <button class="d-market-btn active" data-market="Crypto" id="d_market_crypto" type="button">
+        <i class="ph ph-currency-btc"></i> <span>Crypto (Binance)</span>
+      </button>
+      <button class="d-market-btn" data-market="India" id="d_market_india" type="button">
+        <i class="ph ph-buildings"></i> <span>India (NSE/BSE)</span>
+      </button>
+    </div>
+
+    <div class="drawer-menu-list">
+      <button class="drawer-menu-item" id="d_open_search" type="button">
+        <i class="ph ph-magnifying-glass item-ico cyan"></i>
+        <span>Search Asset / Watchlist</span>
+        <i class="ph ph-arrow-right arr-ico"></i>
+      </button>
+
+      <button class="drawer-menu-item" id="d_open_passbook" type="button">
+        <i class="ph ph-receipt item-ico emerald"></i>
+        <span>Financial Passbook & History</span>
+        <span class="d-chip">18% GST</span>
+        <i class="ph ph-arrow-right arr-ico"></i>
+      </button>
+
+      <button class="drawer-menu-item" id="d_open_journal" type="button">
+        <i class="ph ph-notebook item-ico purple"></i>
+        <span>Trade Journal & Analytics</span>
+        <i class="ph ph-arrow-right arr-ico"></i>
+      </button>
+
+      <button class="drawer-menu-item" id="d_toggle_autopilot" type="button">
+        <i class="ph-bold ph-robot item-ico purple"></i>
+        <span>Auto-Pilot Execution</span>
+        <span class="d-toggle-badge" id="d_autopilot_badge">OFF</span>
+      </button>
+
+      <button class="drawer-menu-item" id="d_toggle_voice" type="button">
+        <i class="ph ph-speaker-high item-ico cyan"></i>
+        <span>Hinglish Audio Copilot</span>
+        <span class="d-toggle-badge active" id="d_voice_badge">ON</span>
+      </button>
+
+      <div class="drawer-menu-item d-theme-row">
+        <div class="d-row-left">
+          <i class="ph ph-sun-dim item-ico amber"></i>
+          <span>Theme Mode</span>
+        </div>
+        <button class="d-theme-toggle-btn" id="d_theme_toggle_btn" type="button">
+          <span id="d_theme_mode_text">Dark</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="drawer-footer">
+      <span>MONDAY Neural Engine v2.5 • Capacitor APK Ready</span>
+    </div>
+  </aside>
+
   <div class="terminal-wrapper" id="terminal_wrapper">
     <!-- Top Header & Global Telemetry Strip -->
     <header class="terminal-header">
+      <!-- Mobile Topbar Left: Hamburger Drawer Toggle -->
+      <button class="mobile-drawer-toggle" id="mobile_drawer_toggle" type="button" aria-label="Open Navigation Menu">
+        <i class="ph ph-list"></i>
+      </button>
+
+      <!-- Mobile Topbar Center: Quick Asset Switcher Pill -->
+      <div class="mobile-asset-pill" id="mobile_asset_pill" title="Tap to switch asset or view watchlist">
+        <span class="m-asset-sym" id="m_asset_sym">BTC</span>
+        <span class="m-asset-price" id="m_asset_price">--</span>
+        <span class="m-asset-chg text-bullish" id="m_asset_chg">--%</span>
+        <i class="ph ph-caret-down m-caret"></i>
+      </div>
+
       <!-- Left Cluster: Brand & Market Selector -->
       <div class="header-left-cluster">
         <div class="header-brand">
@@ -612,16 +707,22 @@
       </div>
     </header>
 
-    <!-- Mobile / Android Responsive View Tabs -->
-    <nav class="mobile-nav-tabs" id="mobile_nav_tabs" aria-label="Mobile View Navigation">
+    <!-- Mobile Native Bottom Navigation Bar (Capacitor Safe-Area Compatible) -->
+    <nav class="mobile-nav-tabs" id="mobile_nav_tabs" aria-label="Mobile Bottom Navigation">
       <button class="mobile-tab-btn active" data-target="panel_chart" id="m_tab_chart" type="button">
-        <i class="ph ph-chart-bar"></i> <span>Live Chart</span>
+        <i class="ph ph-chart-line-up"></i> <span>Chart</span>
       </button>
       <button class="mobile-tab-btn" data-target="panel_strategy" id="m_tab_strategy" type="button">
-        <i class="ph ph-crosshair"></i> <span>Strategy & Order</span>
+        <i class="ph ph-crosshair"></i> <span>Strategy</span>
       </button>
       <button class="mobile-tab-btn" data-target="panel_copilot" id="m_tab_copilot" type="button">
-        <i class="ph ph-sparkle"></i> <span>MONDAY AI</span>
+        <i class="ph ph-sparkle"></i> <span>Copilot</span>
+      </button>
+      <button class="mobile-tab-btn" data-action="open_history" id="m_tab_history" type="button">
+        <i class="ph ph-receipt"></i> <span>Passbook</span>
+      </button>
+      <button class="mobile-tab-btn" data-action="open_journal" id="m_tab_journal" type="button">
+        <i class="ph ph-notebook"></i> <span>Journal</span>
       </button>
     </nav>
 
@@ -930,9 +1031,18 @@
         </div>
 
         <!-- Lower Context Radar (Historical & Macro News) -->
-        <div class="chart-context-deck">
+        <div class="chart-context-deck" id="chart_context_deck">
+          <div class="context-deck-mobile-nav" id="context_deck_mobile_nav">
+            <button class="deck-m-tab active" data-deck-view="hist" id="deck_tab_hist" type="button">
+              <i class="ph ph-git-commit"></i> <span>Pattern Scan</span>
+            </button>
+            <button class="deck-m-tab" data-deck-view="news" id="deck_tab_news" type="button">
+              <i class="ph ph-broadcast"></i> <span>Macro Radar</span>
+            </button>
+          </div>
+
           <!-- Historical Intelligence -->
-          <div class="hist-card" id="historical_pattern_card">
+          <div class="hist-card deck-card active-deck-card" id="historical_pattern_card">
             <div class="hist-title"><i class="ph ph-git-commit"></i> Regime Pattern Matching</div>
             <div class="hist-stats-row">
               <div class="stat-col"><span class="k">Sample:</span> <span class="v">84 setups</span></div>
@@ -943,7 +1053,7 @@
           </div>
 
           <!-- Macro & News Radar -->
-          <div class="news-radar-scroll" id="news_radar_list">
+          <div class="news-radar-scroll deck-card" id="news_radar_list">
             <!-- News items injected dynamically -->
           </div>
         </div>
@@ -1516,6 +1626,6 @@
   <script src="js/config/supabaseConfig.js"></script>
 
   <!-- App Script Entrypoint -->
-  <script type="module" src="js/app.js?v=4.0"></script>
+  <script type="module" src="js/app.js?v=4.1"></script>
 </body>
 </html>

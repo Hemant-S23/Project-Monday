@@ -5155,6 +5155,441 @@
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/* ==========================================================================
+   LIGHT THEME: FINANCIAL PASSBOOK & 18% GST TRADE LEDGER
+   ========================================================================== */
+[data-theme="light"] .passbook-modal-window {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.16), 0 4px 20px rgba(15, 23, 42, 0.08) !important;
+}
+
+[data-theme="light"] .passbook-modal-header {
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+[data-theme="light"] .passbook-icon-wrapper {
+  background: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #059669 !important;
+}
+
+[data-theme="light"] .passbook-modal-title {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .passbook-compliance-row {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .compliance-tag {
+  color: #0284c7 !important;
+}
+
+[data-theme="light"] .compliance-sep {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="light"] .compliance-gst-pill {
+  color: #b45309 !important;
+}
+
+[data-theme="light"] .passbook-modal-header .icon-btn {
+  color: #64748b !important;
+  background: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+[data-theme="light"] .passbook-modal-header .icon-btn:hover {
+  color: #0f172a !important;
+  background: #e2e8f0 !important;
+}
+
+[data-theme="light"] .passbook-modal-body {
+  background: #f8fafc !important;
+}
+
+/* Monthly Statement Card in Light Mode */
+[data-theme="light"] .passbook-monthly-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+[data-theme="light"] .passbook-filter-bar {
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+[data-theme="light"] .passbook-select-group {
+  color: #475569 !important;
+}
+
+[data-theme="light"] .passbook-month-dropdown {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+[data-theme="light"] .passbook-filter-chip {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #64748b !important;
+}
+
+[data-theme="light"] .passbook-filter-chip:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+[data-theme="light"] .passbook-filter-chip.active {
+  background: #0284c7 !important;
+  border-color: #0284c7 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25) !important;
+}
+
+/* 4-Pillar Financial Audit Grid in Light Mode */
+[data-theme="light"] .audit-stat-box {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+}
+
+[data-theme="light"] .audit-stat-box.highlight-net {
+  background: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+}
+
+[data-theme="light"] .audit-lbl {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .audit-val {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .audit-val.text-bullish {
+  color: #059669 !important;
+}
+
+[data-theme="light"] .audit-val.text-bearish {
+  color: #dc2626 !important;
+}
+
+[data-theme="light"] .audit-sub {
+  color: #94a3b8 !important;
+}
+
+/* Feed Heading & Count Tag in Light Mode */
+[data-theme="light"] .passbook-feed-heading {
+  color: #475569 !important;
+}
+
+[data-theme="light"] .feed-count-tag {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #64748b !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Individual Transaction Card in Light Mode */
+[data-theme="light"] .passbook-txn-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+}
+
+[data-theme="light"] .passbook-txn-card:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-theme="light"] .passbook-txn-card.expanded {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 6px 18px rgba(14, 165, 233, 0.12) !important;
+}
+
+[data-theme="light"] .txn-asset-name {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .txn-timestamp {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .txn-direction-badge.long {
+  background: #dcfce7 !important;
+  color: #16a34a !important;
+}
+
+[data-theme="light"] .txn-direction-badge.short {
+  background: #fee2e2 !important;
+  color: #dc2626 !important;
+}
+
+[data-theme="light"] .pos-lev-pill {
+  background: #fef3c7 !important;
+  color: #b45309 !important;
+  border: 1px solid #fde68a !important;
+}
+
+[data-theme="light"] .txn-post-balance {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .txn-chevron {
+  color: #94a3b8 !important;
+}
+
+[data-theme="light"] .passbook-txn-card.expanded .txn-chevron {
+  color: #0284c7 !important;
+}
+
+[data-theme="light"] .txn-net-amount.profit {
+  color: #16a34a !important;
+}
+
+[data-theme="light"] .txn-net-amount.loss {
+  color: #dc2626 !important;
+}
+
+[data-theme="light"] .txn-net-amount.breakeven {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .txn-type-avatar.profit {
+  background: #ecfdf5 !important;
+  color: #059669 !important;
+  border: 1px solid #a7f3d0 !important;
+}
+
+[data-theme="light"] .txn-type-avatar.loss {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+  border: 1px solid #fecaca !important;
+}
+
+[data-theme="light"] .txn-type-avatar.breakeven {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* Itemized Tax & Charges Receipt Drawer in Light Mode */
+[data-theme="light"] .passbook-receipt-drawer {
+  background: #f8fafc !important;
+  border-top: 1px dashed #e2e8f0 !important;
+}
+
+[data-theme="light"] .receipt-title-row {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .receipt-line {
+  color: #475569 !important;
+}
+
+[data-theme="light"] .receipt-line .val {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .receipt-line .val.text-bullish {
+  color: #059669 !important;
+}
+
+[data-theme="light"] .receipt-line .val.text-bearish {
+  color: #dc2626 !important;
+}
+
+[data-theme="light"] .receipt-line.sub-fee {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .receipt-line.sub-fee .val {
+  color: #475569 !important;
+}
+
+[data-theme="light"] .receipt-line.tax-line {
+  color: #d97706 !important;
+}
+
+[data-theme="light"] .receipt-line.tax-line .val {
+  color: #d97706 !important;
+}
+
+[data-theme="light"] .receipt-divider {
+  background: #e2e8f0 !important;
+}
+
+[data-theme="light"] .receipt-line.total-line {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .passbook-empty-state {
+  background: #f8fafc !important;
+  border: 1px dashed #cbd5e1 !important;
+  color: #64748b !important;
+}
+
+[data-theme="light"] .passbook-empty-state i {
+  color: #94a3b8 !important;
+}
+
+/* ==========================================================================
+   LIGHT THEME: AUTONOMOUS AI AUTO-PILOT SETTINGS MODAL
+   ========================================================================== */
+[data-theme="light"] .autopilot-settings-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.16), 0 4px 20px rgba(15, 23, 42, 0.08) !important;
+}
+
+[data-theme="light"] .autopilot-settings-card .modal-header {
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+[data-theme="light"] .autopilot-settings-card .modal-header .icon-btn {
+  color: #64748b !important;
+  background: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+[data-theme="light"] .autopilot-settings-card .modal-header .icon-btn:hover {
+  color: #0f172a !important;
+  background: #e2e8f0 !important;
+}
+
+[data-theme="light"] .autopilot-modal-title {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .autopilot-modal-sub {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .autopilot-modal-icon-badge {
+  background: #e0f2fe !important;
+  border-color: #bae6fd !important;
+  color: #0284c7 !important;
+}
+
+[data-theme="light"] .autopilot-settings-body {
+  background: #f8fafc !important;
+}
+
+[data-theme="light"] .recommended-preset-banner {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(6, 182, 212, 0.08) 100%) !important;
+  border: 1px solid rgba(16, 185, 129, 0.25) !important;
+}
+
+[data-theme="light"] .preset-banner-desc {
+  color: #475569 !important;
+}
+
+[data-theme="light"] .preset-chip {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+[data-theme="light"] .preset-chip strong {
+  color: #0284c7 !important;
+}
+
+[data-theme="light"] .preset-chip.highlight-shield {
+  background: #fef2f2 !important;
+  border-color: #fecaca !important;
+  color: #b91c1c !important;
+}
+
+[data-theme="light"] .preset-chip.highlight-shield strong {
+  color: #dc2626 !important;
+}
+
+[data-theme="light"] .settings-label {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .field-badge {
+  background: #e2e8f0 !important;
+}
+
+[data-theme="light"] .input-with-affix {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+[data-theme="light"] .input-with-affix:focus-within {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15) !important;
+}
+
+[data-theme="light"] .input-affix {
+  background: #f1f5f9 !important;
+  border-right: 1px solid #e2e8f0 !important;
+  color: #64748b !important;
+}
+
+[data-theme="light"] .settings-input {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .settings-select {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .settings-select:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15) !important;
+}
+
+[data-theme="light"] .field-help-text {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .shield-field-box {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.06) 0%, rgba(245, 158, 11, 0.06) 100%) !important;
+  border: 1px solid rgba(239, 68, 68, 0.25) !important;
+}
+
+[data-theme="light"] .shield-title-text {
+  color: #991b1b !important;
+}
+
+[data-theme="light"] .shield-sub-text {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .shield-impact-note {
+  background: #ffffff !important;
+  border: 1px solid rgba(239, 68, 68, 0.2) !important;
+  color: #7f1d1d !important;
+}
+
+[data-theme="light"] .settings-footer-actions {
+  border-top: 1px solid #e2e8f0 !important;
+}
+
+[data-theme="light"] .autopilot-settings-btn {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #64748b !important;
+}
+
+[data-theme="light"] .autopilot-settings-btn:hover {
+  background: #f1f5f9 !important;
+  color: #0284c7 !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 8px rgba(2, 132, 199, 0.2) !important;
+}
+
 
 
 

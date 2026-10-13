@@ -279,35 +279,35 @@ export class TerminalUI {
       });
     });
 
-    // Mobile Navigation Bottom Bar Handler
+    // Native Android / Mobile Dedicated Multi-Page Navigation Router (5 Billion Dollar SaaS APK Experience)
     document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const action = e.currentTarget.dataset.action;
-        const targetId = e.currentTarget.dataset.target;
-
-        if (action === 'open_history') {
-          const histBtn = document.getElementById('open_history_btn');
-          if (histBtn) histBtn.click();
-          return;
-        }
-
-        if (action === 'open_journal') {
-          const journalBtn = document.getElementById('open_journal_btn');
-          if (journalBtn) journalBtn.click();
-          return;
-        }
-
-        if (targetId) {
-          document.querySelectorAll('.mobile-tab-btn[data-target]').forEach(b => b.classList.remove('active'));
-          e.currentTarget.classList.add('active');
-
-          // Toggle mobile active panel
-          document.querySelectorAll('.terminal-panel').forEach(panel => {
-            panel.classList.toggle('active-mobile-panel', panel.id === targetId);
-          });
-        }
+        const page = e.currentTarget.dataset.page || 
+          (e.currentTarget.id === 'm_tab_chart' ? 'chart' :
+           e.currentTarget.id === 'm_tab_strategy' ? 'strategy' :
+           e.currentTarget.id === 'm_tab_copilot' ? 'copilot' :
+           e.currentTarget.id === 'm_tab_history' ? 'passbook' :
+           e.currentTarget.id === 'm_tab_journal' ? 'journal' : 'chart');
+        this.switchMobilePage(page);
       });
     });
+
+    // Native Android Hardware / Browser Back Button Popstate Listener
+    window.addEventListener('popstate', (e) => {
+      if (window.innerWidth <= 860) {
+        const page = (e.state && e.state.mobilePage) || 
+                     (window.location.hash ? window.location.hash.replace('#', '') : 'chart');
+        this.switchMobilePage(page, false);
+      }
+    });
+
+    // Restore URL hash page if loaded directly on mobile
+    if (window.innerWidth <= 860 && window.location.hash) {
+      const initialPage = window.location.hash.replace('#', '');
+      if (['chart', 'strategy', 'copilot', 'passbook', 'journal'].includes(initialPage)) {
+        setTimeout(() => this.switchMobilePage(initialPage, false), 50);
+      }
+    }
 
     // Mobile Slide-In Navigation Drawer Setup
     const drawer = document.getElementById('mobile_drawer');
@@ -352,8 +352,12 @@ export class TerminalUI {
     if (dOpenPassbook) {
       dOpenPassbook.addEventListener('click', () => {
         closeMobileDrawer();
-        const btn = document.getElementById('open_history_btn');
-        if (btn) btn.click();
+        if (window.innerWidth <= 860) {
+          this.switchMobilePage('passbook');
+        } else {
+          const btn = document.getElementById('open_history_btn');
+          if (btn) btn.click();
+        }
       });
     }
 
@@ -361,8 +365,12 @@ export class TerminalUI {
     if (dOpenJournal) {
       dOpenJournal.addEventListener('click', () => {
         closeMobileDrawer();
-        const btn = document.getElementById('open_journal_btn');
-        if (btn) btn.click();
+        if (window.innerWidth <= 860) {
+          this.switchMobilePage('journal');
+        } else {
+          const btn = document.getElementById('open_journal_btn');
+          if (btn) btn.click();
+        }
       });
     }
 
@@ -775,10 +783,11 @@ export class TerminalUI {
       });
     }
 
-    // Journal Modal Toggles
+    // Journal Modal / Mobile Dedicated Page Toggles
     const journalBtn = document.getElementById('open_journal_btn');
     const journalModal = document.getElementById('journal_modal');
     const closeJournalBtn = document.getElementById('close_journal_btn');
+    const mBackJournalBtn = document.getElementById('m_back_journal_btn');
 
     if (journalBtn && journalModal) {
       journalBtn.addEventListener('click', () => {
@@ -786,27 +795,39 @@ export class TerminalUI {
           profilePopoverWrapper.classList.remove('open');
           if (profileAvatarBtn) profileAvatarBtn.setAttribute('aria-expanded', 'false');
         }
-        journalModal.classList.add('open');
-      });
-    }
-    if (closeJournalBtn && journalModal) {
-      closeJournalBtn.addEventListener('click', () => {
-        journalModal.classList.remove('open');
+        if (window.innerWidth <= 860) {
+          this.switchMobilePage('journal');
+        } else {
+          journalModal.classList.add('open');
+        }
       });
     }
 
-    // Financial Passbook & 18% GST Ledger Modal Toggles
+    const handleCloseJournal = () => {
+      if (window.innerWidth <= 860) {
+        this.switchMobilePage('chart');
+      } else if (journalModal) {
+        journalModal.classList.remove('open');
+      }
+    };
+    if (closeJournalBtn) closeJournalBtn.addEventListener('click', handleCloseJournal);
+    if (mBackJournalBtn) mBackJournalBtn.addEventListener('click', handleCloseJournal);
+
+    // Financial Passbook & 18% GST Ledger Modal / Mobile Dedicated Page Toggles
     const openHistoryBtn = document.getElementById('open_history_btn');
     const quickPassbookBtn = document.getElementById('btn_quick_passbook');
     const passbookModal = document.getElementById('passbook_modal');
     const closePassbookBtn = document.getElementById('close_passbook_btn');
+    const mBackPassbookBtn = document.getElementById('m_back_passbook_btn');
 
     const openPassbook = () => {
       if (profilePopoverWrapper) {
         profilePopoverWrapper.classList.remove('open');
         if (profileAvatarBtn) profileAvatarBtn.setAttribute('aria-expanded', 'false');
       }
-      if (passbookModal) {
+      if (window.innerWidth <= 860) {
+        this.switchMobilePage('passbook');
+      } else if (passbookModal) {
         passbookModal.classList.add('open');
         this.renderFinancialPassbook();
       }
@@ -814,11 +835,16 @@ export class TerminalUI {
 
     if (openHistoryBtn) openHistoryBtn.addEventListener('click', openPassbook);
     if (quickPassbookBtn) quickPassbookBtn.addEventListener('click', openPassbook);
-    if (closePassbookBtn && passbookModal) {
-      closePassbookBtn.addEventListener('click', () => {
+
+    const handleClosePassbook = () => {
+      if (window.innerWidth <= 860) {
+        this.switchMobilePage('chart');
+      } else if (passbookModal) {
         passbookModal.classList.remove('open');
-      });
-    }
+      }
+    };
+    if (closePassbookBtn) closePassbookBtn.addEventListener('click', handleClosePassbook);
+    if (mBackPassbookBtn) mBackPassbookBtn.addEventListener('click', handleClosePassbook);
 
     if (passbookModal) {
       passbookModal.addEventListener('click', (e) => {
@@ -1258,6 +1284,73 @@ export class TerminalUI {
         }
         this.showToast('Supabase Cleared', 'Using local multi-user session storage.', 'info');
       });
+    }
+  }
+
+  /**
+   * Switch mobile view between dedicated 100% full-screen pages
+   * Options: 'chart' | 'strategy' | 'copilot' | 'passbook' | 'journal'
+   * Designed for multi-billion-dollar-tier SaaS APK UX with Android hardware back-button support
+   */
+  switchMobilePage(pageKey = 'chart', pushHistory = true) {
+    if (!pageKey) pageKey = 'chart';
+    this.currentMobilePage = pageKey;
+
+    // 1. Update active tab indicator on mobile bottom nav
+    const tabBtns = document.querySelectorAll('.mobile-tab-btn');
+    tabBtns.forEach(btn => {
+      const p = btn.dataset.page || 
+        (btn.id === 'm_tab_chart' ? 'chart' :
+         btn.id === 'm_tab_strategy' ? 'strategy' :
+         btn.id === 'm_tab_copilot' ? 'copilot' :
+         btn.id === 'm_tab_history' ? 'passbook' :
+         btn.id === 'm_tab_journal' ? 'journal' : '');
+      btn.classList.toggle('active', p === pageKey);
+    });
+
+    const passbookModal = document.getElementById('passbook_modal');
+    const journalModal = document.getElementById('journal_modal');
+
+    // 2. Manage dedicated mobile pages & modals
+    if (pageKey === 'passbook') {
+      if (journalModal) journalModal.classList.remove('open');
+      if (passbookModal) {
+        passbookModal.classList.add('open');
+        this.renderFinancialPassbook();
+      }
+    } else if (pageKey === 'journal') {
+      if (passbookModal) passbookModal.classList.remove('open');
+      if (journalModal) {
+        journalModal.classList.add('open');
+      }
+    } else {
+      // chart, strategy, copilot: hide modals and activate respective terminal panel
+      if (passbookModal) passbookModal.classList.remove('open');
+      if (journalModal) journalModal.classList.remove('open');
+
+      const targetPanelId = pageKey === 'strategy' ? 'panel_strategy'
+                          : pageKey === 'copilot' ? 'panel_copilot'
+                          : 'panel_chart';
+
+      document.querySelectorAll('.terminal-panel').forEach(panel => {
+        panel.classList.toggle('active-mobile-panel', panel.id === targetPanelId);
+      });
+
+      if (pageKey === 'chart') {
+        window.dispatchEvent(new Event('resize'));
+      }
+    }
+
+    // 3. Smooth scroll viewport to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // 4. Update browser / native Android APK history for hardware back navigation
+    if (pushHistory && window.innerWidth <= 860) {
+      if (window.location.hash !== '#' + pageKey) {
+        try {
+          history.pushState({ mobilePage: pageKey }, '', '#' + pageKey);
+        } catch (e) {}
+      }
     }
   }
 

@@ -281,7 +281,13 @@ class App {
       : await this.newsEngine.fetchFearAndGreed();
     const fundingData = await this.derivativesEngine.fetchLiveFundingRate(targetAsset, this.currentMarket);
 
-    // 1. Strategy Evaluation with Multi-Factor Confluence
+    // Hyper-Sensitive Event Risk Scanner (Ultra-rapid news check)
+    if (this.newsEngine.fetchBreakingNewsFeed) {
+      await this.newsEngine.fetchBreakingNewsFeed();
+    }
+    const eventRisk = this.newsEngine.getOverallEventRisk(targetAsset, this.currentMarket);
+
+    // 1. Strategy Evaluation with Multi-Factor Confluence & Event Shield
     const strategyResult = this.strategyEngine.evaluate(
       targetAsset,
       candles1H,
@@ -290,7 +296,7 @@ class App {
       currentPrice,
       currencySymbol,
       relatedAsset,
-      { sentiment, fundingData }
+      { sentiment, fundingData, eventRisk }
     );
 
     // 2. Historical Context Analysis
@@ -301,9 +307,6 @@ class App {
       'NORMAL',
       this.currentMarket
     );
-
-    // 3. News & Event Context
-    const eventRisk = this.newsEngine.getOverallEventRisk(targetAsset, this.currentMarket);
 
     // 4. Risk & Position Calculation
     const levels = strategyResult.levels || {
@@ -404,22 +407,66 @@ class App {
     this.ui.appendChatMessage('copilot', briefing);
   }
 
+  getAutoPilotSettings() {
+    try {
+      const raw = localStorage.getItem('monday_autopilot_settings');
+      if (raw) {
+        const s = JSON.parse(raw);
+        return {
+          marginUSD: Math.max(5, Math.min(500, parseFloat(s.marginUSD) || 20)),
+          leverage: Math.max(1, Math.min(50, parseInt(s.leverage, 10) || (this.currentMarket === 'India' ? 5 : 20))),
+          maxTrades: Math.max(1, Math.min(5, parseInt(s.maxTrades, 10) || 2)),
+          minConfluence: Math.max(50, Math.min(95, parseInt(s.minConfluence, 10) || 75)),
+          minRR: Math.max(1.5, Math.min(5.0, parseFloat(s.minRR) || 3.0)),
+          eventShieldEnabled: s.eventShieldEnabled !== false
+        };
+      }
+    } catch (e) {}
+    return {
+      marginUSD: 20,
+      leverage: this.currentMarket === 'India' ? 5 : 20,
+      maxTrades: 2,
+      minConfluence: 75,
+      minRR: 3.0,
+      eventShieldEnabled: true
+    };
+  }
+
   async processAutoPilotExecution(asset, direction, strategyResult) {
+    const settings = this.getAutoPilotSettings();
     const openPositions = this.paperTrader.openPositions;
     const currentOpenCount = openPositions.length;
     const currSym = this.currentMarket === 'India' ? '₹' : '$';
 
-    // 1. Max 2 Concurrent Trades Guardrail
-    if (currentOpenCount >= 2) {
+    // 0. Hyper-Sensitive Event Risk Shield Gatekeeper (Safety First)
+    const eventRisk = this.newsEngine.getOverallEventRisk(asset, this.currentMarket);
+    const isShieldActive = settings.eventShieldEnabled && (eventRisk.isShieldTriggered || eventRisk.level === 'High');
+    if (isShieldActive) {
+      const shockTitle = eventRisk.activeEvents?.[0]?.title || eventRisk.summary || 'Breaking Macro / Regulatory Shock';
       this.ui.appendAutonomousDecisionCard({
         action: 'SKIPPED',
         asset,
         direction,
         openCount: currentOpenCount,
-        skipReason: 'Max 2 Concurrent Trades Limit Reached',
-        skipExplanation: `Auto-Pilot currently holds 2 active open positions (${openPositions.map(p => p.asset).join(', ')}). To prevent portfolio over-exposure, new entries are strictly capped until an existing trade hits TP or SL.`
+        skipReason: '🚨 HYPER-SENSITIVE EVENT RISK SHIELD ACTIVE',
+        skipExplanation: `Breaking shock catalyst detected: "${shockTitle}". Auto-Pilot engaged capital preservation armor. Entries throttled to prevent volatile news slippage and wick hunts.`
       });
-      this.ui.showToast('⚠️ Auto-Pilot Throttled', 'Max 2 concurrent positions active. Capital protection rules preserved.', 'warning');
+      this.voiceAssistant.speak('Alert! Breaking shock catalyst detected. Auto-pilot entry cancelled to protect capital.');
+      this.ui.showToast('🛡️ Event Risk Shield Active', `${shockTitle.slice(0, 55)}... Order cancelled.`, 'warning');
+      return;
+    }
+
+    // 1. Max Concurrent Trades Guardrail (Configurable)
+    if (currentOpenCount >= settings.maxTrades) {
+      this.ui.appendAutonomousDecisionCard({
+        action: 'SKIPPED',
+        asset,
+        direction,
+        openCount: currentOpenCount,
+        skipReason: `Max ${settings.maxTrades} Concurrent Trades Limit Reached`,
+        skipExplanation: `Auto-Pilot currently holds ${currentOpenCount} active open positions (${openPositions.map(p => p.asset).join(', ')}). To prevent portfolio over-exposure, new entries are strictly capped until an existing trade hits TP or SL.`
+      });
+      this.ui.showToast('⚠️ Auto-Pilot Throttled', `Max ${settings.maxTrades} concurrent positions active. Capital protection preserved.`, 'warning');
       return;
     }
 
@@ -437,32 +484,32 @@ class App {
       return;
     }
 
-    // 3. Confluence & RR Gatekeeper (Strict ≥75% Confluence and ≥3.0 RR)
+    // 3. Confluence & RR Gatekeeper (Configurable Thresholds)
     const score = Math.round(strategyResult.confluenceScore || 0);
     const rr = Number(strategyResult.levels?.rrRatio || 0);
-    if (score < 75 || rr < 3.0) {
+    if (score < settings.minConfluence || rr < settings.minRR) {
       this.ui.appendAutonomousDecisionCard({
         action: 'SKIPPED',
         asset,
         direction,
         openCount: currentOpenCount,
-        skipReason: `Confluence Below Institutional Threshold (${score}%)`,
-        skipExplanation: `Auto-Pilot strictly requires Grade A confluence (≥75%) and minimum 1:3.0 RR. Setup filtered out to avoid choppy/low-probability market.`
+        skipReason: `Setup Filtered by Standards (${score}% Conf, 1:${rr} RR)`,
+        skipExplanation: `Auto-Pilot execution standards require minimum ${settings.minConfluence}% Confluence and 1:${settings.minRR} RR. Setup filtered out to avoid choppy/low-probability market.`
       });
       return;
     }
 
-    // 4. Autonomous Execution (Default $20 Margin, Strict 1% Account Risk)
+    // 4. Autonomous Execution (Configured Margin & Leverage)
     const entry = Number(strategyResult.levels.entry);
     const stopLoss = Number(strategyResult.levels.stopLoss);
     const target = Number(strategyResult.levels.target);
-    const leverage = this.currentMarket === 'India' ? 5 : 20;
-    const marginUSD = 20;
+    const leverage = this.currentMarket === 'India' ? Math.min(5, settings.leverage) : settings.leverage;
+    const marginUSD = settings.marginUSD;
     const notionalUSD = +(marginUSD * leverage).toFixed(2);
     const positionSize = +(notionalUSD / entry).toFixed(5);
-    const riskUSD = 20;
+    const riskUSD = marginUSD;
     const rewardUSD = +(riskUSD * rr).toFixed(2);
-    const liqPrice = +(direction === 'LONG' ? entry * 0.95 : entry * 1.05).toFixed(2);
+    const liqPrice = +(direction === 'LONG' ? entry * (1 - 1 / leverage) : entry * (1 + 1 / leverage)).toFixed(2);
 
     const orderPacket = {
       asset,
@@ -481,7 +528,7 @@ class App {
       liquidationPrice: liqPrice,
       conditions: strategyResult.reasoning || ['Autonomous Neural Execution'],
       historicalContext: 'Supportive',
-      eventRisk: 'Low'
+      eventRisk: eventRisk.level || 'Low'
     };
 
     await this.executeCurrentTrade(orderPacket);

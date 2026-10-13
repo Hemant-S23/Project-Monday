@@ -467,6 +467,11 @@
           </button>
         </div>
 
+        <!-- Auto-Pilot Settings Trigger (Execution & Risk Standards) -->
+        <button class="autopilot-settings-btn" id="btn_autopilot_settings" type="button" title="Configure Auto-Pilot Risk & Execution Standards">
+          <i class="ph-bold ph-gear-six"></i>
+        </button>
+
         <!-- Modern Notification Center Hub -->
         <div class="notif-popover-wrapper" id="notif_popover_wrapper">
           <button class="notif-bell-btn" id="notif_bell_btn" type="button" aria-haspopup="true" aria-expanded="false" title="Trade Alerts & Notifications">
@@ -1251,6 +1256,192 @@
     </div>
   </div>
 
+  <!-- Autonomous AI Auto-Pilot Risk & Execution Standards Modal -->
+  <div class="terminal-modal" id="modal_autopilot_settings" style="display: none;">
+    <div class="modal-backdrop" id="backdrop_autopilot_settings"></div>
+    <div class="modal-card autopilot-settings-card" style="max-width: 580px;">
+      <div class="modal-header">
+        <div class="modal-header-title-box">
+          <div class="autopilot-modal-icon-badge">
+            <i class="ph-bold ph-sliders"></i>
+          </div>
+          <div>
+            <h2 class="autopilot-modal-title">Auto-Pilot Risk & Standards</h2>
+            <div class="autopilot-modal-sub">Institutional Execution Rules & Quantitative Risk Control</div>
+          </div>
+        </div>
+        <button class="icon-btn" id="close_autopilot_settings_btn" type="button" title="Close Settings">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+
+      <div class="modal-body autopilot-settings-body">
+        <!-- MONDAY Recommended Institutional Preset Banner -->
+        <div class="recommended-preset-banner">
+          <div class="preset-banner-head">
+            <div class="preset-badge">
+              <i class="ph-fill ph-star"></i> MONDAY RECOMMENDED INSTITUTIONAL PRESET
+            </div>
+            <button class="preset-apply-btn" id="btn_apply_recommended_preset" type="button" title="Auto-fill with MONDAY's recommended optimal risk configuration">
+              <i class="ph-bold ph-lightning"></i> Apply Recommended
+            </button>
+          </div>
+          <p class="preset-banner-desc">
+            Mathematically calibrated for consistent long-term edge retention. Keeps portfolio drawdown strictly capped while allowing asymmetric 1:3.0+ profit expansion:
+          </p>
+          <div class="preset-chips-grid">
+            <span class="preset-chip"><strong>Margin:</strong> $20.00 / Trade (1% Risk)</span>
+            <span class="preset-chip"><strong>Leverage:</strong> 20x Isolated</span>
+            <span class="preset-chip"><strong>Max Open:</strong> 2 Positions</span>
+            <span class="preset-chip"><strong>Min Edge:</strong> 75% Confluence</span>
+            <span class="preset-chip"><strong>Asymmetric RR:</strong> Min 1:3.0</span>
+            <span class="preset-chip highlight-shield"><strong>🛡️ Event Shield:</strong> HYPER-SENSITIVE ON</span>
+          </div>
+        </div>
+
+        <!-- Custom Settings Form -->
+        <form class="autopilot-settings-form" id="form_autopilot_settings" onsubmit="return false;">
+          <div class="settings-form-grid">
+            <!-- Field 1: Margin Per Trade -->
+            <div class="settings-field">
+              <div class="field-label-row">
+                <label for="input_autopilot_margin" class="settings-label">
+                  <i class="ph-bold ph-currency-dollar"></i> Fixed Margin Per Trade
+                </label>
+                <span class="field-badge text-cyan">Standard $20</span>
+              </div>
+              <div class="input-with-affix">
+                <span class="input-affix">$</span>
+                <input 
+                  type="number" 
+                  id="input_autopilot_margin" 
+                  class="settings-input" 
+                  min="5" 
+                  max="500" 
+                  step="5" 
+                  value="20" 
+                  required
+                />
+              </div>
+              <span class="field-help-text">Flat amount locked from wallet per setup. At $20 on $2,000 equity, your downside risk is strictly 1.0%.</span>
+            </div>
+
+            <!-- Field 2: Leverage -->
+            <div class="settings-field">
+              <div class="field-label-row">
+                <label for="select_autopilot_leverage" class="settings-label">
+                  <i class="ph-bold ph-gauge"></i> Execution Leverage
+                </label>
+                <span class="field-badge text-gold">Isolated</span>
+              </div>
+              <select id="select_autopilot_leverage" class="settings-select">
+                <option value="5">5x (Ultra-Conservative)</option>
+                <option value="10">10x (Conservative)</option>
+                <option value="15">15x (Balanced)</option>
+                <option value="20" selected>20x (MONDAY Standard)</option>
+                <option value="25">25x (Aggressive Beta)</option>
+              </select>
+              <span class="field-help-text">Multiplies purchasing power while maintaining strict isolated stop loss (Auto-derated to 5x on NSE/BSE).</span>
+            </div>
+
+            <!-- Field 3: Max Concurrent Trades -->
+            <div class="settings-field">
+              <div class="field-label-row">
+                <label for="select_autopilot_maxtrades" class="settings-label">
+                  <i class="ph-bold ph-stack"></i> Max Concurrent Trades
+                </label>
+                <span class="field-badge text-emerald">Max 2 Positions</span>
+              </div>
+              <select id="select_autopilot_maxtrades" class="settings-select">
+                <option value="1">1 Trade Only (Max Focus)</option>
+                <option value="2" selected>2 Trades (MONDAY Recommended)</option>
+                <option value="3">3 Trades (Multi-Asset Diversified)</option>
+              </select>
+              <span class="field-help-text">Auto-Pilot will throttle and refuse entry if this limit is reached until an open trade hits TP or SL.</span>
+            </div>
+
+            <!-- Field 4: Minimum Confluence Score -->
+            <div class="settings-field">
+              <div class="field-label-row">
+                <label for="input_autopilot_confluence" class="settings-label">
+                  <i class="ph-bold ph-seal-check"></i> Min Confluence Threshold
+                </label>
+                <span class="field-badge" id="badge_confluence_val">≥ 75% Grade A</span>
+              </div>
+              <div class="slider-row">
+                <input 
+                  type="range" 
+                  id="input_autopilot_confluence" 
+                  class="settings-range" 
+                  min="60" 
+                  max="90" 
+                  step="5" 
+                  value="75"
+                />
+                <span class="slider-val-tag" id="label_autopilot_confluence">75%</span>
+              </div>
+              <span class="field-help-text">Requires multi-factor institutional alignment (HTF Trend + SMT + VMA + RSI + Liquidity Sweep).</span>
+            </div>
+
+            <!-- Field 5: Minimum Risk-to-Reward Ratio -->
+            <div class="settings-field full-width">
+              <div class="field-label-row">
+                <label for="select_autopilot_min_rr" class="settings-label">
+                  <i class="ph-bold ph-chart-line-up"></i> Minimum Risk / Reward Ratio (R-Multiple)
+                </label>
+                <span class="field-badge text-cyan">Asymmetric Rule</span>
+              </div>
+              <select id="select_autopilot_min_rr" class="settings-select">
+                <option value="2.0">1:2.0 (Standard Scalp Minimum)</option>
+                <option value="2.5">1:2.5 (Strong Momentum Filter)</option>
+                <option value="3.0" selected>1:3.0 (MONDAY Institutional Standard - Recommended)</option>
+                <option value="3.5">1:3.5 (High R Asymmetric Runner)</option>
+              </select>
+              <span class="field-help-text">Auto-Pilot strictly rejects any setup where target distance is less than 3x the stoploss distance.</span>
+            </div>
+
+            <!-- Field 6: Hyper-Sensitive Event Risk Shield -->
+            <div class="settings-field full-width shield-field-box">
+              <div class="shield-field-header">
+                <div class="shield-info-cluster">
+                  <div class="shield-pulse-icon">
+                    <i class="ph-fill ph-shield-check"></i>
+                  </div>
+                  <div>
+                    <div class="shield-title-text">
+                      Hyper-Sensitive Event Risk Shield
+                      <span class="shield-live-tag">REALTIME ACTIVE</span>
+                    </div>
+                    <div class="shield-sub-text">
+                      Instantly monitors breaking regulatory shocks (SEC, FBI, lawsuits), hacks, depegs, liquidation cascades, and surprise macro hikes.
+                    </div>
+                  </div>
+                </div>
+                <label class="shield-toggle-switch" for="switch_autopilot_event_shield" title="Toggle Hyper-Sensitive Event Shield">
+                  <input type="checkbox" id="switch_autopilot_event_shield" checked />
+                  <span class="shield-slider"></span>
+                </label>
+              </div>
+              <div class="shield-impact-note">
+                <i class="ph-bold ph-warning-circle"></i>
+                <span>When active: Any high-impact catalyst or breaking news shock triggers an <strong>immediate entry freeze</strong> and deducts 25 confluence points, ensuring we are <strong>never trapped in news wicks</strong>.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-footer-actions">
+            <button class="btn-secondary" id="btn_reset_autopilot_settings" type="button">
+              <i class="ph ph-arrow-counter-clockwise"></i> Reset to Default
+            </button>
+            <button class="btn-primary" id="btn_save_autopilot_settings" type="button">
+              <i class="ph-bold ph-check"></i> Save & Apply Standards
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- Supabase Cloud Setup Modal (Beginner Friendly) -->
   <div class="terminal-modal" id="modal_supabase_setup" style="display: none;">
     <div class="modal-backdrop" id="backdrop_supabase_setup"></div>
@@ -1322,6 +1513,6 @@
   <script src="js/config/supabaseConfig.js"></script>
 
   <!-- App Script Entrypoint -->
-  <script type="module" src="js/app.js?v=2.9"></script>
+  <script type="module" src="js/app.js?v=3.0"></script>
 </body>
 </html>

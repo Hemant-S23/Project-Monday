@@ -197,24 +197,102 @@ export class NewsContextEngine {
     };
   }
 
+  /**
+   * Hyper-Sensitive Real-Time Breaking Shock Scanner
+   * Scans live crypto news headlines for regulatory, black-swan, or catastrophic shocks
+   * Cache duration reduced to 45 seconds for ultra-rapid reaction speed.
+   */
+  async fetchBreakingNewsFeed() {
+    const now = Date.now();
+    if (this._cachedNews && (now - this._cachedNewsTime < 45 * 1000)) {
+      return this._cachedNews;
+    }
+
+    const shockKeywords = [
+      'sec', 'lawsuit', 'sue', 'sued', 'ban', 'banned', 'hack', 'hacked', 
+      'stolen', 'exploit', 'subpoena', 'indictment', 'emergency rate', 
+      'rate hike', 'rate cut', 'war', 'missile', 'sanction', 'sanctions', 
+      'insolvent', 'insolvency', 'bankruptcy', 'chapter 11', 'depeg', 
+      'binance suit', 'investigation', 'liquidation cascade', 'rug pull', 
+      'fraud', 'arrested', 'freeze', 'frozen', 'cftc', 'doj', 'fbi', 
+      'attack', 'breach', 'black swan', 'fomc emergency', 'rbi ban', 
+      'sebi probe', 'scam', 'default', 'npa spike'
+    ];
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      const resp = await fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN', { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (resp && resp.ok) {
+        const json = await resp.json();
+        if (json && json.Data && Array.isArray(json.Data)) {
+          const recentArticles = json.Data.slice(0, 20);
+          this.activeShockEvents = [];
+
+          for (const item of recentArticles) {
+            const titleLower = ((item.title || '') + ' ' + (item.body || '')).toLowerCase();
+            const matchedKeyword = shockKeywords.find(kw => titleLower.includes(kw));
+
+            if (matchedKeyword) {
+              const shockEvt = {
+                id: `BREAKING-${item.id || Date.now()}`,
+                title: `🚨 BREAKING: ${item.title}`,
+                category: 'Breaking Catalyst',
+                impact: 'Market Moving',
+                riskLevel: 'High',
+                timeWindow: 'Just Now (Realtime)',
+                affectedAssets: ['BTC', 'ETH', 'SOL', 'Crypto', 'All'],
+                details: item.body ? item.body.substring(0, 160) + '...' : `Hyper-sensitive shock keyword "${matchedKeyword.toUpperCase()}" detected. Volatility expansion imminent.`
+              };
+              this.activeShockEvents.push(shockEvt);
+            }
+          }
+
+          this._cachedNews = json.Data;
+          this._cachedNewsTime = now;
+          return this._cachedNews;
+        }
+      }
+    } catch (e) {
+      // Graceful fallback
+    }
+
+    return this._cachedNews || [];
+  }
+
   getEventsForAsset(asset, market = 'Crypto') {
     const isIndian = market === 'India' || ['NIFTY', 'BANKNIFTY', 'SENSEX', 'FINNIFTY', 'RELIANCE', 'TCS', 'HDFCBANK'].includes(asset);
+    let baseEvents = [];
     if (isIndian) {
-      return this.events.filter(e => e.affectedAssets.includes(asset) || e.affectedAssets.includes('India'));
+      baseEvents = this.events.filter(e => e.affectedAssets.includes(asset) || e.affectedAssets.includes('India'));
+    } else {
+      baseEvents = this.events.filter(e => e.affectedAssets.includes(asset) || e.affectedAssets.includes('Crypto') || e.affectedAssets.includes('All'));
     }
-    return this.events.filter(e => e.affectedAssets.includes(asset) || e.affectedAssets.includes('Crypto') || e.affectedAssets.includes('All'));
+
+    // Prepend any real-time breaking shock alerts
+    if (this.activeShockEvents && this.activeShockEvents.length > 0 && !isIndian) {
+      return [...this.activeShockEvents, ...baseEvents];
+    }
+    return baseEvents;
   }
 
   getOverallEventRisk(asset, market = 'Crypto') {
     const relevant = this.getEventsForAsset(asset, market);
-    const hasHigh = relevant.some(e => e.riskLevel === 'High');
+    const hasShock = this.activeShockEvents && this.activeShockEvents.length > 0;
+    const hasHigh = hasShock || relevant.some(e => e.riskLevel === 'High');
     const hasMedium = relevant.some(e => e.riskLevel === 'Medium');
 
     if (hasHigh) {
+      const shockTitle = hasShock ? this.activeShockEvents[0].title : null;
       return {
         level: 'High',
-        badge: 'High Event Risk',
-        summary: market === 'India' ? 'Major RBI policy announcement pending. Expect sharp volatility in Bank Nifty.' : 'Major market-moving event (US CPI) approaching. Expect sharp liquidity sweeps.',
+        badge: 'High Event Risk (Shield Active)',
+        isShieldTriggered: true,
+        summary: shockTitle 
+          ? `${shockTitle} • Hyper-sensitive event shield triggered to preserve capital.`
+          : (market === 'India' ? 'Major RBI policy announcement pending. Expect sharp volatility in Bank Nifty.' : 'Major market-moving event (US CPI) approaching. Expect sharp liquidity sweeps.'),
         activeEvents: relevant
       };
     }
@@ -222,6 +300,7 @@ export class NewsContextEngine {
       return {
         level: 'Medium',
         badge: 'Medium Event Risk',
+        isShieldTriggered: false,
         summary: market === 'India' ? 'F&O expiry & earnings catalyst active. Exercise disciplined 1% risk allocation.' : 'Moderate ecosystem/macro catalyst active. Exercise normal disciplined stop placement.',
         activeEvents: relevant
       };
@@ -229,6 +308,7 @@ export class NewsContextEngine {
     return {
       level: 'Low',
       badge: 'Low Event Risk',
+      isShieldTriggered: false,
       summary: 'No immediate high-impact catalysts scheduled. Favorable technical clarity.',
       activeEvents: relevant
     };

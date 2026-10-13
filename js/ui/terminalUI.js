@@ -683,6 +683,123 @@ export class TerminalUI {
     // Initialize Auto-Pilot UI from persisted state
     updateAutoPilotUI(this.autoPilotEnabled);
 
+    // Auto-Pilot Risk & Execution Standards Modal Handlers
+    const autopilotSettingsBtn = document.getElementById('btn_autopilot_settings');
+    const autopilotSettingsModal = document.getElementById('modal_autopilot_settings');
+    const closeAutopilotSettingsBtn = document.getElementById('close_autopilot_settings_btn');
+    const backdropAutopilotSettings = document.getElementById('backdrop_autopilot_settings');
+    const btnApplyRecommended = document.getElementById('btn_apply_recommended_preset');
+    const btnSaveAutopilotSettings = document.getElementById('btn_save_autopilot_settings');
+    const btnResetAutopilotSettings = document.getElementById('btn_reset_autopilot_settings');
+
+    const inputMargin = document.getElementById('input_autopilot_margin');
+    const selectLeverage = document.getElementById('select_autopilot_leverage');
+    const selectMaxTrades = document.getElementById('select_autopilot_maxtrades');
+    const inputConfluence = document.getElementById('input_autopilot_confluence');
+    const labelConfluence = document.getElementById('label_autopilot_confluence');
+    const badgeConfluence = document.getElementById('badge_confluence_val');
+    const selectMinRR = document.getElementById('select_autopilot_min_rr');
+    const switchEventShield = document.getElementById('switch_autopilot_event_shield');
+
+    const RECOMMENDED_SETTINGS = {
+      marginUSD: 20,
+      leverage: 20,
+      maxTrades: 2,
+      minConfluence: 75,
+      minRR: 3.0,
+      eventShieldEnabled: true
+    };
+
+    const getSavedSettings = () => {
+      try {
+        const raw = localStorage.getItem('monday_autopilot_settings');
+        if (raw) return { ...RECOMMENDED_SETTINGS, ...JSON.parse(raw) };
+      } catch (e) {}
+      return { ...RECOMMENDED_SETTINGS };
+    };
+
+    const populateForm = (s) => {
+      if (inputMargin) inputMargin.value = s.marginUSD || 20;
+      if (selectLeverage) selectLeverage.value = String(s.leverage || 20);
+      if (selectMaxTrades) selectMaxTrades.value = String(s.maxTrades || 2);
+      if (inputConfluence) {
+        inputConfluence.value = String(s.minConfluence || 75);
+        if (labelConfluence) labelConfluence.textContent = `${inputConfluence.value}%`;
+        if (badgeConfluence) badgeConfluence.textContent = `≥ ${inputConfluence.value}% Grade ${inputConfluence.value >= 85 ? 'A+' : inputConfluence.value >= 75 ? 'A' : 'B'}`;
+      }
+      if (selectMinRR) selectMinRR.value = Number(s.minRR || 3.0).toFixed(1);
+      if (switchEventShield) switchEventShield.checked = s.eventShieldEnabled !== false;
+    };
+
+    if (inputConfluence) {
+      inputConfluence.addEventListener('input', () => {
+        const val = inputConfluence.value;
+        if (labelConfluence) labelConfluence.textContent = `${val}%`;
+        if (badgeConfluence) badgeConfluence.textContent = `≥ ${val}% Grade ${val >= 85 ? 'A+' : val >= 75 ? 'A' : 'B'}`;
+      });
+    }
+
+    const openAutopilotSettings = () => {
+      populateForm(getSavedSettings());
+      if (autopilotSettingsModal) autopilotSettingsModal.style.display = 'flex';
+    };
+
+    const closeAutopilotSettings = () => {
+      if (autopilotSettingsModal) autopilotSettingsModal.style.display = 'none';
+    };
+
+    if (autopilotSettingsBtn) autopilotSettingsBtn.addEventListener('click', openAutopilotSettings);
+    if (closeAutopilotSettingsBtn) closeAutopilotSettingsBtn.addEventListener('click', closeAutopilotSettings);
+    if (backdropAutopilotSettings) backdropAutopilotSettings.addEventListener('click', closeAutopilotSettings);
+
+    if (btnApplyRecommended) {
+      btnApplyRecommended.addEventListener('click', () => {
+        populateForm(RECOMMENDED_SETTINGS);
+        this.showToast('⭐ MONDAY Preset Applied', '$20 Margin @ 20x, Max 2 Trades, 75% Conf, 1:3.0 RR, Event Shield ON', 'success');
+      });
+    }
+
+    if (btnResetAutopilotSettings) {
+      btnResetAutopilotSettings.addEventListener('click', () => {
+        populateForm(RECOMMENDED_SETTINGS);
+        try {
+          localStorage.removeItem('monday_autopilot_settings');
+        } catch (e) {}
+        this.showToast('Defaults Restored', 'Auto-Pilot standards reset to MONDAY recommended configuration.', 'info');
+      });
+    }
+
+    if (btnSaveAutopilotSettings) {
+      btnSaveAutopilotSettings.addEventListener('click', () => {
+        const marginUSD = Math.max(5, Math.min(500, parseFloat(inputMargin?.value || '20')));
+        const leverage = parseInt(selectLeverage?.value || '20', 10);
+        const maxTrades = parseInt(selectMaxTrades?.value || '2', 10);
+        const minConfluence = parseInt(inputConfluence?.value || '75', 10);
+        const minRR = parseFloat(selectMinRR?.value || '3.0');
+        const eventShieldEnabled = !!switchEventShield?.checked;
+
+        const newSettings = {
+          marginUSD,
+          leverage,
+          maxTrades,
+          minConfluence,
+          minRR,
+          eventShieldEnabled
+        };
+
+        try {
+          localStorage.setItem('monday_autopilot_settings', JSON.stringify(newSettings));
+        } catch (e) {}
+
+        closeAutopilotSettings();
+        this.showToast(
+          '⚙️ Standards Saved',
+          `Auto-Pilot updated: $${marginUSD} Margin @ ${leverage}x | Max ${maxTrades} Trades | Shield: ${eventShieldEnabled ? 'ON' : 'OFF'}`,
+          'success'
+        );
+      });
+    }
+
     // R-Multiple & Live Equity Explainer Modal Toggles
     const explainRBtn = document.getElementById('btn_explain_r');
     const rModal = document.getElementById('modal_r_explainer');

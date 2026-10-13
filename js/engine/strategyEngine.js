@@ -135,12 +135,20 @@ export class StrategyEngine {
     // Cap score at 100%
     confluenceScore = Math.min(100, confluenceScore);
 
+    // Hyper-Sensitive Event Risk Shield (Safety Gatekeeper)
+    const isEventShieldTriggered = !!(externalTelemetry?.eventRisk?.isShieldTriggered || externalTelemetry?.eventRisk?.level === 'High');
+    if (isEventShieldTriggered) {
+      confluenceScore = Math.max(0, confluenceScore - 25);
+      const shockHeadline = externalTelemetry?.eventRisk?.activeEvents?.[0]?.title || 'Market Shock / Macro Release';
+      missingConditions.push(`🚨 HYPER-SENSITIVE EVENT RISK SHIELD ACTIVE: ${shockHeadline}. New entries throttled to preserve capital against news spikes.`);
+    }
+
     let confluenceGrade = 'GRADE C [NO EDGE]';
     if (confluenceScore >= 85) confluenceGrade = 'GRADE A+ [INSTITUTIONAL EDGE]';
     else if (confluenceScore >= 75) confluenceGrade = 'GRADE A [HIGH CONFLUENCE]';
     else if (confluenceScore >= 50) confluenceGrade = 'GRADE B [DEVELOPING]';
 
-    // State synthesis (Requires >= 75% Confluence and 1:3.0 RR)
+    // State synthesis (Requires >= 75% Confluence, 1:3.0 RR, and Event Shield clear)
     if (ltfStructure.isInvalidated) {
       state = 'CANCELLED';
       reasoning.push(`Setup invalidated: 5M structure broke key invalidation level ${currencySymbol}${ltfStructure.invalidationLevel.toFixed(1)}.`);
@@ -148,7 +156,8 @@ export class StrategyEngine {
       ltfStructure.inPullbackZone &&
       ltfStructure.hasConfirmation &&
       levels.rrRatio >= 3.0 &&
-      confluenceScore >= 75
+      confluenceScore >= 75 &&
+      !isEventShieldTriggered
     ) {
       state = 'CONFIRMED';
     } else if (ltfStructure.inPullbackZone) {

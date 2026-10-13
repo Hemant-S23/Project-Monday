@@ -866,6 +866,9 @@ export class TerminalUI {
         } catch (e) {}
 
         closeAutopilotSettings();
+        if (this.callbacks.onSaveAutoPilotSettings) {
+          this.callbacks.onSaveAutoPilotSettings(newSettings);
+        }
         this.showToast(
           '⚙️ Standards Saved',
           `Auto-Pilot updated: $${marginUSD} Margin @ ${leverage}x | Max ${maxTrades} Trades | Shield: ${eventShieldEnabled ? 'ON' : 'OFF'}`,

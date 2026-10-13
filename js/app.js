@@ -60,8 +60,14 @@ class App {
         this.autoPilotEnabled = enabled;
         if (enabled) {
           this.voiceAssistant.speak('Auto-pilot mode activated. Confirmed setups will execute automatically.');
+          this.scanAndExecuteAutoPilot();
         } else {
           this.voiceAssistant.speak('Auto-pilot deactivated. Manual mode active.');
+        }
+      },
+      onSaveAutoPilotSettings: () => {
+        if (this.autoPilotEnabled) {
+          this.scanAndExecuteAutoPilot();
         }
       },
       onExecuteTrade: (orderPacket) => this.executeCurrentTrade(orderPacket),
@@ -257,17 +263,18 @@ class App {
     this.ui.updateHeaderAccountHUD(liveMetrics);
   }
 
-  async runFullEvaluation() {
-    const targetAsset = this.currentAsset;
+  async evaluateAsset(targetAsset) {
     const adapter = this.getActiveAdapter();
+    await adapter.ensureAssetInitialized(targetAsset);
     const currentPrice = adapter.getCurrentPrice(targetAsset);
+    if (!currentPrice || currentPrice <= 0) return null;
 
     // SMT Divergence Related Asset:
     // For India: NIFTY vs BANKNIFTY (or Stock vs NIFTY)
-    // For Crypto: BTC vs ETH
+    // For Crypto: BTC vs ETH (or ETH/SOL vs BTC)
     const relatedAsset = this.currentMarket === 'India'
       ? (targetAsset === 'NIFTY' ? 'BANKNIFTY' : 'NIFTY')
-      : 'ETH';
+      : (targetAsset === 'BTC' ? 'ETH' : 'BTC');
 
     const candles1H = await adapter.getHistoricalCandles(targetAsset, '1H');
     const candles5M = await adapter.getHistoricalCandles(targetAsset, '5M');
@@ -275,19 +282,14 @@ class App {
 
     const currencySymbol = this.currentMarket === 'India' ? '₹' : '$';
 
-    // Fetch live sentiment (Fear & Greed Index) and Perpetual Funding Rate (non-blocking, cached)
+    // Fetch live sentiment (Fear & Greed Index) and Perpetual Funding Rate
     const sentiment = this.currentMarket === 'India' 
       ? this.newsEngine.getMarketSentiment('India') 
       : await this.newsEngine.fetchFearAndGreed();
     const fundingData = await this.derivativesEngine.fetchLiveFundingRate(targetAsset, this.currentMarket);
-
-    // Hyper-Sensitive Event Risk Scanner (Ultra-rapid news check)
-    if (this.newsEngine.fetchBreakingNewsFeed) {
-      await this.newsEngine.fetchBreakingNewsFeed();
-    }
     const eventRisk = this.newsEngine.getOverallEventRisk(targetAsset, this.currentMarket);
 
-    // 1. Strategy Evaluation with Multi-Factor Confluence & Event Shield
+    // Strategy Evaluation with Multi-Factor Confluence & Event Shield
     const strategyResult = this.strategyEngine.evaluate(
       targetAsset,
       candles1H,
@@ -298,6 +300,31 @@ class App {
       relatedAsset,
       { sentiment, fundingData, eventRisk }
     );
+
+    return {
+      targetAsset,
+      currentPrice,
+      strategyResult,
+      eventRisk,
+      sentiment,
+      fundingData,
+      currencySymbol
+    };
+  }
+
+  async runFullEvaluation() {
+    const targetAsset = this.currentAsset;
+    const adapter = this.getActiveAdapter();
+
+    // Hyper-Sensitive Event Risk Scanner (Ultra-rapid news check)
+    if (this.newsEngine.fetchBreakingNewsFeed) {
+      await this.newsEngine.fetchBreakingNewsFeed();
+    }
+
+    const evalData = await this.evaluateAsset(targetAsset);
+    if (!evalData) return;
+
+    const { currentPrice, strategyResult, eventRisk, sentiment, fundingData, currencySymbol } = evalData;
 
     // 2. Historical Context Analysis
     const histContext = this.historicalEngine.evaluate(
@@ -343,11 +370,54 @@ class App {
       market: this.currentMarket
     });
 
-    // 7. Check for State Transitions
+    // 7. Check for State Transitions on current screen asset
     if (this.lastKnownState && this.lastKnownState !== strategyResult.state) {
       this.handleStateTransition(this.lastKnownState, strategyResult.state, strategyResult);
     }
     this.lastKnownState = strategyResult.state;
+
+    // 8. Auto-Pilot Multi-Asset Scanner (Fills open positions up to maxTrades across watchlist)
+    if (this.autoPilotEnabled) {
+      await this.scanAndExecuteAutoPilot();
+    }
+  }
+
+  async scanAndExecuteAutoPilot() {
+    if (!this.autoPilotEnabled || this.isAutoPilotScanning) return;
+    this.isAutoPilotScanning = true;
+
+    try {
+      const settings = this.getAutoPilotSettings();
+      const openPositions = this.paperTrader.openPositions;
+      if (openPositions.length >= settings.maxTrades) return;
+
+      // Watchlist candidate assets for current market
+      const candidateAssets = this.currentMarket === 'India'
+        ? ['NIFTY', 'BANKNIFTY', 'RELIANCE']
+        : ['BTC', 'ETH', 'SOL'];
+
+      for (const asset of candidateAssets) {
+        // Stop if maxTrades limit reached
+        if (this.paperTrader.openPositions.length >= settings.maxTrades) break;
+
+        // Skip assets already open (prevents duplicate position on same coin)
+        if (this.paperTrader.openPositions.some(p => p.asset === asset)) continue;
+
+        // Evaluate candidate asset
+        const evalData = await this.evaluateAsset(asset);
+        if (!evalData || !evalData.strategyResult) continue;
+
+        const { strategyResult } = evalData;
+        if (strategyResult.state === 'CONFIRMED' && strategyResult.levels) {
+          console.log(`[Auto-Pilot] Autonomous execution triggered for ${asset} (${strategyResult.direction || 'LONG'})`);
+          await this.processAutoPilotExecution(asset, strategyResult.direction || 'LONG', strategyResult);
+        }
+      }
+    } catch (err) {
+      console.error('[Auto-Pilot Scanner Error]:', err);
+    } finally {
+      this.isAutoPilotScanning = false;
+    }
   }
 
   handleStateTransition(oldState, newState, strategyResult) {
@@ -600,9 +670,9 @@ class App {
         marginUSD: customOrder.marginUSD,
         notionalUSD: customOrder.notionalUSD,
         liquidationPrice: customOrder.liquidationPrice,
-        conditions: ctx?.strategyState?.reasoning || ['Delta Derivatives Desk Execution'],
-        historicalContext: ctx?.historicalContext?.contextTag || 'Supportive',
-        eventRisk: ctx?.eventRisk?.level || 'Low',
+        conditions: customOrder.conditions || ctx?.strategyState?.reasoning || ['Delta Derivatives Desk Execution'],
+        historicalContext: customOrder.historicalContext || ctx?.historicalContext?.contextTag || 'Supportive',
+        eventRisk: customOrder.eventRisk || ctx?.eventRisk?.level || 'Low',
         aiReasoning: `Executed at ${currency}${customOrder.entry} with ${customOrder.leverage}x leverage. Margin: ${currency}${customOrder.marginUSD}. Est Liq: ${currency}${customOrder.liquidationPrice}.`
       };
     } else {

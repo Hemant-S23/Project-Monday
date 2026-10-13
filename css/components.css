@@ -5591,6 +5591,136 @@
 }
 
 /* ==========================================================================
+   Light Mode Overrides for Algorithmic Confluence Score Meter
+   ========================================================================== */
+[data-theme="light"] .confluence-meter-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+}
+
+[data-theme="light"] .confluence-header {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .confluence-title {
+  color: #475569 !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="light"] .confluence-title i {
+  color: #d97706 !important;
+}
+
+[data-theme="light"] .confluence-score-val {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .confluence-grade {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+[data-theme="light"] .confluence-grade.grade-a {
+  background: #ecfdf5 !important;
+  color: #047857 !important;
+  border: 1px solid #a7f3d0 !important;
+}
+
+[data-theme="light"] .confluence-grade.grade-b {
+  background: #fffbeb !important;
+  color: #b45309 !important;
+  border: 1px solid #fde68a !important;
+}
+
+[data-theme="light"] .confluence-grade.grade-c {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+[data-theme="light"] .confluence-track {
+  background: #e2e8f0 !important;
+}
+
+[data-theme="light"] .confluence-fill {
+  box-shadow: none !important;
+}
+
+[data-theme="light"] .confluence-footer,
+[data-theme="light"] .confluence-sub {
+  color: #64748b !important;
+}
+
+/* ==========================================================================
+   Light Mode Overrides for Pinned Radar & Trade Blueprint Cards
+   ========================================================================== */
+[data-theme="light"] .chat-pinned-radar {
+  background: #ffffff !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06), 0 0 10px rgba(245, 158, 11, 0.1) !important;
+}
+
+[data-theme="light"] .chat-pinned-radar.confirmed {
+  border-color: rgba(16, 185, 129, 0.45) !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06), 0 0 12px rgba(16, 185, 129, 0.15) !important;
+}
+
+[data-theme="light"] .pinned-radar-asset {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .pinned-radar-badge {
+  color: #d97706 !important;
+}
+
+[data-theme="light"] .chat-pinned-radar.confirmed .pinned-radar-badge {
+  color: #059669 !important;
+}
+
+[data-theme="light"] .pinned-radar-dismiss {
+  color: #94a3b8 !important;
+}
+
+[data-theme="light"] .pinned-radar-dismiss:hover {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .pinned-radar-levels {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+[data-theme="light"] .pinned-level-cell .p-lbl {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .pinned-level-cell .p-val {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .pinned-proximity {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .trade-blueprint-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06), 0 0 12px rgba(16, 185, 129, 0.08) !important;
+}
+
+[data-theme="light"] .blueprint-header {
+  border-bottom-color: #f1f5f9 !important;
+}
+
+[data-theme="light"] .blueprint-asset-name {
+  color: #0f172a !important;
+}
+
+
+/* ==========================================================================
    RESET ACCOUNT CONFIRMATION MODAL (TOP LAYER • ULTRA-MINIMAL & PLAIN)
    ========================================================================== */
 .reset-confirm-modal {

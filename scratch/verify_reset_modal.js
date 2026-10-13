@@ -8,8 +8,9 @@ const htmlChecks = [
   'id="close_reset_confirm_btn"',
   'id="btn_cancel_reset"',
   'id="btn_confirm_reset"',
-  'Reset Paper Trading Account',
-  'Are you sure you want to reset your paper account?'
+  'Reset Paper Account?',
+  'restore your balance to',
+  'This action cannot be undone.'
 ];
 
 console.log('--- HTML CHECKS ---');
@@ -20,13 +21,17 @@ for (const c of htmlChecks) {
   if (!ok) htmlOk = false;
 }
 
+// Make sure verbose 3-column table was removed from the reset modal
+const hasClutteredPreview = html.includes('reset-impact-preview');
+console.log('Verbose 3-column grid removed:', !hasClutteredPreview ? '✅' : '❌');
+
 const css = fs.readFileSync('css/components.css', 'utf8');
 const cssChecks = [
   '.reset-confirm-modal {',
   'z-index: 10000000 !important;',
   '.reset-confirm-card {',
-  '.reset-impact-preview {',
   '.btn-confirm-reset {',
+  '.reset-icon-circle {',
   '[data-theme="light"] .reset-confirm-card {'
 ];
 
@@ -58,9 +63,10 @@ for (const c of jsChecks) {
 const hasOldHindiConfirm = js.includes('Kya tum account balance aur journal reset');
 console.log('\nOld Native Confirm Removed:', !hasOldHindiConfirm ? '✅' : '❌');
 
-if (!htmlOk || !cssOk || !jsOk || hasOldHindiConfirm) {
-  console.error('\n❌ RESET MODAL AUDIT FAILED');
-  process.exit(1);
+if (htmlOk && cssOk && jsOk && !hasOldHindiConfirm && !hasClutteredPreview) {
+  console.log('\n🎉 ALL MINIMAL RESET MODAL VERIFICATIONS PASSED!');
+  process.exit(0);
 } else {
-  console.log('\n🎉 ALL RESET MODAL AUDIT TESTS PASSED!');
+  console.error('\n❌ SOME CHECKS FAILED!');
+  process.exit(1);
 }

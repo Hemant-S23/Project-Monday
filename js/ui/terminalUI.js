@@ -504,15 +504,64 @@ export class TerminalUI {
       });
     }
 
-    // Reset Account Button
+    // Reset Account Button & Top-Layer Minimal Confirmation Modal
     const resetBtn = document.getElementById('reset_account_btn');
+    const resetModal = document.getElementById('modal_reset_confirm');
+    const closeResetBtn = document.getElementById('close_reset_confirm_btn');
+    const cancelResetBtn = document.getElementById('btn_cancel_reset');
+    const confirmResetBtn = document.getElementById('btn_confirm_reset');
+    const backdropReset = document.getElementById('backdrop_reset_confirm');
+
+    const openResetConfirmModal = (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (resetModal) {
+        resetModal.style.display = 'flex';
+        resetModal.classList.add('open');
+      }
+    };
+
+    const closeResetConfirmModal = (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (resetModal) {
+        resetModal.style.display = 'none';
+        resetModal.classList.remove('open');
+      }
+    };
+
     if (resetBtn) {
-      resetBtn.addEventListener('click', () => {
-        if (confirm('Kya tum account balance aur journal reset karna chahte ho?')) {
-          if (this.callbacks.onResetAccount) this.callbacks.onResetAccount();
+      resetBtn.addEventListener('click', openResetConfirmModal);
+    }
+    if (closeResetBtn) {
+      closeResetBtn.addEventListener('click', closeResetConfirmModal);
+    }
+    if (cancelResetBtn) {
+      cancelResetBtn.addEventListener('click', closeResetConfirmModal);
+    }
+    if (backdropReset) {
+      backdropReset.addEventListener('click', closeResetConfirmModal);
+    }
+
+    if (confirmResetBtn) {
+      confirmResetBtn.addEventListener('click', () => {
+        closeResetConfirmModal();
+        if (this.callbacks.onResetAccount) {
+          this.callbacks.onResetAccount();
         }
       });
     }
+
+    // Keyboard ESC to close reset confirmation dialog
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && resetModal && resetModal.classList.contains('open')) {
+        closeResetConfirmModal();
+      }
+    });
 
     // Google-Style User Profile & Utilities Popover Hub Toggles
     const profilePopoverWrapper = document.getElementById('profile_popover_wrapper');
@@ -975,8 +1024,8 @@ export class TerminalUI {
           profilePopoverWrapper.classList.remove('open');
           if (profileAvatarBtn) profileAvatarBtn.setAttribute('aria-expanded', 'false');
         }
-        if (confirm('Kya aap logout karke account switch karna chahte hain?')) {
-          if (this.callbacks.onSignOut) this.callbacks.onSignOut();
+        if (this.callbacks.onSignOut) {
+          this.callbacks.onSignOut();
         }
       });
     }

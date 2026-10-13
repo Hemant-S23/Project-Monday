@@ -12,9 +12,9 @@
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/main.css?v=3.2">
-  <link rel="stylesheet" href="css/components.css?v=3.2">
-  <link rel="stylesheet" href="css/auth.css?v=3.2">
+  <link rel="stylesheet" href="css/main.css?v=3.3">
+  <link rel="stylesheet" href="css/components.css?v=3.3">
+  <link rel="stylesheet" href="css/auth.css?v=3.3">
 
   <!-- Supabase JS Client (Optional cloud auth & database sync) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1124,6 +1124,61 @@
     </div>
   </div>
 
+  <!-- RESET ACCOUNT & JOURNAL CONFIRMATION MODAL (TOP-LAYER MINIMAL AESTHETIC) -->
+  <div class="terminal-modal reset-confirm-modal" id="modal_reset_confirm" style="display: none;">
+    <div class="modal-backdrop" id="backdrop_reset_confirm"></div>
+    <div class="modal-card reset-confirm-card" role="dialog" aria-modal="true" aria-labelledby="reset_confirm_title">
+      <div class="reset-confirm-header">
+        <div class="reset-icon-badge">
+          <i class="ph-bold ph-arrow-counter-clockwise"></i>
+        </div>
+        <div class="reset-header-text">
+          <h3 class="reset-title" id="reset_confirm_title">Reset Paper Trading Account</h3>
+          <span class="reset-subtitle">Irreversible Action • Fresh $2,000 Starting Equity</span>
+        </div>
+        <button class="icon-btn reset-close-btn" id="close_reset_confirm_btn" type="button" title="Close" aria-label="Close dialog">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+
+      <div class="reset-confirm-body">
+        <p class="reset-body-text">
+          Are you sure you want to reset your paper account? This will permanently wipe your trade journal history, reset all PnL analytics, and restore your balance back to <strong>$2,000.00</strong>.
+        </p>
+
+        <div class="reset-impact-preview">
+          <div class="impact-item">
+            <span class="impact-label">Starting Balance</span>
+            <span class="impact-value highlight-green">$2,000.00</span>
+          </div>
+          <div class="impact-item">
+            <span class="impact-label">Trade History</span>
+            <span class="impact-value highlight-red">0 Trades (Wiped)</span>
+          </div>
+          <div class="impact-item">
+            <span class="impact-label">Cumulative PnL</span>
+            <span class="impact-value highlight-dim">$0.00 (+0.00R)</span>
+          </div>
+        </div>
+
+        <div class="reset-note-alert">
+          <i class="ph-bold ph-info"></i>
+          <span>Active open positions (if any) will be closed immediately at current market price without penalty.</span>
+        </div>
+      </div>
+
+      <div class="reset-confirm-footer">
+        <button class="btn-cancel-reset" id="btn_cancel_reset" type="button">
+          Cancel
+        </button>
+        <button class="btn-confirm-reset" id="btn_confirm_reset" type="button">
+          <i class="ph-bold ph-trash"></i>
+          <span>Reset Account to $2,000</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- FINANCIAL PASSBOOK & 18% GST TRADE LEDGER MODAL -->
   <div class="modal-overlay" id="passbook_modal">
     <div class="modal-window passbook-modal-window">
@@ -1513,6 +1568,6 @@
   <script src="js/config/supabaseConfig.js"></script>
 
   <!-- App Script Entrypoint -->
-  <script type="module" src="js/app.js?v=3.1"></script>
+  <script type="module" src="js/app.js?v=3.3"></script>
 </body>
 </html>

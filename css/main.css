@@ -2256,31 +2256,70 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   .terminal-body {
-    padding: 6px 8px;
-    gap: 8px;
-    display: flex;
-    flex-direction: column;
-    min-height: auto;
+    padding: 0 !important;
+    margin: 0 !important;
+    gap: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: calc(100vh - 54px - calc(56px + env(safe-area-inset-bottom, 0px))) !important;
+    width: 100vw !important;
   }
 
-  .terminal-panel {
-    display: none;
-    width: 100%;
-    border-radius: var(--radius-md);
-    min-height: calc(100vh - 130px);
-    height: auto;
+  /* 100% Strict Mutual Exclusion: Hide ALL panels by default on mobile */
+  .terminal-panel,
+  .chart-panel,
+  .panel-strategy,
+  .panel-copilot,
+  #panel_chart,
+  #panel_strategy,
+  #panel_copilot {
+    display: none !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    margin: 0 !important;
   }
 
-  .terminal-panel.active-mobile-panel {
-    display: flex;
-    animation: fadeIn 0.2s ease-in;
+  /* Display strictly and ONLY the active mobile page */
+  [data-mobile-page="chart"] #panel_chart,
+  body:not([data-mobile-page]) #panel_chart {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: calc(100vh - 54px - calc(56px + env(safe-area-inset-bottom, 0px))) !important;
+    height: auto !important;
+    animation: fadeIn 0.18s ease-in;
   }
 
-  .chart-panel {
-    height: auto;
-    min-height: calc(100vh - 130px);
-    display: flex;
-    flex-direction: column;
+  [data-mobile-page="strategy"] #panel_strategy {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: calc(100vh - 54px - calc(56px + env(safe-area-inset-bottom, 0px))) !important;
+    height: auto !important;
+    animation: fadeIn 0.18s ease-in;
+  }
+
+  [data-mobile-page="copilot"] #panel_copilot {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: calc(100vh - 54px - calc(56px + env(safe-area-inset-bottom, 0px))) !important;
+    height: auto !important;
+    animation: fadeIn 0.18s ease-in;
+  }
+
+  /* When on Passbook or Journal page, completely hide terminal-body so nothing is stacked behind */
+  [data-mobile-page="passbook"] .terminal-body,
+  [data-mobile-page="journal"] .terminal-body {
+    display: none !important;
+  }
+
+  /* Mobile Content Padding & Momentum Scrolling */
+  .panel-strategy .panel-content,
+  .panel-copilot .panel-content {
+    padding: 10px 12px 24px 12px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   .chart-viewport {
@@ -2397,12 +2436,35 @@ h1, h2, h3, h4, h5, h6 {
     overflow: hidden !important;
   }
 
-  .modal-overlay#passbook_modal.open,
-  .modal-overlay#journal_modal.open {
+  /* Mobile modal display strictly bound to data-mobile-page */
+  [data-mobile-page="passbook"] .modal-overlay#passbook_modal,
+  .modal-overlay#passbook_modal.open[data-mobile-page="passbook"] {
     display: flex !important;
     opacity: 1 !important;
     pointer-events: auto !important;
     animation: fadeIn 0.18s ease-in;
+  }
+
+  [data-mobile-page="journal"] .modal-overlay#journal_modal,
+  .modal-overlay#journal_modal.open[data-mobile-page="journal"] {
+    display: flex !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    animation: fadeIn 0.18s ease-in;
+  }
+
+  /* When on other pages, strictly force modals to disappear */
+  [data-mobile-page="chart"] .modal-overlay#passbook_modal,
+  [data-mobile-page="chart"] .modal-overlay#journal_modal,
+  [data-mobile-page="strategy"] .modal-overlay#passbook_modal,
+  [data-mobile-page="strategy"] .modal-overlay#journal_modal,
+  [data-mobile-page="copilot"] .modal-overlay#passbook_modal,
+  [data-mobile-page="copilot"] .modal-overlay#journal_modal,
+  [data-mobile-page="passbook"] .modal-overlay#journal_modal,
+  [data-mobile-page="journal"] .modal-overlay#passbook_modal {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
 
   [data-theme="light"] .modal-overlay#passbook_modal,

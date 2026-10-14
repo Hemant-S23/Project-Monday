@@ -1296,6 +1296,11 @@ export class TerminalUI {
     if (!pageKey) pageKey = 'chart';
     this.currentMobilePage = pageKey;
 
+    // Apply strict page attribute to body & terminal wrapper
+    document.body.dataset.mobilePage = pageKey;
+    const terminalWrapper = document.getElementById('terminal_wrapper');
+    if (terminalWrapper) terminalWrapper.dataset.mobilePage = pageKey;
+
     // 1. Update active tab indicator on mobile bottom nav
     const tabBtns = document.querySelectorAll('.mobile-tab-btn');
     tabBtns.forEach(btn => {
@@ -1318,11 +1323,17 @@ export class TerminalUI {
         passbookModal.classList.add('open');
         this.renderFinancialPassbook();
       }
+      document.querySelectorAll('.terminal-panel').forEach(panel => {
+        panel.classList.remove('active-mobile-panel');
+      });
     } else if (pageKey === 'journal') {
       if (passbookModal) passbookModal.classList.remove('open');
       if (journalModal) {
         journalModal.classList.add('open');
       }
+      document.querySelectorAll('.terminal-panel').forEach(panel => {
+        panel.classList.remove('active-mobile-panel');
+      });
     } else {
       // chart, strategy, copilot: hide modals and activate respective terminal panel
       if (passbookModal) passbookModal.classList.remove('open');
@@ -1341,8 +1352,8 @@ export class TerminalUI {
       }
     }
 
-    // 3. Smooth scroll viewport to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // 3. Instant scroll viewport to top without smooth lag
+    window.scrollTo(0, 0);
 
     // 4. Update browser / native Android APK history for hardware back navigation
     if (pushHistory && window.innerWidth <= 860) {

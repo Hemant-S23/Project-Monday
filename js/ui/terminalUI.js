@@ -463,6 +463,8 @@ export class TerminalUI {
     const watchlistTrayBtn = document.getElementById('watchlist_tray_btn');
     const watchlistTrayClose = document.getElementById('watchlist_tray_close');
 
+    const watchlistSearchInput = document.getElementById('watchlist_tray_search_input');
+
     if (watchlistTrayBtn && watchlistTrayWrapper) {
       watchlistTrayBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -472,11 +474,29 @@ export class TerminalUI {
 
         const isOpen = watchlistTrayWrapper.classList.contains('open');
         if (!isOpen) {
+          if (watchlistSearchInput) watchlistSearchInput.value = '';
           this.renderWatchlistTray(this.currentMarket);
           watchlistTrayWrapper.classList.add('open');
         } else {
           watchlistTrayWrapper.classList.remove('open');
         }
+      });
+    }
+
+    if (watchlistSearchInput) {
+      watchlistSearchInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim().toLowerCase();
+        const cards = document.querySelectorAll('#watchlist_tray_body .tray-asset-card');
+        cards.forEach(card => {
+          const sym = (card.querySelector('.tray-asset-sym')?.textContent || '').toLowerCase();
+          const sub = (card.querySelector('.tray-asset-sub')?.textContent || '').toLowerCase();
+          const match = !query || sym.includes(query) || sub.includes(query);
+          card.style.display = match ? '' : 'none';
+        });
+        document.querySelectorAll('#watchlist_tray_body .tray-section').forEach(sec => {
+          const visible = sec.querySelectorAll('.tray-asset-card:not([style*="display: none"])');
+          sec.style.display = visible.length > 0 ? '' : 'none';
+        });
       });
     }
 

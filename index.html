@@ -12,9 +12,9 @@
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/main.css?v=4.5">
-  <link rel="stylesheet" href="css/components.css?v=4.5">
-  <link rel="stylesheet" href="css/auth.css?v=4.5">
+  <link rel="stylesheet" href="css/main.css?v=4.6">
+  <link rel="stylesheet" href="css/components.css?v=4.6">
+  <link rel="stylesheet" href="css/auth.css?v=4.6">
 
   <!-- Supabase JS Client (Optional cloud auth & database sync) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -446,6 +446,16 @@
               <div class="watchlist-tray-header">
                 <span class="tray-title"><i class="ph-fill ph-star text-gold"></i> Watchlist & Quick Assets</span>
                 <button class="tray-close-btn" id="watchlist_tray_close" type="button"><i class="ph ph-x"></i></button>
+              </div>
+              <div class="watchlist-tray-search-wrap">
+                <i class="ph ph-magnifying-glass tray-search-ico"></i>
+                <input 
+                  type="text" 
+                  id="watchlist_tray_search_input" 
+                  class="watchlist-tray-search-input" 
+                  placeholder="Search asset (BTC, ETH, SOL, NIFTY...)" 
+                  autocomplete="off" 
+                />
               </div>
               <div class="watchlist-tray-body" id="watchlist_tray_body">
                 <!-- Dynamically loaded with starred assets + categorized market explorer -->
@@ -1634,6 +1644,6 @@
   <script src="js/config/supabaseConfig.js"></script>
 
   <!-- App Script Entrypoint -->
-  <script type="module" src="js/app.js?v=4.1"></script>
+  <script type="module" src="js/app.js?v=4.6"></script>
 </body>
 </html>

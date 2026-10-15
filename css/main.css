@@ -2090,21 +2090,24 @@ h1, h2, h3, h4, h5, h6 {
   .terminal-wrapper {
     padding: 0;
     gap: 0;
-    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px));
     min-height: 100vh;
     height: auto;
     overflow-x: hidden;
   }
 
-  /* Native Compact Mobile Topbar (52px) */
+  /* Native Compact Mobile Topbar with Safe-Area Notch/Status Bar Inset */
   .terminal-header {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
     justify-content: space-between !important;
-    height: 54px !important;
-    max-height: 54px !important;
-    padding: 0 10px !important;
+    height: calc(54px + env(safe-area-inset-top, 0px)) !important;
+    max-height: calc(54px + env(safe-area-inset-top, 0px)) !important;
+    padding-top: env(safe-area-inset-top, 0px) !important;
+    padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(10px, env(safe-area-inset-right, 0px)) !important;
+    padding-bottom: 0 !important;
     gap: 8px !important;
     flex-wrap: nowrap !important;
     overflow: hidden !important;
@@ -2122,8 +2125,114 @@ h1, h2, h3, h4, h5, h6 {
     display: none !important; /* Moved to Slide-in Mobile Drawer */
   }
 
+  /* Keep container alive so Watchlist Hub & Asset Search Popover can render on mobile */
   .header-ticker-strip {
-    display: none !important; /* Moved to Mobile Asset Pill & Drawer */
+    display: block !important;
+    position: static !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    overflow: visible !important;
+    background: transparent !important;
+  }
+
+  .header-ticker-strip .ticker-tape,
+  .header-ticker-strip #ticker_tape,
+  .header-ticker-strip .feed-badge,
+  .header-ticker-strip #feed_badge,
+  .header-ticker-strip .watchlist-tray-btn {
+    display: none !important;
+  }
+
+  .watchlist-hub {
+    position: static !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  .watchlist-tray-wrapper {
+    position: static !important;
+  }
+
+  /* Watchlist Tray as Native Mobile Bottom Sheet */
+  .watchlist-tray-wrapper.open::before {
+    content: '' !important;
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.72) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    z-index: 10000 !important;
+  }
+
+  .watchlist-tray-popover {
+    position: fixed !important;
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 75vh !important;
+    max-height: 80vh !important;
+    border-radius: 20px 20px 0 0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-bottom: none !important;
+    background: #0d1527 !important;
+    backdrop-filter: blur(28px) !important;
+    -webkit-backdrop-filter: blur(28px) !important;
+    box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.85) !important;
+    z-index: 10005 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px)) !important;
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
+  }
+
+  .watchlist-tray-wrapper.open .watchlist-tray-popover {
+    transform: translateY(0) !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  [data-theme="light"] .watchlist-tray-popover {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.2) !important;
+  }
+
+  .watchlist-tray-header {
+    height: 48px !important;
+    padding: 0 16px !important;
+    border-bottom: 1px solid var(--border-subtle) !important;
+    flex-shrink: 0 !important;
+  }
+
+  .watchlist-tray-search-wrap {
+    flex-shrink: 0 !important;
+    padding: 10px 14px !important;
+    background: rgba(0, 0, 0, 0.35) !important;
+  }
+
+  [data-theme="light"] .watchlist-tray-search-wrap {
+    background: #f1f5f9 !important;
+  }
+
+  .watchlist-tray-search-input {
+    font-size: 16px !important; /* Prevents auto-zoom on iOS */
+  }
+
+  .watchlist-tray-body {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 12px 14px 28px 14px !important;
   }
 
   /* Mobile Topbar Elements */
@@ -2212,7 +2321,7 @@ h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-mono) !important;
   }
 
-  /* Strictly hide Desktop Header Buttons on Mobile to eliminate collision with Chart toolbar */
+  /* Strictly hide Desktop Header Buttons on Mobile */
   .header-ledger-btn,
   #btn_quick_passbook,
   .autopilot-toggle-wrapper,
@@ -2285,7 +2394,7 @@ h1, h2, h3, h4, h5, h6 {
     gap: 0 !important;
     display: flex !important;
     flex-direction: column !important;
-    min-height: calc(100vh - 54px - calc(56px + env(safe-area-inset-bottom, 0px))) !important;
+    min-height: calc(100vh - calc(54px + env(safe-area-inset-top, 0px)) - calc(56px + env(safe-area-inset-bottom, 0px))) !important;
     width: 100vw !important;
   }
 
@@ -2311,7 +2420,7 @@ h1, h2, h3, h4, h5, h6 {
   body:not([data-mobile-page]) #panel_chart {
     display: flex !important;
     flex-direction: column !important;
-    min-height: calc(100vh - 54px - calc(56px + env(safe-area-inset-bottom, 0px))) !important;
+    min-height: calc(100vh - calc(54px + env(safe-area-inset-top, 0px)) - calc(56px + env(safe-area-inset-bottom, 0px))) !important;
     height: auto !important;
     animation: fadeIn 0.18s ease-in;
   }
@@ -2319,7 +2428,7 @@ h1, h2, h3, h4, h5, h6 {
   [data-mobile-page="strategy"] #panel_strategy {
     display: flex !important;
     flex-direction: column !important;
-    min-height: calc(100vh - 54px - calc(56px + env(safe-area-inset-bottom, 0px))) !important;
+    min-height: calc(100vh - calc(54px + env(safe-area-inset-top, 0px)) - calc(56px + env(safe-area-inset-bottom, 0px))) !important;
     height: auto !important;
     animation: fadeIn 0.18s ease-in;
   }
@@ -2327,8 +2436,9 @@ h1, h2, h3, h4, h5, h6 {
   [data-mobile-page="copilot"] #panel_copilot {
     display: flex !important;
     flex-direction: column !important;
-    min-height: calc(100vh - 54px - calc(56px + env(safe-area-inset-bottom, 0px))) !important;
-    height: auto !important;
+    height: calc(100vh - calc(54px + env(safe-area-inset-top, 0px)) - calc(56px + env(safe-area-inset-bottom, 0px))) !important;
+    max-height: calc(100vh - calc(54px + env(safe-area-inset-top, 0px)) - calc(56px + env(safe-area-inset-bottom, 0px))) !important;
+    overflow: hidden !important;
     animation: fadeIn 0.18s ease-in;
   }
 
@@ -2339,11 +2449,55 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   /* Mobile Content Padding & Momentum Scrolling */
-  .panel-strategy .panel-content,
-  .panel-copilot .panel-content {
+  .panel-strategy .panel-content {
     padding: 10px 12px 24px 12px !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Copilot Mobile Dedicated Layout & Virtual Keyboard Friendly */
+  .panel-copilot .panel-content {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    height: 100% !important;
+  }
+
+  .panel-copilot .copilot-messages {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 12px 10px !important;
+  }
+
+  .panel-copilot .copilot-input-area {
+    flex-shrink: 0 !important;
+    padding: 8px 10px !important;
+    background: rgba(10, 15, 26, 0.98) !important;
+    border-top: 1px solid var(--border-subtle) !important;
+  }
+
+  .copilot-prompt-chips {
+    display: flex !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding-bottom: 6px !important;
+    gap: 6px !important;
+  }
+
+  .copilot-prompt-chips::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .copilot-chip-btn {
+    flex: 0 0 auto !important;
+    font-size: 0.72rem !important;
+    padding: 5px 10px !important;
+    white-space: nowrap !important;
   }
 
   .chart-toolbar {
@@ -2371,6 +2525,13 @@ h1, h2, h3, h4, h5, h6 {
     padding: 4px 8px !important;
     font-size: 0.72rem !important;
     white-space: nowrap !important;
+  }
+
+  /* Timeframe Tray Menu on Mobile (Aligned to prevent clipping) */
+  .tf-tray-menu {
+    max-width: calc(100vw - 20px) !important;
+    right: 0 !important;
+    left: auto !important;
   }
 
   .chart-viewport {
@@ -2466,12 +2627,12 @@ h1, h2, h3, h4, h5, h6 {
   .modal-overlay#passbook_modal,
   .modal-overlay#journal_modal {
     position: fixed !important;
-    top: 54px !important;
+    top: calc(54px + env(safe-area-inset-top, 0px)) !important;
     bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
     left: 0 !important;
     right: 0 !important;
     width: 100vw !important;
-    height: calc(100vh - 54px - 56px - env(safe-area-inset-bottom, 0px)) !important;
+    height: calc(100vh - calc(54px + env(safe-area-inset-top, 0px)) - calc(56px + env(safe-area-inset-bottom, 0px))) !important;
     max-height: none !important;
     background: #080c14 !important;
     backdrop-filter: none !important;
@@ -2572,7 +2733,7 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   /* Responsive tuning inside Passbook mobile page */
-  .passbook-stat-grid {
+  .passbook-audit-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 8px !important;
   }
@@ -2587,9 +2748,8 @@ h1, h2, h3, h4, h5, h6 {
     width: 100% !important;
   }
 
-  .passbook-trades-table-wrap {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
+  .passbook-transactions-feed {
+    padding-bottom: 24px !important;
   }
 
   /* Responsive tuning inside Journal mobile page */
@@ -2604,15 +2764,98 @@ h1, h2, h3, h4, h5, h6 {
     gap: 8px !important;
   }
 
-  .journal-table-wrap {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
+  .journal-table {
+    min-width: 650px !important;
   }
 
-  /* Other dialog modals (like reset confirm, autopilot settings) retain sheet/dialog styling */
+  .journal-table th:first-child,
+  .journal-table td:first-child {
+    position: sticky !important;
+    left: 0 !important;
+    background: #0d1527 !important;
+    z-index: 2 !important;
+    box-shadow: 2px 0 6px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  [data-theme="light"] .journal-table th:first-child,
+  [data-theme="light"] .journal-table td:first-child {
+    background: #ffffff !important;
+  }
+
+  /* Strategy Order Desk Mobile Touch Targets & iOS Zoom Prevention */
+  .derivatives-order-desk .size-inputs-grid,
+  .derivatives-order-desk .tpsl-inputs-grid {
+    gap: 8px !important;
+  }
+
+  .derivatives-order-desk input[type="number"],
+  .derivatives-order-desk input[type="text"] {
+    font-size: 16px !important; /* Prevents auto-zoom on iOS */
+    min-height: 42px !important;
+  }
+
+  .derivatives-order-desk .lev-chips-row,
+  .derivatives-order-desk .pct-chips-row {
+    display: flex !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    gap: 6px !important;
+    padding-bottom: 4px !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .derivatives-order-desk .lev-chips-row::-webkit-scrollbar,
+  .derivatives-order-desk .pct-chips-row::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .derivatives-order-desk .lev-chip,
+  .derivatives-order-desk .pct-chip {
+    flex: 0 0 auto !important;
+    min-height: 34px !important;
+    padding: 6px 12px !important;
+    font-size: 0.74rem !important;
+  }
+
+  .btn-exec-trade {
+    min-height: 48px !important;
+    font-size: 0.95rem !important;
+  }
+
+  /* Secondary Modals (Reset Confirm, Autopilot Settings, R Explainer) Native Bottom Sheet */
   .terminal-modal {
-    width: 92vw !important;
-    max-width: 420px !important;
+    padding: 0 !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+    width: 100vw !important;
+    height: 100vh !important;
+  }
+
+  .terminal-modal .modal-card,
+  .reset-confirm-card,
+  .autopilot-settings-card,
+  .r-explainer-card {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    max-height: 85vh !important;
+    border-radius: 20px 20px 0 0 !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    animation: slideUpModal 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    padding-bottom: max(20px, env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  @keyframes slideUpModal {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
 
   .toast-container {

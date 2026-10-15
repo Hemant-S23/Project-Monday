@@ -136,7 +136,7 @@ export class StrategyEngine {
     confluenceScore = Math.min(100, confluenceScore);
 
     // Hyper-Sensitive Event Risk Shield (Safety Gatekeeper)
-    const isEventShieldTriggered = !!(externalTelemetry?.eventRisk?.isShieldTriggered || externalTelemetry?.eventRisk?.level === 'High');
+    const isEventShieldTriggered = !!(externalTelemetry?.eventRisk?.isShieldTriggered);
     if (isEventShieldTriggered) {
       confluenceScore = Math.max(0, confluenceScore - 25);
       const shockHeadline = externalTelemetry?.eventRisk?.activeEvents?.[0]?.title || 'Market Shock / Macro Release';

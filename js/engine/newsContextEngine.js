@@ -380,41 +380,72 @@ export class NewsContextEngine {
   }
 
   getOverallEventRisk(asset, market = 'Crypto') {
+    const now = Date.now();
     const relevant = this.getEventsForAsset(asset, market);
-    const hasShock = this.activeShockEvents && this.activeShockEvents.length > 0;
-    const hasHigh = hasShock || relevant.some(e => e.riskLevel === 'High');
-    const hasMedium = relevant.some(e => e.riskLevel === 'Medium');
 
-    if (hasHigh) {
-      const shockTitle = hasShock ? this.activeShockEvents[0].title : null;
+    // 1. Live Breaking Shock Check (Flash crashes, black swan wicks, regulatory emergency)
+    const hasShock = this.activeShockEvents && this.activeShockEvents.length > 0;
+
+    // 2. Scheduled High-Impact Event Danger Zone (Active strictly within ±20 minutes of drop)
+    const imminentHighEvent = relevant.find(e => {
+      if (e.riskLevel !== 'High') return false;
+      if (!e.timestamp) return false;
+      const diffMs = Math.abs(now - e.timestamp);
+      return diffMs <= 20 * 60 * 1000; // ±20 minutes window
+    });
+
+    const isShieldTriggered = !!(hasShock || imminentHighEvent);
+
+    if (isShieldTriggered) {
+      const shockTitle = hasShock 
+        ? this.activeShockEvents[0].title 
+        : (imminentHighEvent ? imminentHighEvent.title : 'High-Impact Macro Event');
       return {
         level: 'High',
         badge: 'High Event Risk (Shield Active)',
         isShieldTriggered: true,
-        summary: shockTitle 
-          ? `${shockTitle} • Hyper-sensitive event shield triggered to preserve capital.`
-          : (market === 'India' ? 'Major RBI policy announcement pending. Expect sharp volatility in Bank Nifty.' : 'Major market-moving event (US CPI) approaching. Expect sharp liquidity sweeps.'),
+        summary: `🚨 ${shockTitle} is active or imminent (within 20m). Hyper-sensitive event shield engaged to protect capital against news slippage.`,
         activeEvents: relevant,
-        lastUpdated: Date.now()
+        lastUpdated: now
       };
     }
+
+    // 3. Upcoming High-Impact Event (Beyond 20m away) or Medium Risk Catalyst
+    const upcomingHighEvent = relevant.find(e => e.riskLevel === 'High');
+    const hasMedium = relevant.some(e => e.riskLevel === 'Medium');
+
+    if (upcomingHighEvent) {
+      const timeRemaining = this.formatRelativeTime(upcomingHighEvent.timestamp);
+      return {
+        level: 'Medium',
+        badge: 'Macro Event Scheduled',
+        isShieldTriggered: false,
+        summary: `${upcomingHighEvent.title} scheduled (${timeRemaining}). Normal institutional trading active with strict 1:3 RR stops.`,
+        activeEvents: relevant,
+        lastUpdated: now
+      };
+    }
+
     if (hasMedium) {
       return {
         level: 'Medium',
         badge: 'Medium Event Risk',
         isShieldTriggered: false,
-        summary: market === 'India' ? 'F&O expiry & earnings catalyst active. Exercise disciplined 1% risk allocation.' : 'Moderate ecosystem/macro catalyst active. Exercise normal disciplined stop placement.',
+        summary: market === 'India' 
+          ? 'F&O expiry & earnings catalyst active. Normal disciplined 1% risk allocation.' 
+          : 'Moderate ecosystem/macro catalyst active. Normal disciplined 1:3 RR execution.',
         activeEvents: relevant,
-        lastUpdated: Date.now()
+        lastUpdated: now
       };
     }
+
     return {
       level: 'Low',
       badge: 'Low Event Risk',
       isShieldTriggered: false,
       summary: 'No immediate high-impact catalysts scheduled. Favorable technical clarity.',
       activeEvents: relevant,
-      lastUpdated: Date.now()
+      lastUpdated: now
     };
   }
 }

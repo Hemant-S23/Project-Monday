@@ -396,10 +396,13 @@ class App {
       const openPositions = this.paperTrader.openPositions;
       if (openPositions.length >= settings.maxTrades) return;
 
-      // Watchlist candidate assets for current market
-      const candidateAssets = this.currentMarket === 'India'
+      // Watchlist candidate assets for current market (Prioritizing currently viewed asset)
+      const baseCandidates = this.currentMarket === 'India'
         ? ['NIFTY', 'BANKNIFTY', 'RELIANCE']
         : ['BTC', 'ETH', 'SOL'];
+      const candidateAssets = this.currentAsset
+        ? [this.currentAsset, ...baseCandidates.filter(a => a !== this.currentAsset)]
+        : baseCandidates;
 
       for (const asset of candidateAssets) {
         // Stop if maxTrades limit reached
@@ -515,7 +518,7 @@ class App {
 
     // 0. Hyper-Sensitive Event Risk Shield Gatekeeper (Safety First)
     const eventRisk = this.newsEngine.getOverallEventRisk(asset, this.currentMarket);
-    const isShieldActive = settings.eventShieldEnabled && (eventRisk.isShieldTriggered || eventRisk.level === 'High');
+    const isShieldActive = settings.eventShieldEnabled && eventRisk.isShieldTriggered;
     if (isShieldActive) {
       const shockTitle = eventRisk.activeEvents?.[0]?.title || eventRisk.summary || 'Breaking Macro / Regulatory Shock';
       this.ui.appendAutonomousDecisionCard({

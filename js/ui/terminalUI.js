@@ -3096,9 +3096,9 @@ export class TerminalUI {
     const filterType = this.passbookFilterType || 'ALL';
     let filteredTrades = ledger.trades || [];
     if (filterType === 'PROFIT') {
-      filteredTrades = filteredTrades.filter(t => t.result === 'WIN' || (t.pnlUSD || 0) > 0);
+      filteredTrades = filteredTrades.filter(t => t.result === 'WIN' || (Number(t.pnlUSD || 0) > 0));
     } else if (filterType === 'LOSS') {
-      filteredTrades = filteredTrades.filter(t => t.result === 'LOSS' || (t.pnlUSD || 0) < 0);
+      filteredTrades = filteredTrades.filter(t => t.result === 'LOSS' || t.result === 'LIQUIDATED' || (Number(t.pnlUSD || 0) < 0));
     }
 
     if (countTag) {
@@ -3128,8 +3128,10 @@ export class TerminalUI {
     }
 
     feedContainer.innerHTML = filteredTrades.map(trade => {
-      const isNetProfit = (trade.pnlUSD || 0) >= 0;
-      const typeClass = trade.result === 'WIN' || isNetProfit ? 'profit' : trade.result === 'BREAKEVEN' ? 'breakeven' : 'loss';
+      const netPnl = Number(trade.pnlUSD || 0);
+      const isNetProfit = netPnl > 0 || trade.result === 'WIN';
+      const isLoss = netPnl < 0 || trade.result === 'LOSS' || trade.result === 'LIQUIDATED';
+      const typeClass = isNetProfit ? 'profit' : isLoss ? 'loss' : 'breakeven';
       const icon = typeClass === 'profit' ? 'ph-arrow-down-left' : typeClass === 'loss' ? 'ph-arrow-up-right' : 'ph-arrows-left-right';
       
       const dateObj = new Date(trade.closedAt || Date.now());
@@ -3137,18 +3139,23 @@ export class TerminalUI {
       const timeFormatted = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       
       const dirClass = (trade.direction || 'LONG').toLowerCase();
-      const gross = trade.grossPnlUSD !== undefined ? Number(trade.grossPnlUSD) : Number(trade.pnlUSD);
-      const isGrossProfit = gross >= 0;
       
       const entryFee = Number(trade.entryFeeUSD || 0);
       const exitFee = Number(trade.exitFeeUSD || 0);
       const brokerage = Number(trade.brokerageFeeUSD || (trade.totalFeesUSD ? +(trade.totalFeesUSD / 1.18).toFixed(2) : 0));
       const gst = Number(trade.gstUSD || (trade.totalFeesUSD ? +(trade.totalFeesUSD - brokerage).toFixed(2) : 0));
-      const totalCharges = Number(trade.totalChargesUSD || trade.totalFeesUSD || 0);
-      const netPnl = Number(trade.pnlUSD || 0);
+      const totalCharges = Number(trade.totalChargesUSD || trade.totalFeesUSD || +(brokerage + gst).toFixed(2));
+      const gross = trade.grossPnlUSD !== undefined ? Number(trade.grossPnlUSD) : +(netPnl + totalCharges).toFixed(2);
+      const isGrossProfit = gross > 0;
       const postBal = trade.postTradeBalance ? Number(trade.postTradeBalance) : null;
       
       const reasonLabel = trade.result === 'WIN' ? '🎯 Take Profit Hit' : trade.result === 'LIQUIDATED' ? '⚠️ Liquidation Exit' : trade.result === 'LOSS' ? '🛑 Stop Loss Hit' : '✋ Manual Close';
+
+      const formattedAmount = isNetProfit
+        ? `+$${netPnl.toFixed(2)}`
+        : isLoss
+          ? `-$${Math.abs(netPnl).toFixed(2)}`
+          : `$${netPnl.toFixed(2)}`;
 
       return `
         <div class="passbook-txn-card" data-trade-id="${trade.id}">
@@ -3170,7 +3177,7 @@ export class TerminalUI {
             <div class="txn-right-col">
               <div class="txn-amount-group">
                 <span class="txn-net-amount ${typeClass}">
-                  ${isNetProfit ? '+' : ''}$${netPnl.toFixed(2)}
+                  ${formattedAmount}
                 </span>
                 ${postBal !== null ? `<span class="txn-post-balance">Bal: $${postBal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>` : ''}
               </div>
@@ -3187,7 +3194,7 @@ export class TerminalUI {
             <div class="receipt-itemized-list">
               <div class="receipt-line">
                 <span>Gross Trading PnL (E: $${Number(trade.entry).toLocaleString()} → M: $${Number(trade.exitPrice || trade.entry).toLocaleString()})</span>
-                <span class="val ${isGrossProfit ? 'text-bullish' : 'text-bearish'}">${isGrossProfit ? '+' : ''}$${gross.toFixed(2)}</span>
+                <span class="val ${isGrossProfit ? 'text-bullish' : isLoss ? 'text-bearish' : ''}">${isGrossProfit ? '+' : isLoss ? '-' : ''}$${Math.abs(gross).toFixed(2)}</span>
               </div>
               <div class="receipt-line sub-fee">
                 <span>• Entry Brokerage Fee (${trade.orderType === 'LIMIT' ? '0.02% Maker' : '0.05% Taker'})</span>
@@ -3212,7 +3219,7 @@ export class TerminalUI {
               </div>
               <div class="receipt-line total-line">
                 <span>Net Credited to Trading Account</span>
-                <span class="val ${isNetProfit ? 'text-bullish' : 'text-bearish'}">${isNetProfit ? '+' : ''}$${netPnl.toFixed(2)}</span>
+                <span class="val ${isNetProfit ? 'text-bullish' : isLoss ? 'text-bearish' : ''}">${formattedAmount}</span>
               </div>
             </div>
           </div>

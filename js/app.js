@@ -273,6 +273,10 @@ class App {
             changed = true;
           }
         } else if (ct.status === 'CLOSED') {
+          // Skip 0-pnl ghost liquidations
+          if (ct.result === 'LIQUIDATED' && Number(ct.pnl_usd || 0) === 0) {
+            continue;
+          }
           const openIdx = this.paperTrader.openPositions.findIndex(p => p.id === ct.id);
           if (openIdx !== -1) {
             this.paperTrader.openPositions.splice(openIdx, 1);

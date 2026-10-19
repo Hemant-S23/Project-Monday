@@ -75,7 +75,14 @@ export class PaperTrader {
     if (raw !== null) {
       try {
         const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed : [];
+        if (Array.isArray(parsed)) {
+          // Purge 0-pnl ghost liquidations from earlier test
+          const clean = parsed.filter(t => !(t.result === 'LIQUIDATED' && Number(t.pnlUSD || 0) === 0));
+          if (clean.length !== parsed.length) {
+            localStorage.setItem(this.storageKey, JSON.stringify(clean));
+          }
+          return clean;
+        }
       } catch (e) {
         console.error('Failed to parse stored trades:', e);
       }
@@ -493,15 +500,16 @@ export class PaperTrader {
     });
 
     const totalTrades = filtered.length;
-    const wins = filtered.filter(t => t.result === 'WIN');
-    const losses = filtered.filter(t => t.result === 'LOSS');
-    const breakevens = filtered.filter(t => t.result === 'BREAKEVEN');
+    const wins = filtered.filter(t => t.result === 'WIN' || (Number(t.pnlUSD || 0) > 0));
+    const losses = filtered.filter(t => t.result === 'LOSS' || t.result === 'LIQUIDATED' || (Number(t.pnlUSD || 0) < 0));
+    const breakevens = filtered.filter(t => t.result === 'BREAKEVEN' || (Number(t.pnlUSD || 0) === 0 && t.result !== 'LIQUIDATED'));
 
-    const totalGrossPnl = +filtered.reduce((acc, t) => acc + (t.grossPnlUSD !== undefined ? t.grossPnlUSD : t.pnlUSD), 0).toFixed(2);
     const totalBrokerage = +filtered.reduce((acc, t) => acc + (t.brokerageFeeUSD || (t.totalFeesUSD ? +(t.totalFeesUSD / 1.18).toFixed(2) : 0)), 0).toFixed(2);
     const totalGST = +filtered.reduce((acc, t) => acc + (t.gstUSD || (t.totalFeesUSD ? +(t.totalFeesUSD - (t.totalFeesUSD / 1.18)).toFixed(2) : 0)), 0).toFixed(2);
     const totalCharges = +(totalBrokerage + totalGST).toFixed(2);
-    const netSettledPnl = +filtered.reduce((acc, t) => acc + (t.pnlUSD || 0), 0).toFixed(2);
+    const netSettledPnl = +filtered.reduce((acc, t) => acc + (Number(t.pnlUSD) || 0), 0).toFixed(2);
+    // Double-entry accounting: Gross PnL minus Charges equals Net Settled to the penny
+    const totalGrossPnl = +(netSettledPnl + totalCharges).toFixed(2);
     const winRate = totalTrades > 0 ? +((wins.length / totalTrades) * 100).toFixed(1) : 0;
 
     // Available month options extracted from history
@@ -539,15 +547,15 @@ export class PaperTrader {
   getAnalytics() {
     const closed = this.trades.filter(t => t.status === 'CLOSED');
     const totalTrades = closed.length;
-    const wins = closed.filter(t => t.result === 'WIN');
-    const losses = closed.filter(t => t.result === 'LOSS');
-    const breakevens = closed.filter(t => t.result === 'BREAKEVEN');
+    const wins = closed.filter(t => t.result === 'WIN' || (Number(t.pnlUSD || 0) > 0));
+    const losses = closed.filter(t => t.result === 'LOSS' || t.result === 'LIQUIDATED' || (Number(t.pnlUSD || 0) < 0));
+    const breakevens = closed.filter(t => t.result === 'BREAKEVEN' || (Number(t.pnlUSD || 0) === 0 && t.result !== 'LIQUIDATED'));
 
     const winRate = totalTrades > 0 ? +((wins.length / totalTrades) * 100).toFixed(1) : 0;
     const totalR = +closed.reduce((acc, t) => acc + (t.rMultiple || 0), 0).toFixed(2);
     const totalPnlUSD = +closed.reduce((acc, t) => acc + (t.pnlUSD || 0), 0).toFixed(2);
     const totalFeesUSD = +closed.reduce((acc, t) => acc + (t.totalFeesUSD || t.feesUSD || 0), 0).toFixed(2);
-    const grossPnlUSD = +closed.reduce((acc, t) => acc + (t.grossPnlUSD !== undefined ? t.grossPnlUSD : (t.pnlUSD + (t.totalFeesUSD || 0))), 0).toFixed(2);
+    const grossPnlUSD = +(totalPnlUSD + totalFeesUSD).toFixed(2);
 
     const grossProfit = wins.reduce((acc, t) => acc + t.pnlUSD, 0);
     const grossLoss = Math.abs(losses.reduce((acc, t) => acc + t.pnlUSD, 0));

@@ -613,8 +613,16 @@ class App {
       });
 
       // Autonomous AI Auto-Pilot Execution (If Active)
+      // HTF Gate: only fire if direction matches the 1H trend
       if (this.autoPilotEnabled) {
-        this.processAutoPilotExecution(asset, dir, strategyResult);
+        const htfDir = strategyResult.htfTrend?.direction;
+        const execDir = dir;
+        const directionAligned = (htfDir === 'BULLISH' && execDir === 'LONG') || (htfDir === 'BEARISH' && execDir === 'SHORT');
+        if (directionAligned) {
+          this.processAutoPilotExecution(asset, dir, strategyResult);
+        } else {
+          console.warn(`[HTF Gate / StateTransition] Blocked ${asset} ${execDir}: 1H trend is ${htfDir}.`);
+        }
       }
     } else if (newState === 'DEVELOPING') {
       this.ui.showToast(`🟠 ${asset} Setup DEVELOPING`, `Price reaction zone me enter ho chuki hai. Awaiting confirmation.`, 'warning');
@@ -689,6 +697,25 @@ class App {
         skipExplanation: `Auto-Pilot currently holds ${currentOpenCount} active open positions (${openPositions.map(p => p.asset).join(', ')}). To prevent portfolio over-exposure, new entries are strictly capped until an existing trade hits TP or SL.`
       });
       this.ui.showToast('⚠️ Auto-Pilot Throttled', `Max ${settings.maxTrades} concurrent positions active. Capital protection preserved.`, 'warning');
+      return;
+    }
+
+    // 🔒 1.5. HARD HTF TREND DIRECTIONAL GATE — Permanent Fix
+    // If 1H trend is BEARISH → only SHORT allowed. LONG = absolute block.
+    // If 1H trend is BULLISH → only LONG allowed. SHORT = absolute block.
+    const htfDirection = strategyResult.htfTrend?.direction || 'UNCLEAR';
+    const allowedDirection = htfDirection === 'BULLISH' ? 'LONG' : (htfDirection === 'BEARISH' ? 'SHORT' : null);
+    if (!allowedDirection || direction !== allowedDirection) {
+      const trendLabel = htfDirection === 'BULLISH' ? '📈 Bullish' : htfDirection === 'BEARISH' ? '📉 Bearish' : '↔️ Sideways/Unclear';
+      console.warn(`[HTF Gate] BLOCKED ${asset} ${direction}: 1H trend is ${htfDirection}. Only ${allowedDirection || 'WAIT'} entries allowed.`);
+      this.ui.appendAutonomousDecisionCard({
+        action: 'SKIPPED',
+        asset,
+        direction,
+        openCount: currentOpenCount,
+        skipReason: `🔒 HTF Trend Gate: ${trendLabel} Market`,
+        skipExplanation: `1H higher-timeframe trend is ${htfDirection}. Only ${allowedDirection || 'no'} trades are allowed in this regime. A ${direction} entry would trade AGAINST the institutional trend — blocked to protect capital.`
+      });
       return;
     }
 

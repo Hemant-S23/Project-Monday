@@ -21,7 +21,7 @@ export class StrategyEngine {
       return this.createState('NO SETUP', 'Insufficient candle data to form complete strategy assessment.');
     }
 
-    // --- STEP 1: Higher-Timeframe (1H) Direction ---
+    // --- STEP 1: Higher-Timeframe (1H) Direction (Hard HTF Trend Gate) ---
     const htfTrend = this.calculateHTFTrend(targetCandles1H);
 
     if (htfTrend.direction === 'UNCLEAR') {
@@ -30,6 +30,13 @@ export class StrategyEngine {
         targetAsset
       });
     }
+
+    // 🔒 HARD HTF TREND GATE — Institutional Directional Lock
+    // If 1H trend is BEARISH, we ONLY look for SHORT setups.
+    // If 1H trend is BULLISH, we ONLY look for LONG setups.
+    // Any signal that contradicts the HTF bias is REJECTED outright.
+    const allowedDirection = htfTrend.direction === 'BULLISH' ? 'LONG' : 'SHORT';
+    // (This gate is enforced in the final result: direction is always derived from htfTrend, never overridden)
 
     // --- STEP 2: Lower-Timeframe (5M) Pullback into key zone ---
     const ltfStructure = this.calculateLTFStructure(targetCandles5M, htfTrend.direction, currentPrice);
@@ -196,33 +203,58 @@ export class StrategyEngine {
 
   calculateHTFTrend(candles) {
     const closes = candles.map(c => c.close);
+    const highs  = candles.map(c => c.high);
+    const lows   = candles.map(c => c.low);
+
+    // Triple-EMA stack: EMA12 (fast), EMA26 (mid), EMA50 (slow/anchor)
     const emaFast = this.calculateEMA(closes, 12);
-    const emaSlow = this.calculateEMA(closes, 26);
+    const emaMid  = this.calculateEMA(closes, 26);
+    const emaSlow = this.calculateEMA(closes, 50);
     const lastClose = closes[closes.length - 1];
 
-    let direction = 'UNCLEAR';
-    const slope = (emaFast - emaSlow) / emaSlow;
+    // --- Primary Signal: Triple EMA Stack ---
+    const bullishStack = lastClose > emaFast && emaFast > emaMid && emaMid > emaSlow;
+    const bearishStack = lastClose < emaFast && emaFast < emaMid && emaMid < emaSlow;
 
-    if (lastClose > emaFast && emaFast > emaSlow && slope > 0.002) {
+    // --- Secondary Signal: Higher-High / Higher-Low or Lower-High / Lower-Low structure ---
+    const recent = candles.slice(-8);
+    const recentHighs = recent.map(c => c.high);
+    const recentLows  = recent.map(c => c.low);
+    const structureBullish = recentHighs[recentHighs.length - 1] > recentHighs[0] && recentLows[recentLows.length - 1] > recentLows[0];
+    const structureBearish = recentHighs[recentHighs.length - 1] < recentHighs[0] && recentLows[recentLows.length - 1] < recentLows[0];
+
+    // --- Tertiary: Price vs EMA50 (the slow anchor — most reliable) ---
+    const aboveSlowEMA = lastClose > emaSlow;
+    const belowSlowEMA = lastClose < emaSlow;
+
+    let direction = 'UNCLEAR';
+    let confidence = 0;
+
+    // Count bullish evidence
+    if (bullishStack)   confidence += 3;
+    if (structureBullish) confidence += 2;
+    if (aboveSlowEMA)   confidence += 1;
+
+    // Count bearish evidence (negative)
+    if (bearishStack)   confidence -= 3;
+    if (structureBearish) confidence -= 2;
+    if (belowSlowEMA)   confidence -= 1;
+
+    // Require at least 3 evidence points to commit to a direction
+    if (confidence >= 3) {
       direction = 'BULLISH';
-    } else if (lastClose < emaFast && emaFast < emaSlow && slope < -0.002) {
+    } else if (confidence <= -3) {
       direction = 'BEARISH';
-    } else {
-      // Structure check
-      const recentHighs = candles.slice(-5).map(c => c.high);
-      const recentLows = candles.slice(-5).map(c => c.low);
-      if (recentHighs[4] > recentHighs[0] && recentLows[4] > recentLows[0]) {
-        direction = 'BULLISH';
-      } else if (recentHighs[4] < recentHighs[0] && recentLows[4] < recentLows[0]) {
-        direction = 'BEARISH';
-      }
     }
+    // confidence between -2 and +2 = UNCLEAR (no trade zone)
 
     return {
       direction,
       emaFast,
-      emaSlow,
-      lastClose
+      emaSlow: emaMid, // expose mid as emaSlow for UI compatibility
+      ema50: emaSlow,
+      lastClose,
+      confidence
     };
   }
 

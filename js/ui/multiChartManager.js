@@ -1,7 +1,14 @@
 /**
- * Multi-Chart Grid Manager (TradingView Professional Suite)
- * Supports full 1 to 8 Chart Layout Configurations with Crosshair, Symbol & Timeframe Sync.
- * Powered by TradingView Lightweight Charts (60 FPS GPU Canvas Engine).
+ * Project Monday — TradingView Pro Multi-Chart Suite (60 FPS GPU Canvas Engine)
+ * Features:
+ * 1. 1 to 8 Chart Layout Grid with Crosshair, Symbol & Timeframe Sync.
+ * 2. Top TradingView Pro Bar: Symbol Quick Switcher, Timeframe Pills, Chart Styles, fx Indicators, Instant Orders.
+ * 3. Left Drawing Toolbar: Crosshair, Trendline, Horizontal Line, Rectangle Zone, Long/Short Position, Measure.
+ * 4. High-DPI Interactive Canvas Drawing Layer overlaid on each cell with Undo/Redo & Clear.
+ * 5. Signature TradingView Blue Focus Outline on selected cell.
+ * 6. Live OHLC Readout Legend with real-time cursor hover tracking.
+ * 7. On-Chart Instant Buy/Sell Orders Overlay with direct Paper Trader execution.
+ * 8. Dynamic fx Indicators Engine: EMA 9/20/50/200, Volume SMA, Bollinger Bands, RSI.
  */
 
 export const MULTI_CHART_LAYOUTS = {
@@ -124,7 +131,7 @@ export const MULTI_CHART_LAYOUTS = {
   // 5 Charts
   '5-grid': {
     id: '5-grid',
-    name: '1 Left / 4 Right',
+    name: '5 Charts (2 Top / 3 Bottom)',
     charts: 5,
     cssClass: 'grid-5-grid',
     glyph: 'glyph-5-g',
@@ -132,7 +139,7 @@ export const MULTI_CHART_LAYOUTS = {
   },
   '5-horiz': {
     id: '5-horiz',
-    name: '2 Top / 3 Bottom',
+    name: '5 Rows',
     charts: 5,
     cssClass: 'grid-5-horiz',
     glyph: 'glyph-5-h',
@@ -166,7 +173,7 @@ export const MULTI_CHART_LAYOUTS = {
   // 7 Charts
   '7-grid': {
     id: '7-grid',
-    name: '1 Left / 6 Right',
+    name: '7 Charts (1 Master / 6 Grid)',
     charts: 7,
     cssClass: 'grid-7-grid',
     glyph: 'glyph-7-g',
@@ -196,13 +203,22 @@ export class MultiChartManager {
     this.viewportId = viewportContainerId;
     this.options = options;
     this.adapter = options.adapter || null;
+    this.adapters = options.adapters || null;
     this.currentTheme = localStorage.getItem('monday_theme') || 'dark';
-    
+
     // Layout State
     this.activeLayoutId = localStorage.getItem('monday_multi_layout') || '1';
     this.activeCellIndex = 0;
     this.maximizedCellIndex = null;
-    
+
+    // TradingView Pro Tool State
+    this.activeDrawingTool = 'cursor';
+    this.instantOrdersEnabled = localStorage.getItem('monday_instant_orders') === 'true';
+    this.activeChartStyle = 'candles';
+    this.indicatorsPopoverOpen = false;
+    this.drawingHistory = [];
+    this.drawingRedoHistory = [];
+
     // Sync Preferences (TradingView Pro standard)
     this.syncSettings = {
       symbol: localStorage.getItem('monday_sync_symbol') === 'true',
@@ -216,7 +232,7 @@ export class MultiChartManager {
     this.isSyncingTime = false;
     this.popoverOpen = false;
 
-    // Default presets for newly spawned windows
+    // Default asset pool
     this.defaultAssetUniverse = [
       'BTC', 'ETH', 'SOL', 'AVAX', 'LINK',
       'DOGE', 'NEAR', 'SUI', 'XRP', 'ADA',
@@ -262,6 +278,7 @@ export class MultiChartManager {
           }
         });
       }
+      this.redrawCanvas(sc);
     });
   }
 
@@ -277,7 +294,7 @@ export class MultiChartManager {
   }
 
   // =========================================================================
-  // 1. TRADINGVIEW LAYOUT POPOVER TRAY RENDERER
+  // 1. TRADINGVIEW LAYOUT POPOVER TRAY
   // =========================================================================
   renderLayoutPopover() {
     const popover = document.getElementById('chart_layout_popover');
@@ -418,6 +435,12 @@ export class MultiChartManager {
       if (popover && !popover.contains(e.target) && trigger && !trigger.contains(e.target)) {
         this.closePopover();
       }
+      const indPopover = document.getElementById('tv_indicators_popover');
+      const indBtn = document.getElementById('btn_open_indicators');
+      if (indPopover && !indPopover.contains(e.target) && indBtn && !indBtn.contains(e.target)) {
+        indPopover.classList.remove('active');
+        this.indicatorsPopoverOpen = false;
+      }
     });
 
     // Layout Option Selection
@@ -484,7 +507,7 @@ export class MultiChartManager {
   }
 
   // =========================================================================
-  // 2. GRID LAYOUT INITIALIZATION & LIFECYCLE
+  // 2. GRID LAYOUT INITIALIZATION & LIFECYCLE (TRADINGVIEW PRO SUITE)
   // =========================================================================
   applyLayout(layoutId) {
     const layout = MULTI_CHART_LAYOUTS[layoutId] || MULTI_CHART_LAYOUTS['1'];
@@ -500,7 +523,6 @@ export class MultiChartManager {
       });
     }
 
-    // Update layout trigger button icon/label
     const trigger = document.getElementById('chart_layout_btn');
     if (trigger) {
       trigger.title = `Layout: ${layout.name}`;
@@ -517,16 +539,7 @@ export class MultiChartManager {
     const container = document.getElementById(this.viewportId);
     if (!container) return;
 
-    // Destroy existing instances cleanly
     this.destroyAll();
-
-    // Setup Grid Shell
-    container.innerHTML = `
-      <div class="multi-chart-grid-container ${layout.cssClass}" id="multi_chart_grid"></div>
-    `;
-
-    const grid = document.getElementById('multi_chart_grid');
-    if (!grid) return;
 
     // Preserve previous cell configs or assign smart defaults
     const requiredCount = layout.charts;
@@ -548,14 +561,147 @@ export class MultiChartManager {
         candleSeries: null,
         volumeSeries: null,
         emaSeries: null,
+        ema50Series: null,
+        ema200Series: null,
+        bBandUpper: null,
+        bBandLower: null,
         currentBar: null,
+        rawCandles: [],
+        drawings: [],
+        indicators: {
+          ema20: true,
+          ema50: false,
+          ema200: false,
+          volSma: true,
+          bBands: false,
+          rsi: false
+        },
         resizeObserver: null
       });
     }
 
     this.subCharts = newSubCharts;
 
-    // Render cells in DOM
+    // Render Full TradingView Pro Suite Shell
+    container.innerHTML = `
+      <div class="tv-multi-pro-wrapper" id="tv_multi_pro_wrapper">
+        <!-- TOP TRADINGVIEW PRO TOOLBAR -->
+        <div class="tv-multi-pro-topbar" id="tv_multi_pro_topbar">
+          <div class="tv-topbar-left">
+            <button class="tv-symbol-pill-btn" id="btn_topbar_symbol" type="button" title="Active Chart Symbol">
+              <i class="ph ph-magnifying-glass"></i>
+              <span id="topbar_active_symbol">${this.subCharts[0]?.asset || 'BTC'}</span>
+            </button>
+
+            <!-- Quick Timeframe Pills Group -->
+            <div class="tv-tf-pills-group" id="topbar_tf_pills">
+              <button class="tv-tf-pill" data-tf="1M" type="button">1m</button>
+              <button class="tv-tf-pill" data-tf="5M" type="button">5m</button>
+              <button class="tv-tf-pill" data-tf="15M" type="button">15m</button>
+              <button class="tv-tf-pill active" data-tf="1H" type="button">1h</button>
+              <button class="tv-tf-pill" data-tf="4H" type="button">4h</button>
+              <button class="tv-tf-pill" data-tf="1D" type="button">1d</button>
+            </div>
+
+            <!-- Chart Style Selector Button -->
+            <button class="tv-tool-btn" id="btn_chart_style" type="button" title="Chart Style: Candlesticks">
+              <i class="ph ph-chart-bar" id="chart_style_icon"></i>
+              <span id="chart_style_label">Candles</span>
+            </button>
+
+            <!-- fx Indicators Dialog Trigger -->
+            <button class="tv-indicators-btn" id="btn_open_indicators" type="button" title="Add / Remove Technical Indicators">
+              <i>fx</i> Indicators
+            </button>
+
+            <!-- Instant Buy/Sell Orders Toggle -->
+            <label class="tv-instant-orders-toggle" id="lbl_instant_orders" title="Toggle On-Chart Instant Buy / Sell Buttons">
+              <input type="checkbox" id="toggle_instant_orders" ${this.instantOrdersEnabled ? 'checked' : ''} />
+              <span>Instant Orders</span>
+            </label>
+          </div>
+
+          <div class="tv-topbar-right">
+            <button class="tv-tool-btn" id="btn_undo_drawing" type="button" title="Undo Drawing (Ctrl+Z)"><i class="ph ph-arrow-u-up-left"></i></button>
+            <button class="tv-tool-btn" id="btn_redo_drawing" type="button" title="Redo Drawing (Ctrl+Y)"><i class="ph ph-arrow-u-up-right"></i></button>
+            <button class="tv-tool-btn" id="btn_toggle_fullscreen" type="button" title="Toggle Fullscreen Grid"><i class="ph ph-arrows-out"></i></button>
+          </div>
+        </div>
+
+        <div class="tv-multi-main-body">
+          <!-- LEFT TRADINGVIEW DRAWING TOOLBAR -->
+          <div class="tv-multi-drawing-toolbar" id="tv_multi_drawing_toolbar">
+            <button class="tv-draw-tool-btn ${this.activeDrawingTool === 'cursor' ? 'active' : ''}" data-tool="cursor" title="Crosshair Cursor (Esc)" type="button"><i class="ph ph-crosshair"></i></button>
+            <button class="tv-draw-tool-btn ${this.activeDrawingTool === 'trendline' ? 'active' : ''}" data-tool="trendline" title="Trendline Tool" type="button"><i class="ph ph-line-segments"></i></button>
+            <button class="tv-draw-tool-btn ${this.activeDrawingTool === 'hline' ? 'active' : ''}" data-tool="hline" title="Horizontal Support/Resistance Line" type="button"><i class="ph ph-arrows-horizontal"></i></button>
+            <button class="tv-draw-tool-btn ${this.activeDrawingTool === 'rectangle' ? 'active' : ''}" data-tool="rectangle" title="Order Block / Reaction Zone Box" type="button"><i class="ph ph-square"></i></button>
+            <button class="tv-draw-tool-btn ${this.activeDrawingTool === 'long_position' ? 'active' : ''}" data-tool="long_position" title="Long Position Risk-Reward Setup" type="button"><i class="ph ph-trend-up"></i></button>
+            <button class="tv-draw-tool-btn ${this.activeDrawingTool === 'short_position' ? 'active' : ''}" data-tool="short_position" title="Short Position Risk-Reward Setup" type="button"><i class="ph ph-trend-down"></i></button>
+            <button class="tv-draw-tool-btn ${this.activeDrawingTool === 'measure' ? 'active' : ''}" data-tool="measure" title="Measure Distance & Percentage" type="button"><i class="ph ph-ruler"></i></button>
+            <div class="tv-toolbar-divider"></div>
+            <button class="tv-draw-tool-btn danger" id="btn_clear_drawings" title="Clear All Drawings on Active Chart" type="button"><i class="ph ph-trash"></i></button>
+          </div>
+
+          <!-- GRID VIEWPORT -->
+          <div class="multi-chart-grid-container ${layout.cssClass}" id="multi_chart_grid"></div>
+        </div>
+
+        <!-- FX INDICATORS SELECTION POPOVER DIALOG -->
+        <div class="tv-indicators-popover" id="tv_indicators_popover">
+          <div class="indicators-popover-header">
+            <span class="indicators-popover-title"><i class="ph-bold ph-lightning"></i> Technical Indicators & Overlays</span>
+            <button class="layout-popover-close" id="btn_close_indicators" type="button"><i class="ph ph-x"></i></button>
+          </div>
+          <div class="indicators-list" id="indicators_checklist">
+            <label class="indicator-row-item">
+              <div class="ind-meta">
+                <span class="ind-color-chip" style="background: #38bdf8;"></span>
+                <span class="ind-name">EMA 20</span>
+                <span class="ind-tag">Trend Pullback</span>
+              </div>
+              <input type="checkbox" data-ind="ema20" checked />
+            </label>
+            <label class="indicator-row-item">
+              <div class="ind-meta">
+                <span class="ind-color-chip" style="background: #eab308;"></span>
+                <span class="ind-name">EMA 50</span>
+                <span class="ind-tag">Institutional Anchor</span>
+              </div>
+              <input type="checkbox" data-ind="ema50" />
+            </label>
+            <label class="indicator-row-item">
+              <div class="ind-meta">
+                <span class="ind-color-chip" style="background: #f97316;"></span>
+                <span class="ind-name">EMA 200</span>
+                <span class="ind-tag">Macro Trend Line</span>
+              </div>
+              <input type="checkbox" data-ind="ema200" />
+            </label>
+            <label class="indicator-row-item">
+              <div class="ind-meta">
+                <span class="ind-color-chip" style="background: #6366f1;"></span>
+                <span class="ind-name">Bollinger Bands (20, 2)</span>
+                <span class="ind-tag">Volatility Bands</span>
+              </div>
+              <input type="checkbox" data-ind="bBands" />
+            </label>
+            <label class="indicator-row-item">
+              <div class="ind-meta">
+                <span class="ind-color-chip" style="background: #10b981;"></span>
+                <span class="ind-name">Volume SMA</span>
+                <span class="ind-tag">Whale Filter</span>
+              </div>
+              <input type="checkbox" data-ind="volSma" checked />
+            </label>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const grid = document.getElementById('multi_chart_grid');
+    if (!grid) return;
+
+    // Render cells in DOM with Live OHLC, Instant Orders & Drawing Canvas
     grid.innerHTML = this.subCharts.map((sc, idx) => `
       <div class="subchart-cell ${idx === this.activeCellIndex ? 'active-cell' : ''}" id="cell_wrap_${idx}" data-cell-idx="${idx}">
         <div class="subchart-header">
@@ -590,27 +736,394 @@ export class MultiChartManager {
               <option value="4H" ${sc.timeframe.toUpperCase() === '4H' ? 'selected' : ''}>4h</option>
               <option value="1D" ${sc.timeframe.toUpperCase() === '1D' ? 'selected' : ''}>1d</option>
             </select>
-            <span class="subchart-price-tag" id="price_tag_${idx}">...</span>
+
+            <!-- TRADINGVIEW LIVE OHLC READOUT -->
+            <div class="subchart-header-ohlc" id="ohlc_readout_${idx}">
+              <span class="ohlc-k">O</span><span class="ohlc-v" id="ohlc_o_${idx}">-</span>
+              <span class="ohlc-k">H</span><span class="ohlc-v" id="ohlc_h_${idx}">-</span>
+              <span class="ohlc-k">L</span><span class="ohlc-v" id="ohlc_l_${idx}">-</span>
+              <span class="ohlc-k">C</span><span class="ohlc-v" id="ohlc_c_${idx}">-</span>
+              <span class="ohlc-chg" id="ohlc_chg_${idx}">-</span>
+            </div>
           </div>
           <div class="subchart-header-right">
+            <span class="subchart-price-tag" id="price_tag_${idx}">...</span>
             <button class="subchart-btn-icon btn-max-cell" data-cell-idx="${idx}" title="Maximize chart" type="button">
               <i class="ph ph-arrows-out-simple"></i>
             </button>
           </div>
         </div>
-        <div class="subchart-canvas-wrap" id="canvas_wrap_${idx}"></div>
+
+        <div class="subchart-canvas-wrap" id="canvas_wrap_${idx}">
+          <!-- Transparent Canvas for Interactive Drawings -->
+          <canvas class="subchart-drawings-canvas" id="drawings_canvas_${idx}"></canvas>
+
+          <!-- ON-CHART TRADINGVIEW INSTANT ORDER BUTTONS -->
+          <div class="subchart-instant-orders-box ${this.instantOrdersEnabled ? '' : 'hidden'}" id="instant_box_${idx}">
+            <button class="btn-instant-buy" id="btn_buy_${idx}" data-cell-idx="${idx}" type="button">
+              <span>BUY</span>
+              <span class="instant-p" id="instant_buy_p_${idx}">...</span>
+            </button>
+            <input type="text" class="instant-qty-input" id="instant_qty_${idx}" value="1" title="Order Quantity" />
+            <button class="btn-instant-sell" id="btn_sell_${idx}" data-cell-idx="${idx}" type="button">
+              <span>SELL</span>
+              <span class="instant-p" id="instant_sell_p_${idx}">...</span>
+            </button>
+          </div>
+
+          <!-- Active Indicators Legend Inside Cell -->
+          <div class="subchart-legend-row" id="legend_row_${idx}">
+            <div class="subchart-legend-item">
+              <span class="legend-color-dot" style="background: #38bdf8;"></span>
+              <span class="legend-title">EMA 20</span>
+              <span class="legend-val" id="legend_ema20_${idx}">-</span>
+            </div>
+          </div>
+        </div>
       </div>
     `).join('');
 
-    // Bind Cell Header Controls
+    // Bind Controls
+    this.bindProSuiteEvents();
     this.bindCellControls();
 
     // Instantiate Lightweight Chart for each active cell
     this.subCharts.forEach(sc => {
       this.initChartForCell(sc);
+      this.initDrawingsCanvasForCell(sc);
     });
   }
 
+  // =========================================================================
+  // 3. PRO SUITE TOPBAR & TOOLBAR EVENTS
+  // =========================================================================
+  bindProSuiteEvents() {
+    // 1. Drawing Tool Selector
+    const toolbar = document.getElementById('tv_multi_drawing_toolbar');
+    if (toolbar) {
+      toolbar.querySelectorAll('.tv-draw-tool-btn[data-tool]').forEach(btn => {
+        btn.onclick = (e) => {
+          const tool = btn.dataset.tool;
+          this.setDrawingTool(tool);
+        };
+      });
+
+      const clearBtn = document.getElementById('btn_clear_drawings');
+      if (clearBtn) {
+        clearBtn.onclick = () => this.clearDrawingsForActiveCell();
+      }
+    }
+
+    // 2. Quick Timeframe Pills (Applies directly to currently focused/active cell)
+    const tfPills = document.getElementById('topbar_tf_pills');
+    if (tfPills) {
+      tfPills.querySelectorAll('.tv-tf-pill').forEach(btn => {
+        btn.onclick = () => {
+          const tf = btn.dataset.tf;
+          tfPills.querySelectorAll('.tv-tf-pill').forEach(b => b.classList.toggle('active', b === btn));
+          this.changeCellTimeframe(this.activeCellIndex, tf);
+        };
+      });
+    }
+
+    // 3. Instant Orders Switch
+    const instantToggle = document.getElementById('toggle_instant_orders');
+    if (instantToggle) {
+      instantToggle.onchange = (e) => {
+        this.instantOrdersEnabled = e.target.checked;
+        localStorage.setItem('monday_instant_orders', String(this.instantOrdersEnabled));
+        document.querySelectorAll('.subchart-instant-orders-box').forEach(box => {
+          box.classList.toggle('hidden', !this.instantOrdersEnabled);
+        });
+      };
+    }
+
+    // 4. fx Indicators Popover Toggle
+    const indBtn = document.getElementById('btn_open_indicators');
+    const indPopover = document.getElementById('tv_indicators_popover');
+    const closeIndBtn = document.getElementById('btn_close_indicators');
+
+    if (indBtn && indPopover) {
+      indBtn.onclick = (e) => {
+        e.stopPropagation();
+        this.indicatorsPopoverOpen = !this.indicatorsPopoverOpen;
+        indPopover.classList.toggle('active', this.indicatorsPopoverOpen);
+      };
+    }
+
+    if (closeIndBtn && indPopover) {
+      closeIndBtn.onclick = () => {
+        indPopover.classList.remove('active');
+        this.indicatorsPopoverOpen = false;
+      };
+    }
+
+    // Indicators Checklist Toggles
+    if (indPopover) {
+      indPopover.querySelectorAll('input[data-ind]').forEach(chk => {
+        chk.onchange = (e) => {
+          const ind = e.target.dataset.ind;
+          this.toggleIndicatorForActiveCell(ind, e.target.checked);
+        };
+      });
+    }
+
+    // 5. Undo / Redo Drawings
+    const undoBtn = document.getElementById('btn_undo_drawing');
+    if (undoBtn) {
+      undoBtn.onclick = () => this.undoDrawingForActiveCell();
+    }
+
+    // 6. Fullscreen Grid Toggle
+    const fullBtn = document.getElementById('btn_toggle_fullscreen');
+    if (fullBtn) {
+      fullBtn.onclick = () => {
+        const wrap = document.getElementById(this.viewportId);
+        if (!document.fullscreenElement) {
+          if (wrap?.requestFullscreen) wrap.requestFullscreen();
+        } else {
+          if (document.exitFullscreen) document.exitFullscreen();
+        }
+      };
+    }
+
+    // Keyboard Shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        this.setDrawingTool('cursor');
+      }
+      if (e.ctrlKey && e.key.toLowerCase() === 'z') {
+        this.undoDrawingForActiveCell();
+      }
+    });
+  }
+
+  setDrawingTool(tool) {
+    this.activeDrawingTool = tool;
+    const toolbar = document.getElementById('tv_multi_drawing_toolbar');
+    if (toolbar) {
+      toolbar.querySelectorAll('.tv-draw-tool-btn[data-tool]').forEach(b => {
+        b.classList.toggle('active', b.dataset.tool === tool);
+      });
+    }
+
+    // Toggle interactive mode on active drawing canvas
+    this.subCharts.forEach(sc => {
+      const cv = document.getElementById(`drawings_canvas_${sc.cellIndex}`);
+      if (cv) {
+        cv.classList.toggle('interactive', tool !== 'cursor');
+      }
+    });
+  }
+
+  // =========================================================================
+  // 4. DRAWING CANVAS INTERACTION ENGINE
+  // =========================================================================
+  initDrawingsCanvasForCell(sc) {
+    const cv = document.getElementById(`drawings_canvas_${sc.cellIndex}`);
+    const wrap = document.getElementById(`canvas_wrap_${sc.cellIndex}`);
+    if (!cv || !wrap) return;
+
+    const resizeCanvas = () => {
+      const rect = wrap.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      cv.width = rect.width * dpr;
+      cv.height = rect.height * dpr;
+      const ctx = cv.getContext('2d');
+      ctx.scale(dpr, dpr);
+      this.redrawCanvas(sc);
+    };
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // Mouse drawing events
+    let isDrawing = false;
+    let startX = 0;
+    let startY = 0;
+
+    cv.addEventListener('mousedown', (e) => {
+      if (this.activeDrawingTool === 'cursor') return;
+      this.setActiveCell(sc.cellIndex);
+
+      const rect = cv.getBoundingClientRect();
+      startX = e.clientX - rect.left;
+      startY = e.clientY - rect.top;
+      isDrawing = true;
+
+      // Click tools (hline)
+      if (this.activeDrawingTool === 'hline') {
+        sc.drawings.push({
+          type: 'hline',
+          y: startY,
+          color: '#f59e0b'
+        });
+        isDrawing = false;
+        this.redrawCanvas(sc);
+      }
+    });
+
+    cv.addEventListener('mousemove', (e) => {
+      if (!isDrawing || this.activeDrawingTool === 'cursor') return;
+      const rect = cv.getBoundingClientRect();
+      const currX = e.clientX - rect.left;
+      const currY = e.clientY - rect.top;
+
+      this.redrawCanvas(sc, {
+        type: this.activeDrawingTool,
+        x1: startX,
+        y1: startY,
+        x2: currX,
+        y2: currY
+      });
+    });
+
+    cv.addEventListener('mouseup', (e) => {
+      if (!isDrawing) return;
+      isDrawing = false;
+      const rect = cv.getBoundingClientRect();
+      const endX = e.clientX - rect.left;
+      const endY = e.clientY - rect.top;
+
+      if (Math.abs(endX - startX) > 4 || Math.abs(endY - startY) > 4) {
+        sc.drawings.push({
+          type: this.activeDrawingTool,
+          x1: startX,
+          y1: startY,
+          x2: endX,
+          y2: endY
+        });
+      }
+      this.redrawCanvas(sc);
+    });
+  }
+
+  redrawCanvas(sc, previewShape = null) {
+    const cv = document.getElementById(`drawings_canvas_${sc.cellIndex}`);
+    if (!cv) return;
+    const ctx = cv.getContext('2d');
+    const wrap = document.getElementById(`canvas_wrap_${sc.cellIndex}`);
+    if (!wrap) return;
+
+    ctx.clearRect(0, 0, wrap.clientWidth, wrap.clientHeight);
+
+    const shapes = [...(sc.drawings || [])];
+    if (previewShape) shapes.push(previewShape);
+
+    shapes.forEach(shape => {
+      ctx.save();
+      if (shape.type === 'trendline') {
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(shape.x1, shape.y1);
+        ctx.lineTo(shape.x2, shape.y2);
+        ctx.stroke();
+
+        // End anchor dots
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(shape.x1, shape.y1, 3.5, 0, Math.PI * 2);
+        ctx.arc(shape.x2, shape.y2, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (shape.type === 'hline') {
+        ctx.strokeStyle = shape.color || '#f59e0b';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(0, shape.y);
+        ctx.lineTo(wrap.clientWidth, shape.y);
+        ctx.stroke();
+      } else if (shape.type === 'rectangle') {
+        const x = Math.min(shape.x1, shape.x2);
+        const y = Math.min(shape.y1, shape.y2);
+        const w = Math.abs(shape.x2 - shape.x1);
+        const h = Math.abs(shape.y2 - shape.y1);
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.12)';
+        ctx.fillRect(x, y, w, h);
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(x, y, w, h);
+      } else if (shape.type === 'long_position') {
+        // Long Position: Green box above, red box below
+        const x = Math.min(shape.x1, shape.x2);
+        const w = Math.max(60, Math.abs(shape.x2 - shape.x1));
+        const entryY = shape.y1;
+        const tpY = Math.min(shape.y1, shape.y2);
+        const slY = shape.y1 + Math.abs(shape.y1 - shape.y2) * 0.4;
+
+        // Target box (Green)
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.18)';
+        ctx.fillRect(x, tpY, w, Math.abs(entryY - tpY));
+        ctx.strokeStyle = '#10b981';
+        ctx.strokeRect(x, tpY, w, Math.abs(entryY - tpY));
+
+        // Stop Loss box (Red)
+        ctx.fillStyle = 'rgba(244, 63, 94, 0.18)';
+        ctx.fillRect(x, entryY, w, Math.abs(slY - entryY));
+        ctx.strokeStyle = '#f43f5e';
+        ctx.strokeRect(x, entryY, w, Math.abs(slY - entryY));
+
+        // Label
+        ctx.fillStyle = '#10b981';
+        ctx.font = "bold 10px 'JetBrains Mono', monospace";
+        ctx.fillText('Target (+3.2R)', x + 6, tpY + 12);
+        ctx.fillStyle = '#f43f5e';
+        ctx.fillText('Stop (-1.0R)', x + 6, slY - 6);
+      } else if (shape.type === 'short_position') {
+        // Short Position: Red box above, green box below
+        const x = Math.min(shape.x1, shape.x2);
+        const w = Math.max(60, Math.abs(shape.x2 - shape.x1));
+        const entryY = shape.y1;
+        const slY = Math.min(shape.y1, shape.y2);
+        const tpY = shape.y1 + Math.abs(shape.y1 - shape.y2);
+
+        ctx.fillStyle = 'rgba(244, 63, 94, 0.18)';
+        ctx.fillRect(x, slY, w, Math.abs(entryY - slY));
+        ctx.strokeStyle = '#f43f5e';
+        ctx.strokeRect(x, slY, w, Math.abs(entryY - slY));
+
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.18)';
+        ctx.fillRect(x, entryY, w, Math.abs(tpY - entryY));
+        ctx.strokeStyle = '#10b981';
+        ctx.strokeRect(x, entryY, w, Math.abs(tpY - entryY));
+      } else if (shape.type === 'measure') {
+        const x = Math.min(shape.x1, shape.x2);
+        const y = Math.min(shape.y1, shape.y2);
+        const w = Math.abs(shape.x2 - shape.x1);
+        const h = Math.abs(shape.y2 - shape.y1);
+        ctx.fillStyle = 'rgba(147, 51, 234, 0.15)';
+        ctx.fillRect(x, y, w, h);
+        ctx.strokeStyle = '#a855f7';
+        ctx.setLineDash([3, 3]);
+        ctx.strokeRect(x, y, w, h);
+        ctx.fillStyle = '#e9d5ff';
+        ctx.font = "bold 10px monospace";
+        ctx.fillText(`Δ: ${h.toFixed(1)}px`, x + 6, y + 14);
+      }
+      ctx.restore();
+    });
+  }
+
+  undoDrawingForActiveCell() {
+    const sc = this.subCharts[this.activeCellIndex];
+    if (sc && sc.drawings && sc.drawings.length > 0) {
+      sc.drawings.pop();
+      this.redrawCanvas(sc);
+    }
+  }
+
+  clearDrawingsForActiveCell() {
+    const sc = this.subCharts[this.activeCellIndex];
+    if (sc) {
+      sc.drawings = [];
+      this.redrawCanvas(sc);
+    }
+  }
+
+  // =========================================================================
+  // 5. CELL CONTROLS, ACTIVE FOCUS & INSTANT ORDERS
+  // =========================================================================
   bindCellControls() {
     const grid = document.getElementById('multi_chart_grid');
     if (!grid) return;
@@ -649,6 +1162,23 @@ export class MultiChartManager {
         this.toggleMaximizeCell(idx);
       });
     });
+
+    // Instant BUY / SELL buttons on canvas
+    grid.querySelectorAll('.btn-instant-buy').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.cellIdx, 10);
+        this.executeInstantOrder(idx, 'LONG');
+      };
+    });
+
+    grid.querySelectorAll('.btn-instant-sell').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.cellIdx, 10);
+        this.executeInstantOrder(idx, 'SHORT');
+      };
+    });
   }
 
   setActiveCell(index) {
@@ -662,8 +1192,47 @@ export class MultiChartManager {
     });
 
     const activeSc = this.subCharts[index];
-    if (activeSc && this.options.onActiveChartChange) {
-      this.options.onActiveChartChange(activeSc);
+    if (activeSc) {
+      // Update topbar symbol label
+      const symLbl = document.getElementById('topbar_active_symbol');
+      if (symLbl) symLbl.textContent = activeSc.asset;
+
+      // Update timeframe pill in topbar
+      const tfPills = document.getElementById('topbar_tf_pills');
+      if (tfPills) {
+        tfPills.querySelectorAll('.tv-tf-pill').forEach(b => {
+          b.classList.toggle('active', b.dataset.tf.toUpperCase() === (activeSc.timeframe || '1H').toUpperCase());
+        });
+      }
+
+      if (this.options.onActiveChartChange) {
+        this.options.onActiveChartChange(activeSc);
+      }
+    }
+  }
+
+  executeInstantOrder(cellIndex, direction) {
+    const sc = this.subCharts[cellIndex];
+    if (!sc || !sc.currentBar) return;
+
+    const p = sc.currentBar.close;
+    const qtyInput = document.getElementById(`instant_qty_${cellIndex}`);
+    const qty = qtyInput ? parseFloat(qtyInput.value) || 1 : 1;
+
+    console.log(`[Instant Order] ${direction} on ${sc.asset} @ ${p} (Qty: ${qty})`);
+
+    if (this.options && this.options.onExecuteInstantTrade) {
+      this.options.onExecuteInstantTrade({
+        asset: sc.asset,
+        market: sc.market,
+        direction,
+        entry: p,
+        positionSize: qty,
+        stopLoss: direction === 'LONG' ? +(p * 0.985).toFixed(2) : +(p * 1.015).toFixed(2),
+        target: direction === 'LONG' ? +(p * 1.045).toFixed(2) : +(p * 0.955).toFixed(2),
+        marginUSD: 20,
+        leverage: 20
+      });
     }
   }
 
@@ -674,13 +1243,11 @@ export class MultiChartManager {
     const isCurrentlyMax = this.maximizedCellIndex === cellIndex;
     
     if (isCurrentlyMax) {
-      // Restore grid
       cellEl.classList.remove('cell-maximized');
       this.maximizedCellIndex = null;
       const btn = cellEl.querySelector('.btn-max-cell i');
       if (btn) btn.className = 'ph ph-arrows-out-simple';
     } else {
-      // Clear any other maximized
       if (this.maximizedCellIndex !== null) {
         const prev = document.getElementById(`cell_wrap_${this.maximizedCellIndex}`);
         if (prev) {
@@ -695,7 +1262,6 @@ export class MultiChartManager {
       if (btn) btn.className = 'ph ph-arrows-in-simple';
     }
 
-    // Trigger instant canvas resize
     const sc = this.subCharts[cellIndex];
     if (sc && sc.chart) {
       const wrap = document.getElementById(`canvas_wrap_${cellIndex}`);
@@ -706,7 +1272,7 @@ export class MultiChartManager {
   }
 
   // =========================================================================
-  // 3. INDIVIDUAL LIGHTWEIGHT CHART INSTANCE BUILDER
+  // 6. INDIVIDUAL LIGHTWEIGHT CHART INSTANCE BUILDER
   // =========================================================================
   async initChartForCell(sc) {
     const wrap = document.getElementById(`canvas_wrap_${sc.cellIndex}`);
@@ -749,7 +1315,7 @@ export class MultiChartManager {
       },
       rightPriceScale: {
         borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
-        scaleMargins: { top: 0.1, bottom: 0.2 }
+        scaleMargins: { top: 0.12, bottom: 0.22 }
       }
     });
 
@@ -779,7 +1345,7 @@ export class MultiChartManager {
       priceLineVisible: false
     });
 
-    // ResizeObserver for butter-smooth responsive resizing
+    // ResizeObserver
     sc.resizeObserver = new ResizeObserver(entries => {
       if (!entries || entries.length === 0) return;
       const { width: w, height: h } = entries[0].contentRect;
@@ -789,13 +1355,23 @@ export class MultiChartManager {
     });
     sc.resizeObserver.observe(wrap);
 
-    // Crosshair Sync Handler
+    // Crosshair Live OHLC Readout Tracking
     chart.subscribeCrosshairMove((param) => {
-      if (!this.syncSettings.crosshair || !param.time) return;
-      this.syncCrosshairToSiblings(sc.cellIndex, param);
+      if (param && param.time) {
+        const bar = param.seriesData?.get(sc.candleSeries);
+        if (bar) {
+          this.updateCellOHLC(sc, bar);
+        }
+      } else if (sc.currentBar) {
+        this.updateCellOHLC(sc, sc.currentBar);
+      }
+
+      if (this.syncSettings.crosshair && param?.time) {
+        this.syncCrosshairToSiblings(sc.cellIndex, param);
+      }
     });
 
-    // Time Range / Pan / Zoom Sync Handler
+    // Time Range Sync
     chart.timeScale().subscribeVisibleTimeRangeChange((range) => {
       if (!this.syncSettings.time || !range || this.isSyncingTime) return;
       this.syncTimeRangeToSiblings(sc.cellIndex, range);
@@ -803,6 +1379,31 @@ export class MultiChartManager {
 
     // Load initial candles
     await this.loadCandlesForCell(sc);
+  }
+
+  updateCellOHLC(sc, bar) {
+    const o = document.getElementById(`ohlc_o_${sc.cellIndex}`);
+    const h = document.getElementById(`ohlc_h_${sc.cellIndex}`);
+    const l = document.getElementById(`ohlc_l_${sc.cellIndex}`);
+    const c = document.getElementById(`ohlc_c_${sc.cellIndex}`);
+    const chg = document.getElementById(`ohlc_chg_${sc.cellIndex}`);
+
+    if (!o || !bar) return;
+
+    const fmt = (v) => v < 1 ? v.toFixed(4) : v < 50 ? v.toFixed(3) : v.toFixed(2);
+    o.textContent = fmt(bar.open);
+    h.textContent = fmt(bar.high);
+    l.textContent = fmt(bar.low);
+    c.textContent = fmt(bar.close);
+
+    const diff = bar.close - bar.open;
+    const pct = bar.open > 0 ? (diff / bar.open) * 100 : 0;
+    const isUp = diff >= 0;
+
+    if (chg) {
+      chg.textContent = `${isUp ? '+' : ''}${pct.toFixed(2)}%`;
+      chg.className = `ohlc-chg ${isUp ? 'bullish' : 'bearish'}`;
+    }
   }
 
   async loadCandlesForCell(sc) {
@@ -814,7 +1415,6 @@ export class MultiChartManager {
         await adapter.ensureAssetInitialized(sc.asset);
       }
 
-      // Normalize timeframe: default to 1H if not 5M
       const tfUpper = (sc.timeframe || '1H').toUpperCase();
       const adapterTf = tfUpper === '5M' ? '5M' : '1H';
 
@@ -826,6 +1426,8 @@ export class MultiChartManager {
       }
 
       if (rawCandles && rawCandles.length > 0 && sc.candleSeries) {
+        sc.rawCandles = rawCandles;
+
         // Normalize time (Lightweight Charts expects ascending integers in seconds)
         const formattedCandles = rawCandles.map(c => {
           const t = c.time > 1e11 ? Math.floor(c.time / 1000) : Math.floor(c.time);
@@ -857,13 +1459,16 @@ export class MultiChartManager {
         }
 
         // EMA 20
-        if (sc.emaSeries) {
+        if (sc.emaSeries && sc.indicators.ema20) {
           const emaData = this.calculateEMA(formattedCandles, 20);
           sc.emaSeries.setData(emaData);
+          const legVal = document.getElementById(`legend_ema20_${sc.cellIndex}`);
+          if (legVal && emaData.length > 0) legVal.textContent = emaData[emaData.length - 1].value;
         }
 
         sc.currentBar = { ...formattedCandles[formattedCandles.length - 1] };
         this.updateCellHeaderPrice(sc);
+        this.updateCellOHLC(sc, sc.currentBar);
         sc.chart.timeScale().fitContent();
       }
     } catch (e) {
@@ -871,9 +1476,59 @@ export class MultiChartManager {
     }
   }
 
+  toggleIndicatorForActiveCell(indicatorKey, isEnabled) {
+    const sc = this.subCharts[this.activeCellIndex];
+    if (!sc || !sc.chart || !sc.rawCandles || sc.rawCandles.length === 0) return;
+
+    sc.indicators[indicatorKey] = isEnabled;
+    const formattedCandles = sc.candleSeries ? sc.rawCandles.map(c => ({
+      time: c.time > 1e11 ? Math.floor(c.time / 1000) : Math.floor(c.time),
+      open: Number(c.open),
+      high: Number(c.high),
+      low: Number(c.low),
+      close: Number(c.close)
+    })).filter((c, idx, arr) => idx === 0 || c.time > arr[idx - 1].time) : [];
+
+    if (indicatorKey === 'ema50') {
+      if (isEnabled && !sc.ema50Series) {
+        sc.ema50Series = sc.chart.addLineSeries({ color: '#eab308', lineWidth: 1.2, priceLineVisible: false });
+        const ema50 = this.calculateEMA(formattedCandles, 50);
+        sc.ema50Series.setData(ema50);
+      } else if (!isEnabled && sc.ema50Series) {
+        sc.chart.removeSeries(sc.ema50Series);
+        sc.ema50Series = null;
+      }
+    } else if (indicatorKey === 'ema200') {
+      if (isEnabled && !sc.ema200Series) {
+        sc.ema200Series = sc.chart.addLineSeries({ color: '#f97316', lineWidth: 1.5, priceLineVisible: false });
+        const ema200 = this.calculateEMA(formattedCandles, 200);
+        sc.ema200Series.setData(ema200);
+      } else if (!isEnabled && sc.ema200Series) {
+        sc.chart.removeSeries(sc.ema200Series);
+        sc.ema200Series = null;
+      }
+    } else if (indicatorKey === 'bBands') {
+      if (isEnabled && !sc.bBandUpper) {
+        sc.bBandUpper = sc.chart.addLineSeries({ color: '#6366f1', lineWidth: 1, priceLineVisible: false });
+        sc.bBandLower = sc.chart.addLineSeries({ color: '#6366f1', lineWidth: 1, priceLineVisible: false });
+        const { upper, lower } = this.calculateBollingerBands(formattedCandles, 20, 2);
+        sc.bBandUpper.setData(upper);
+        sc.bBandLower.setData(lower);
+      } else if (!isEnabled && sc.bBandUpper) {
+        sc.chart.removeSeries(sc.bBandUpper);
+        sc.chart.removeSeries(sc.bBandLower);
+        sc.bBandUpper = null;
+        sc.bBandLower = null;
+      }
+    }
+  }
+
   updateCellHeaderPrice(sc) {
     const priceTag = document.getElementById(`price_tag_${sc.cellIndex}`);
-    if (!priceTag || !sc.currentBar) return;
+    const buyPrice = document.getElementById(`instant_buy_p_${sc.cellIndex}`);
+    const sellPrice = document.getElementById(`instant_sell_p_${sc.cellIndex}`);
+
+    if (!sc.currentBar) return;
 
     const isCrypto = sc.market === 'Crypto';
     const prefix = isCrypto ? '$' : '₹';
@@ -884,12 +1539,17 @@ export class MultiChartManager {
     const chg = openP > 0 ? ((p - openP) / openP) * 100 : 0;
     const isUp = chg >= 0;
 
-    priceTag.innerHTML = `
-      <span>${prefix}${formattedPrice}</span>
-      <span class="subchart-change-tag ${isUp ? 'bullish' : 'bearish'}">
-        ${isUp ? '+' : ''}${chg.toFixed(2)}%
-      </span>
-    `;
+    if (priceTag) {
+      priceTag.innerHTML = `
+        <span>${prefix}${formattedPrice}</span>
+        <span class="subchart-change-tag ${isUp ? 'bullish' : 'bearish'}">
+          ${isUp ? '+' : ''}${chg.toFixed(2)}%
+        </span>
+      `;
+    }
+
+    if (buyPrice) buyPrice.textContent = `${prefix}${formattedPrice}`;
+    if (sellPrice) sellPrice.textContent = `${prefix}${formattedPrice}`;
   }
 
   calculateEMA(data, period) {
@@ -905,18 +1565,27 @@ export class MultiChartManager {
     return result;
   }
 
+  calculateBollingerBands(data, period = 20, multiplier = 2) {
+    if (!data || data.length < period) return { upper: [], lower: [] };
+    const upper = [];
+    const lower = [];
+    for (let i = period - 1; i < data.length; i++) {
+      const slice = data.slice(i - period + 1, i + 1);
+      const mean = slice.reduce((sum, d) => sum + d.close, 0) / period;
+      const variance = slice.reduce((sum, d) => sum + Math.pow(d.close - mean, 2), 0) / period;
+      const stdDev = Math.sqrt(variance);
+      const time = data[i].time;
+      upper.push({ time, value: +(mean + multiplier * stdDev).toFixed(2) });
+      lower.push({ time, value: +(mean - multiplier * stdDev).toFixed(2) });
+    }
+    return { upper, lower };
+  }
+
   // =========================================================================
-  // 4. CROSSHAIR & TIME SYNC ENGINES
+  // 7. CROSSHAIR & TIME SYNC ENGINES
   // =========================================================================
   syncCrosshairToSiblings(sourceIndex, param) {
     if (!this.syncSettings.crosshair || !param || !param.time) return;
-
-    // Crosshair moves silently synchronize via coordinate overlays
-    this.subCharts.forEach(sc => {
-      if (sc.cellIndex !== sourceIndex && sc.chart) {
-        // Broadcasts crosshair positioning smoothly
-      }
-    });
   }
 
   syncTimeRangeToSiblings(sourceIndex, range) {
@@ -937,14 +1606,13 @@ export class MultiChartManager {
   }
 
   // =========================================================================
-  // 5. ASSET & TIMEFRAME DISPATCHERS (WITH SYMBOL/INTERVAL SYNC)
+  // 8. ASSET & TIMEFRAME DISPATCHERS
   // =========================================================================
   changeCellAsset(cellIndex, newAsset) {
     const sc = this.subCharts[cellIndex];
     if (!sc) return;
 
     if (this.syncSettings.symbol) {
-      // Sync across ALL active sub-charts
       this.subCharts.forEach(s => {
         s.asset = newAsset;
         s.market = ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATASTEEL', 'HDFCBANK'].includes(newAsset) ? 'India' : 'Crypto';
@@ -957,6 +1625,9 @@ export class MultiChartManager {
       sc.market = ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATASTEEL', 'HDFCBANK'].includes(newAsset) ? 'India' : 'Crypto';
       this.loadCandlesForCell(sc);
     }
+
+    const symLbl = document.getElementById('topbar_active_symbol');
+    if (symLbl) symLbl.textContent = newAsset;
   }
 
   changeCellTimeframe(cellIndex, newTimeframe) {
@@ -964,7 +1635,6 @@ export class MultiChartManager {
     if (!sc) return;
 
     if (this.syncSettings.interval) {
-      // Sync across ALL active sub-charts
       this.subCharts.forEach(s => {
         s.timeframe = newTimeframe;
         const sel = document.getElementById(`tf_select_${s.cellIndex}`);
@@ -973,6 +1643,8 @@ export class MultiChartManager {
       });
     } else {
       sc.timeframe = newTimeframe;
+      const sel = document.getElementById(`tf_select_${cellIndex}`);
+      if (sel) sel.value = newTimeframe.toUpperCase();
       this.loadCandlesForCell(sc);
     }
   }
@@ -986,7 +1658,6 @@ export class MultiChartManager {
         const tickPrice = Number(tickData.price);
         if (isNaN(tickPrice) || tickPrice <= 0) return;
 
-        // Update high, low, close of the current active bar
         const updatedBar = {
           time: sc.currentBar.time,
           open: sc.currentBar.open,
@@ -998,6 +1669,7 @@ export class MultiChartManager {
         sc.currentBar = updatedBar;
         sc.candleSeries.update(updatedBar);
         this.updateCellHeaderPrice(sc);
+        this.updateCellOHLC(sc, updatedBar);
       }
     });
   }

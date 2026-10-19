@@ -44,7 +44,9 @@ class App {
     this.paperTrader = new PaperTrader(2000, activeUserId);
     this.riskEngine = new RiskEngine(this.paperTrader.balance, 1.0);
     this.copilotBrain = new CopilotBrain();
-    this.chartManager = new ChartManager('tv_chart_container');
+    this.chartManager = new ChartManager('tv_chart_container', {
+      onExecuteInstantTrade: (orderPacket) => this.executeCurrentTrade(orderPacket)
+    });
 
     // UI Coordinator
     this.ui = new TerminalUI({

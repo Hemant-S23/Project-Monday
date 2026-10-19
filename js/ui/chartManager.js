@@ -13,8 +13,9 @@
 import { MultiChartManager, MULTI_CHART_LAYOUTS } from './multiChartManager.js';
 
 export class ChartManager {
-  constructor(containerId) {
+  constructor(containerId, options = {}) {
     this.containerId = containerId;
+    this.options = options;
     this.currentAsset = 'BTC';
     this.currentMarket = 'Crypto';
     this.currentTimeframe = '60'; // 60 = 1H, 5 = 5M
@@ -63,6 +64,7 @@ export class ChartManager {
     if (!this.multiChartManager) {
       this.multiChartManager = new MultiChartManager(this.containerId, {
         adapter: this.adapter,
+        adapters: this.adapters,
         onActiveChartChange: (sc) => {
           this.currentAsset = sc.asset;
           this.rawTimeframe = sc.timeframe;
@@ -70,6 +72,11 @@ export class ChartManager {
         },
         onSingleChartSelected: () => {
           this.render();
+        },
+        onExecuteInstantTrade: (order) => {
+          if (this.options && typeof this.options.onExecuteInstantTrade === 'function') {
+            this.options.onExecuteInstantTrade(order);
+          }
         }
       });
       this.multiChartManager.init(this.currentAsset, this.rawTimeframe, this.currentMarket);

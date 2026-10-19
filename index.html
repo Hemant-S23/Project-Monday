@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="css/main.css?v=4.7">
   <link rel="stylesheet" href="css/components.css?v=4.7">
   <link rel="stylesheet" href="css/auth.css?v=4.7">
+  <link rel="stylesheet" href="css/multi-chart.css?v=5.0">
 
   <!-- Supabase JS Client (Optional cloud auth & database sync) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -967,8 +968,20 @@
           <div style="display: flex; align-items: center; gap: 8px;">
             <span class="panel-title"><i class="ph ph-chart-bar"></i> TradingView Live Chart</span>
           </div>
-          <!-- Timeframe Selector Tray -->
-          <div class="tf-selector-wrapper">
+
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <!-- TradingView Style Multi-Chart Layout Selector (1 to 8 Windows) -->
+            <div class="chart-layout-wrapper" id="chart_layout_wrapper">
+              <button class="chart-layout-btn" id="chart_layout_btn" type="button" aria-haspopup="true" aria-expanded="false" title="Select Chart Layout (1 to 8 Windows)">
+                <i class="ph ph-squares-four layout-icon" id="current_layout_icon"></i>
+                <span class="layout-btn-label" id="current_layout_label">Layout</span>
+                <i class="ph ph-caret-down layout-caret"></i>
+              </button>
+              <div class="chart-layout-popover" id="chart_layout_popover"></div>
+            </div>
+
+            <!-- Timeframe Selector Tray -->
+            <div class="tf-selector-wrapper">
             <!-- Dropdown Tray Trigger -->
             <div class="tf-dropdown-container">
               <button class="tf-tray-trigger-btn" id="tf_tray_trigger" aria-haspopup="true" aria-expanded="false" title="Click to open Timeframe Tray">
@@ -1644,6 +1657,6 @@
   <script src="js/config/supabaseConfig.js"></script>
 
   <!-- App Script Entrypoint -->
-  <script type="module" src="js/app.js?v=4.9"></script>
+  <script type="module" src="js/app.js?v=5.0"></script>
 </body>
 </html>

@@ -10,6 +10,8 @@
  * 2. Crypto Market (Binance): TradingView Advanced Chart Widget (iframe)
  *    - Preserved completely untouched as requested
  */
+import { MultiChartManager, MULTI_CHART_LAYOUTS } from './multiChartManager.js';
+
 export class ChartManager {
   constructor(containerId) {
     this.containerId = containerId;
@@ -31,10 +33,14 @@ export class ChartManager {
     this.slPriceLine = null;
     this.resizeObserver = null;
     this.currentBar = null;
+    this.multiChartManager = null;
   }
 
   setAdapter(adapter) {
     this.adapter = adapter;
+    if (this.multiChartManager) {
+      this.multiChartManager.setAdapter(adapter);
+    }
   }
 
   init(asset = 'BTC', timeframe = '60', market = 'Crypto', theme = null, adapter = null) {
@@ -43,11 +49,35 @@ export class ChartManager {
     this.currentTimeframe = timeframe;
     this.rawTimeframe = timeframe === '5' ? '5M' : '1H';
     if (theme) this.currentTheme = theme;
-    if (adapter) this.adapter = adapter;
+    if (adapter) {
+      this.adapter = adapter;
+    }
+
+    if (!this.multiChartManager) {
+      this.multiChartManager = new MultiChartManager(this.containerId, {
+        adapter: this.adapter,
+        onActiveChartChange: (sc) => {
+          this.currentAsset = sc.asset;
+          this.rawTimeframe = sc.timeframe;
+          this.currentMarket = sc.market;
+        },
+        onSingleChartSelected: () => {
+          this.render();
+        }
+      });
+      this.multiChartManager.init(this.currentAsset, this.rawTimeframe, this.currentMarket);
+    }
+
     this.render();
   }
 
   render() {
+    if (this.multiChartManager && this.multiChartManager.activeLayoutId !== '1') {
+      this.destroyLightweightChart();
+      this.multiChartManager.applyLayout(this.multiChartManager.activeLayoutId);
+      return;
+    }
+
     if (this.currentMarket === 'India') {
       this.renderLightweightChart();
     } else {
@@ -59,6 +89,10 @@ export class ChartManager {
   setTheme(theme) {
     if (this.currentTheme === theme) return;
     this.currentTheme = theme;
+
+    if (this.multiChartManager) {
+      this.multiChartManager.setTheme(theme);
+    }
 
     if (this.currentMarket === 'India' && this.lwChart) {
       const isDark = theme !== 'light';
@@ -427,6 +461,11 @@ export class ChartManager {
   }
 
   onRealtimeTick(tick) {
+    if (this.multiChartManager && this.multiChartManager.activeLayoutId !== '1') {
+      this.multiChartManager.onRealtimeTick(tick);
+      return;
+    }
+
     if (this.currentMarket !== 'India' || !this.candleSeries || !this.currentBar) return;
     if (tick.asset && tick.asset.toUpperCase() !== this.currentAsset.toUpperCase()) return;
 

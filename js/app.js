@@ -314,9 +314,11 @@ class App {
   }
 
   async onMarketDataTick(data) {
+    // Distribute tick to all active multi-chart subwindows
+    this.chartManager.onRealtimeTick(data);
+
     if (data.asset === this.currentAsset) {
       this.ui.updateTicker(data);
-      this.chartManager.onRealtimeTick(data);
       if (this.ui.orderState && data.price) {
         this.ui.orderState.entryPrice = data.price;
         this.ui.refreshDerivativesOrderDesk();

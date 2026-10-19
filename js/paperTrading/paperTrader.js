@@ -22,13 +22,15 @@ export class PaperTrader {
     this.openPositions = this.loadOpenPositions();
 
     const storedBalance = localStorage.getItem(this.balanceStorageKey);
-    if (storedBalance !== null && !isNaN(parseFloat(storedBalance))) {
-      this.balance = parseFloat(storedBalance);
+    const parsedBal = parseFloat(storedBalance);
+    if (storedBalance !== null && !isNaN(parsedBal) && isFinite(parsedBal) && parsedBal > 0) {
+      this.balance = parsedBal;
     } else {
       const closedPnL = this.trades
         .filter(t => t.status === 'CLOSED')
-        .reduce((sum, t) => sum + (t.pnlUSD || 0), 0);
-      this.balance = +(initialBalance + closedPnL).toFixed(2);
+        .reduce((sum, t) => sum + (Number(t.pnlUSD) || 0), 0);
+      const calcBal = initialBalance + closedPnL;
+      this.balance = (isNaN(calcBal) || !isFinite(calcBal) || calcBal <= 0) ? initialBalance : +calcBal.toFixed(2);
       this.save();
     }
   }
@@ -42,10 +44,15 @@ export class PaperTrader {
     this.trades = this.loadTrades();
     this.openPositions = this.loadOpenPositions();
     const storedBalance = localStorage.getItem(this.balanceStorageKey);
-    if (storedBalance !== null && !isNaN(parseFloat(storedBalance))) {
-      this.balance = parseFloat(storedBalance);
+    const parsedBal = parseFloat(storedBalance);
+    if (storedBalance !== null && !isNaN(parsedBal) && isFinite(parsedBal) && parsedBal > 0) {
+      this.balance = parsedBal;
     } else {
-      this.balance = this.initialBalance;
+      const closedPnL = this.trades
+        .filter(t => t.status === 'CLOSED')
+        .reduce((sum, t) => sum + (Number(t.pnlUSD) || 0), 0);
+      const calcBal = this.initialBalance + closedPnL;
+      this.balance = (isNaN(calcBal) || !isFinite(calcBal) || calcBal <= 0) ? this.initialBalance : +calcBal.toFixed(2);
       this.save();
     }
   }
@@ -183,6 +190,9 @@ export class PaperTrader {
 
   save() {
     try {
+      if (isNaN(this.balance) || !isFinite(this.balance) || this.balance <= 0) {
+        this.balance = this.initialBalance || 2000;
+      }
       localStorage.setItem(this.storageKey, JSON.stringify(this.trades));
       localStorage.setItem(this.balanceStorageKey, this.balance.toFixed(2));
       localStorage.setItem(this.positionsStorageKey, JSON.stringify(this.openPositions));
@@ -274,9 +284,12 @@ export class PaperTrader {
 
       // Real-time price movement (Gross Unrealized Floating PnL - Standard Exchange UX)
       const priceDelta = isLong ? (livePrice - pos.entry) : (pos.entry - livePrice);
-      const grossPnl = +(priceDelta * pos.positionSize).toFixed(2);
-      const estExitFee = +(livePrice * pos.positionSize * DELTA_FEE_RATES.TAKER).toFixed(2);
-      const brokerageFee = +( (pos.entryFeeUSD || 0) + estExitFee ).toFixed(2);
+      const posSize = Number(pos.positionSize) || 0;
+      const notional = Number(pos.notionalUSD) || +(pos.entry * posSize).toFixed(2) || 0;
+      const grossPnl = +(priceDelta * posSize).toFixed(2) || 0;
+      const estExitFee = +(livePrice * posSize * DELTA_FEE_RATES.TAKER).toFixed(2) || 0;
+      const entryFee = Number(pos.entryFeeUSD) || +(notional * DELTA_FEE_RATES.TAKER).toFixed(2) || 0;
+      const brokerageFee = +(entryFee + estExitFee).toFixed(2);
       const estGst = +(brokerageFee * DELTA_FEE_RATES.GST_RATE).toFixed(2);
       const totalEstimatedCharges = +(brokerageFee + estGst).toFixed(2);
       const netPnl = +(grossPnl - totalEstimatedCharges).toFixed(2);
@@ -288,8 +301,8 @@ export class PaperTrader {
       pos.brokerageFeeUSD = brokerageFee;
       pos.gstUSD = estGst;
       pos.feesUSD = totalEstimatedCharges;
-      pos.unrealizedR = pos.riskUSD > 0 ? +(grossPnl / pos.riskUSD).toFixed(2) : 0;
-      pos.roePercent = pos.marginUSD > 0 ? +((grossPnl / pos.marginUSD) * 100).toFixed(1) : 0;
+      pos.unrealizedR = Number(pos.riskUSD) > 0 ? +(grossPnl / pos.riskUSD).toFixed(2) : 0;
+      pos.roePercent = Number(pos.marginUSD) > 0 ? +((grossPnl / pos.marginUSD) * 100).toFixed(1) : 0;
 
       // 1. Check Liquidation (Delta Exchange Standard)
       let hitLiquidation = false;
@@ -328,11 +341,13 @@ export class PaperTrader {
     const priceDelta = isLong ? (actualExit - pos.entry) : (pos.entry - actualExit);
     
     // Delta Exchange Execution Fees + 18% GST (Delta Exchange India Standard)
-    const entryFee = pos.entryFeeUSD || +(pos.notionalUSD * DELTA_FEE_RATES.TAKER).toFixed(2);
+    const posSize = Number(pos.positionSize) || 0;
+    const notional = Number(pos.notionalUSD) || +(Number(pos.entry || actualExit) * posSize).toFixed(2) || 0;
+    const entryFee = Number(pos.entryFeeUSD) || +(notional * DELTA_FEE_RATES.TAKER).toFixed(2) || 0;
     // TP exit is Maker (0.02%), SL / Manual exit is Taker (0.05%)
     const exitRate = resultType === 'WIN' ? DELTA_FEE_RATES.MAKER : DELTA_FEE_RATES.TAKER;
-    const exitNotional = +(actualExit * pos.positionSize).toFixed(2);
-    const exitFee = +(exitNotional * exitRate).toFixed(2);
+    const exitNotional = +(actualExit * posSize).toFixed(2) || 0;
+    const exitFee = +(exitNotional * exitRate).toFixed(2) || 0;
     const brokerageFee = +(entryFee + exitFee).toFixed(2);
     const gstFee = +(brokerageFee * DELTA_FEE_RATES.GST_RATE).toFixed(2); // 18% GST on Delta Exchange Brokerage
     const totalCharges = +(brokerageFee + gstFee).toFixed(2);
@@ -343,20 +358,27 @@ export class PaperTrader {
     let result = resultType;
 
     if (resultType === 'LIQUIDATED') {
-      grossPnlUSD = -pos.marginUSD;
-      pnlUSD = -pos.marginUSD;
+      const margin = Number(pos.marginUSD) || +(notional / (Number(pos.leverage) || 20)).toFixed(2) || 0;
+      grossPnlUSD = -margin;
+      pnlUSD = -margin;
       rMultiple = -1.0;
       result = 'LIQUIDATED';
     } else {
-      grossPnlUSD = +(priceDelta * pos.positionSize).toFixed(2);
-      pnlUSD = +(grossPnlUSD - totalCharges).toFixed(2); // Net Realized Settled to Wallet
-      rMultiple = pos.riskUSD > 0 ? +(pnlUSD / pos.riskUSD).toFixed(2) : 0;
+      grossPnlUSD = +(priceDelta * posSize).toFixed(2) || 0;
+      pnlUSD = +(grossPnlUSD - totalCharges).toFixed(2) || 0; // Net Realized Settled to Wallet
+      const risk = Number(pos.riskUSD) || 0;
+      rMultiple = risk > 0 ? +(pnlUSD / risk).toFixed(2) : 0;
       if (resultType === 'MANUAL') {
         result = pnlUSD > 0 ? 'WIN' : pnlUSD < 0 ? 'LOSS' : 'BREAKEVEN';
       }
     }
 
-    const postTradeBalance = +(this.balance + pnlUSD).toFixed(2);
+    if (isNaN(pnlUSD) || !isFinite(pnlUSD)) pnlUSD = 0;
+    if (isNaN(grossPnlUSD) || !isFinite(grossPnlUSD)) grossPnlUSD = 0;
+    if (isNaN(rMultiple) || !isFinite(rMultiple)) rMultiple = 0;
+
+    const baseBal = (isNaN(this.balance) || !isFinite(this.balance) || this.balance <= 0) ? this.initialBalance : this.balance;
+    const postTradeBalance = +(baseBal + pnlUSD).toFixed(2);
 
     const closedTrade = {
       ...pos,
@@ -390,42 +412,59 @@ export class PaperTrader {
     let unrealizedFeesUSD = 0;
     let unrealizedR = 0;
 
+    // Self-healing balance check: if corrupted by NaN or non-finite, heal immediately
+    if (isNaN(this.balance) || !isFinite(this.balance) || this.balance <= 0) {
+      const closedPnL = this.trades
+        .filter(t => t.status === 'CLOSED')
+        .reduce((sum, t) => sum + (Number(t.pnlUSD) || 0), 0);
+      const calcBal = (this.initialBalance || 2000) + closedPnL;
+      this.balance = (isNaN(calcBal) || !isFinite(calcBal) || calcBal <= 0) ? (this.initialBalance || 2000) : +calcBal.toFixed(2);
+      this.save();
+    }
+
     this.openPositions.forEach(pos => {
-      const livePrice = currentPrices[pos.asset] || pos.currentPrice || pos.entry;
+      const livePrice = Number(currentPrices[pos.asset] || pos.currentPrice || pos.entry || 0);
       pos.currentPrice = livePrice;
-      const isLong = pos.direction === 'LONG';
-      const priceDelta = isLong ? (livePrice - pos.entry) : (pos.entry - livePrice);
-      const grossPnl = +(priceDelta * pos.positionSize).toFixed(2);
-      const estExitFee = +(livePrice * pos.positionSize * DELTA_FEE_RATES.TAKER).toFixed(2);
-      const brokerage = +( (pos.entryFeeUSD || 0) + estExitFee ).toFixed(2);
+      const isLong = (pos.direction || 'LONG').toUpperCase() === 'LONG';
+      const entryP = Number(pos.entry) || livePrice;
+      const priceDelta = isLong ? (livePrice - entryP) : (entryP - livePrice);
+      const posSize = Number(pos.positionSize) || 0;
+      const notional = Number(pos.notionalUSD) || +(entryP * posSize).toFixed(2) || 0;
+      const grossPnl = +(priceDelta * posSize).toFixed(2) || 0;
+      const estExitFee = +(livePrice * posSize * DELTA_FEE_RATES.TAKER).toFixed(2) || 0;
+      const entryFee = Number(pos.entryFeeUSD) || +(notional * DELTA_FEE_RATES.TAKER).toFixed(2) || 0;
+      const brokerage = +( entryFee + estExitFee ).toFixed(2);
       const estGst = +(brokerage * DELTA_FEE_RATES.GST_RATE).toFixed(2);
       const totalFees = +(brokerage + estGst).toFixed(2);
       const netPnl = +(grossPnl - totalFees).toFixed(2);
 
-      pos.unrealizedGrossPnlUSD = grossPnl;
-      pos.feesUSD = totalFees;
-      pos.unrealizedPnlUSD = grossPnl;
-      pos.unrealizedNetPnlUSD = netPnl;
-      pos.unrealizedR = pos.riskUSD > 0 ? +(grossPnl / pos.riskUSD).toFixed(2) : 0;
-      pos.roePercent = pos.marginUSD > 0 ? +((grossPnl / pos.marginUSD) * 100).toFixed(1) : 0;
+      pos.unrealizedGrossPnlUSD = isNaN(grossPnl) ? 0 : grossPnl;
+      pos.feesUSD = isNaN(totalFees) ? 0 : totalFees;
+      pos.unrealizedPnlUSD = isNaN(grossPnl) ? 0 : grossPnl;
+      pos.unrealizedNetPnlUSD = isNaN(netPnl) ? 0 : netPnl;
+      const risk = Number(pos.riskUSD) || 0;
+      pos.unrealizedR = risk > 0 ? +(grossPnl / risk).toFixed(2) : 0;
+      const margin = Number(pos.marginUSD) || 0;
+      pos.roePercent = margin > 0 ? +((grossPnl / margin) * 100).toFixed(1) : 0;
 
-      unrealizedGrossPnlUSD += grossPnl;
-      unrealizedFeesUSD += totalFees;
-      unrealizedPnlUSD += grossPnl;
-      unrealizedR += pos.unrealizedR;
+      unrealizedGrossPnlUSD += (isNaN(grossPnl) ? 0 : grossPnl);
+      unrealizedFeesUSD += (isNaN(totalFees) ? 0 : totalFees);
+      unrealizedPnlUSD += (isNaN(grossPnl) ? 0 : grossPnl);
+      unrealizedR += (isNaN(pos.unrealizedR) ? 0 : pos.unrealizedR);
     });
 
     const closed = this.trades.filter(t => t.status === 'CLOSED');
-    const closedTotalR = +closed.reduce((acc, t) => acc + (t.rMultiple || 0), 0).toFixed(2);
-    const closedPnlUSD = +closed.reduce((acc, t) => acc + (t.pnlUSD || 0), 0).toFixed(2);
-    const equity = +(this.balance + unrealizedPnlUSD).toFixed(2);
+    const closedTotalR = +closed.reduce((acc, t) => acc + (Number(t.rMultiple) || 0), 0).toFixed(2);
+    const closedPnlUSD = +closed.reduce((acc, t) => acc + (Number(t.pnlUSD) || 0), 0).toFixed(2);
+    const safeBalance = (isNaN(this.balance) || !isFinite(this.balance) || this.balance <= 0) ? (this.initialBalance || 2000) : this.balance;
+    const equity = +(safeBalance + unrealizedPnlUSD).toFixed(2);
     const netTotalR = +(closedTotalR + unrealizedR).toFixed(2);
     const netTotalPnlUSD = +(closedPnlUSD + unrealizedPnlUSD).toFixed(2);
-    const usedMargin = +this.openPositions.reduce((acc, p) => acc + (p.marginUSD || 0), 0).toFixed(2);
+    const usedMargin = +this.openPositions.reduce((acc, p) => acc + (Number(p.marginUSD) || 0), 0).toFixed(2);
 
     return {
-      balance: +this.balance.toFixed(2),
-      equity,
+      balance: +safeBalance.toFixed(2),
+      equity: isNaN(equity) ? +safeBalance.toFixed(2) : equity,
       usedMargin,
       unrealizedPnlUSD: +unrealizedPnlUSD.toFixed(2),
       unrealizedGrossPnlUSD: +unrealizedGrossPnlUSD.toFixed(2),

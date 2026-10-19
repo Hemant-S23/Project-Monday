@@ -236,27 +236,34 @@ class App {
         if (ct.status === 'OPEN') {
           const exists = this.paperTrader.openPositions.find(p => p.id === ct.id);
           if (!exists) {
+            const entryP = Number(ct.entry_price) || 0;
+            const posSz = Number(ct.position_size || 0);
+            const notional = +(entryP * posSz).toFixed(2);
+            const entryFee = +(notional * 0.0005).toFixed(2);
             this.paperTrader.openPositions.push({
               id: ct.id,
               market: ct.market || 'Crypto',
               asset: ct.asset,
               direction: ct.direction,
-              entry: Number(ct.entry_price),
+              entry: entryP,
               stopLoss: Number(ct.stop_loss),
               target: Number(ct.target_price),
-              positionSize: Number(ct.position_size || 0),
+              positionSize: posSz,
               riskUSD: Number(ct.risk_usd || 20),
               rewardUSD: Number(ct.reward_usd || 60),
               rrRatio: Number(ct.rr_ratio || 3.0),
               leverage: 20,
               marginUSD: Number(ct.risk_usd || 20),
+              notionalUSD: notional,
+              entryFeeUSD: entryFee,
+              estExitFeeUSD: entryFee,
               status: 'OPEN',
-              currentPrice: Number(ct.entry_price),
+              currentPrice: entryP,
               unrealizedPnlUSD: 0,
               unrealizedGrossPnlUSD: 0,
               unrealizedR: 0,
               roePercent: 0,
-              feesUSD: 0,
+              feesUSD: +(entryFee * 2 * 1.18).toFixed(2),
               openedAt: new Date(ct.created_at).getTime()
             });
             changed = true;

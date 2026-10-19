@@ -2872,12 +2872,17 @@ export class TerminalUI {
       // In active trade: Show Live Equity & Realtime Floating PnL
       if (labelEl) labelEl.textContent = 'Equity (Live):';
       if (balEl) {
-        balEl.textContent = `$${liveMetrics.equity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const safeEquity = (liveMetrics.equity !== null && !isNaN(liveMetrics.equity) && isFinite(liveMetrics.equity))
+          ? liveMetrics.equity
+          : (Number(liveMetrics.balance) || 2000.0);
+        balEl.textContent = `$${safeEquity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
       }
       if (liveChip && liveText) {
         liveChip.style.display = 'inline-flex';
-        const isPos = liveMetrics.unrealizedPnlUSD >= 0;
-        liveText.textContent = `${isPos ? '+' : ''}$${liveMetrics.unrealizedPnlUSD.toFixed(2)} (${isPos ? '+' : ''}${liveMetrics.unrealizedR.toFixed(2)}R)`;
+        const unPnl = Number(liveMetrics.unrealizedPnlUSD || 0);
+        const unR = Number(liveMetrics.unrealizedR || 0);
+        const isPos = unPnl >= 0;
+        liveText.textContent = `${isPos ? '+' : ''}$${unPnl.toFixed(2)} (${isPos ? '+' : ''}${unR.toFixed(2)}R)`;
         liveChip.className = `account-live-chip ${isPos ? 'bullish' : 'bearish'}`;
       }
       if (pill) pill.classList.add('in-position');
@@ -2885,15 +2890,20 @@ export class TerminalUI {
       // Settled state: Show Settled Paper Balance
       if (labelEl) labelEl.textContent = 'Paper Balance:';
       if (balEl) {
-        balEl.textContent = `$${liveMetrics.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const safeBalance = (liveMetrics.balance !== null && !isNaN(liveMetrics.balance) && isFinite(liveMetrics.balance))
+          ? liveMetrics.balance
+          : 2000.0;
+        balEl.textContent = `$${safeBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
       }
       if (liveChip) liveChip.style.display = 'none';
       if (pill) pill.classList.remove('in-position');
     }
 
     // Always update net R and PnL
-    const activeTotalR = liveMetrics.netTotalR ?? liveMetrics.closedTotalR ?? 0;
-    const activeTotalPnl = liveMetrics.netTotalPnlUSD ?? liveMetrics.closedPnlUSD ?? 0;
+    const rawR = liveMetrics.netTotalR ?? liveMetrics.closedTotalR ?? 0;
+    const rawPnl = liveMetrics.netTotalPnlUSD ?? liveMetrics.closedPnlUSD ?? 0;
+    const activeTotalR = isNaN(rawR) ? 0 : Number(rawR);
+    const activeTotalPnl = isNaN(rawPnl) ? 0 : Number(rawPnl);
 
     if (totalREl) {
       const isPos = activeTotalR >= 0;

@@ -13,7 +13,7 @@
   
   <!-- Stylesheets -->
   <link rel="stylesheet" href="css/main.css?v=5.1">
-  <link rel="stylesheet" href="css/components.css?v=4.7">
+  <link rel="stylesheet" href="css/components.css?v=4.8">
   <link rel="stylesheet" href="css/auth.css?v=4.7">
   <link rel="stylesheet" href="css/multi-chart.css?v=5.1">
 
@@ -1361,6 +1361,25 @@
           </div>
         </div>
 
+        <!-- 24-Hour / Daily Performance Summary Ribbon -->
+        <div class="passbook-daily-ribbon" id="passbook_daily_ribbon">
+          <div class="daily-ribbon-left">
+            <div class="daily-ribbon-badge">
+              <i class="ph-bold ph-calendar-check"></i>
+              <span>Last 24 Hours</span>
+            </div>
+            <span class="daily-ribbon-stat" id="daily_trades_count">0 Trades</span>
+            <span class="daily-ribbon-sep">•</span>
+            <span class="daily-ribbon-winrate" id="daily_win_rate">0.0% Win Rate</span>
+            <span class="daily-ribbon-breakdown" id="daily_win_loss_split">(0W / 0L)</span>
+          </div>
+          <div class="daily-ribbon-right">
+            <span class="daily-net-label">24H Net:</span>
+            <span class="daily-net-val text-bullish" id="daily_net_pnl">+$0.00 (+0.0R)</span>
+            <span class="daily-charges-pill" id="daily_charges_pill" title="Delta Brokerage + GST in last 24h">-$0.00 Fees</span>
+          </div>
+        </div>
+
         <!-- Ledger Statement Header -->
         <div class="passbook-feed-heading">
           <span><i class="ph ph-list-dashes"></i> Transaction Ledger & Receipts</span>
@@ -1666,6 +1685,6 @@
   <script src="js/config/supabaseConfig.js"></script>
 
   <!-- App Script Entrypoint -->
-  <script type="module" src="js/app.js?v=5.3"></script>
+  <script type="module" src="js/app.js?v=5.4"></script>
 </body>
 </html>

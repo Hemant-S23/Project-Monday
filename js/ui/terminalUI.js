@@ -3092,6 +3092,51 @@ export class TerminalUI {
       netEl.className = `audit-val ${isNetPos ? 'text-bullish' : 'text-bearish'}`;
     }
 
+    // 2.5. Populate 24-Hour Rolling Performance Digest Ribbon
+    const ribbonEl = document.getElementById('passbook_daily_ribbon');
+    if (ribbonEl) {
+      const allClosed = ledger.allTrades || ledger.trades || [];
+      const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+      const trades24h = allClosed.filter(t => {
+        const cTime = t.closedAt ? new Date(t.closedAt).getTime() : 0;
+        return cTime >= oneDayAgo;
+      });
+
+      const count24h = trades24h.length;
+      const wins24h = trades24h.filter(t => t.result === 'WIN' || (Number(t.pnlUSD || 0) > 0)).length;
+      const losses24h = trades24h.filter(t => t.result === 'LOSS' || t.result === 'LIQUIDATED' || (Number(t.pnlUSD || 0) < 0)).length;
+      const winRate24h = count24h > 0 ? ((wins24h / count24h) * 100).toFixed(1) : '0.0';
+
+      const netPnl24h = +trades24h.reduce((acc, t) => acc + (Number(t.pnlUSD) || 0), 0).toFixed(2);
+      const netR24h = +trades24h.reduce((acc, t) => acc + (Number(t.rMultiple) || 0), 0).toFixed(1);
+      const charges24h = +trades24h.reduce((acc, t) => {
+        const brokerage = Number(t.brokerageFeeUSD || (t.totalFeesUSD ? +(t.totalFeesUSD / 1.18).toFixed(2) : 0));
+        const gst = Number(t.gstUSD || (t.totalFeesUSD ? +(t.totalFeesUSD - brokerage).toFixed(2) : 0));
+        return acc + Number(t.totalChargesUSD || t.totalFeesUSD || +(brokerage + gst).toFixed(2));
+      }, 0).toFixed(2);
+
+      const dCount = document.getElementById('daily_trades_count');
+      const dWinRate = document.getElementById('daily_win_rate');
+      const dSplit = document.getElementById('daily_win_loss_split');
+      const dNet = document.getElementById('daily_net_pnl');
+      const dCharges = document.getElementById('daily_charges_pill');
+
+      if (dCount) dCount.textContent = `${count24h} Trade${count24h === 1 ? '' : 's'}`;
+      if (dWinRate) {
+        dWinRate.textContent = `${winRate24h}% Win Rate`;
+        dWinRate.className = `daily-ribbon-winrate ${Number(winRate24h) >= 50 ? 'text-bullish' : count24h > 0 ? 'text-bearish' : ''}`;
+      }
+      if (dSplit) dSplit.textContent = `(${wins24h}W / ${losses24h}L)`;
+      if (dNet) {
+        const isPos = netPnl24h >= 0;
+        dNet.textContent = `${isPos ? '+' : '-'}$${Math.abs(netPnl24h).toFixed(2)} (${netR24h >= 0 ? '+' : ''}${netR24h.toFixed(1)}R)`;
+        dNet.className = `daily-net-val ${isPos ? 'text-bullish' : 'negative'}`;
+      }
+      if (dCharges) {
+        dCharges.textContent = `-$${charges24h.toFixed(2)} Fees`;
+      }
+    }
+
     // 3. Filter Trades by Type (ALL, PROFIT, LOSS)
     const filterType = this.passbookFilterType || 'ALL';
     let filteredTrades = ledger.trades || [];
@@ -3127,7 +3172,8 @@ export class TerminalUI {
       return;
     }
 
-    feedContainer.innerHTML = filteredTrades.map(trade => {
+    feedContainer.innerHTML = filteredTrades.map((trade, idx) => {
+      const seqNum = filteredTrades.length - idx;
       const netPnl = Number(trade.pnlUSD || 0);
       const isNetProfit = netPnl > 0 || trade.result === 'WIN';
       const isLoss = netPnl < 0 || trade.result === 'LOSS' || trade.result === 'LIQUIDATED';
@@ -3161,6 +3207,7 @@ export class TerminalUI {
         <div class="passbook-txn-card" data-trade-id="${trade.id}">
           <div class="passbook-txn-header" role="button" tabindex="0" title="Tap to expand itemized tax & charge receipt">
             <div class="txn-left-col">
+              <span class="txn-seq-badge" title="Settlement #${seqNum}">#${seqNum}</span>
               <div class="txn-type-avatar ${typeClass}">
                 <i class="ph ${icon}"></i>
               </div>

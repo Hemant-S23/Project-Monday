@@ -540,7 +540,8 @@ export class PaperTrader {
       totalGST,
       totalCharges,
       netSettledPnl,
-      trades: filtered
+      trades: filtered,
+      allTrades: closed
     };
   }
 

@@ -1006,12 +1006,31 @@ class App {
     } catch (e) {}
   }
 
-  resetAccount() {
+  async resetAccount() {
     this.paperTrader.resetAccount(true);
     this.riskEngine.setAccountBalance(2000);
     this.updateTradeJournalAndStats();
     this.ui.updateOpenPositions([]);
+    const liveMetrics = this.paperTrader.getLiveEquity();
+    this.ui.updateHeaderAccountHUD(liveMetrics);
     this.ui.showToast('Account Reset', 'Clean account balance restored to $2,000.00 with 0 trades.', 'info');
+
+    // Cloud-Aware Reset: Also purge Supabase paper_trades so cloud sync doesn't resurrect deleted trades
+    try {
+      const cfg = window.MONDAY_SUPABASE_CONFIG;
+      if (cfg && cfg.url && cfg.anonKey) {
+        await fetch(`${cfg.url}/rest/v1/paper_trades?id=neq.NONE`, {
+          method: 'DELETE',
+          headers: {
+            'apikey': cfg.anonKey,
+            'Authorization': `Bearer ${cfg.anonKey}`
+          }
+        });
+        console.log('[Cloud Reset] Supabase paper_trades table purged successfully.');
+      }
+    } catch (err) {
+      console.warn('[Cloud Reset] Supabase trade purge error:', err);
+    }
   }
 
   updateTradeJournalAndStats() {

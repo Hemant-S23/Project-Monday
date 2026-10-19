@@ -43,6 +43,13 @@ export class ChartManager {
     }
   }
 
+  setAdapters(adapters) {
+    this.adapters = adapters;
+    if (this.multiChartManager) {
+      this.multiChartManager.setAdapters(adapters);
+    }
+  }
+
   init(asset = 'BTC', timeframe = '60', market = 'Crypto', theme = null, adapter = null) {
     this.currentAsset = asset;
     this.currentMarket = market;

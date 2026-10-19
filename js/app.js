@@ -173,6 +173,7 @@ class App {
     // 1. Initialize TradingView chart with saved theme and active adapter
     const activeTheme = localStorage.getItem('monday_theme') || 'dark';
     this.chartManager.setAdapter(this.getActiveAdapter());
+    this.chartManager.setAdapters({ crypto: this.cryptoAdapter, india: this.indiaAdapter });
     this.chartManager.init(this.currentAsset, '60', this.currentMarket, activeTheme, this.getActiveAdapter());
 
     // 2. Initialize Market Feeds in parallel

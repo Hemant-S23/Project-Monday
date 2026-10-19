@@ -228,6 +228,18 @@ export class MultiChartManager {
     this.adapter = adapter;
   }
 
+  setAdapters(adapters) {
+    this.adapters = adapters;
+  }
+
+  getAdapterForCell(sc) {
+    const isIndian = sc.market === 'India' || ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATASTEEL', 'HDFCBANK', 'HAL', 'ZOMATO', 'TATAMOTORS'].includes(sc.asset);
+    if (this.adapters) {
+      return isIndian ? this.adapters.india : this.adapters.crypto;
+    }
+    return this.adapter;
+  }
+
   setTheme(theme) {
     this.currentTheme = theme;
     this.subCharts.forEach(sc => {
@@ -794,31 +806,63 @@ export class MultiChartManager {
   }
 
   async loadCandlesForCell(sc) {
-    if (!this.adapter) return;
+    const adapter = this.getAdapterForCell(sc);
+    if (!adapter) return;
 
     try {
-      await this.adapter.ensureAssetInitialized(sc.asset);
-      const candles = this.adapter.getCandles(sc.asset, sc.timeframe) || [];
-      if (candles.length > 0 && sc.candleSeries) {
-        sc.candleSeries.setData(candles);
+      if (typeof adapter.ensureAssetInitialized === 'function') {
+        await adapter.ensureAssetInitialized(sc.asset);
+      }
+
+      // Normalize timeframe: default to 1H if not 5M
+      const tfUpper = (sc.timeframe || '1H').toUpperCase();
+      const adapterTf = tfUpper === '5M' ? '5M' : '1H';
+
+      let rawCandles = [];
+      if (typeof adapter.getHistoricalCandles === 'function') {
+        rawCandles = await adapter.getHistoricalCandles(sc.asset, adapterTf, 60);
+      } else if (typeof adapter.getCandles === 'function') {
+        rawCandles = await adapter.getCandles(sc.asset, adapterTf);
+      }
+
+      if (rawCandles && rawCandles.length > 0 && sc.candleSeries) {
+        // Normalize time (Lightweight Charts expects ascending integers in seconds)
+        const formattedCandles = rawCandles.map(c => {
+          const t = c.time > 1e11 ? Math.floor(c.time / 1000) : Math.floor(c.time);
+          return {
+            time: t,
+            open: Number(c.open),
+            high: Number(c.high),
+            low: Number(c.low),
+            close: Number(c.close)
+          };
+        }).filter((c, idx, arr) => idx === 0 || c.time > arr[idx - 1].time);
+
+        if (formattedCandles.length === 0) return;
+
+        sc.candleSeries.setData(formattedCandles);
 
         // Volume
         if (sc.volumeSeries) {
-          const volData = candles.map(c => ({
-            time: c.time,
-            value: c.volume || Math.abs(c.close - c.open) * 1000,
-            color: c.close >= c.open ? 'rgba(16, 185, 129, 0.25)' : 'rgba(244, 63, 94, 0.25)'
-          }));
+          const volData = formattedCandles.map((c, i) => {
+            const raw = rawCandles[i] || {};
+            return {
+              time: c.time,
+              value: raw.volume || Math.abs(c.close - c.open) * 1000 || 10000,
+              color: c.close >= c.open ? 'rgba(16, 185, 129, 0.25)' : 'rgba(244, 63, 94, 0.25)'
+            };
+          }).filter((c, idx, arr) => idx === 0 || c.time > arr[idx - 1].time);
+
           sc.volumeSeries.setData(volData);
         }
 
         // EMA 20
         if (sc.emaSeries) {
-          const emaData = this.calculateEMA(candles, 20);
+          const emaData = this.calculateEMA(formattedCandles, 20);
           sc.emaSeries.setData(emaData);
         }
 
-        sc.currentBar = { ...candles[candles.length - 1] };
+        sc.currentBar = { ...formattedCandles[formattedCandles.length - 1] };
         this.updateCellHeaderPrice(sc);
         sc.chart.timeScale().fitContent();
       }

@@ -131,7 +131,9 @@ class App {
     const liveMetrics = this.paperTrader.getLiveEquity();
     this.ui.updateHeaderAccountHUD(liveMetrics);
     if (this.ui.orderState) {
-      this.ui.orderState.availableBalance = this.paperTrader.balance;
+      this.ui.orderState.availableBalance = liveMetrics.availableMargin !== undefined
+        ? liveMetrics.availableMargin
+        : Math.max(0, this.paperTrader.balance - (liveMetrics.usedMargin || 0));
       this.ui.refreshDerivativesOrderDesk();
     }
     this.ui.showToast('Welcome!', `${user.name || 'Trader'}, trading session active.`, 'success');
@@ -161,7 +163,9 @@ class App {
     const initialLiveMetrics = this.paperTrader.getLiveEquity();
     this.ui.updateHeaderAccountHUD(initialLiveMetrics);
     if (this.ui.orderState) {
-      this.ui.orderState.availableBalance = this.paperTrader.balance;
+      this.ui.orderState.availableBalance = initialLiveMetrics.availableMargin !== undefined
+        ? initialLiveMetrics.availableMargin
+        : Math.max(0, this.paperTrader.balance - (initialLiveMetrics.usedMargin || 0));
       this.ui.refreshDerivativesOrderDesk();
     }
 

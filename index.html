@@ -550,6 +550,14 @@
                     pnlEl.textContent = '(' + (netPnl >= 0 ? '+' : '') + '$' + netPnl.toFixed(2) + ')';
                     pnlEl.className = 'stat-pnl-usd ' + (netPnl >= 0 ? 'bullish' : 'bearish');
                   }
+                  var openTrades = trs.filter(function(t) { return t.status === 'OPEN'; });
+                  var usedMargin = openTrades.reduce(function(acc, t) { return acc + (t.marginUSD || 0); }, 0);
+                  var curBal = (savedBal && !isNaN(parseFloat(savedBal))) ? parseFloat(savedBal) : 2000;
+                  var availBal = Math.max(0, curBal - usedMargin);
+                  var availEl = document.getElementById('order_avail_balance');
+                  if (availEl) {
+                    availEl.textContent = '$' + availBal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  }
                 }
               }
             } catch (e) {}
@@ -1658,6 +1666,6 @@
   <script src="js/config/supabaseConfig.js"></script>
 
   <!-- App Script Entrypoint -->
-  <script type="module" src="js/app.js?v=5.1"></script>
+  <script type="module" src="js/app.js?v=5.2"></script>
 </body>
 </html>

@@ -461,11 +461,13 @@ export class PaperTrader {
     const netTotalR = +(closedTotalR + unrealizedR).toFixed(2);
     const netTotalPnlUSD = +(closedPnlUSD + unrealizedPnlUSD).toFixed(2);
     const usedMargin = +this.openPositions.reduce((acc, p) => acc + (Number(p.marginUSD) || 0), 0).toFixed(2);
+    const availableMargin = Math.max(0, +(safeBalance - usedMargin).toFixed(2));
 
     return {
       balance: +safeBalance.toFixed(2),
       equity: isNaN(equity) ? +safeBalance.toFixed(2) : equity,
       usedMargin,
+      availableMargin,
       unrealizedPnlUSD: +unrealizedPnlUSD.toFixed(2),
       unrealizedGrossPnlUSD: +unrealizedGrossPnlUSD.toFixed(2),
       unrealizedFeesUSD: +unrealizedFeesUSD.toFixed(2),

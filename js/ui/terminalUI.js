@@ -1574,6 +1574,12 @@ export class TerminalUI {
     if (levInput) levInput.max = spec.maxLeverage;
     if (qtyUnit) qtyUnit.textContent = this.currentAsset;
 
+    // Keep left desk Available Margin indicator in sync
+    const orderAvail = document.getElementById('order_avail_balance');
+    if (orderAvail && this.orderState && this.orderState.availableBalance !== undefined) {
+      orderAvail.textContent = `$${Number(this.orderState.availableBalance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
     // Enable/disable chips above max leverage
     document.querySelectorAll('.lev-chip').forEach(chip => {
       const chipLev = parseInt(chip.dataset.lev, 10);
@@ -2916,37 +2922,55 @@ export class TerminalUI {
       pnlUsdEl.className = `r-usd-val ${isPos ? 'bullish' : 'bearish'}`;
     }
 
-    // Live Portfolio & Margin Snapshot in Profile Popover Hub
+    // Institutional Available Margin (Settled Balance minus Open Positions Margin)
+    const safeBalance = (liveMetrics.balance !== null && !isNaN(liveMetrics.balance) && isFinite(liveMetrics.balance))
+      ? Number(liveMetrics.balance)
+      : 2000.0;
+    const usedMargin = Number(liveMetrics.usedMargin) || 0;
+    const availMargin = liveMetrics.availableMargin !== undefined && !isNaN(liveMetrics.availableMargin)
+      ? Number(liveMetrics.availableMargin)
+      : Math.max(0, +(safeBalance - usedMargin).toFixed(2));
+
+    // Update orderState for 1%, 5%, 10%, 25%, 50%, Max percentage chips
+    if (this.orderState) {
+      this.orderState.availableBalance = availMargin;
+    }
+
+    // 1. Order Desk Live Available Margin Element
+    const orderAvail = document.getElementById('order_avail_balance');
+    if (orderAvail) {
+      orderAvail.textContent = `$${availMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
+    // 2. Live Portfolio & Margin Snapshot in Profile Popover Hub
     const popoverEquity = document.getElementById('popover_equity_tag');
     const popoverAvail = document.getElementById('popover_avail_bal');
     const popoverMargin = document.getElementById('popover_used_margin');
 
     if (popoverEquity) {
       const eq = liveMetrics.equity !== undefined ? liveMetrics.equity : liveMetrics.balance;
-      popoverEquity.textContent = `$${eq.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      popoverEquity.textContent = `$${Number(eq).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
     if (popoverAvail) {
-      popoverAvail.textContent = `$${(liveMetrics.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      popoverAvail.textContent = `$${availMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
     if (popoverMargin) {
-      const margin = liveMetrics.usedMargin !== undefined ? liveMetrics.usedMargin : 0;
-      popoverMargin.textContent = `$${margin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      popoverMargin.textContent = `$${usedMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
 
-    // Live Mobile Drawer Balance Cards
+    // 3. Live Mobile Drawer Balance Cards
     const dEquity = document.getElementById('drawer_total_equity');
     const dAvail = document.getElementById('drawer_avail_cash');
     const dMargin = document.getElementById('drawer_used_margin');
     if (dEquity) {
       const eq = liveMetrics.equity !== undefined ? liveMetrics.equity : liveMetrics.balance;
-      dEquity.textContent = `$${eq.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      dEquity.textContent = `$${Number(eq).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
     if (dAvail) {
-      dAvail.textContent = `$${(liveMetrics.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      dAvail.textContent = `$${availMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
     if (dMargin) {
-      const margin = liveMetrics.usedMargin !== undefined ? liveMetrics.usedMargin : 0;
-      dMargin.textContent = `$${margin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      dMargin.textContent = `$${usedMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
   }
 

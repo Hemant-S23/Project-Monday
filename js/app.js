@@ -62,6 +62,7 @@ class App {
           this.voiceAssistant.speak('Auto-pilot mode activated. Confirmed setups will execute automatically.');
           this.scanAndExecuteAutoPilot();
         } else {
+          this.isAutoPilotScanning = false;
           this.voiceAssistant.speak('Auto-pilot deactivated. Manual mode active.');
         }
       },
@@ -301,8 +302,8 @@ class App {
               pnlUSD: Number(ct.pnl_usd || 0),
               rMultiple: Number(ct.r_multiple || 0),
               exitPrice: ct.exit_price ? Number(ct.exit_price) : null,
-              openedAt: new Date(ct.created_at).getTime(),
-              closedAt: Date.now()
+              openedAt: ct.created_at ? new Date(ct.created_at).getTime() : Date.now(),
+              closedAt: ct.closed_at ? new Date(ct.closed_at).getTime() : (ct.created_at ? new Date(ct.created_at).getTime() : Date.now())
             });
             changed = true;
           }
@@ -541,6 +542,9 @@ class App {
         : baseCandidates;
 
       for (const asset of candidateAssets) {
+        // Immediate termination if user disabled Auto-Pilot mid-scan
+        if (!this.autoPilotEnabled) break;
+
         // Stop if maxTrades limit reached (bypassed in testing mode)
         if (settings.maxTrades < 900 && this.paperTrader.openPositions.length >= settings.maxTrades) break;
 
@@ -663,6 +667,12 @@ class App {
   }
 
   async processAutoPilotExecution(asset, direction, strategyResult) {
+    // 🔒 ABSOLUTE MASTER KILL-SWITCH: If Auto-Pilot is turned OFF, abort execution immediately
+    if (!this.autoPilotEnabled) {
+      console.warn(`[Auto-Pilot Master Gate] Blocked execution for ${asset}: Auto-Pilot is switched OFF.`);
+      return;
+    }
+
     const settings = this.getAutoPilotSettings();
     const openPositions = this.paperTrader.openPositions;
     const currentOpenCount = openPositions.length;

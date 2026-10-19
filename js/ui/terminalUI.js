@@ -3206,7 +3206,7 @@ export class TerminalUI {
       const typeClass = isNetProfit ? 'profit' : isLoss ? 'loss' : 'breakeven';
       const icon = typeClass === 'profit' ? 'ph-arrow-down-left' : typeClass === 'loss' ? 'ph-arrow-up-right' : 'ph-arrows-left-right';
       
-      const dateObj = new Date(trade.closedAt || Date.now());
+      const dateObj = new Date(trade.closedAt || trade.openedAt || Date.now());
       const dateFormatted = dateObj.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
       const timeFormatted = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       

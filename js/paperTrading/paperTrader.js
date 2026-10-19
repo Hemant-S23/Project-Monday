@@ -76,10 +76,25 @@ export class PaperTrader {
       try {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
-          // Purge 0-pnl ghost liquidations from earlier test
-          const clean = parsed.filter(t => !(t.result === 'LIQUIDATED' && Number(t.pnlUSD || 0) === 0));
+          // 1. Purge 0-pnl ghost liquidations
+          // 2. Purge rapid-fire glitch loop trades (< 15 seconds duration, LONG loss)
+          const isGlitchLoopTrade = (t) => {
+            const duration = (t.closedAt || 0) - (t.openedAt || 0);
+            return t.direction === 'LONG' && (t.result === 'LOSS' || t.result === 'LIQUIDATED') && duration < 15000;
+          };
+
+          const clean = parsed.filter(t => 
+            !(t.result === 'LIQUIDATED' && Number(t.pnlUSD || 0) === 0) &&
+            !isGlitchLoopTrade(t)
+          );
+
           if (clean.length !== parsed.length) {
             localStorage.setItem(this.storageKey, JSON.stringify(clean));
+            // Recalculate genuine cash balance from real settled trades
+            const netRealized = +clean.reduce((acc, t) => acc + (Number(t.pnlUSD) || 0), 0).toFixed(2);
+            this.balance = +(2000 + netRealized).toFixed(2);
+            localStorage.setItem(this.balanceStorageKey, this.balance.toFixed(2));
+            console.log(`[PaperTrader] Auto-purged ${parsed.length - clean.length} glitch trades. Balance restored to $${this.balance}`);
           }
           return clean;
         }
@@ -228,10 +243,43 @@ export class PaperTrader {
     eventRisk = 'Low',
     aiReasoning = ''
   }) {
+    const dir = (direction || 'LONG').toUpperCase();
+    const entryNum = Number(entry);
+    const slNum = Number(stopLoss);
+    const tpNum = Number(target);
+
+    // =========================================================================
+    // PRE-FLIGHT EXECUTION FIREWALL: Zero-Tolerance Sanity & Level Validation
+    // =========================================================================
+    if (isNaN(entryNum) || isNaN(slNum) || isNaN(tpNum) || entryNum <= 0 || slNum <= 0 || tpNum <= 0) {
+      console.warn(`[Pre-Flight Firewall] Order rejected for ${asset}: Invalid price numbers.`);
+      return null;
+    }
+
+    if (dir === 'LONG') {
+      if (slNum >= entryNum) {
+        console.warn(`[Pre-Flight Firewall] LONG rejected for ${asset}: Stop Loss ($${slNum}) cannot be >= Entry ($${entryNum}).`);
+        return null;
+      }
+      if (tpNum <= entryNum) {
+        console.warn(`[Pre-Flight Firewall] LONG rejected for ${asset}: Target ($${tpNum}) cannot be <= Entry ($${entryNum}).`);
+        return null;
+      }
+    } else if (dir === 'SHORT') {
+      if (slNum <= entryNum) {
+        console.warn(`[Pre-Flight Firewall] SHORT rejected for ${asset}: Stop Loss ($${slNum}) cannot be <= Entry ($${entryNum}).`);
+        return null;
+      }
+      if (tpNum >= entryNum) {
+        console.warn(`[Pre-Flight Firewall] SHORT rejected for ${asset}: Target ($${tpNum}) cannot be >= Entry ($${entryNum}).`);
+        return null;
+      }
+    }
+
     const tradeId = `TRADE-${String(this.trades.length + this.openPositions.length + 1).padStart(3, '0')}`;
     const lev = Math.max(1, Number(leverage) || 1);
     const posSize = Number(positionSize) || 0;
-    const notional = notionalUSD !== null ? Number(notionalUSD) : +(Number(entry) * posSize).toFixed(2);
+    const notional = notionalUSD !== null ? Number(notionalUSD) : +(entryNum * posSize).toFixed(2);
     const margin = marginUSD !== null ? Number(marginUSD) : +(notional / lev).toFixed(2);
 
     // Delta Exchange Entry Fee (0.05% Taker on Notional)

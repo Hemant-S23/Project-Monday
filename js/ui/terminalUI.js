@@ -2646,6 +2646,17 @@ export class TerminalUI {
       return isNaN(n) ? 0 : +(n.toFixed(2));
     };
 
+    if (riskParams.direction) {
+      const dirUpper = riskParams.direction.toUpperCase();
+      this.orderState.direction = dirUpper;
+      const dirLongBtn = document.getElementById('order_dir_long');
+      const dirShortBtn = document.getElementById('order_dir_short');
+      if (dirLongBtn && dirShortBtn) {
+        dirLongBtn.classList.toggle('active', dirUpper === 'LONG');
+        dirShortBtn.classList.toggle('active', dirUpper === 'SHORT');
+      }
+    }
+
     if (riskParams.entry) this.orderState.entryPrice = cleanPrice(riskParams.entry);
     if (riskParams.stopLoss) this.orderState.slPrice = cleanPrice(riskParams.stopLoss);
     if (riskParams.target) this.orderState.tpPrice = cleanPrice(riskParams.target);

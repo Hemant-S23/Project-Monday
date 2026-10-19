@@ -349,6 +349,10 @@ class App {
     if (closedTrades.length > 0) {
       closedTrades.forEach(({ pos, result, price }) => {
         const isWin = result === 'WIN';
+        if (!isWin) {
+          // Trigger 3-minute direction-specific cooldown for this asset to prevent rapid-fire churn
+          this.setAssetCooldown(pos.asset, pos.direction, 3 * 60 * 1000);
+        }
         const title = isWin ? '🎯 TARGET HIT!' : '🛑 STOP LOSS HIT!';
         const formattedPrice = this.ui.formatPrice(price, pos.market === 'India' ? '₹' : '$');
         const pnlSign = pos.unrealizedPnlUSD >= 0 ? '+' : '';
@@ -465,6 +469,7 @@ class App {
       currencySymbol
     );
     riskParams.asset = targetAsset;
+    riskParams.direction = strategyResult.direction || (strategyResult.htfTrend?.direction === 'BULLISH' ? 'LONG' : 'SHORT');
 
     // 5. Update UI Telemetry
     const liveSnapshot = adapter.getSnapshot(targetAsset);
@@ -499,6 +504,25 @@ class App {
     }
   }
 
+  setAssetCooldown(asset, direction, durationMs = 180000) {
+    if (!this.assetCooldowns) this.assetCooldowns = new Map();
+    const key = `${asset}_${(direction || 'LONG').toUpperCase()}`;
+    this.assetCooldowns.set(key, Date.now() + durationMs);
+    console.log(`[Cooldown Guard] Set ${key} post-loss cooldown for ${durationMs / 1000}s`);
+  }
+
+  isAssetOnCooldown(asset, direction) {
+    if (!this.assetCooldowns) return false;
+    const key = `${asset}_${(direction || 'LONG').toUpperCase()}`;
+    const expiry = this.assetCooldowns.get(key);
+    if (!expiry) return false;
+    if (Date.now() > expiry) {
+      this.assetCooldowns.delete(key);
+      return false;
+    }
+    return true;
+  }
+
   async scanAndExecuteAutoPilot() {
     if (!this.autoPilotEnabled || this.isAutoPilotScanning) return;
     this.isAutoPilotScanning = true;
@@ -528,9 +552,17 @@ class App {
         if (!evalData || !evalData.strategyResult) continue;
 
         const { strategyResult } = evalData;
+        const proposedDir = strategyResult.direction || 'LONG';
+
+        // Direction-Specific Post-Loss Cooldown Guard (3-Minute Safety Cushion)
+        if (this.isAssetOnCooldown(asset, proposedDir)) {
+          console.log(`[Auto-Pilot] Skipping ${asset} ${proposedDir}: In 3-minute post-loss cooldown.`);
+          continue;
+        }
+
         if (strategyResult.state === 'CONFIRMED' && strategyResult.levels) {
-          console.log(`[Auto-Pilot] Autonomous execution triggered for ${asset} (${strategyResult.direction || 'LONG'})`);
-          await this.processAutoPilotExecution(asset, strategyResult.direction || 'LONG', strategyResult);
+          console.log(`[Auto-Pilot] Autonomous execution triggered for ${asset} (${proposedDir})`);
+          await this.processAutoPilotExecution(asset, proposedDir, strategyResult);
         }
       }
     } catch (err) {
@@ -687,6 +719,37 @@ class App {
         skipExplanation: `Auto-Pilot execution standards require minimum ${settings.minConfluence}% Confluence and 1:${settings.minRR} RR. Setup filtered out to avoid choppy/low-probability market.`
       });
       return;
+    }
+
+    // 3.5. Pre-Flight Price Sanity Firewall: Ensure live market tick hasn't crossed SL
+    const adapter = this.getActiveAdapter();
+    const livePrice = adapter.getCurrentPrice(asset) || entry;
+    if (direction === 'LONG') {
+      if (livePrice <= stopLoss || livePrice >= target) {
+        console.warn(`[Auto-Pilot Firewall] LONG blocked for ${asset}: Live price ($${livePrice}) is at/past SL ($${stopLoss}) or TP ($${target}).`);
+        this.ui.appendAutonomousDecisionCard({
+          action: 'SKIPPED',
+          asset,
+          direction,
+          openCount: currentOpenCount,
+          skipReason: '🚨 PRE-FLIGHT PRICE FIREWALL ACTIVE',
+          skipExplanation: `Live market price ($${livePrice}) has already crossed or breached setup Stop Loss ($${stopLoss}). Order discarded to protect capital against instant slippage.`
+        });
+        return;
+      }
+    } else {
+      if (livePrice >= stopLoss || livePrice <= target) {
+        console.warn(`[Auto-Pilot Firewall] SHORT blocked for ${asset}: Live price ($${livePrice}) is at/past SL ($${stopLoss}) or TP ($${target}).`);
+        this.ui.appendAutonomousDecisionCard({
+          action: 'SKIPPED',
+          asset,
+          direction,
+          openCount: currentOpenCount,
+          skipReason: '🚨 PRE-FLIGHT PRICE FIREWALL ACTIVE',
+          skipExplanation: `Live market price ($${livePrice}) has already crossed or breached setup Stop Loss ($${stopLoss}). Order discarded to protect capital against instant slippage.`
+        });
+        return;
+      }
     }
 
     // 4. Autonomous Execution (Configured Margin & Leverage)

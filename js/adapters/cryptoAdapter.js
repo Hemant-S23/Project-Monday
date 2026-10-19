@@ -215,27 +215,36 @@ export class CryptoAdapter extends MarketAdapter {
   }
 
   generateSyntheticCandles(asset, timeframe) {
-    const candles = [];
-    let basePrice = this.cache[asset]?.price || (asset === 'BTC' ? 82960 : asset === 'ETH' ? 3420 : 152);
+    const currentPrice = this.cache[asset]?.price || (asset === 'BTC' ? 82165 : asset === 'ETH' ? 2415 : asset === 'SOL' ? 104 : 100);
     const count = 60;
     const intervalSec = timeframe === '1H' ? 3600 : 300;
     const now = Math.floor(Date.now() / 1000);
 
-    for (let i = count; i >= 0; i--) {
+    // Build historical candles ending EXACTLY at current live mark price without artificial drift
+    let p = currentPrice;
+    const volatility = currentPrice * (timeframe === '1H' ? 0.005 : 0.002);
+    const revCandles = [];
+
+    for (let i = 0; i < count; i++) {
       const time = now - (i * intervalSec);
-      const volatility = basePrice * (timeframe === '1H' ? 0.008 : 0.003);
-      const delta = (Math.random() - 0.48) * volatility;
-      const open = basePrice;
-      const close = basePrice + delta;
-      const high = Math.max(open, close) + Math.random() * (volatility * 0.6);
-      const low = Math.min(open, close) - Math.random() * (volatility * 0.6);
+      const close = p;
+      // Zero-mean balanced delta (no directional bias)
+      const delta = (Math.random() - 0.5) * volatility;
+      const open = close - delta;
+      const high = Math.max(open, close) + Math.random() * (volatility * 0.4);
+      const low = Math.min(open, close) - Math.random() * (volatility * 0.4);
       const volume = (Math.random() * 50 + 20) * (asset === 'BTC' ? 10 : asset === 'ETH' ? 50 : 200);
 
-      candles.push({ time, open, high, low, close, volume });
-      basePrice = close;
+      revCandles.push({ time, open, high, low, close, volume });
+      p = open;
     }
-    this.cache[asset].price = basePrice;
-    return candles;
+
+    // Chronological order: oldest to newest
+    revCandles.reverse();
+    if (revCandles.length > 0) {
+      revCandles[revCandles.length - 1].close = currentPrice;
+    }
+    return revCandles;
   }
 
   startWebSocket() {

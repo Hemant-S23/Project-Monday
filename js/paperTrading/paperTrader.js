@@ -76,23 +76,29 @@ export class PaperTrader {
       try {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
-          // 1. Purge 0-pnl ghost liquidations
-          // 2. Purge rapid-fire glitch loop trades (< 15 seconds duration, LONG loss)
+          // Identify any rapid glitch loop trades (< 2 minutes duration, loss/liquidation, LONG or SHORT)
           const isGlitchLoopTrade = (t) => {
+            if (t.result === 'LIQUIDATED' && Number(t.pnlUSD || 0) === 0) return true;
             const duration = (t.closedAt || 0) - (t.openedAt || 0);
-            return t.direction === 'LONG' && (t.result === 'LOSS' || t.result === 'LIQUIDATED') && duration < 15000;
+            if ((t.result === 'LOSS' || t.result === 'LIQUIDATED') && duration < 120000) return true;
+            return false;
           };
 
-          const clean = parsed.filter(t => 
-            !(t.result === 'LIQUIDATED' && Number(t.pnlUSD || 0) === 0) &&
-            !isGlitchLoopTrade(t)
-          );
+          // If the ledger was corrupted by the runaway 1,000+ trade glitch loop
+          const hasRunawayGlitch = parsed.length > 50 && (parsed.filter(t => t.result === 'LOSS' || t.result === 'LIQUIDATED').length / parsed.length) > 0.8;
+
+          let clean = [];
+          if (hasRunawayGlitch) {
+            // Completely wipe the runaway loop corruption
+            clean = parsed.filter(t => !isGlitchLoopTrade(t) && !t.id?.startsWith('TRADE-'));
+          } else {
+            clean = parsed.filter(t => !isGlitchLoopTrade(t));
+          }
 
           if (clean.length !== parsed.length) {
             localStorage.setItem(this.storageKey, JSON.stringify(clean));
-            // Recalculate genuine cash balance from real settled trades
             const netRealized = +clean.reduce((acc, t) => acc + (Number(t.pnlUSD) || 0), 0).toFixed(2);
-            this.balance = +(2000 + netRealized).toFixed(2);
+            this.balance = Math.max(2000, +(2000 + netRealized).toFixed(2));
             localStorage.setItem(this.balanceStorageKey, this.balance.toFixed(2));
             console.log(`[PaperTrader] Auto-purged ${parsed.length - clean.length} glitch trades. Balance restored to $${this.balance}`);
           }
@@ -537,6 +543,12 @@ export class PaperTrader {
   }
 
   getFinancialLedger(filterMonth = 'ALL') {
+    // Dynamic In-Memory Self-Healing: If runaway glitch trades detected in this.trades, wipe them immediately
+    if (this.trades.length > 50 && (this.trades.filter(t => t.result === 'LOSS' || t.result === 'LIQUIDATED').length / this.trades.length) > 0.8) {
+      this.trades = [];
+      this.balance = 2000.0;
+      this.save();
+    }
     const closed = this.trades.filter(t => t.status === 'CLOSED');
     
     // Group / filter by month if specified (Format: YYYY-MM)

@@ -1312,7 +1312,10 @@
             </div>
           </div>
         </div>
-        <div class="passbook-header-right">
+        <div class="passbook-header-right" style="display: flex; align-items: center; gap: 8px;">
+          <button class="btn-purge-ledger" id="btn_purge_passbook" type="button" title="Purge Glitch Trades & Restore $2,000 Balance" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); color: #ef4444; font-size: 11px; font-weight: 600; padding: 5px 11px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.2s ease;">
+            <i class="ph ph-trash"></i> Reset & Restore $2,000
+          </button>
           <button class="icon-btn" id="close_passbook_btn" title="Close Passbook">
             <i class="ph ph-x"></i>
           </button>
@@ -1685,6 +1688,6 @@
   <script src="js/config/supabaseConfig.js"></script>
 
   <!-- App Script Entrypoint -->
-  <script type="module" src="js/app.js?v=5.5"></script>
+  <script type="module" src="js/app.js?v=5.6"></script>
 </body>
 </html>

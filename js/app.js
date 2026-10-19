@@ -75,6 +75,7 @@ class App {
       },
       onExecuteTrade: (orderPacket) => this.executeCurrentTrade(orderPacket),
       onCloseTrade: (id) => this.closeActiveTrade(id),
+      onCloseAllTrades: () => this.closeAllActiveTrades(),
       onResetAccount: () => this.resetAccount(),
       onGetFinancialLedger: (month) => this.paperTrader.getFinancialLedger(month),
       onThemeChange: (theme) => this.chartManager.setTheme(theme),
@@ -968,6 +969,54 @@ class App {
       this.ui.updateOpenPositions(this.paperTrader.openPositions);
       this.updateTradeJournalAndStats();
       this.syncTradeToSupabase(closed);
+    }
+  }
+
+  async closeAllActiveTrades() {
+    if (!this.paperTrader.openPositions || this.paperTrader.openPositions.length === 0) return;
+
+    // Refresh live mark prices from active adapter before closing
+    const adapter = this.getActiveAdapter();
+    const livePrices = {};
+    for (const pos of this.paperTrader.openPositions) {
+      const p = adapter.getCurrentPrice(pos.asset) || pos.currentPrice || pos.entry;
+      pos.currentPrice = p;
+      livePrices[pos.asset] = p;
+    }
+    this.paperTrader.updateLivePositions(livePrices);
+
+    const closedList = this.paperTrader.closeAllPositions('MANUAL');
+    if (closedList && closedList.length > 0) {
+      const totalPnL = closedList.reduce((sum, t) => sum + (Number(t.pnlUSD) || 0), 0);
+      const isPositive = totalPnL >= 0;
+      const pnlPrefix = isPositive ? '+' : '';
+      const pnlFormatted = `${pnlPrefix}$${totalPnL.toFixed(2)}`;
+
+      this.ui.showToast(
+        'All Trades Closed',
+        `Closed ${closedList.length} positions at market LTP. Total Realized: ${pnlFormatted}`,
+        isPositive ? 'success' : 'info'
+      );
+
+      this.voiceAssistant.speak(
+        `All active positions closed at market price. Realized profit and loss ${totalPnL.toFixed(2)} dollars.`
+      );
+
+      this.ui.addNotification({
+        type: isPositive ? 'target' : 'stop',
+        title: `Panic Flatten • ${closedList.length} Positions Closed`,
+        message: `Closed all active positions at market LTP. Total Realized: ${pnlFormatted}`
+      });
+
+      this.ui.updateOpenPositions(this.paperTrader.openPositions);
+      const liveMetrics = this.paperTrader.getLiveEquity();
+      this.ui.updateHeaderAccountHUD(liveMetrics);
+      this.updateTradeJournalAndStats();
+
+      // Sync all closed trades to Supabase
+      for (const t of closedList) {
+        this.syncTradeToSupabase(t);
+      }
     }
   }
 

@@ -13,7 +13,7 @@
   
   <!-- Stylesheets -->
   <link rel="stylesheet" href="css/main.css?v=5.1">
-  <link rel="stylesheet" href="css/components.css?v=4.8">
+  <link rel="stylesheet" href="css/components.css?v=4.9">
   <link rel="stylesheet" href="css/auth.css?v=4.7">
   <link rel="stylesheet" href="css/multi-chart.css?v=6.1">
 
@@ -957,11 +957,15 @@
           </div>
 
           <!-- Open Positions Section -->
-          <div class="panel-header" style="margin: 6px -12px 0 -12px; padding: 6px 12px;">
+          <div class="panel-header" style="margin: 6px -12px 0 -12px; padding: 6px 12px; display: flex; align-items: center; justify-content: space-between;">
             <span class="panel-title">
               <i class="ph ph-chart-line-up"></i> Active Paper Trades 
               (<span id="open_positions_count">0</span>)
             </span>
+            <button class="btn-close-all-positions hidden" id="btn_close_all_positions" type="button" title="Panic Flatten: Close all open positions immediately at market LTP">
+              <i class="ph-bold ph-lightning"></i>
+              <span>Close All</span>
+            </button>
           </div>
 
           <div id="open_positions_list" class="open-positions-container">
@@ -1688,6 +1692,6 @@
   <script src="js/config/supabaseConfig.js"></script>
 
   <!-- App Script Entrypoint -->
-  <script type="module" src="js/app.js?v=6.1"></script>
+  <script type="module" src="js/app.js?v=6.2"></script>
 </body>
 </html>

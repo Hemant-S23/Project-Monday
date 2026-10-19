@@ -467,6 +467,18 @@ export class PaperTrader {
     return closedTrade;
   }
 
+  closeAllPositions(resultType = 'MANUAL') {
+    const closedList = [];
+    const toClose = [...this.openPositions];
+    for (const pos of toClose) {
+      const closed = this.closePosition(pos.id, resultType, pos.currentPrice);
+      if (closed) {
+        closedList.push(closed);
+      }
+    }
+    return closedList;
+  }
+
   getLiveEquity(currentPrices = {}) {
     let unrealizedPnlUSD = 0;
     let unrealizedGrossPnlUSD = 0;

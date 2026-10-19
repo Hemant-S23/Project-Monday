@@ -513,6 +513,17 @@ export class TerminalUI {
       }
     });
 
+    // Close All Active Positions Panic Button
+    const closeAllPositionsBtn = document.getElementById('btn_close_all_positions');
+    if (closeAllPositionsBtn) {
+      closeAllPositionsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (this.callbacks.onCloseAllTrades) {
+          this.callbacks.onCloseAllTrades();
+        }
+      });
+    }
+
     // Timeframe Tray & Pinned Buttons
     const dropdownContainer = document.querySelector('.tf-dropdown-container');
     const trayTriggerBtn = document.getElementById('tf_tray_trigger');
@@ -2742,7 +2753,18 @@ export class TerminalUI {
   updateOpenPositions(positions) {
     const container = document.getElementById('open_positions_list');
     const countBadge = document.getElementById('open_positions_count');
+    const closeAllBtn = document.getElementById('btn_close_all_positions');
     if (countBadge) countBadge.textContent = positions.length;
+
+    // Smart visibility for Close All Panic Button
+    if (closeAllBtn) {
+      if (positions && positions.length > 0) {
+        closeAllBtn.classList.remove('hidden');
+        closeAllBtn.innerHTML = `<i class="ph-bold ph-lightning"></i> <span>Close All (${positions.length})</span>`;
+      } else {
+        closeAllBtn.classList.add('hidden');
+      }
+    }
 
     if (!container) return;
 

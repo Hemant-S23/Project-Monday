@@ -2072,6 +2072,46 @@
   transform: scale(1.03);
 }
 
+/* Panic / Close All Positions Button in Active Trades Header */
+.btn-close-all-positions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: 9999px;
+  border: 1px solid rgba(239, 68, 68, 0.38);
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.15);
+}
+
+.btn-close-all-positions i {
+  font-size: 0.72rem;
+  color: #ef4444;
+}
+
+.btn-close-all-positions:hover {
+  background: rgba(239, 68, 68, 0.28);
+  border-color: rgba(239, 68, 68, 0.75);
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.38);
+  transform: translateY(-1px);
+}
+
+.btn-close-all-positions:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.btn-close-all-positions.hidden {
+  display: none !important;
+}
+
 /* Collapsible Details Panel */
 .pos-strip-details {
   max-height: 0;

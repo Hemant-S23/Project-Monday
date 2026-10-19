@@ -1536,6 +1536,8 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   gap: 5px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .feed-pulse {
@@ -1967,8 +1969,8 @@ h1, h2, h3, h4, h5, h6 {
    RESPONSIVE DESIGN ARCHITECTURE (Pure Fluid Across All Form Factors)
    ========================================================================== */
 
-/* Ultrawide & 4K Displays (> 1880px): Single-Row Unified Command Bar */
-@media (min-width: 1881px) {
+/* Ultrawide & 4K Displays (> 2040px): Single-Row Unified Command Bar */
+@media (min-width: 2040px) {
   .terminal-header {
     flex-wrap: nowrap;
     padding: 8px 18px;
@@ -1980,15 +1982,17 @@ h1, h2, h3, h4, h5, h6 {
   .header-ticker-strip {
     order: 2;
     width: auto;
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     justify-content: center;
     padding-top: 0;
     margin-top: 0;
     border-top: none;
+    min-width: 0;
   }
   .header-actions {
     order: 3;
     margin-left: 0;
+    flex-shrink: 0;
   }
 }
 

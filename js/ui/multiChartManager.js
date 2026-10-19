@@ -259,7 +259,9 @@ export class MultiChartManager {
     this.initialMarket = initialMarket;
 
     this.renderLayoutPopover();
-    this.applyLayout(this.activeLayoutId);
+    if (this.activeLayoutId && this.activeLayoutId !== '1') {
+      this.applyLayout(this.activeLayoutId);
+    }
   }
 
   // =========================================================================

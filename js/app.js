@@ -762,7 +762,11 @@ class App {
       return;
     }
 
-    // 3.5. Pre-Flight Price Sanity Firewall: Ensure live market tick hasn't crossed SL
+    // 3.5. Extract setup levels & Pre-Flight Price Sanity Firewall: Ensure live market tick hasn't crossed SL
+    const entry = Number(strategyResult.levels.entry);
+    const stopLoss = Number(strategyResult.levels.stopLoss);
+    const target = Number(strategyResult.levels.target);
+
     const adapter = this.getActiveAdapter();
     const livePrice = adapter.getCurrentPrice(asset) || entry;
     if (direction === 'LONG') {
@@ -794,9 +798,6 @@ class App {
     }
 
     // 4. Autonomous Execution (Configured Margin & Leverage)
-    const entry = Number(strategyResult.levels.entry);
-    const stopLoss = Number(strategyResult.levels.stopLoss);
-    const target = Number(strategyResult.levels.target);
     const leverage = this.currentMarket === 'India' ? Math.min(5, settings.leverage) : settings.leverage;
     const marginUSD = settings.marginUSD;
     const notionalUSD = +(marginUSD * leverage).toFixed(2);

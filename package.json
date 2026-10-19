@@ -1,0 +1,21 @@
+{
+  "name": "project-monday",
+  "version": "4.6.0",
+  "description": "Project MONDAY - 24/7 Autonomous Neural Trading Terminal & Daemon",
+  "main": "monday-daemon.js",
+  "type": "module",
+  "scripts": {
+    "start": "node monday-daemon.js",
+    "daemon": "node monday-daemon.js",
+    "test": "node scratch/test_clean_shield.js"
+  },
+  "keywords": [
+    "trading",
+    "crypto",
+    "autopilot",
+    "algorithmic-trading",
+    "supabase"
+  ],
+  "author": "Hemant-S23",
+  "license": "ISC"
+}

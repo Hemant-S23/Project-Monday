@@ -193,6 +193,7 @@ class App {
 
     // 4. Run first full strategic evaluation & initialize watchlist tray
     this.ui.renderWatchlistTray(this.currentMarket);
+    await this.syncWithSupabaseCloud();
     await this.runFullEvaluation();
     this.ui.updateOpenPositions(this.paperTrader.openPositions);
     this.updateTradeJournalAndStats();
@@ -207,8 +208,95 @@ class App {
       this.voiceAssistant.speak('Namaste! Main hoon Monday. Crypto aur Indian Market dono active hain. Market analysis ready hai.');
     }, 1200);
 
-    // 6. Setup interval for continuous position updates & evaluation
+    // 6. Setup interval for continuous position updates, evaluation & Supabase sync
     setInterval(() => this.runFullEvaluation(), 5000);
+    setInterval(() => this.syncWithSupabaseCloud(), 15000);
+  }
+
+  async syncWithSupabaseCloud() {
+    try {
+      const cfg = window.MONDAY_SUPABASE_CONFIG;
+      if (!cfg || !cfg.url || !cfg.anonKey) return;
+
+      const res = await fetch(`${cfg.url}/rest/v1/paper_trades?select=*&order=created_at.desc`, {
+        headers: {
+          'apikey': cfg.anonKey,
+          'Authorization': `Bearer ${cfg.anonKey}`
+        }
+      });
+      if (!res.ok) return;
+
+      const cloudTrades = await res.json();
+      if (!Array.isArray(cloudTrades)) return;
+
+      let changed = false;
+      for (const ct of cloudTrades) {
+        if (ct.status === 'OPEN') {
+          const exists = this.paperTrader.openPositions.find(p => p.id === ct.id);
+          if (!exists) {
+            this.paperTrader.openPositions.push({
+              id: ct.id,
+              market: ct.market || 'Crypto',
+              asset: ct.asset,
+              direction: ct.direction,
+              entry: Number(ct.entry_price),
+              stopLoss: Number(ct.stop_loss),
+              target: Number(ct.target_price),
+              positionSize: Number(ct.position_size || 0),
+              riskUSD: Number(ct.risk_usd || 20),
+              rewardUSD: Number(ct.reward_usd || 60),
+              rrRatio: Number(ct.rr_ratio || 3.0),
+              leverage: 20,
+              marginUSD: Number(ct.risk_usd || 20),
+              status: 'OPEN',
+              currentPrice: Number(ct.entry_price),
+              openedAt: new Date(ct.created_at).getTime()
+            });
+            changed = true;
+          }
+        } else if (ct.status === 'CLOSED') {
+          const openIdx = this.paperTrader.openPositions.findIndex(p => p.id === ct.id);
+          if (openIdx !== -1) {
+            this.paperTrader.openPositions.splice(openIdx, 1);
+            changed = true;
+          }
+          const existsClosed = this.paperTrader.trades.find(t => t.id === ct.id);
+          if (!existsClosed) {
+            this.paperTrader.trades.unshift({
+              id: ct.id,
+              market: ct.market || 'Crypto',
+              asset: ct.asset,
+              direction: ct.direction,
+              entry: Number(ct.entry_price),
+              stopLoss: Number(ct.stop_loss),
+              target: Number(ct.target_price),
+              positionSize: Number(ct.position_size || 0),
+              riskUSD: Number(ct.risk_usd || 20),
+              rewardUSD: Number(ct.reward_usd || 60),
+              rrRatio: Number(ct.rr_ratio || 3.0),
+              status: 'CLOSED',
+              result: ct.result || 'WIN',
+              pnlUSD: Number(ct.pnl_usd || 0),
+              rMultiple: Number(ct.r_multiple || 0),
+              exitPrice: ct.exit_price ? Number(ct.exit_price) : null,
+              openedAt: new Date(ct.created_at).getTime(),
+              closedAt: Date.now()
+            });
+            changed = true;
+          }
+        }
+      }
+
+      if (changed) {
+        this.paperTrader.save();
+        this.updateTradeJournalAndStats();
+        this.ui.updateOpenPositions(this.paperTrader.openPositions);
+        const liveMetrics = this.paperTrader.getLiveEquity();
+        this.ui.updateHeaderAccountHUD(liveMetrics);
+      }
+    } catch (e) {
+      // Supabase sync failure non-blocking
+    }
   }
 
   async onMarketDataTick(data) {
@@ -398,15 +486,15 @@ class App {
 
       // Watchlist candidate assets for current market (Prioritizing currently viewed asset)
       const baseCandidates = this.currentMarket === 'India'
-        ? ['NIFTY', 'BANKNIFTY', 'RELIANCE']
-        : ['BTC', 'ETH', 'SOL'];
+        ? ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATAMOTORS', 'HDFCBANK', 'HAL', 'ZOMATO']
+        : ['BTC', 'ETH', 'SOL', 'AVAX', 'LINK', 'DOGE', 'NEAR', 'SUI', 'XRP', 'ADA'];
       const candidateAssets = this.currentAsset
         ? [this.currentAsset, ...baseCandidates.filter(a => a !== this.currentAsset)]
         : baseCandidates;
 
       for (const asset of candidateAssets) {
-        // Stop if maxTrades limit reached
-        if (this.paperTrader.openPositions.length >= settings.maxTrades) break;
+        // Stop if maxTrades limit reached (bypassed in testing mode)
+        if (settings.maxTrades < 900 && this.paperTrader.openPositions.length >= settings.maxTrades) break;
 
         // Skip assets already open (prevents duplicate position on same coin)
         if (this.paperTrader.openPositions.some(p => p.asset === asset)) continue;
@@ -493,7 +581,7 @@ class App {
         return {
           marginUSD: Math.max(5, Math.min(500, parseFloat(s.marginUSD) || 20)),
           leverage: Math.max(1, Math.min(50, parseInt(s.leverage, 10) || (this.currentMarket === 'India' ? 5 : 20))),
-          maxTrades: Math.max(1, Math.min(5, parseInt(s.maxTrades, 10) || 2)),
+          maxTrades: Math.max(1, Math.min(999, parseInt(s.maxTrades, 10) || 999)),
           minConfluence: Math.max(50, Math.min(95, parseInt(s.minConfluence, 10) || 75)),
           minRR: Math.max(1.5, Math.min(5.0, parseFloat(s.minRR) || 3.0)),
           eventShieldEnabled: s.eventShieldEnabled !== false
@@ -503,7 +591,7 @@ class App {
     return {
       marginUSD: 20,
       leverage: this.currentMarket === 'India' ? 5 : 20,
-      maxTrades: 2,
+      maxTrades: 999, // Uncapped for testing
       minConfluence: 75,
       minRR: 3.0,
       eventShieldEnabled: true
@@ -534,8 +622,8 @@ class App {
       return;
     }
 
-    // 1. Max Concurrent Trades Guardrail (Configurable)
-    if (currentOpenCount >= settings.maxTrades) {
+    // 1. Max Concurrent Trades Guardrail (Bypassed when >= 900 for testing)
+    if (settings.maxTrades < 900 && currentOpenCount >= settings.maxTrades) {
       this.ui.appendAutonomousDecisionCard({
         action: 'SKIPPED',
         asset,
@@ -732,6 +820,7 @@ class App {
     const liveMetrics = this.paperTrader.getLiveEquity();
     this.ui.updateHeaderAccountHUD(liveMetrics);
     this.updateTradeJournalAndStats();
+    this.syncTradeToSupabase(newPos);
   }
 
   closeActiveTrade(tradeId) {
@@ -751,7 +840,46 @@ class App {
 
       this.ui.updateOpenPositions(this.paperTrader.openPositions);
       this.updateTradeJournalAndStats();
+      this.syncTradeToSupabase(closed);
     }
+  }
+
+  async syncTradeToSupabase(trade) {
+    try {
+      const cfg = window.MONDAY_SUPABASE_CONFIG;
+      if (!cfg || !cfg.url || !cfg.anonKey || !trade) return;
+      const payload = {
+        id: trade.id,
+        user_id: 'guest_autopilot',
+        market: trade.market || 'Crypto',
+        asset: trade.asset,
+        direction: trade.direction,
+        entry_price: trade.entry,
+        stop_loss: trade.stopLoss,
+        target_price: trade.target,
+        position_size: trade.positionSize,
+        risk_usd: trade.riskUSD,
+        reward_usd: trade.rewardUSD,
+        rr_ratio: trade.rrRatio ? parseFloat(trade.rrRatio) : 3.0,
+        status: trade.status || 'OPEN',
+        result: trade.result || null,
+        pnl_usd: trade.pnlUSD || 0,
+        r_multiple: trade.rMultiple || 0,
+        exit_price: trade.exitPrice || null,
+        timeframe: '5M',
+        strategy: '20x Isolated HTF-Trend Pullback'
+      };
+      await fetch(`${cfg.url}/rest/v1/paper_trades`, {
+        method: 'POST',
+        headers: {
+          'apikey': cfg.anonKey,
+          'Authorization': `Bearer ${cfg.anonKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates'
+        },
+        body: JSON.stringify(payload)
+      });
+    } catch (e) {}
   }
 
   resetAccount() {

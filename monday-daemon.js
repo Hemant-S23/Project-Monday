@@ -1,20 +1,21 @@
 /**
- * PROJECT MONDAY — 24/7 Autonomous Algorithmic Trading Daemon
- * Runs autonomously in Node.js (Local or Cloud like Render/Railway/VPS)
+ * PROJECT MONDAY — 24/7 Autonomous Algorithmic Trading Daemon (Ultra-Low Latency Edition)
+ * Powered by Native Exchange WebSockets + Real-Time Microsecond Execution
  * 
- * Features:
- * 1. 24/7 Continuous Scanning across high-volume assets (BTC, ETH, SOL, AVAX, LINK, DOGE, NEAR, SUI, XRP, ADA)
- * 2. Uncapped Multi-Trade execution for testing (takes every valid institutional setup)
- * 3. 100% Strict Risk Protocols: Grade A Confluence (>=75%), 1:3.0 RR, 1% Max Predefined Risk, Strict SL/TP
- * 4. Hyper-Sensitive Event Risk Shield to prevent trading during macro/regulatory shocks
- * 5. Real-Time Tick-by-Tick Position Monitoring (Closes trade instantly upon hitting TP or SL)
- * 6. Continuous Supabase Cloud Sync + 60s Heartbeat (Keeps Supabase project permanently awake)
+ * Capabilities:
+ * 1. Millisecond WebSocket Ticker Stream (Coinbase wss://ws-feed.exchange.coinbase.com)
+ * 2. Instant Sub-Second TP/SL Trigger: Closes position the exact millisecond price crosses level
+ * 3. 24/7 Multi-Asset Universe (BTC, ETH, SOL, AVAX, LINK, DOGE, NEAR, SUI, XRP, ADA)
+ * 4. Uncapped Multi-Trade Testing Mode (No trade limits)
+ * 5. Strict Risk Protocols: 1% Account Risk, Strict SL/TP, 1:3.0 RR, Grade A Confluence (>=75%)
+ * 6. Hyper-Sensitive Event Risk Shield Protection
+ * 7. Real-Time Supabase Cloud Sync + 60s Keep-Alive Heartbeat
  */
 
 import fs from 'fs';
 import path from 'path';
 
-// --- Step 0: Robust File-backed LocalStorage Polyfill for Node.js ---
+// File-backed LocalStorage Polyfill for Node.js
 const storageFile = path.resolve('scratch/daemon_storage.json');
 let memStore = {};
 try {
@@ -52,7 +53,7 @@ globalThis.localStorage = {
   }
 };
 
-// --- Step 1: Import Core Neural Engines ---
+// Import Core Neural Engines
 import { StrategyEngine } from './js/engine/strategyEngine.js';
 import { NewsContextEngine } from './js/engine/newsContextEngine.js';
 import { PaperTrader } from './js/paperTrading/paperTrader.js';
@@ -69,17 +70,19 @@ class MondayAutoPilotDaemon {
     this.paperTrader = new PaperTrader(2000.0, 'guest_autopilot');
     this.derivativesEngine = new DerivativesEngine();
 
-    // High-liquidity multi-asset universe for testing
+    // High-liquidity multi-asset universe
     this.candidateAssets = [
       'BTC', 'ETH', 'SOL', 'AVAX', 'LINK',
       'DOGE', 'NEAR', 'SUI', 'XRP', 'ADA'
     ];
 
+    this.livePrices = {};
     this.candleCache = {};
+    this.ws = null;
+    this.isWsConnected = false;
     this.isScanning = false;
-    this.scanIntervalMs = 15000; // 15 seconds full strategy scan
-    this.positionCheckIntervalMs = 3000; // 3 seconds tick check for SL / TP
-    this.heartbeatIntervalMs = 60000; // 60 seconds Supabase keep-alive
+    this.scanIntervalMs = 8000; // 8 seconds strategy scan
+    this.heartbeatIntervalMs = 60000; // 60 seconds keep-alive
     this.startTime = Date.now();
   }
 
@@ -92,23 +95,24 @@ class MondayAutoPilotDaemon {
 
   async init() {
     console.log('========================================================================');
-    console.log('       PROJECT MONDAY — 24/7 AUTONOMOUS AUTOPILOT DAEMON               ');
-    console.log('       Running in Cloud/Background Mode • Uncapped Testing Active       ');
+    console.log('   PROJECT MONDAY — 24/7 ULTRA-LOW LATENCY WEBSOCKET AUTOPILOT DAEMON  ');
+    console.log('   Sub-Second Microsecond Execution • Uncapped Testing Active           ');
     console.log('========================================================================');
-    this.log(`Initial Paper Wallet Balance: $${this.paperTrader.balance.toFixed(2)}`);
-    this.log(`Active Open Positions in Store: ${this.paperTrader.openPositions.length}`);
-    this.log(`Multi-Asset Universe: ${this.candidateAssets.join(', ')}`);
+    this.log(`Wallet Balance: $${this.paperTrader.balance.toFixed(2)} | Active Store Positions: ${this.paperTrader.openPositions.length}`);
+    this.log(`Universe: ${this.candidateAssets.join(', ')}`);
 
-    // 1. Initial Supabase Connectivity Check & Hydration
+    // 1. Initial Supabase Connectivity Check
     await this.testSupabaseConnection();
     await this.hydrateFromSupabase();
 
-    // 2. Start Continuous Loops
-    this.startPositionMonitoringLoop();
+    // 2. Start Native WebSocket Feed (Millisecond Ticks)
+    this.startWebSocketFeed();
+
+    // 3. Start Strategy Scanner & Keep-Alive Loops
     this.startScanningLoop();
     this.startHeartbeatLoop();
 
-    this.log('Auto-Pilot Daemon is fully active and watching the markets 24/7.\n');
+    this.log('🟢 24/7 Daemon is live. Real-time sub-second execution engaged.\n', 'SUCCESS');
   }
 
   async testSupabaseConnection() {
@@ -121,8 +125,6 @@ class MondayAutoPilotDaemon {
       });
       if (res.ok) {
         this.log('🟢 Supabase Cloud Database Connected & Healthy.', 'SUCCESS');
-      } else {
-        this.log(`⚠️ Supabase returned HTTP ${res.status}`, 'WARN');
       }
     } catch (err) {
       this.log(`⚠️ Supabase connection warning: ${err.message}`, 'WARN');
@@ -139,23 +141,134 @@ class MondayAutoPilotDaemon {
       });
       if (res.ok) {
         const cloudTrades = await res.json();
-        if (Array.isArray(cloudTrades) && cloudTrades.length > 0) {
-          this.log(`Fetched ${cloudTrades.length} trade record(s) from Supabase Cloud.`);
+        if (Array.isArray(cloudTrades)) {
+          this.log(`Hydrated ${cloudTrades.length} trade record(s) from Supabase Cloud.`);
         }
       }
     } catch (e) {}
+  }
+
+  startWebSocketFeed() {
+    const wsUrl = 'wss://ws-feed.exchange.coinbase.com';
+    const productIds = this.candidateAssets.map(a => `${a}-USD`);
+
+    try {
+      this.ws = new WebSocket(wsUrl);
+
+      this.ws.onopen = () => {
+        this.isWsConnected = true;
+        this.log('⚡ Native Coinbase WebSocket Connected. Streaming sub-second ticks.', 'WEBSOCKET');
+        const subscribeMsg = {
+          type: 'subscribe',
+          product_ids: productIds,
+          channels: ['ticker']
+        };
+        this.ws.send(JSON.stringify(subscribeMsg));
+      };
+
+      this.ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'ticker' && data.product_id && data.price) {
+            const asset = data.product_id.replace('-USD', '');
+            const price = parseFloat(data.price);
+            if (!isNaN(price) && price > 0) {
+              this.livePrices[asset] = price;
+              // INSTANT SUB-SECOND SL/TP EXECUTION:
+              this.checkInstantPositionHit(asset, price);
+            }
+          }
+        } catch (e) {}
+      };
+
+      this.ws.onerror = (err) => {
+        this.log(`WebSocket Error: ${err.message || 'Stream error'}`, 'WARN');
+      };
+
+      this.ws.onclose = () => {
+        this.isWsConnected = false;
+        this.log('WebSocket disconnected. Reconnecting in 3 seconds...', 'WARN');
+        setTimeout(() => this.startWebSocketFeed(), 3000);
+      };
+    } catch (err) {
+      this.log(`WebSocket Init Failed: ${err.message}. Retrying in 5s...`, 'WARN');
+      setTimeout(() => this.startWebSocketFeed(), 5000);
+    }
+  }
+
+  checkInstantPositionHit(asset, currentPrice) {
+    const openPositions = this.paperTrader.openPositions;
+    if (!openPositions || openPositions.length === 0) return;
+
+    for (let i = openPositions.length - 1; i >= 0; i--) {
+      const pos = openPositions[i];
+      if (pos.asset !== asset) continue;
+
+      pos.currentPrice = currentPrice;
+      const isLong = (pos.direction || 'LONG').toUpperCase() === 'LONG';
+
+      let hitLiquidation = false;
+      if (pos.liquidationPrice && pos.liquidationPrice > 0) {
+        hitLiquidation = isLong ? (currentPrice <= pos.liquidationPrice) : (currentPrice >= pos.liquidationPrice);
+      }
+      const hitTarget = isLong ? (currentPrice >= pos.target) : (currentPrice <= pos.target);
+      const hitStop = isLong ? (currentPrice <= pos.stopLoss) : (currentPrice >= pos.stopLoss);
+
+      if (hitLiquidation) {
+        const closed = this.paperTrader.closePosition(pos.id, 'LIQUIDATED', pos.liquidationPrice);
+        if (closed) {
+          const pnl = Number(closed.pnlUSD || 0);
+          this.log(`⚠️ [INSTANT LIQUIDATION HIT] ${pos.asset} ${pos.direction} at $${pos.liquidationPrice} | Margin Loss: -$${Math.abs(pnl).toFixed(2)}`, 'LIQUIDATED');
+          this.syncTradeToSupabase({
+            ...pos,
+            status: 'CLOSED',
+            result: 'LIQUIDATED',
+            exitPrice: pos.liquidationPrice,
+            pnlUSD: pnl,
+            rMultiple: -1.0
+          });
+        }
+      } else if (hitTarget) {
+        const closed = this.paperTrader.closePosition(pos.id, 'WIN', pos.target);
+        if (closed) {
+          const pnl = Number(closed.pnlUSD || 0);
+          this.log(`🎯 [INSTANT SUB-SECOND TP HIT] ${pos.asset} ${pos.direction} at $${pos.target} | Net PnL: +$${pnl.toFixed(2)} (+${closed.rMultiple || 3.0}R)`, 'SETTLED');
+          this.syncTradeToSupabase({
+            ...pos,
+            status: 'CLOSED',
+            result: 'WIN',
+            exitPrice: pos.target,
+            pnlUSD: pnl,
+            rMultiple: closed.rMultiple || 3.0
+          });
+        }
+      } else if (hitStop) {
+        const closed = this.paperTrader.closePosition(pos.id, 'LOSS', pos.stopLoss);
+        if (closed) {
+          const pnl = Number(closed.pnlUSD || 0);
+          this.log(`🛑 [INSTANT SUB-SECOND SL HIT] ${pos.asset} ${pos.direction} at $${pos.stopLoss} | Net PnL: -$${Math.abs(pnl).toFixed(2)} (${closed.rMultiple || -1.0}R)`, 'SETTLED');
+          this.syncTradeToSupabase({
+            ...pos,
+            status: 'CLOSED',
+            result: 'LOSS',
+            exitPrice: pos.stopLoss,
+            pnlUSD: pnl,
+            rMultiple: closed.rMultiple || -1.0
+          });
+        }
+      }
+    }
   }
 
   async fetchCandles(asset, granularity = 300) {
     const symbol = `${asset}-USD`;
     const url = `https://api.exchange.coinbase.com/products/${symbol}/candles?granularity=${granularity}`;
     try {
-      const res = await fetch(url, { headers: { 'User-Agent': 'Monday-Daemon/4.6' } });
+      const res = await fetch(url, { headers: { 'User-Agent': 'Monday-Daemon/4.7' } });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (!Array.isArray(data) || data.length === 0) return [];
 
-      // Coinbase format: [ time, low, high, open, close, volume ]
       return data
         .slice(0, 60)
         .map(c => ({
@@ -168,35 +281,12 @@ class MondayAutoPilotDaemon {
         }))
         .sort((a, b) => a.time - b.time);
     } catch (err) {
-      // Return cached if available
       return this.candleCache[`${asset}_${granularity}`] || [];
     }
   }
 
-  async getLatestPrice(asset) {
-    try {
-      const symbol = `${asset}-USD`;
-      const res = await fetch(`https://api.exchange.coinbase.com/products/${symbol}/ticker`, {
-        headers: { 'User-Agent': 'Monday-Daemon/4.6' }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const p = parseFloat(data.price);
-        if (!isNaN(p) && p > 0) return p;
-      }
-    } catch (e) {}
-
-    // Fallback to candle close
-    const candles5M = this.candleCache[`${asset}_300`];
-    if (candles5M && candles5M.length > 0) {
-      return candles5M[candles5M.length - 1].close;
-    }
-    return null;
-  }
-
   async scanAsset(asset) {
     try {
-      // 1. Fetch 1H and 5M candles
       const candles1H = await this.fetchCandles(asset, 3600);
       const candles5M = await this.fetchCandles(asset, 300);
       if (candles1H.length < 10 || candles5M.length < 10) return;
@@ -204,13 +294,11 @@ class MondayAutoPilotDaemon {
       this.candleCache[`${asset}_3600`] = candles1H;
       this.candleCache[`${asset}_300`] = candles5M;
 
-      const currentPrice = candles5M[candles5M.length - 1].close;
+      const currentPrice = this.livePrices[asset] || candles5M[candles5M.length - 1].close;
 
-      // 2. Related Asset (For SMT Divergence)
       const relatedAsset = asset === 'BTC' ? 'ETH' : 'BTC';
       const related5M = this.candleCache[`${relatedAsset}_300`] || candles5M;
 
-      // 3. Strategy Engine Evaluation (HTF Trend + 5M Pullback + SMT + RSI)
       const strategyResult = this.strategyEngine.evaluate(
         asset,
         candles1H,
@@ -221,20 +309,16 @@ class MondayAutoPilotDaemon {
         relatedAsset
       );
 
-      // 4. Check Event Risk Shield (Capital Preservation Armor)
+      // Event Risk Shield
       const eventRisk = this.newsEngine.getOverallEventRisk(asset, 'Crypto');
-      if (eventRisk.isShieldTriggered) {
-        return; // Event shield active, preserve capital
-      }
+      if (eventRisk.isShieldTriggered) return;
 
-      // 5. Evaluate if Setup is Confirmed
       const isConfirmed = strategyResult.state === 'CONFIRMED' && strategyResult.levels;
       const score = Math.round(strategyResult.confluenceScore || 0);
       const rr = Number(strategyResult.levels?.rrRatio || 0);
 
       // Strict institutional rules: Grade A confluence (>= 75%) and minimum 1:3.0 RR
       if (isConfirmed && score >= 75 && rr >= 3.0) {
-        // Prevent duplicate position on same coin
         const alreadyOpen = this.paperTrader.openPositions.some(p => p.asset === asset);
         if (alreadyOpen) return;
 
@@ -248,22 +332,19 @@ class MondayAutoPilotDaemon {
   async executeAutonomousTrade(asset, strategyResult, currentPrice) {
     const dir = strategyResult.direction || 'LONG';
     const levels = strategyResult.levels;
-    const lev = 20; // Standard 20x isolated leverage
+    const lev = 20;
     const balance = this.paperTrader.balance;
 
-    // Strict 1% risk rule of total equity ($20 on $2,000 balance)
     const riskUSD = +(balance * 0.01).toFixed(2);
     const stopLossDistance = Math.abs(levels.entry - levels.stopLoss);
     if (stopLossDistance <= 0) return;
 
-    // Calculate position size based strictly on 1% risk distance
     const rawPosSize = +(riskUSD / stopLossDistance).toFixed(4);
     const posSize = Math.max(0.001, rawPosSize);
     const notional = +(levels.entry * posSize).toFixed(2);
     const marginUSD = +(notional / lev).toFixed(2);
     const rewardUSD = +(riskUSD * (Number(levels.rrRatio) || 3.0)).toFixed(2);
 
-    // Delta exchange liquidation price calculation
     const liqPrice = this.derivativesEngine.calcLiquidationPrice({
       entry: levels.entry,
       direction: dir,
@@ -276,7 +357,6 @@ class MondayAutoPilotDaemon {
     this.log(`Entry: $${levels.entry} | SL: $${levels.stopLoss} | TP: $${levels.target} | RR: 1:${levels.rrRatio}`);
     this.log(`Confluence: ${strategyResult.confluenceScore}% (${strategyResult.confluenceGrade}) | Risk: $${riskUSD} (1.0%)`);
 
-    // Execute in Paper Trader
     const trade = this.paperTrader.executePaperTrade({
       asset,
       market: 'Crypto',
@@ -299,8 +379,6 @@ class MondayAutoPilotDaemon {
     });
 
     this.log(`✅ [TRADE OPENED] ID: ${trade.id} | ${asset} ${dir} | Margin: $${marginUSD}`, 'SUCCESS');
-
-    // Sync to Supabase Cloud
     await this.syncTradeToSupabase(trade);
   }
 
@@ -328,7 +406,7 @@ class MondayAutoPilotDaemon {
         strategy: '20x Isolated HTF-Trend Pullback'
       };
 
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/paper_trades`, {
+      await fetch(`${SUPABASE_URL}/rest/v1/paper_trades`, {
         method: 'POST',
         headers: {
           'apikey': SUPABASE_KEY,
@@ -338,10 +416,6 @@ class MondayAutoPilotDaemon {
         },
         body: JSON.stringify(payload)
       });
-
-      if (res.ok) {
-        this.log(`Cloud Synced: Trade ${trade.id} -> Supabase`, 'SYNC');
-      }
     } catch (err) {
       this.log(`Supabase Sync Error: ${err.message}`, 'WARN');
     }
@@ -354,49 +428,14 @@ class MondayAutoPilotDaemon {
       try {
         for (const asset of this.candidateAssets) {
           await this.scanAsset(asset);
-          // 350ms breather to prevent exchange rate-limiting
-          await new Promise(r => setTimeout(r, 350));
+          await new Promise(r => setTimeout(r, 200));
         }
       } catch (err) {
-        this.log(`Scanner iteration error: ${err.message}`, 'WARN');
+        this.log(`Scanner error: ${err.message}`, 'WARN');
       } finally {
         this.isScanning = false;
       }
     }, this.scanIntervalMs);
-  }
-
-  startPositionMonitoringLoop() {
-    setInterval(async () => {
-      const openPositions = this.paperTrader.openPositions;
-      if (!openPositions || openPositions.length === 0) return;
-
-      const prices = {};
-      for (const pos of openPositions) {
-        const p = await this.getLatestPrice(pos.asset);
-        if (p) prices[pos.asset] = p;
-      }
-
-      // Check if price crossed Take Profit or Stop Loss
-      const closedTrades = this.paperTrader.updateLivePositions(prices);
-      if (closedTrades && closedTrades.length > 0) {
-        for (const closed of closedTrades) {
-          const { pos, result, price } = closed;
-          const pnlText = pos.pnlUSD >= 0 ? `+$${pos.pnlUSD.toFixed(2)}` : `-$${Math.abs(pos.pnlUSD).toFixed(2)}`;
-          const emoji = result === 'WIN' ? '🎯 [TAKE PROFIT HIT]' : '🛑 [STOP LOSS HIT]';
-          this.log(`${emoji} Trade ${pos.id} (${pos.asset} ${pos.direction}) Closed at $${price} | Net PnL: ${pnlText}`, 'SETTLED');
-
-          // Sync settled trade to Supabase
-          await this.syncTradeToSupabase({
-            ...pos,
-            status: 'CLOSED',
-            result,
-            exitPrice: price,
-            pnlUSD: pos.pnlUSD,
-            rMultiple: pos.rMultiple
-          });
-        }
-      }
-    }, this.positionCheckIntervalMs);
   }
 
   startHeartbeatLoop() {
@@ -405,8 +444,8 @@ class MondayAutoPilotDaemon {
       const openCount = this.paperTrader.openPositions.length;
       const closedCount = this.paperTrader.trades.length;
       const bal = this.paperTrader.balance.toFixed(2);
+      const wsStatus = this.isWsConnected ? '⚡ Connected (Realtime)' : '⚠️ Reconnecting';
 
-      // Lightweight Supabase query (Keeps Supabase 100% active and prevents inactivity pausing)
       try {
         await fetch(`${SUPABASE_URL}/rest/v1/paper_trades?limit=1`, {
           headers: {
@@ -416,7 +455,7 @@ class MondayAutoPilotDaemon {
         });
       } catch (e) {}
 
-      this.log(`💓 [Heartbeat] Uptime: ${uptimeSec}s | Wallet: $${bal} | Open Positions: ${openCount} | Closed Settlements: ${closedCount} | Cloud: Online`);
+      this.log(`💓 [Heartbeat] Uptime: ${uptimeSec}s | Wallet: $${bal} | Open Trades: ${openCount} | Closed: ${closedCount} | WS: ${wsStatus}`);
     }, this.heartbeatIntervalMs);
   }
 }

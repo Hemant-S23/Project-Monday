@@ -193,10 +193,12 @@ class App {
 
     // 4. Run first full strategic evaluation & initialize watchlist tray
     this.ui.renderWatchlistTray(this.currentMarket);
-    await this.syncWithSupabaseCloud();
     await this.runFullEvaluation();
     this.ui.updateOpenPositions(this.paperTrader.openPositions);
     this.updateTradeJournalAndStats();
+
+    // Run Supabase sync asynchronously without blocking chart render
+    setTimeout(() => this.syncWithSupabaseCloud(), 150);
 
     // 5. Initial greeting from MONDAY
     setTimeout(() => {
@@ -250,6 +252,11 @@ class App {
               marginUSD: Number(ct.risk_usd || 20),
               status: 'OPEN',
               currentPrice: Number(ct.entry_price),
+              unrealizedPnlUSD: 0,
+              unrealizedGrossPnlUSD: 0,
+              unrealizedR: 0,
+              roePercent: 0,
+              feesUSD: 0,
               openedAt: new Date(ct.created_at).getTime()
             });
             changed = true;

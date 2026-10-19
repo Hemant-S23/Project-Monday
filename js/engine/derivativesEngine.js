@@ -115,14 +115,16 @@ export class DerivativesEngine {
     const mmr = spec.mmr;
     const isLong = (direction || 'LONG').toUpperCase() === 'LONG';
 
+    const decimals = p < 0.1 ? 6 : p < 1 ? 5 : p < 10 ? 4 : 2;
+
     if (isLong) {
       const factor = 1 - (1 / lev) + mmr;
       const liq = p * Math.max(0, factor);
-      return +liq.toFixed(2);
+      return +liq.toFixed(decimals);
     } else {
       const factor = 1 + (1 / lev) - mmr;
       const liq = p * factor;
-      return +liq.toFixed(2);
+      return +liq.toFixed(decimals);
     }
   }
 

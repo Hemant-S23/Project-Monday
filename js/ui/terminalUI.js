@@ -2724,16 +2724,22 @@ export class TerminalUI {
     }
 
     container.innerHTML = positions.map(pos => {
-      const isPos = pos.unrealizedPnlUSD >= 0;
-      const isLong = pos.direction === 'LONG';
-      const range = Math.abs(pos.target - pos.stopLoss) || 1;
+      const unPnl = Number(pos.unrealizedPnlUSD || pos.unrealizedGrossPnlUSD || 0);
+      const isPos = unPnl >= 0;
+      const isLong = (pos.direction || 'LONG').toUpperCase() === 'LONG';
+      const curP = Number(pos.currentPrice || pos.entry || 0);
+      const stopL = Number(pos.stopLoss || 0);
+      const targetP = Number(pos.target || pos.targetPrice || 0);
+      const range = Math.abs(targetP - stopL) || 1;
       const progress = isLong
-        ? Math.min(100, Math.max(0, ((pos.currentPrice - pos.stopLoss) / range) * 100))
-        : Math.min(100, Math.max(0, ((pos.stopLoss - pos.currentPrice) / range) * 100));
+        ? Math.min(100, Math.max(0, ((curP - stopL) / range) * 100))
+        : Math.min(100, Math.max(0, ((stopL - curP) / range) * 100));
 
       const lev = pos.leverage || 20;
-      const roe = pos.roePercent !== undefined ? pos.roePercent : (pos.marginUSD > 0 ? ((pos.unrealizedPnlUSD / pos.marginUSD) * 100).toFixed(1) : 0);
+      const margin = Number(pos.marginUSD || pos.riskUSD || 20);
+      const roe = pos.roePercent !== undefined ? pos.roePercent : (margin > 0 ? ((unPnl / margin) * 100).toFixed(1) : 0);
       const liqText = pos.liquidationPrice ? this.formatPrice(pos.liquidationPrice) : 'N/A';
+      const unR = pos.unrealizedR !== undefined ? pos.unrealizedR : (pos.riskUSD > 0 ? +(unPnl / pos.riskUSD).toFixed(2) : 0);
       const isExpanded = this.expandedPositionIds.has(pos.id);
 
       return `
@@ -2744,13 +2750,13 @@ export class TerminalUI {
             <div class="strip-row-top">
               <div class="strip-badges">
                 <span class="pos-asset-pill">${pos.asset}/USD</span>
-                <span class="pos-direction-pill ${pos.direction.toLowerCase()}">${pos.direction}</span>
+                <span class="pos-direction-pill ${(pos.direction || 'LONG').toLowerCase()}">${pos.direction || 'LONG'}</span>
                 <span class="pos-lev-pill">${lev}x</span>
               </div>
 
               <div class="strip-pnl-wrapper">
                 <span class="pos-pnl-chip ${isPos ? 'bullish' : 'bearish'}" title="Floating PnL & Return on Equity">
-                  ${isPos ? '+' : ''}$${pos.unrealizedPnlUSD.toFixed(2)} (${isPos ? '+' : ''}${roe}%)
+                  ${isPos ? '+' : ''}$${unPnl.toFixed(2)} (${isPos ? '+' : ''}${roe}%)
                 </span>
                 <i class="ph ph-caret-down strip-expand-caret"></i>
               </div>
@@ -2764,7 +2770,7 @@ export class TerminalUI {
                 </span>
                 <span class="strip-sep">•</span>
                 <span class="strip-price-item" title="Mark / Live Price">
-                  <span class="strip-lbl">M:</span><span class="strip-val highlight">${this.formatPrice(pos.currentPrice)}</span>
+                  <span class="strip-lbl">M:</span><span class="strip-val highlight">${this.formatPrice(curP)}</span>
                 </span>
               </div>
 
@@ -2783,9 +2789,9 @@ export class TerminalUI {
                 <div class="pos-progress-marker" style="left: ${progress}%;"></div>
               </div>
               <div class="pos-progress-labels">
-                <span>SL ${this.formatPrice(pos.stopLoss)}</span>
-                <span class="pos-roe-tag ${isPos ? 'bullish' : 'bearish'}">${isPos ? '+' : ''}${pos.unrealizedR}R (${isPos ? '+' : ''}${roe}% ROE)</span>
-                <span>TP ${this.formatPrice(pos.target)}</span>
+                <span>SL ${this.formatPrice(stopL)}</span>
+                <span class="pos-roe-tag ${isPos ? 'bullish' : 'bearish'}">${isPos ? '+' : ''}${unR}R (${isPos ? '+' : ''}${roe}% ROE)</span>
+                <span>TP ${this.formatPrice(targetP)}</span>
               </div>
             </div>
 

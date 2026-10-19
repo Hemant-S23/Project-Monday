@@ -362,7 +362,7 @@ export class PaperTrader {
       ...pos,
       status: 'CLOSED',
       result,
-      exitPrice: +actualExit.toFixed(2),
+      exitPrice: actualExit < 0.1 ? +actualExit.toFixed(6) : actualExit < 1 ? +actualExit.toFixed(5) : actualExit < 10 ? +actualExit.toFixed(4) : +actualExit.toFixed(2),
       grossPnlUSD,
       entryFeeUSD: entryFee,
       exitFeeUSD: exitFee,

@@ -1707,6 +1707,7 @@ h1, h2, h3, h4, h5, h6 {
    ========================================================================== */
 .mobile-drawer-toggle,
 .mobile-asset-pill,
+.mobile-search-toggle-btn,
 .context-deck-mobile-nav {
   display: none;
 }
@@ -2305,7 +2306,7 @@ h1, h2, h3, h4, h5, h6 {
   .account-pill {
     display: inline-flex !important;
     align-items: center !important;
-    padding: 4px 10px !important;
+    padding: 4px 8px !important;
     border-radius: 8px !important;
     background: rgba(255, 255, 255, 0.05) !important;
     border: 1px solid var(--border-subtle) !important;
@@ -2323,6 +2324,212 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 700 !important;
     color: var(--text-bright) !important;
     font-family: var(--font-mono) !important;
+  }
+
+  /* Mobile Search Icon Toggle Button */
+  .mobile-search-toggle-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    color: var(--text-bright);
+    font-size: 1.05rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.18s ease;
+  }
+
+  .mobile-search-toggle-btn:active {
+    transform: scale(0.92);
+    background: rgba(6, 182, 212, 0.18);
+  }
+
+  /* Floating Search Overlay Bar on Mobile (Uncongested Header) */
+  .crypto-search-container {
+    display: none !important;
+  }
+
+  .crypto-search-container.mobile-active {
+    display: block !important;
+    position: fixed !important;
+    top: calc(54px + env(safe-area-inset-top, 0px)) !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    padding: 8px 12px !important;
+    background: rgba(10, 15, 26, 0.98) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border-bottom: 1px solid var(--border-subtle) !important;
+    z-index: 10020 !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8) !important;
+    animation: slideDownSearch 0.18s ease-out !important;
+  }
+
+  .crypto-search-container.mobile-active .crypto-search-box {
+    width: 100% !important;
+    height: 42px !important;
+  }
+
+  .crypto-search-container.mobile-active .crypto-search-input {
+    font-size: 16px !important;
+  }
+
+  .crypto-search-container.mobile-active .crypto-search-results {
+    position: fixed !important;
+    top: calc(104px + env(safe-area-inset-top, 0px)) !important;
+    left: 10px !important;
+    right: 10px !important;
+    max-width: calc(100vw - 20px) !important;
+    max-height: 65vh !important;
+  }
+
+  @keyframes slideDownSearch {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Drawer Market Intelligence Radar Hub */
+  .d-flex-between {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+
+  .d-live-pulse-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.65rem;
+    color: var(--color-primary);
+    background: rgba(6, 182, 212, 0.1);
+    border: 1px solid rgba(6, 182, 212, 0.25);
+    padding: 2px 7px;
+    border-radius: 12px;
+    font-weight: 700;
+  }
+
+  .drawer-radar-hub {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 8px;
+  }
+
+  .drawer-radar-nav {
+    display: flex;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.25);
+    padding: 2px;
+    border-radius: 8px;
+  }
+
+  .d-radar-tab-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 8px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-size: 0.74rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+
+  .d-radar-tab-btn.active {
+    background: rgba(6, 182, 212, 0.18);
+    color: var(--color-primary);
+    border: 1px solid rgba(6, 182, 212, 0.3);
+  }
+
+  .d-radar-view {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .d-radar-view.active {
+    display: flex !important;
+  }
+
+  .d-pattern-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-bright);
+  }
+
+  .d-pattern-badge {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+
+  .d-pattern-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .d-p-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 5px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+  }
+
+  .d-p-stat .k {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+  }
+
+  .d-p-stat .v {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    font-family: var(--font-mono);
+  }
+
+  .d-pattern-desc {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    line-height: 1.35;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 6px 8px;
+    border-radius: 6px;
+  }
+
+  #drawer_news_radar_list {
+    max-height: 240px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Strictly hide Desktop Header Buttons on Mobile */
@@ -2469,39 +2676,50 @@ h1, h2, h3, h4, h5, h6 {
     height: 100% !important;
   }
 
-  .panel-copilot .copilot-messages {
+  .panel-copilot .chat-transcript {
     flex: 1 1 auto !important;
+    min-height: 0 !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
     padding: 12px 10px !important;
   }
 
-  .panel-copilot .copilot-input-area {
+  .panel-copilot .quick-chips-wrapper {
     flex-shrink: 0 !important;
-    padding: 8px 10px !important;
-    background: rgba(10, 15, 26, 0.98) !important;
-    border-top: 1px solid var(--border-subtle) !important;
-  }
-
-  .copilot-prompt-chips {
     display: flex !important;
     overflow-x: auto !important;
     flex-wrap: nowrap !important;
     -webkit-overflow-scrolling: touch !important;
     scrollbar-width: none !important;
-    padding-bottom: 6px !important;
+    padding: 6px 10px !important;
     gap: 6px !important;
+    background: rgba(10, 15, 26, 0.95) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
   }
 
-  .copilot-prompt-chips::-webkit-scrollbar {
+  .panel-copilot .quick-chips-wrapper::-webkit-scrollbar {
     display: none !important;
   }
 
-  .copilot-chip-btn {
+  .panel-copilot .quick-chip {
     flex: 0 0 auto !important;
     font-size: 0.72rem !important;
     padding: 5px 10px !important;
     white-space: nowrap !important;
+  }
+
+  .panel-copilot .chat-input-bar {
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 8px 10px !important;
+    background: rgba(10, 15, 26, 0.98) !important;
+    border-top: 1px solid var(--border-subtle) !important;
+    gap: 8px !important;
+  }
+
+  .panel-copilot .chat-text-input {
+    font-size: 16px !important; /* Prevents auto-zoom on iOS */
   }
 
   .chart-toolbar {
@@ -2538,64 +2756,17 @@ h1, h2, h3, h4, h5, h6 {
     left: auto !important;
   }
 
-  .chart-viewport {
-    height: 52vh;
-    min-height: 320px;
-    flex: none;
-  }
-
-  /* Segmented Context Deck on Mobile (100% full width cards) */
-  .chart-context-deck {
-    display: flex;
-    flex-direction: column;
-    height: auto;
-    max-height: none;
-    min-height: unset;
-    padding: 8px;
-    gap: 8px;
-    border-top: 1px solid var(--border-subtle);
-    background: rgba(0, 0, 0, 0.35);
-  }
-
-  .context-deck-mobile-nav {
-    display: flex !important;
-    gap: 6px;
-    background: rgba(255, 255, 255, 0.04);
-    padding: 3px;
-    border-radius: 8px;
-    border: 1px solid var(--border-subtle);
-  }
-
-  .deck-m-tab {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 6px 10px;
-    background: transparent;
-    border: none;
-    border-radius: 6px;
-    color: var(--text-muted);
-    font-size: 0.72rem;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .deck-m-tab.active {
-    background: rgba(6, 182, 212, 0.18);
-    color: var(--color-primary);
-    border: 1px solid rgba(6, 182, 212, 0.3);
-  }
-
-  .chart-context-deck .deck-card {
+  /* Mobile Chart: Context Deck shifted to Left Drawer, Chart takes full height */
+  .chart-context-deck,
+  #chart_context_deck {
     display: none !important;
-    width: 100%;
-    min-height: 120px;
   }
 
-  .chart-context-deck .deck-card.active-deck-card {
-    display: flex !important;
+  .chart-viewport,
+  #tv_chart_container {
+    height: calc(100vh - calc(54px + env(safe-area-inset-top, 0px)) - calc(56px + env(safe-area-inset-bottom, 0px)) - 48px) !important;
+    min-height: 420px !important;
+    flex: 1 1 auto !important;
   }
 
   /* Mobile Dedicated Page Back Button */
@@ -2627,16 +2798,16 @@ h1, h2, h3, h4, h5, h6 {
     color: #0f172a;
   }
 
-  /* Dedicated 100% Full-Screen Mobile Pages for Passbook & Journal (Capacitor Native APK Tier) */
+  /* Dedicated 100% Full-Screen Mobile Pages for Passbook & Journal (Native App Page Experience) */
   .modal-overlay#passbook_modal,
   .modal-overlay#journal_modal {
     position: fixed !important;
-    top: calc(54px + env(safe-area-inset-top, 0px)) !important;
+    top: 0 !important;
     bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
     left: 0 !important;
     right: 0 !important;
     width: 100vw !important;
-    height: calc(100vh - calc(54px + env(safe-area-inset-top, 0px)) - calc(56px + env(safe-area-inset-bottom, 0px))) !important;
+    height: calc(100vh - calc(56px + env(safe-area-inset-bottom, 0px))) !important;
     max-height: none !important;
     background: #080c14 !important;
     backdrop-filter: none !important;
@@ -2646,7 +2817,7 @@ h1, h2, h3, h4, h5, h6 {
     display: none !important;
     align-items: stretch !important;
     justify-content: stretch !important;
-    z-index: 950 !important;
+    z-index: 1050 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
     overflow: hidden !important;
@@ -2684,32 +2855,104 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   [data-theme="light"] .modal-overlay#passbook_modal,
-  [data-theme="light"] .modal-overlay#journal_modal {
+  [data-theme="light"] .modal-overlay#journal_modal,
+  [data-theme="light"] .modal-overlay#passbook_modal .modal-window,
+  [data-theme="light"] .modal-overlay#journal_modal .modal-window,
+  [data-theme="light"] .modal-overlay#journal_modal .journal-modal-body,
+  [data-theme="light"] .modal-overlay#passbook_modal .passbook-modal-body {
     background: #f8fafc !important;
   }
 
   .modal-overlay#passbook_modal .modal-window,
   .modal-overlay#journal_modal .modal-window,
-  .modal-overlay#passbook_modal .passbook-modal-window {
-    width: 100% !important;
-    max-width: 100% !important;
+  .modal-overlay#passbook_modal .passbook-modal-window,
+  .modal-overlay#journal_modal .journal-modal-window {
+    width: 100vw !important;
+    max-width: 100vw !important;
     height: 100% !important;
     max-height: 100% !important;
     border-radius: 0 !important;
     border: none !important;
     box-shadow: none !important;
-    background: transparent !important;
+    background: #080c14 !important;
     display: flex !important;
     flex-direction: column !important;
     margin: 0 !important;
   }
 
-  .modal-overlay#passbook_modal .modal-header,
-  .modal-overlay#journal_modal .modal-header,
+  /* Clean Un-congested Passbook Modal Header */
   .modal-overlay#passbook_modal .passbook-modal-header {
     flex-shrink: 0 !important;
-    height: 52px !important;
-    padding: 6px 12px !important;
+    height: auto !important;
+    min-height: 64px !important;
+    padding: 8px 12px !important;
+    background: rgba(13, 21, 39, 0.98) !important;
+    border-bottom: 1px solid var(--border-subtle) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+    border-radius: 0 !important;
+  }
+
+  .passbook-header-main-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  .passbook-header-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  .passbook-modal-title {
+    font-size: 0.95rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin: 0 !important;
+    font-weight: 700 !important;
+  }
+
+  .passbook-header-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .passbook-compliance-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-wrap: wrap !important;
+    padding-left: 42px !important;
+  }
+
+  .compliance-tag, .compliance-gst-pill {
+    font-size: 0.65rem !important;
+    padding: 2px 6px !important;
+    line-height: 1.2 !important;
+  }
+
+  .btn-purge-ledger {
+    padding: 4px 8px !important;
+    font-size: 0.72rem !important;
+    white-space: nowrap !important;
+  }
+
+  /* Clean Un-congested Journal Modal Header & Body */
+  .modal-overlay#journal_modal .modal-header,
+  .modal-overlay#journal_modal .journal-modal-header {
+    flex-shrink: 0 !important;
+    height: calc(52px + env(safe-area-inset-top, 0px)) !important;
+    padding: env(safe-area-inset-top, 0px) 12px 0 12px !important;
     background: rgba(13, 21, 39, 0.98) !important;
     border-bottom: 1px solid var(--border-subtle) !important;
     display: flex !important;
@@ -2718,22 +2961,59 @@ h1, h2, h3, h4, h5, h6 {
     border-radius: 0 !important;
   }
 
-  [data-theme="light"] .modal-overlay#passbook_modal .modal-header,
-  [data-theme="light"] .modal-overlay#journal_modal .modal-header,
-  [data-theme="light"] .modal-overlay#passbook_modal .passbook-modal-header {
-    background: #ffffff !important;
-    border-bottom: 1px solid #e2e8f0 !important;
+  .journal-header-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  .journal-modal-title {
+    font-size: 0.95rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin: 0 !important;
+  }
+
+  .journal-header-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .modal-overlay#journal_modal .modal-body,
+  .modal-overlay#journal_modal .journal-modal-body {
+    flex: 1 1 auto !important;
+    height: calc(100% - 54px) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 12px 10px 32px 10px !important;
+    background: #080c14 !important;
+    gap: 12px !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 
   .modal-overlay#passbook_modal .modal-body,
-  .modal-overlay#journal_modal .modal-body,
   .modal-overlay#passbook_modal .passbook-modal-body {
-    flex: 1 !important;
-    height: calc(100% - 52px) !important;
+    flex: 1 1 auto !important;
+    height: calc(100% - 64px) !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
-    padding: 12px 10px 24px 10px !important;
+    padding: 12px 10px 32px 10px !important;
+    background: #080c14 !important;
     gap: 12px !important;
+  }
+
+  [data-theme="light"] .modal-overlay#passbook_modal .modal-header,
+  [data-theme="light"] .modal-overlay#journal_modal .modal-header,
+  [data-theme="light"] .modal-overlay#passbook_modal .passbook-modal-header,
+  [data-theme="light"] .modal-overlay#journal_modal .journal-modal-header {
+    background: #ffffff !important;
+    border-bottom: 1px solid #e2e8f0 !important;
   }
 
   /* Responsive tuning inside Passbook mobile page */

@@ -341,6 +341,46 @@ export class TerminalUI {
       });
     }
 
+    // Mobile Header Quick Search Button Toggle
+    const mobileSearchBtn = document.getElementById('mobile_search_toggle_btn');
+    const cryptoSearchContainer = document.getElementById('crypto_search_container');
+    const cryptoSearchInput = document.getElementById('crypto_search_input');
+    if (mobileSearchBtn && cryptoSearchContainer) {
+      mobileSearchBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isActive = cryptoSearchContainer.classList.toggle('mobile-active');
+        if (isActive && cryptoSearchInput) {
+          setTimeout(() => cryptoSearchInput.focus(), 60);
+        }
+      });
+      document.addEventListener('click', (e) => {
+        if (!cryptoSearchContainer.contains(e.target) && !mobileSearchBtn.contains(e.target)) {
+          cryptoSearchContainer.classList.remove('mobile-active');
+        }
+      });
+    }
+
+    // Drawer Market Intelligence Radar (Pattern Scan ⇄ Macro Radar)
+    const dTabPattern = document.getElementById('d_tab_pattern');
+    const dTabMacro = document.getElementById('d_tab_macro');
+    const dPatternCard = document.getElementById('drawer_historical_pattern_card');
+    const dMacroCard = document.getElementById('drawer_news_radar_list');
+
+    if (dTabPattern && dTabMacro) {
+      dTabPattern.addEventListener('click', () => {
+        dTabPattern.classList.add('active');
+        dTabMacro.classList.remove('active');
+        if (dPatternCard) dPatternCard.classList.add('active');
+        if (dMacroCard) dMacroCard.classList.remove('active');
+      });
+      dTabMacro.addEventListener('click', () => {
+        dTabMacro.classList.add('active');
+        dTabPattern.classList.remove('active');
+        if (dMacroCard) dMacroCard.classList.add('active');
+        if (dPatternCard) dPatternCard.classList.remove('active');
+      });
+    }
+
     // Drawer Menu Navigation Actions
     const dOpenSearch = document.getElementById('d_open_search');
     if (dOpenSearch) {
@@ -1383,6 +1423,9 @@ export class TerminalUI {
       document.querySelectorAll('.terminal-panel').forEach(panel => {
         panel.classList.remove('active-mobile-panel');
       });
+      if (this._lastAnalytics && this._lastTrades) {
+        this.updateJournalAndAnalytics(this._lastAnalytics, this._lastTrades);
+      }
     } else {
       // chart, strategy, copilot: hide modals and activate respective terminal panel
       if (passbookModal) passbookModal.classList.remove('open');
@@ -2558,6 +2601,11 @@ export class TerminalUI {
         </div>
         ${itemsHtml}
       `;
+
+      const drawerNewsContainer = document.getElementById('drawer_news_radar_list');
+      if (drawerNewsContainer) {
+        drawerNewsContainer.innerHTML = itemsHtml;
+      }
     }
 
     // Historical Pattern Card (Live Quantitative Scanner)
@@ -2584,6 +2632,23 @@ export class TerminalUI {
           <span class="hist-disclaimer">ℹ️ ${historicalContext.disclaimer}</span>
         </div>
       `;
+
+      const dHistCard = document.getElementById('drawer_historical_pattern_card');
+      if (dHistCard) {
+        dHistCard.innerHTML = `
+          <div class="d-pattern-header">
+            <div class="d-pattern-title"><i class="ph ph-git-commit"></i> ${historicalContext.patternName}</div>
+            <div class="d-pattern-badge ${historicalContext.contextTag === 'Supportive' ? 'text-bullish' : 'text-warning'}">${historicalContext.contextTag}</div>
+          </div>
+          <div class="d-pattern-stats-grid">
+            <div class="d-p-stat"><span class="k">Sample:</span> <span class="v">${historicalContext.sampleSize} setups</span></div>
+            <div class="d-p-stat"><span class="k">Win Rate:</span> <span class="v text-bullish">${historicalContext.historicalWinRate}%</span></div>
+            <div class="d-p-stat"><span class="k">Avg RR:</span> <span class="v">1:${historicalContext.expectedRR}</span></div>
+            <div class="d-p-stat"><span class="k">Live Scan:</span> <span class="v">${liveClock}</span></div>
+          </div>
+          <div class="d-pattern-desc">${historicalContext.explanation}</div>
+        `;
+      }
     }
   }
 
@@ -3040,6 +3105,8 @@ export class TerminalUI {
   }
 
   updateJournalAndAnalytics(analytics, trades) {
+    this._lastAnalytics = analytics;
+    this._lastTrades = trades;
     // Header Live HUD Sync
     const liveMetrics = {
       balance: analytics.balance,

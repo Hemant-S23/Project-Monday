@@ -652,14 +652,89 @@
                 <span class="notif-count-pill" id="notif_header_count">0 alerts</span>
               </div>
               <div class="notif-header-actions">
-                <button class="notif-action-btn" id="notif_mark_read_btn" type="button" title="Mark all as read" onclick="if(window.notificationManager) window.notificationManager.markAllAsRead(event);">
+                <button class="notif-action-btn" id="notif_mark_read_btn" type="button" title="Mark all as read" onclick="window.markAllNotificationsRead(event);">
                   <i class="ph ph-checks"></i> <span>Mark read</span>
                 </button>
-                <button class="notif-action-btn danger" id="notif_clear_btn" type="button" title="Clear all notifications" onclick="if(window.notificationManager) window.notificationManager.clearAll(event);">
+                <button class="notif-action-btn danger" id="notif_clear_btn" type="button" title="Clear all notifications" onclick="window.clearAllNotifications(event);">
                   <i class="ph ph-trash"></i>
                 </button>
               </div>
             </div>
+
+            <script>
+              window.markAllNotificationsRead = function(e) {
+                if (e) {
+                  if (typeof e.stopPropagation === 'function') e.stopPropagation();
+                  if (typeof e.preventDefault === 'function') e.preventDefault();
+                }
+                if (window.notificationManager && typeof window.notificationManager.markAllAsRead === 'function') {
+                  window.notificationManager.markAllAsRead(e);
+                  return;
+                }
+                if (window.__AI_COPILOT_APP__ && window.__AI_COPILOT_APP__.ui && window.__AI_COPILOT_APP__.ui.notificationManager) {
+                  window.__AI_COPILOT_APP__.ui.notificationManager.markAllAsRead(e);
+                  return;
+                }
+                try {
+                  var data = localStorage.getItem('monday_notifications_v1');
+                  if (data) {
+                    var items = JSON.parse(data);
+                    items.forEach(function(n) { n.read = true; });
+                    localStorage.setItem('monday_notifications_v1', JSON.stringify(items));
+                  }
+                  var badge = document.getElementById('notif_unread_badge');
+                  if (badge) badge.style.display = 'none';
+                  var countEl = document.getElementById('notif_header_count');
+                  if (countEl) {
+                    countEl.textContent = '0 unread';
+                    countEl.className = 'notif-count-pill';
+                  }
+                  var list = document.getElementById('notif_list');
+                  if (list) {
+                    list.querySelectorAll('.notif-item').forEach(function(el) {
+                      el.classList.remove('unread');
+                      el.classList.add('read');
+                    });
+                    list.querySelectorAll('.notif-dot').forEach(function(el) {
+                      el.remove();
+                    });
+                  }
+                } catch(err) {
+                  console.warn('markAllNotificationsRead fallback err:', err);
+                }
+              };
+
+              window.clearAllNotifications = function(e) {
+                if (e) {
+                  if (typeof e.stopPropagation === 'function') e.stopPropagation();
+                  if (typeof e.preventDefault === 'function') e.preventDefault();
+                }
+                if (window.notificationManager && typeof window.notificationManager.clearAll === 'function') {
+                  window.notificationManager.clearAll(e);
+                  return;
+                }
+                if (window.__AI_COPILOT_APP__ && window.__AI_COPILOT_APP__.ui && window.__AI_COPILOT_APP__.ui.notificationManager) {
+                  window.__AI_COPILOT_APP__.ui.notificationManager.clearAll(e);
+                  return;
+                }
+                try {
+                  localStorage.setItem('monday_notifications_v1', '[]');
+                  var badge = document.getElementById('notif_unread_badge');
+                  if (badge) badge.style.display = 'none';
+                  var countEl = document.getElementById('notif_header_count');
+                  if (countEl) {
+                    countEl.textContent = '0 alerts';
+                    countEl.className = 'notif-count-pill';
+                  }
+                  var list = document.getElementById('notif_list');
+                  if (list) {
+                    list.innerHTML = '<div class="notif-empty-state"><div class="notif-empty-icon"><i class="ph ph-bell-simple-slash"></i></div><div class="notif-empty-title">All Caught Up</div><div class="notif-empty-desc">No trade or setup notifications yet.</div></div>';
+                  }
+                } catch(err) {
+                  console.warn('clearAllNotifications fallback err:', err);
+                }
+              };
+            </script>
 
             <!-- Scrollable List of Notifications -->
             <div class="notif-list" id="notif_list">
@@ -1752,6 +1827,6 @@
   <script src="js/config/supabaseConfig.js"></script>
 
   <!-- App Script Entrypoint -->
-  <script type="module" src="js/app.js?v=7.0"></script>
+  <script type="module" src="js/app.js?v=7.1"></script>
 </body>
 </html>

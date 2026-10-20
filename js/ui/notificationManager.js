@@ -14,6 +14,12 @@ export class NotificationManager {
     this.listEl = null;
     this.markReadBtn = null;
     this.clearBtn = null;
+
+    // Attach to window so inline onclick and external triggers never fail
+    window.notificationManager = this;
+    window.mondayNotifications = this;
+    window.markAllNotificationsRead = (e) => this.markAllAsRead(e);
+    window.clearAllNotifications = (e) => this.clearAll(e);
   }
 
   loadNotifications() {
@@ -61,6 +67,8 @@ export class NotificationManager {
     // Attach to window so inline onclick and external triggers never fail
     window.notificationManager = this;
     window.mondayNotifications = this;
+    window.markAllNotificationsRead = (e) => this.markAllAsRead(e);
+    window.clearAllNotifications = (e) => this.clearAll(e);
 
     if (this.btnEl && this.wrapperEl) {
       this.btnEl.addEventListener('click', (e) => {

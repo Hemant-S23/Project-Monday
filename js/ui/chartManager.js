@@ -227,7 +227,7 @@ export class ChartManager {
       allow_symbol_change: false,
       calendar: false,
       hide_top_toolbar: false,
-      hide_side_toolbar: false,
+      hide_side_toolbar: window.innerWidth <= 860,
       support_host: "https://www.tradingview.com"
     });
 

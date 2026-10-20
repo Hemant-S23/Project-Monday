@@ -68,9 +68,10 @@ class App {
           this.voiceAssistant.speak('Auto-pilot deactivated. Manual mode active.');
         }
       },
-      onSaveAutoPilotSettings: () => {
+      onSaveAutoPilotSettings: async () => {
+        await this.runFullEvaluation();
         if (this.autoPilotEnabled) {
-          this.scanAndExecuteAutoPilot();
+          await this.scanAndExecuteAutoPilot();
         }
       },
       onExecuteTrade: (orderPacket) => this.executeCurrentTrade(orderPacket),
@@ -410,6 +411,8 @@ class App {
     const fundingData = await this.derivativesEngine.fetchLiveFundingRate(targetAsset, this.currentMarket);
     const eventRisk = this.newsEngine.getOverallEventRisk(targetAsset, this.currentMarket);
 
+    const settings = this.getAutoPilotSettings();
+
     // Strategy Evaluation with Multi-Factor Confluence & Event Shield
     const strategyResult = this.strategyEngine.evaluate(
       targetAsset,
@@ -419,7 +422,7 @@ class App {
       currentPrice,
       currencySymbol,
       relatedAsset,
-      { sentiment, fundingData, eventRisk }
+      { sentiment, fundingData, eventRisk, userStandards: settings }
     );
 
     return {
@@ -568,8 +571,14 @@ class App {
           continue;
         }
 
-        if (strategyResult.state === 'CONFIRMED' && strategyResult.levels) {
-          console.log(`[Auto-Pilot] Autonomous execution triggered for ${asset} (${proposedDir})`);
+        // Dynamic execution eligibility: Either state is CONFIRMED, or score meets user standards
+        const isEligible = (
+          strategyResult.state === 'CONFIRMED' || 
+          (strategyResult.confluenceScore >= settings.minConfluence && strategyResult.levels?.rrRatio >= settings.minRR && (!settings.eventShieldEnabled || !evalData.eventRisk?.isShieldTriggered))
+        ) && strategyResult.levels;
+
+        if (isEligible) {
+          console.log(`[Auto-Pilot] Autonomous execution triggered for ${asset} (${proposedDir}) at ${strategyResult.confluenceScore}% confluence (Threshold: ${settings.minConfluence}%)`);
           await this.processAutoPilotExecution(asset, proposedDir, strategyResult);
         }
       }
@@ -653,7 +662,7 @@ class App {
         return {
           marginUSD: Math.max(5, Math.min(500, parseFloat(s.marginUSD) || 20)),
           leverage: Math.max(1, Math.min(50, parseInt(s.leverage, 10) || (this.currentMarket === 'India' ? 5 : 20))),
-          maxTrades: Math.max(1, Math.min(999, parseInt(s.maxTrades, 10) || 999)),
+          maxTrades: Math.max(1, Math.min(50, parseInt(s.maxTrades, 10) || 2)),
           minConfluence: Math.max(50, Math.min(95, parseInt(s.minConfluence, 10) || 75)),
           minRR: Math.max(1.5, Math.min(5.0, parseFloat(s.minRR) || 3.0)),
           eventShieldEnabled: s.eventShieldEnabled !== false
@@ -663,7 +672,7 @@ class App {
     return {
       marginUSD: 20,
       leverage: this.currentMarket === 'India' ? 5 : 20,
-      maxTrades: 999, // Uncapped for testing
+      maxTrades: 2,
       minConfluence: 75,
       minRR: 3.0,
       eventShieldEnabled: true

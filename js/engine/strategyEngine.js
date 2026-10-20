@@ -109,11 +109,17 @@ export class StrategyEngine {
       missingConditions.push('Waiting for 5M reversal displacement candle close.');
     }
 
-    // Check 5: Strict 1:3.0 Asymmetric Risk / Reward Rule
-    if (levels.rrRatio >= 3.0) {
-      reasoning.push(`Strict 1:3+ Asymmetric Risk/Reward verified at 1:${levels.rrRatio.toFixed(2)} (Target: ${currencySymbol}${levels.target.toFixed(1)}, SL: ${currencySymbol}${levels.stopLoss.toFixed(1)}).`);
+    // --- DYNAMIC USER STANDARDS (from Auto-Pilot Settings panel) ---
+    const standards = externalTelemetry?.userStandards || {};
+    const minConfluence = typeof standards.minConfluence === 'number' ? standards.minConfluence : 75;
+    const minRR = typeof standards.minRR === 'number' ? standards.minRR : 3.0;
+    const isShieldEnforced = standards.eventShieldEnabled !== false;
+
+    // Check 5: Dynamic Asymmetric Risk / Reward Rule
+    if (levels.rrRatio >= minRR) {
+      reasoning.push(`Asymmetric Risk/Reward verified at 1:${levels.rrRatio.toFixed(2)} (Target: ${currencySymbol}${levels.target.toFixed(1)}, SL: ${currencySymbol}${levels.stopLoss.toFixed(1)}).`);
     } else {
-      missingConditions.push(`Nearest target yields RR 1:${levels.rrRatio.toFixed(2)} (Below required 1:3.0 asymmetric minimum).`);
+      missingConditions.push(`Nearest target yields RR 1:${levels.rrRatio.toFixed(2)} (Below required 1:${minRR.toFixed(1)} standard minimum).`);
     }
 
     // Check 6: RSI Momentum Alignment
@@ -133,8 +139,8 @@ export class StrategyEngine {
     if (htfTrend.direction !== 'UNCLEAR') confluenceScore += 20;
     if (ltfStructure.inPullbackZone) confluenceScore += 20;
     if (ltfStructure.hasConfirmation) confluenceScore += 20;
-    if (levels.rrRatio >= 3.0) confluenceScore += 15;
-    else if (levels.rrRatio >= 2.5) confluenceScore += 10;
+    if (levels.rrRatio >= minRR) confluenceScore += 15;
+    else if (levels.rrRatio >= Math.max(1.5, minRR - 0.5)) confluenceScore += 10;
     if (rsiAligned) confluenceScore += 10;
     if (volumeFlow.isInstitutional) confluenceScore += 10;
     if (smtAnalysis.divergenceDetected) confluenceScore += 10;
@@ -144,7 +150,7 @@ export class StrategyEngine {
 
     // Hyper-Sensitive Event Risk Shield (Safety Gatekeeper)
     const isEventShieldTriggered = !!(externalTelemetry?.eventRisk?.isShieldTriggered);
-    if (isEventShieldTriggered) {
+    if (isEventShieldTriggered && isShieldEnforced) {
       confluenceScore = Math.max(0, confluenceScore - 25);
       const shockHeadline = externalTelemetry?.eventRisk?.activeEvents?.[0]?.title || 'Market Shock / Macro Release';
       missingConditions.push(`🚨 HYPER-SENSITIVE EVENT RISK SHIELD ACTIVE: ${shockHeadline}. New entries throttled to preserve capital against news spikes.`);
@@ -152,19 +158,19 @@ export class StrategyEngine {
 
     let confluenceGrade = 'GRADE C [NO EDGE]';
     if (confluenceScore >= 85) confluenceGrade = 'GRADE A+ [INSTITUTIONAL EDGE]';
-    else if (confluenceScore >= 75) confluenceGrade = 'GRADE A [HIGH CONFLUENCE]';
+    else if (confluenceScore >= minConfluence) confluenceGrade = `GRADE A [THRESHOLD ≥ ${minConfluence}%]`;
     else if (confluenceScore >= 50) confluenceGrade = 'GRADE B [DEVELOPING]';
 
-    // State synthesis (Requires >= 75% Confluence, 1:3.0 RR, and Event Shield clear)
+    // State synthesis (Requires >= minConfluence, >= minRR, and Event Shield clear)
     if (ltfStructure.isInvalidated) {
       state = 'CANCELLED';
       reasoning.push(`Setup invalidated: 5M structure broke key invalidation level ${currencySymbol}${ltfStructure.invalidationLevel.toFixed(1)}.`);
     } else if (
       ltfStructure.inPullbackZone &&
       ltfStructure.hasConfirmation &&
-      levels.rrRatio >= 3.0 &&
-      confluenceScore >= 75 &&
-      !isEventShieldTriggered
+      levels.rrRatio >= minRR &&
+      confluenceScore >= minConfluence &&
+      (!isShieldEnforced || !isEventShieldTriggered)
     ) {
       state = 'CONFIRMED';
     } else if (ltfStructure.inPullbackZone) {

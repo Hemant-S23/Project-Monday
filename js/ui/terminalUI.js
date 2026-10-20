@@ -35,6 +35,9 @@ export class TerminalUI {
       availableBalance: 2000
     };
 
+    // User manual direction lock (prevents periodic AI ticks from overriding user's Long/Short choice)
+    this.userDirectionLocked = false;
+
     // Cached strategy state for order desk synchronization
     this.latestStrategyState = null;
 
@@ -1425,7 +1428,8 @@ export class TerminalUI {
     // 1. Long / Short Direction Toggle
     if (dirLongBtn && dirShortBtn) {
       dirLongBtn.addEventListener('click', () => {
-        if (this.orderState.direction === 'LONG') return;
+        this.userDirectionLocked = true;
+        if (this.orderState.direction === 'LONG' && dirLongBtn.classList.contains('active')) return;
         this.orderState.direction = 'LONG';
         dirLongBtn.classList.add('active');
         dirShortBtn.classList.remove('active');
@@ -1434,7 +1438,8 @@ export class TerminalUI {
       });
 
       dirShortBtn.addEventListener('click', () => {
-        if (this.orderState.direction === 'SHORT') return;
+        this.userDirectionLocked = true;
+        if (this.orderState.direction === 'SHORT' && dirShortBtn.classList.contains('active')) return;
         this.orderState.direction = 'SHORT';
         dirShortBtn.classList.add('active');
         dirLongBtn.classList.remove('active');
@@ -2042,6 +2047,9 @@ export class TerminalUI {
 
   setActiveWatchlistAsset(asset) {
     if (!asset) return;
+    if (this.currentAsset !== asset) {
+      this.userDirectionLocked = false;
+    }
     this.currentAsset = asset;
     const symUpper = asset.toUpperCase().replace(/(\/USD|USDT|USD)$/, '');
 
@@ -2131,9 +2139,10 @@ export class TerminalUI {
     if (!levels) return;
     const dir = (direction || 'LONG').toUpperCase();
     this.orderState.direction = dir;
+    this.userDirectionLocked = false;
 
-    const dirLongBtn = document.getElementById('order_dir_long');
-    const dirShortBtn = document.getElementById('order_dir_short');
+    const dirLongBtn = document.getElementById('btn_order_dir_long');
+    const dirShortBtn = document.getElementById('btn_order_dir_short');
     if (dirLongBtn && dirShortBtn) {
       dirLongBtn.classList.toggle('active', dir === 'LONG');
       dirShortBtn.classList.toggle('active', dir === 'SHORT');
@@ -2672,11 +2681,11 @@ export class TerminalUI {
       return isNaN(n) ? 0 : +(n.toFixed(2));
     };
 
-    if (riskParams.direction) {
+    if (riskParams.direction && !this.userDirectionLocked) {
       const dirUpper = riskParams.direction.toUpperCase();
       this.orderState.direction = dirUpper;
-      const dirLongBtn = document.getElementById('order_dir_long');
-      const dirShortBtn = document.getElementById('order_dir_short');
+      const dirLongBtn = document.getElementById('btn_order_dir_long');
+      const dirShortBtn = document.getElementById('btn_order_dir_short');
       if (dirLongBtn && dirShortBtn) {
         dirLongBtn.classList.toggle('active', dirUpper === 'LONG');
         dirShortBtn.classList.toggle('active', dirUpper === 'SHORT');
@@ -2684,16 +2693,24 @@ export class TerminalUI {
     }
 
     if (riskParams.entry) this.orderState.entryPrice = cleanPrice(riskParams.entry);
-    if (riskParams.stopLoss) this.orderState.slPrice = cleanPrice(riskParams.stopLoss);
-    if (riskParams.target) this.orderState.tpPrice = cleanPrice(riskParams.target);
 
-    const tpInput = document.getElementById('order_tp_input');
-    const slInput = document.getElementById('order_sl_input');
-    if (tpInput && !tpInput.matches(':focus') && riskParams.target) {
-      tpInput.value = cleanPrice(riskParams.target);
-    }
-    if (slInput && !slInput.matches(':focus') && riskParams.stopLoss) {
-      slInput.value = cleanPrice(riskParams.stopLoss);
+    // Only sync AI SL/TP if user has not locked into an opposite counter-trend direction
+    const userDir = (this.orderState.direction || 'LONG').toUpperCase();
+    const aiDir = (riskParams.direction || '').toUpperCase();
+    const isDirectionMatched = !aiDir || userDir === aiDir;
+
+    if (isDirectionMatched) {
+      if (riskParams.stopLoss) this.orderState.slPrice = cleanPrice(riskParams.stopLoss);
+      if (riskParams.target) this.orderState.tpPrice = cleanPrice(riskParams.target);
+
+      const tpInput = document.getElementById('order_tp_input');
+      const slInput = document.getElementById('order_sl_input');
+      if (tpInput && !tpInput.matches(':focus') && riskParams.target) {
+        tpInput.value = cleanPrice(riskParams.target);
+      }
+      if (slInput && !slInput.matches(':focus') && riskParams.stopLoss) {
+        slInput.value = cleanPrice(riskParams.stopLoss);
+      }
     }
 
     this.refreshDerivativesOrderDesk();
@@ -2760,7 +2777,7 @@ export class TerminalUI {
     if (closeAllBtn) {
       if (positions && positions.length > 0) {
         closeAllBtn.classList.remove('hidden');
-        closeAllBtn.innerHTML = `<i class="ph-bold ph-lightning"></i> <span>Close All (${positions.length})</span>`;
+        closeAllBtn.innerHTML = `<i class="ph-bold ph-lightning"></i> <span>Close All</span>`;
       } else {
         closeAllBtn.classList.add('hidden');
       }

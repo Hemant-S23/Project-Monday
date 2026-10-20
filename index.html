@@ -607,10 +607,10 @@
                 <span class="notif-count-pill" id="notif_header_count">0 alerts</span>
               </div>
               <div class="notif-header-actions">
-                <button class="notif-action-btn" id="notif_mark_read_btn" type="button" title="Mark all as read">
+                <button class="notif-action-btn" id="notif_mark_read_btn" type="button" title="Mark all as read" onclick="if(window.notificationManager) window.notificationManager.markAllAsRead(event);">
                   <i class="ph ph-checks"></i> <span>Mark read</span>
                 </button>
-                <button class="notif-action-btn danger" id="notif_clear_btn" type="button" title="Clear all notifications">
+                <button class="notif-action-btn danger" id="notif_clear_btn" type="button" title="Clear all notifications" onclick="if(window.notificationManager) window.notificationManager.clearAll(event);">
                   <i class="ph ph-trash"></i>
                 </button>
               </div>
@@ -1696,6 +1696,6 @@
   <script src="js/config/supabaseConfig.js"></script>
 
   <!-- App Script Entrypoint -->
-  <script type="module" src="js/app.js?v=6.6"></script>
+  <script type="module" src="js/app.js?v=6.7"></script>
 </body>
 </html>

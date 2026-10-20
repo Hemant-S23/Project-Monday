@@ -58,6 +58,10 @@ export class NotificationManager {
     this.markReadBtn = document.getElementById('notif_mark_read_btn');
     this.clearBtn = document.getElementById('notif_clear_btn');
 
+    // Attach to window so inline onclick and external triggers never fail
+    window.notificationManager = this;
+    window.mondayNotifications = this;
+
     if (this.btnEl && this.wrapperEl) {
       this.btnEl.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -83,23 +87,37 @@ export class NotificationManager {
     }
 
     if (this.markReadBtn) {
-      this.markReadBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.markAllAsRead();
-      });
+      this.markReadBtn.addEventListener('click', (e) => this.markAllAsRead(e));
     }
 
     if (this.clearBtn) {
-      this.clearBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.clearAll();
-      });
+      this.clearBtn.addEventListener('click', (e) => this.clearAll(e));
     }
+
+    // Bulletproof Event Delegation Fallback
+    document.addEventListener('click', (e) => {
+      const markBtn = e.target.closest('#notif_mark_read_btn');
+      if (markBtn) {
+        this.markAllAsRead(e);
+        return;
+      }
+      const clearBtn = e.target.closest('#notif_clear_btn');
+      if (clearBtn) {
+        this.clearAll(e);
+        return;
+      }
+    });
 
     this.render();
   }
 
   addNotification({ type = 'info', title, message, tradeId = null }) {
+    // Deduplication guard: ignore duplicate identical alert if received within last 45 seconds
+    const isDuplicate = this.notifications.some(
+      n => n.title === title && n.message === message && (Date.now() - n.timestamp < 45000)
+    );
+    if (isDuplicate) return;
+
     const item = {
       id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
       type,
@@ -128,13 +146,21 @@ export class NotificationManager {
     }
   }
 
-  markAllAsRead() {
+  markAllAsRead(e) {
+    if (e) {
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+    }
     this.notifications.forEach(n => { n.read = true; });
     this.save();
     this.render();
   }
 
-  clearAll() {
+  clearAll(e) {
+    if (e) {
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+    }
     this.notifications = [];
     this.save();
     this.render();

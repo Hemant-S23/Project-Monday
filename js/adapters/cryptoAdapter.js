@@ -148,6 +148,10 @@ export class CryptoAdapter extends MarketAdapter {
     }
     await Promise.all(fetches);
 
+    if (this.cache[asset]['5M'] && this.cache[asset]['5M'].length > 0) {
+      this.cache[asset].price = this.cache[asset]['5M'][this.cache[asset]['5M'].length - 1].close;
+    }
+
     // Dynamically subscribe on live WebSocket if connected
     this.sendWsSubscription([symbol]);
 

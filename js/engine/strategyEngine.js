@@ -364,19 +364,19 @@ export class StrategyEngine {
 
     let stopLoss = 0;
     let target = 0;
+    // Guaranteed minimum 0.5% stop distance so market noise doesn't trigger instant stop outs
+    const minBuffer = currentPrice * 0.005;
 
     if (trendDirection === 'BULLISH') {
       const swingLow = Math.min(...lows);
-      stopLoss = swingLow * 0.9985; // 0.15% below swing low
-      const recentHigh = Math.max(...highs);
-      const potentialTarget = Math.max(recentHigh, currentPrice + (currentPrice - stopLoss) * 3.2);
-      target = potentialTarget;
+      stopLoss = Math.min(swingLow * 0.998, currentPrice - minBuffer);
+      const risk = currentPrice - stopLoss;
+      target = currentPrice + (risk * 3.2);
     } else {
       const swingHigh = Math.max(...highs);
-      stopLoss = swingHigh * 1.0015;
-      const recentLow = Math.min(...lows);
-      const potentialTarget = Math.min(recentLow, currentPrice - (stopLoss - currentPrice) * 3.2);
-      target = potentialTarget;
+      stopLoss = Math.max(swingHigh * 1.002, currentPrice + minBuffer);
+      const risk = stopLoss - currentPrice;
+      target = currentPrice - (risk * 3.2);
     }
 
     const risk = Math.abs(currentPrice - stopLoss);

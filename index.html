@@ -1598,9 +1598,13 @@
                 </label>
               </div>
               <select id="select_autopilot_maxtrades" class="settings-select">
-                <option value="1">1 Trade (Max Focus)</option>
-                <option value="2" selected>2 Trades (MONDAY Standard)</option>
-                <option value="3">3 Trades (Diversified)</option>
+                <option value="2" selected>2 Trades (Conservative)</option>
+                <option value="5">5 Trades (Moderate)</option>
+                <option value="10">10 Trades (Active Basket)</option>
+                <option value="30">30 Trades (Multi-Asset Diversified)</option>
+                <option value="50">50 Trades (Portfolio Scale)</option>
+                <option value="70">70 Trades (High-Capacity Swarm)</option>
+                <option value="100">100 Trades (Institutional Max)</option>
               </select>
             </div>
 
@@ -1748,6 +1752,6 @@
   <script src="js/config/supabaseConfig.js"></script>
 
   <!-- App Script Entrypoint -->
-  <script type="module" src="js/app.js?v=6.9"></script>
+  <script type="module" src="js/app.js?v=7.0"></script>
 </body>
 </html>

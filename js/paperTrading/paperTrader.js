@@ -368,7 +368,11 @@ export class PaperTrader {
       // 1. Check Liquidation (Delta Exchange Standard)
       let hitLiquidation = false;
       if (pos.liquidationPrice && pos.liquidationPrice > 0) {
-        hitLiquidation = isLong ? (livePrice <= pos.liquidationPrice) : (livePrice >= pos.liquidationPrice);
+        // Strict sanity guard: For LONG, liquidation must strictly be below entry. For SHORT, strictly above entry.
+        const isLiqSane = isLong ? (pos.liquidationPrice < pos.entry) : (pos.liquidationPrice > pos.entry);
+        if (isLiqSane) {
+          hitLiquidation = isLong ? (livePrice <= pos.liquidationPrice) : (livePrice >= pos.liquidationPrice);
+        }
       }
 
       // 2. Check SL or TP Hit

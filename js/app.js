@@ -549,9 +549,18 @@ class App {
       if (openPositions.length >= settings.maxTrades) return;
 
       // Watchlist candidate assets for current market (Prioritizing currently viewed asset)
-      const baseCandidates = this.currentMarket === 'India'
-        ? ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATAMOTORS', 'HDFCBANK', 'HAL', 'ZOMATO']
-        : ['BTC', 'ETH', 'SOL', 'AVAX', 'LINK', 'DOGE', 'NEAR', 'SUI', 'XRP', 'ADA'];
+      let baseCandidates;
+      if (this.currentMarket === 'India') {
+        baseCandidates = ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATAMOTORS', 'HDFCBANK', 'HAL', 'ZOMATO', 'INFY', 'TCS', 'ICICIBANK', 'SBIN', 'BHARTIARTL', 'KOTAKBANK', 'LT', 'AXISBANK'];
+      } else {
+        const top10 = ['BTC', 'ETH', 'SOL', 'AVAX', 'LINK', 'DOGE', 'NEAR', 'SUI', 'XRP', 'ADA'];
+        if (settings.maxTrades > 10 && this.cryptoAdapter?.allMarkets?.length > 0) {
+          const allMarketAssets = this.cryptoAdapter.allMarkets.map(m => m.baseAsset).filter(Boolean);
+          baseCandidates = Array.from(new Set([...top10, ...allMarketAssets])).slice(0, Math.min(100, settings.maxTrades + 15));
+        } else {
+          baseCandidates = top10;
+        }
+      }
       const candidateAssets = this.currentAsset
         ? [this.currentAsset, ...baseCandidates.filter(a => a !== this.currentAsset)]
         : baseCandidates;
@@ -672,7 +681,7 @@ class App {
         return {
           marginUSD: Math.max(5, Math.min(500, parseFloat(s.marginUSD) || 20)),
           leverage: Math.max(1, Math.min(50, parseInt(s.leverage, 10) || (this.currentMarket === 'India' ? 5 : 20))),
-          maxTrades: Math.max(1, Math.min(50, parseInt(s.maxTrades, 10) || 2)),
+          maxTrades: Math.max(1, Math.min(100, parseInt(s.maxTrades, 10) || 2)),
           minConfluence: Math.max(50, Math.min(95, parseInt(s.minConfluence, 10) || 75)),
           minRR: Math.max(1.5, Math.min(5.0, parseFloat(s.minRR) || 3.0)),
           eventShieldEnabled: s.eventShieldEnabled !== false
@@ -823,7 +832,12 @@ class App {
     const positionSize = +(notionalUSD / entry).toFixed(5);
     const riskUSD = marginUSD;
     const rewardUSD = +(riskUSD * rr).toFixed(2);
-    const liqPrice = +(direction === 'LONG' ? entry * (1 - 1 / leverage) : entry * (1 + 1 / leverage)).toFixed(2);
+    const rawLiq = direction === 'LONG' 
+      ? entry * (1 - (1 / leverage) * 0.95) 
+      : entry * (1 + (1 / leverage) * 0.95);
+    const liqPrice = entry >= 1000 
+      ? +rawLiq.toFixed(2) 
+      : (entry >= 1 ? +rawLiq.toFixed(4) : +rawLiq.toFixed(6));
 
     const orderPacket = {
       asset,

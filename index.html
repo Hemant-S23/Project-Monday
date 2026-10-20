@@ -17,8 +17,8 @@
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/main.css?v=5.1">
-  <link rel="stylesheet" href="css/components.css?v=5.0">
+  <link rel="stylesheet" href="css/main.css?v=5.2">
+  <link rel="stylesheet" href="css/components.css?v=5.1">
   <link rel="stylesheet" href="css/auth.css?v=4.7">
   <link rel="stylesheet" href="css/multi-chart.css?v=6.1">
 
@@ -279,6 +279,46 @@
       </button>
     </div>
 
+    <!-- Market Intelligence Hub (Pattern Scan & Macro Radar for Mobile) -->
+    <div class="drawer-section-title d-flex-between">
+      <span>Market Intelligence</span>
+      <span class="d-live-pulse-badge"><span class="live-dot pulse-cyan"></span> LIVE SYNC</span>
+    </div>
+
+    <div class="drawer-radar-hub" id="drawer_radar_hub">
+      <div class="drawer-radar-nav">
+        <button class="d-radar-tab-btn active" id="d_tab_pattern" data-deck-view="hist" type="button">
+          <i class="ph ph-git-commit"></i> Pattern Scan
+        </button>
+        <button class="d-radar-tab-btn" id="d_tab_macro" data-deck-view="news" type="button">
+          <i class="ph ph-broadcast"></i> Macro Radar
+        </button>
+      </div>
+
+      <!-- Pattern Scan Drawer Card -->
+      <div class="d-radar-view active" id="drawer_historical_pattern_card">
+        <div class="d-pattern-header">
+          <div class="d-pattern-title" id="d_pattern_title"><i class="ph ph-git-commit"></i> Regime Pattern Matching</div>
+          <div class="d-pattern-badge" id="d_pattern_badge">Supportive</div>
+        </div>
+        <div class="d-pattern-stats-grid">
+          <div class="d-p-stat"><span class="k">Sample:</span> <span class="v" id="d_stat_sample">84 setups</span></div>
+          <div class="d-p-stat"><span class="k">Win Rate:</span> <span class="v text-bullish" id="d_stat_winrate">64.3%</span></div>
+          <div class="d-p-stat"><span class="k">Avg RR:</span> <span class="v" id="d_stat_rr">1:2.65</span></div>
+          <div class="d-p-stat"><span class="k">Regime:</span> <span class="v text-bullish" id="d_stat_regime">Supportive</span></div>
+        </div>
+        <div class="d-pattern-desc" id="d_pattern_desc">
+          Evaluating similar discount pullback behavior following Asian liquidity sweeps.
+        </div>
+      </div>
+
+      <!-- Macro Radar News Drawer List -->
+      <div class="d-radar-view" id="drawer_news_radar_list">
+        <div class="d-macro-empty"><span class="live-dot pulse-green"></span> Live Macro Feed syncing...</div>
+      </div>
+    </div>
+
+    <div class="drawer-section-title">Navigation & Tools</div>
     <div class="drawer-menu-list">
       <button class="drawer-menu-item" id="d_open_search" type="button">
         <i class="ph ph-magnifying-glass item-ico cyan"></i>
@@ -522,6 +562,11 @@
             <span class="live-chip-text" id="header_live_text">+$0.00 (+0.00R)</span>
           </div>
         </div>
+
+        <!-- Mobile Quick Search Toggle (Clean Un-congested Header) -->
+        <button class="mobile-search-toggle-btn" id="mobile_search_toggle_btn" type="button" aria-label="Search Assets" title="Search Stocks & Crypto">
+          <i class="ph ph-magnifying-glass"></i>
+        </button>
 
         <!-- Instant Zero-Lag Synchronous HUD Restoration Script -->
         <script>
@@ -1201,19 +1246,24 @@
 
   <!-- TRADE JOURNAL & PERFORMANCE ANALYTICS MODAL (PRD Sections 27 & 28) -->
   <div class="modal-overlay" id="journal_modal">
-    <div class="modal-window">
-      <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 8px;">
+    <div class="modal-window journal-modal-window">
+      <div class="modal-header journal-modal-header">
+        <div class="journal-header-left" style="display: flex; align-items: center; gap: 8px;">
           <button class="mobile-page-back-btn" id="m_back_journal_btn" type="button" aria-label="Back to Chart" title="Back to Chart">
             <i class="ph-bold ph-arrow-left"></i>
           </button>
-          <h2 style="font-size: 1.1rem; display: flex; align-items: center; gap: 8px; margin: 0;">
-            <i class="ph ph-notebook" style="color: #c084fc;"></i> Paper Trade Journal & Analytics
-          </h2>
+          <div class="passbook-icon-wrapper" style="background: rgba(192, 132, 252, 0.15); border-color: rgba(192, 132, 252, 0.35); color: #c084fc;">
+            <i class="ph ph-notebook"></i>
+          </div>
+          <div>
+            <h2 class="journal-modal-title" style="font-size: 1.05rem; display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 700;">
+              Trade Journal & Analytics
+            </h2>
+          </div>
         </div>
-        <div style="display: flex; gap: 10px; align-items: center;">
-          <button class="icon-btn" id="reset_account_btn" title="Reset Paper Account" style="width: auto; padding: 4px 10px;">
-            <i class="ph ph-arrow-counter-clockwise"></i> Reset Balance
+        <div class="journal-header-right" style="display: flex; gap: 8px; align-items: center;">
+          <button class="icon-btn" id="reset_account_btn" title="Reset Paper Account" style="width: auto; padding: 5px 10px; font-size: 0.76rem; border-radius: 6px;">
+            <i class="ph ph-arrow-counter-clockwise"></i> <span class="reset-journal-btn-text">Reset Balance</span>
           </button>
           <button class="icon-btn" id="close_journal_btn" title="Close Modal">
             <i class="ph ph-x"></i>
@@ -1221,7 +1271,7 @@
         </div>
       </div>
 
-      <div class="modal-body">
+      <div class="modal-body journal-modal-body">
         <!-- Analytics Metrics Strip (PRD Section 28) -->
         <div class="analytics-metrics-strip">
           <div class="metric-box">
@@ -1304,29 +1354,31 @@
   <div class="modal-overlay" id="passbook_modal">
     <div class="modal-window passbook-modal-window">
       <div class="modal-header passbook-modal-header">
-        <div class="passbook-header-left">
-          <button class="mobile-page-back-btn" id="m_back_passbook_btn" type="button" aria-label="Back to Chart" title="Back to Chart">
-            <i class="ph-bold ph-arrow-left"></i>
-          </button>
-          <div class="passbook-icon-wrapper">
-            <i class="ph-bold ph-receipt"></i>
-          </div>
-          <div>
-            <h2 class="passbook-modal-title">Financial Passbook & Trade Ledger</h2>
-            <div class="passbook-compliance-row">
-              <span class="compliance-tag"><i class="ph-fill ph-shield-check"></i> Delta Exchange India Compliant</span>
-              <span class="compliance-sep">•</span>
-              <span class="compliance-gst-pill">18% GST Auto-Bifurcated</span>
+        <div class="passbook-header-main-row">
+          <div class="passbook-header-left">
+            <button class="mobile-page-back-btn" id="m_back_passbook_btn" type="button" aria-label="Back to Chart" title="Back to Chart">
+              <i class="ph-bold ph-arrow-left"></i>
+            </button>
+            <div class="passbook-icon-wrapper">
+              <i class="ph-bold ph-receipt"></i>
+            </div>
+            <div>
+              <h2 class="passbook-modal-title">Trade Ledger & Passbook</h2>
             </div>
           </div>
+          <div class="passbook-header-right">
+            <button class="btn-purge-ledger" id="btn_purge_passbook" type="button" title="Purge Glitch Trades & Restore $2,000 Balance">
+              <i class="ph ph-trash"></i> <span class="purge-btn-text">Reset & Restore $2,000</span>
+            </button>
+            <button class="icon-btn" id="close_passbook_btn" title="Close Passbook">
+              <i class="ph ph-x"></i>
+            </button>
+          </div>
         </div>
-        <div class="passbook-header-right" style="display: flex; align-items: center; gap: 8px;">
-          <button class="btn-purge-ledger" id="btn_purge_passbook" type="button" title="Purge Glitch Trades & Restore $2,000 Balance" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); color: #ef4444; font-size: 11px; font-weight: 600; padding: 5px 11px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.2s ease;">
-            <i class="ph ph-trash"></i> Reset & Restore $2,000
-          </button>
-          <button class="icon-btn" id="close_passbook_btn" title="Close Passbook">
-            <i class="ph ph-x"></i>
-          </button>
+        <div class="passbook-compliance-row">
+          <span class="compliance-tag"><i class="ph-fill ph-shield-check"></i> Delta Exchange India Compliant</span>
+          <span class="compliance-sep">•</span>
+          <span class="compliance-gst-pill">18% GST Auto-Bifurcated</span>
         </div>
       </div>
 
@@ -1696,6 +1748,6 @@
   <script src="js/config/supabaseConfig.js"></script>
 
   <!-- App Script Entrypoint -->
-  <script type="module" src="js/app.js?v=6.7"></script>
+  <script type="module" src="js/app.js?v=6.9"></script>
 </body>
 </html>

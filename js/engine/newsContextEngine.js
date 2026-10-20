@@ -117,13 +117,12 @@ export class NewsContextEngine {
       return this.activeShockEvents;
     }
 
-    const shockKeywords = [
-      'sec', 'lawsuit', 'sue', 'sued', 'ban', 'banned', 'hack', 'hacked', 
-      'stolen', 'exploit', 'subpoena', 'indictment', 'emergency rate', 
-      'rate hike', 'rate cut', 'war', 'missile', 'sanction', 'sanctions', 
-      'insolvent', 'insolvency', 'bankruptcy', 'chapter 11', 'depeg', 
-      'binance', 'investigation', 'liquidation', 'rug pull', 
-      'etf', 'record', 'surge', 'rally', 'dump', 'fomc', 'rbi'
+    const acuteShockPatterns = [
+      /\b(hack|hacked|exploit|exploited|stolen|drain|drained|rug\s*pull)\b/i,
+      /\b(insolvent|insolvency|bankrupt|bankruptcy|chapter\s*11|default|defaulted|depeg|depegged)\b/i,
+      /\b(sec\s+sues?|sec\s+lawsuit|indictment|subpoena|fraud\s+charges)\b/i,
+      /\b(emergency\s+rate|emergency\s+cut|flash\s+crash|trading\s+halt)\b/i,
+      /\b(war\s+declared|missile\s+strike|sanctions\s+imposed)\b/i
     ];
 
     const shocks = [];
@@ -140,10 +139,11 @@ export class NewsContextEngine {
       if (resp && resp.ok) {
         const json = await resp.json();
         if (json && json.status === 'ok' && Array.isArray(json.items)) {
+          const highImpactPattern = /\b(fomc|cpi|interest\s*rate|hack|hacked|exploit|depeg|insolven|bankruptcy|liquidation)\b/i;
           this.liveRssArticles = json.items.slice(0, 10).map((item, idx) => {
             const pubTime = item.pubDate ? new Date(item.pubDate).getTime() : (now - (idx + 1) * 12 * 60000);
             const titleLower = ((item.title || '') + ' ' + (item.description || '')).toLowerCase();
-            const isHighImpact = ['sec', 'etf', 'hack', 'fed', 'rate', 'ban', 'liquidation'].some(k => titleLower.includes(k));
+            const isHighImpact = highImpactPattern.test(titleLower);
 
             return {
               id: `RSS-${idx}-${pubTime}`,
@@ -162,10 +162,11 @@ export class NewsContextEngine {
           // Check if any recent article is an urgent shock
           for (const art of this.liveRssArticles.slice(0, 3)) {
             const titleLower = art.title.toLowerCase();
-            const matchedKw = shockKeywords.find(kw => titleLower.includes(kw));
-            if (matchedKw && art.riskLevel === 'High') {
+            const isAcuteShock = acuteShockPatterns.some(p => p.test(titleLower));
+            if (isAcuteShock) {
               shocks.push({
                 ...art,
+                riskLevel: 'High',
                 title: `🚨 BREAKING: ${art.title}`
               });
             }
@@ -192,13 +193,14 @@ export class NewsContextEngine {
           const pct = parseFloat(ticker.priceChangePercent);
           const volBillion = (parseFloat(ticker.quoteVolume) / 1e9).toFixed(2);
 
-          if (Math.abs(pct) >= 2.0) {
+          // Real volatility shock requires extreme expansion (>= 6% swing)
+          if (Math.abs(pct) >= 6.0) {
             shocks.unshift({
               id: `VOL-SHOCK-${now}`,
               title: `⚡ VOLATILITY EXPANSION: BTC 24h Range ${pct >= 0 ? '+' : ''}${pct}% ($${volBillion}B Volume)`,
               category: 'Market Structure Shock',
               impact: 'Market Moving',
-              riskLevel: Math.abs(pct) >= 4.0 ? 'High' : 'Medium',
+              riskLevel: Math.abs(pct) >= 9.0 ? 'High' : 'Medium',
               timestamp: now,
               timeWindow: 'Just now (Realtime)',
               affectedAssets: ['BTC', 'ETH', 'SOL', 'Crypto'],
@@ -384,27 +386,27 @@ export class NewsContextEngine {
     const relevant = this.getEventsForAsset(asset, market);
 
     // 1. Live Breaking Shock Check (Flash crashes, black swan wicks, regulatory emergency)
-    const hasShock = this.activeShockEvents && this.activeShockEvents.length > 0;
+    const hasShock = this.activeShockEvents && this.activeShockEvents.some(s => s.riskLevel === 'High');
 
-    // 2. Scheduled High-Impact Event Danger Zone (Active strictly within ±20 minutes of drop)
+    // 2. Scheduled High-Impact Event Danger Zone (Active strictly within ±15 minutes of scheduled drop)
     const imminentHighEvent = relevant.find(e => {
       if (e.riskLevel !== 'High') return false;
       if (!e.timestamp) return false;
       const diffMs = Math.abs(now - e.timestamp);
-      return diffMs <= 20 * 60 * 1000; // ±20 minutes window
+      return diffMs <= 15 * 60 * 1000; // ±15 minutes window
     });
 
     const isShieldTriggered = !!(hasShock || imminentHighEvent);
 
     if (isShieldTriggered) {
       const shockTitle = hasShock 
-        ? this.activeShockEvents[0].title 
+        ? this.activeShockEvents.find(s => s.riskLevel === 'High')?.title || 'Market Shock'
         : (imminentHighEvent ? imminentHighEvent.title : 'High-Impact Macro Event');
       return {
         level: 'High',
         badge: 'High Event Risk (Shield Active)',
         isShieldTriggered: true,
-        summary: `🚨 ${shockTitle} is active or imminent (within 20m). Hyper-sensitive event shield engaged to protect capital against news slippage.`,
+        summary: `🚨 ${shockTitle} is active or imminent (within 15m). Hyper-sensitive event shield engaged to protect capital against news slippage.`,
         activeEvents: relevant,
         lastUpdated: now
       };

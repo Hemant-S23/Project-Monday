@@ -399,10 +399,13 @@ export class CryptoAdapter extends MarketAdapter {
   }
 
   async getHistoricalCandles(asset, timeframe) {
-    if (!this.cache[asset][timeframe] || this.cache[asset][timeframe].length === 0) {
+    if (!this.cache[asset]) {
+      await this.ensureAssetInitialized(asset);
+    }
+    if (!this.cache[asset]?.[timeframe] || this.cache[asset][timeframe].length === 0) {
       await this.refreshCandles(asset, timeframe);
     }
-    return this.cache[asset][timeframe] || [];
+    return this.cache[asset]?.[timeframe] || [];
   }
 
   getCurrentPrice(asset) {

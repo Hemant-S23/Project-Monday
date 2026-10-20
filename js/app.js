@@ -556,15 +556,17 @@ class App {
         ? [this.currentAsset, ...baseCandidates.filter(a => a !== this.currentAsset)]
         : baseCandidates;
 
-      for (const asset of candidateAssets) {
+      // Filter out assets that already have active positions to avoid redundant overhead
+      const availableCandidates = candidateAssets.filter(asset => 
+        !this.paperTrader.openPositions.some(p => p.asset === asset)
+      );
+
+      for (const asset of availableCandidates) {
         // Immediate termination if user disabled Auto-Pilot mid-scan
         if (!this.autoPilotEnabled) break;
 
         // Stop if maxTrades limit reached (bypassed in testing mode)
         if (settings.maxTrades < 900 && this.paperTrader.openPositions.length >= settings.maxTrades) break;
-
-        // Skip assets already open (prevents duplicate position on same coin)
-        if (this.paperTrader.openPositions.some(p => p.asset === asset)) continue;
 
         // Evaluate candidate asset
         const evalData = await this.evaluateAsset(asset);
@@ -582,7 +584,7 @@ class App {
         // Dynamic execution eligibility: Either state is CONFIRMED, or score meets user standards
         const isEligible = (
           strategyResult.state === 'CONFIRMED' || 
-          (strategyResult.confluenceScore >= settings.minConfluence && strategyResult.levels?.rrRatio >= settings.minRR && (!settings.eventShieldEnabled || !evalData.eventRisk?.isShieldTriggered))
+          (strategyResult.confluenceScore >= settings.minConfluence && strategyResult.levels?.rrRatio >= settings.minRR)
         ) && strategyResult.levels;
 
         if (isEligible) {

@@ -148,12 +148,11 @@ export class StrategyEngine {
     // Cap score at 100%
     confluenceScore = Math.min(100, confluenceScore);
 
-    // Hyper-Sensitive Event Risk Shield (Safety Gatekeeper)
+    // Hyper-Sensitive Event Risk Shield Telemetry
     const isEventShieldTriggered = !!(externalTelemetry?.eventRisk?.isShieldTriggered);
     if (isEventShieldTriggered && isShieldEnforced) {
-      confluenceScore = Math.max(0, confluenceScore - 25);
       const shockHeadline = externalTelemetry?.eventRisk?.activeEvents?.[0]?.title || 'Market Shock / Macro Release';
-      missingConditions.push(`🚨 HYPER-SENSITIVE EVENT RISK SHIELD ACTIVE: ${shockHeadline}. New entries throttled to preserve capital against news spikes.`);
+      missingConditions.push(`🛡️ Event Risk Shield Active: High-impact catalyst active (${shockHeadline}). Automated entries will be protected.`);
     }
 
     let confluenceGrade = 'GRADE C [NO EDGE]';
@@ -161,7 +160,7 @@ export class StrategyEngine {
     else if (confluenceScore >= minConfluence) confluenceGrade = `GRADE A [THRESHOLD ≥ ${minConfluence}%]`;
     else if (confluenceScore >= 50) confluenceGrade = 'GRADE B [DEVELOPING]';
 
-    // State synthesis (Requires >= minConfluence, >= minRR, and Event Shield clear)
+    // State synthesis: Pure structural technical determination
     if (ltfStructure.isInvalidated) {
       state = 'CANCELLED';
       reasoning.push(`Setup invalidated: 5M structure broke key invalidation level ${currencySymbol}${ltfStructure.invalidationLevel.toFixed(1)}.`);
@@ -169,8 +168,7 @@ export class StrategyEngine {
       ltfStructure.inPullbackZone &&
       ltfStructure.hasConfirmation &&
       levels.rrRatio >= minRR &&
-      confluenceScore >= minConfluence &&
-      (!isShieldEnforced || !isEventShieldTriggered)
+      confluenceScore >= minConfluence
     ) {
       state = 'CONFIRMED';
     } else if (ltfStructure.inPullbackZone) {
@@ -302,7 +300,7 @@ export class StrategyEngine {
 
       const last = slice[slice.length - 1];
       const prev = slice[slice.length - 2];
-      const hasConfirmation = last && prev && (last.close < last.open) && (last.close < prev.close);
+      const hasConfirmation = last && prev && (last.close < last.open) && (last.close < prev.close || (last.close - last.low) < (last.high - last.close));
 
       return {
         zoneName: 'Premium Supply / FVG Rejection Zone',

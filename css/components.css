@@ -3412,7 +3412,11 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  z-index: 1100;
+  z-index: 10020;
+}
+
+.notif-popover-wrapper.open {
+  z-index: 25000 !important;
 }
 
 .notif-bell-btn {
@@ -3468,7 +3472,6 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Floating Popover Container */
 .notif-popover-menu {
   position: absolute;
   top: calc(100% + 10px);
@@ -3488,13 +3491,14 @@
   transform: translateY(-8px) scale(0.96);
   transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
-  z-index: 10005;
+  z-index: 25005;
 }
 
 .notif-popover-wrapper.open .notif-popover-menu {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0) scale(1);
+  z-index: 25005 !important;
 }
 
 .notif-popover-header {

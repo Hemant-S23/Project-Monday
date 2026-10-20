@@ -806,6 +806,8 @@ h1, h2, h3, h4, h5, h6 {
   gap: 8px;
   flex: 0 0 auto;
   margin-left: auto;
+  position: relative;
+  z-index: 10010;
 }
 
 .account-pill {
@@ -1994,6 +1996,8 @@ h1, h2, h3, h4, h5, h6 {
     order: 3;
     margin-left: 0;
     flex-shrink: 0;
+    position: relative;
+    z-index: 10010;
   }
 }
 
@@ -2301,6 +2305,8 @@ h1, h2, h3, h4, h5, h6 {
     justify-content: flex-end !important;
     flex-shrink: 0 !important;
     flex-wrap: nowrap !important;
+    position: relative !important;
+    z-index: 10010 !important;
   }
 
   .account-pill {

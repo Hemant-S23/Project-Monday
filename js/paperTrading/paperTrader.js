@@ -222,7 +222,7 @@ export class PaperTrader {
         this.balance = this.initialBalance || 2000;
       }
       localStorage.setItem(this.storageKey, JSON.stringify(this.trades));
-      localStorage.setItem(this.balanceStorageKey, this.balance.toFixed(2));
+      localStorage.setItem(this.balanceStorageKey, Number(this.balance).toFixed(2));
       localStorage.setItem(this.positionsStorageKey, JSON.stringify(this.openPositions));
     } catch (e) {
       console.error('Failed to save paper trading state:', e);
@@ -394,7 +394,7 @@ export class PaperTrader {
     return closedList;
   }
 
-  closePosition(tradeId, resultType = 'MANUAL', exitPrice = null) {
+  closePosition(tradeId, resultType = 'MANUAL', exitPrice = null, exitTimestamp = null) {
     const index = this.openPositions.findIndex(p => p.id === tradeId);
     if (index === -1) return null;
 
@@ -462,13 +462,126 @@ export class PaperTrader {
       pnlUSD, // Net Realized Settled PnL
       postTradeBalance,
       rMultiple,
-      closedAt: Date.now()
+      closedAt: exitTimestamp !== null ? exitTimestamp : Date.now()
     };
 
     this.balance = postTradeBalance;
     this.trades.unshift(closedTrade);
+    this.trades.sort((a, b) => (b.closedAt || 0) - (a.closedAt || 0));
     this.save();
     return closedTrade;
+  }
+
+  /**
+   * Downtime Historical Catch-Up Engine
+   * Evaluates historical 5M candles from Coinbase for any open positions during app downtime / system shutdown.
+   * If a trade touched Stop-Loss or Target while system was off, closes it retroactively with the EXACT
+   * historical candle timestamp and price, accurately recording in Passbook, Ledger and Journal.
+   */
+  async auditDowntimeTrades(cryptoAdapter = null) {
+    if (!this.openPositions || this.openPositions.length === 0) return [];
+
+    console.log(`[PaperTrader] Running Downtime Historical Catch-Up for ${this.openPositions.length} open position(s)...`);
+    const resolvedTrades = [];
+    const positionsToAudit = [...this.openPositions];
+
+    for (const pos of positionsToAudit) {
+      try {
+        const isCrypto = !pos.market || pos.market === 'Crypto';
+        let candles = [];
+
+        if (isCrypto) {
+          const cleanAsset = (pos.asset || 'BTC').toUpperCase().replace(/\/USD$/, '').replace(/-USD$/, '');
+          const symbol = `${cleanAsset}-USD`;
+          const url = `https://api.exchange.coinbase.com/products/${symbol}/candles?granularity=300`;
+
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4000);
+            const res = await fetch(url, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (res.ok) {
+              const data = await res.json();
+              if (Array.isArray(data) && data.length > 0) {
+                // Coinbase: [ time (sec), low, high, open, close, volume ]
+                candles = data
+                  .map(c => ({
+                    time: c[0] * 1000,
+                    low: parseFloat(c[1]),
+                    high: parseFloat(c[2]),
+                    open: parseFloat(c[3]),
+                    close: parseFloat(c[4])
+                  }))
+                  .sort((a, b) => a.time - b.time); // Chronological order (oldest to newest)
+              }
+            }
+          } catch (fetchErr) {
+            console.warn(`[PaperTrader] Coinbase candle fetch failed for ${pos.asset} catch-up:`, fetchErr.message);
+          }
+        }
+
+        if (candles.length > 0) {
+          const isLong = (pos.direction || 'LONG').toUpperCase() === 'LONG';
+          const openedTime = pos.openedAt || (Date.now() - 86400000);
+
+          // Check candles that closed during or after trade opened
+          const relevantCandles = candles.filter(c => c.time >= (openedTime - 60000));
+
+          let hitResult = null;
+          let hitPrice = null;
+          let hitTime = null;
+
+          for (const candle of relevantCandles) {
+            // 1. Check Liquidation (Conservative Safety)
+            if (pos.liquidationPrice && pos.liquidationPrice > 0) {
+              const liqHit = isLong ? (candle.low <= pos.liquidationPrice) : (candle.high >= pos.liquidationPrice);
+              if (liqHit) {
+                hitResult = 'LIQUIDATED';
+                hitPrice = pos.liquidationPrice;
+                hitTime = candle.time;
+                break;
+              }
+            }
+
+            // 2. Check Stop Loss (Evaluated before target to enforce risk discipline)
+            const stopHit = isLong ? (candle.low <= pos.stopLoss) : (candle.high >= pos.stopLoss);
+            if (stopHit) {
+              hitResult = 'LOSS';
+              hitPrice = pos.stopLoss;
+              hitTime = candle.time;
+              break;
+            }
+
+            // 3. Check Take Profit
+            const targetHit = isLong ? (candle.high >= pos.target) : (candle.low <= pos.target);
+            if (targetHit) {
+              hitResult = 'WIN';
+              hitPrice = pos.target;
+              hitTime = candle.time;
+              break;
+            }
+          }
+
+          if (hitResult && hitPrice !== null && hitTime !== null) {
+            console.log(`[PaperTrader] Downtime Catch-Up: ${pos.asset} ${pos.direction} resolved with ${hitResult} at ${new Date(hitTime).toLocaleTimeString()} (Price: $${hitPrice})`);
+            const closed = this.closePosition(pos.id, hitResult, hitPrice, hitTime);
+            if (closed) {
+              closed.downtimeCatchup = true;
+              resolvedTrades.push(closed);
+            }
+          }
+        }
+      } catch (posErr) {
+        console.error(`[PaperTrader] Error auditing downtime trade ${pos.id}:`, posErr);
+      }
+    }
+
+    if (resolvedTrades.length > 0) {
+      this.trades.sort((a, b) => (b.closedAt || 0) - (a.closedAt || 0));
+      this.save();
+    }
+
+    return resolvedTrades;
   }
 
   closeAllPositions(resultType = 'MANUAL') {

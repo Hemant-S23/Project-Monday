@@ -6,6 +6,11 @@
   <title>MONDAY — Market-Oriented Neural Decision Assistant for You</title>
   <meta name="description" content="Meet MONDAY (Market-Oriented Neural Decision Assistant for You) — a real-time, multi-market AI trading companion combining live data, charts, historical context, and natural Hinglish/English voice interaction.">
   
+  <!-- High-Speed DNS Pre-connect for Zero-Lag Boot -->
+  <link rel="preconnect" href="https://api.exchange.coinbase.com" crossorigin>
+  <link rel="preconnect" href="https://s3.tradingview.com" crossorigin>
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  
   <!-- Phosphor Icons -->
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
@@ -13,12 +18,12 @@
   
   <!-- Stylesheets -->
   <link rel="stylesheet" href="css/main.css?v=5.1">
-  <link rel="stylesheet" href="css/components.css?v=4.9">
+  <link rel="stylesheet" href="css/components.css?v=5.0">
   <link rel="stylesheet" href="css/auth.css?v=4.7">
   <link rel="stylesheet" href="css/multi-chart.css?v=6.1">
 
-  <!-- Supabase JS Client (Optional cloud auth & database sync) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Supabase JS Client (Non-blocking defer for instant HTML paint) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body data-mobile-page="chart">
 
@@ -1691,6 +1696,6 @@
   <script src="js/config/supabaseConfig.js"></script>
 
   <!-- App Script Entrypoint -->
-  <script type="module" src="js/app.js?v=6.5"></script>
+  <script type="module" src="js/app.js?v=6.6"></script>
 </body>
 </html>

@@ -194,16 +194,19 @@ class App {
       this.indiaAdapter.subscribe(asset, (data) => this.onMarketDataTick(data));
     });
 
-    // Restore and subscribe to any active open positions saved across page refreshes
-    for (const pos of this.paperTrader.openPositions) {
-      const adapter = pos.market === 'India' ? this.indiaAdapter : this.cryptoAdapter;
-      await adapter.ensureAssetInitialized(pos.asset);
-      adapter.subscribe(pos.asset, (data) => this.onMarketDataTick(data));
+    // Restore and subscribe to any active open positions in parallel
+    if (this.paperTrader.openPositions.length > 0) {
+      await Promise.all(this.paperTrader.openPositions.map(pos => {
+        const adapter = pos.market === 'India' ? this.indiaAdapter : this.cryptoAdapter;
+        return adapter.ensureAssetInitialized(pos.asset).then(() => {
+          adapter.subscribe(pos.asset, (data) => this.onMarketDataTick(data));
+        }).catch(err => console.warn('[App] Position restore warmup error:', err));
+      }));
     }
 
-    // 4. Run first full strategic evaluation & initialize watchlist tray
+    // 4. Run first full strategic evaluation (fast-path: skips heavy multi-asset scan on frame 1)
     this.ui.renderWatchlistTray(this.currentMarket);
-    await this.runFullEvaluation();
+    await this.runFullEvaluation(true);
     this.ui.updateOpenPositions(this.paperTrader.openPositions);
     this.updateTradeJournalAndStats();
 
@@ -398,19 +401,19 @@ class App {
       ? (targetAsset === 'NIFTY' ? 'BANKNIFTY' : 'NIFTY')
       : (targetAsset === 'BTC' ? 'ETH' : 'BTC');
 
-    const candles1H = await adapter.getHistoricalCandles(targetAsset, '1H');
-    const candles5M = await adapter.getHistoricalCandles(targetAsset, '5M');
-    const relatedCandles5M = await adapter.getHistoricalCandles(relatedAsset, '5M');
+    // Parallel async data pipeline for sub-second evaluation
+    const [candles1H, candles5M, relatedCandles5M, sentiment, fundingData] = await Promise.all([
+      adapter.getHistoricalCandles(targetAsset, '1H'),
+      adapter.getHistoricalCandles(targetAsset, '5M'),
+      adapter.getHistoricalCandles(relatedAsset, '5M'),
+      this.currentMarket === 'India' 
+        ? Promise.resolve(this.newsEngine.getMarketSentiment('India')) 
+        : this.newsEngine.fetchFearAndGreed(),
+      this.derivativesEngine.fetchLiveFundingRate(targetAsset, this.currentMarket)
+    ]);
 
     const currencySymbol = this.currentMarket === 'India' ? '₹' : '$';
-
-    // Fetch live sentiment (Fear & Greed Index) and Perpetual Funding Rate
-    const sentiment = this.currentMarket === 'India' 
-      ? this.newsEngine.getMarketSentiment('India') 
-      : await this.newsEngine.fetchFearAndGreed();
-    const fundingData = await this.derivativesEngine.fetchLiveFundingRate(targetAsset, this.currentMarket);
     const eventRisk = this.newsEngine.getOverallEventRisk(targetAsset, this.currentMarket);
-
     const settings = this.getAutoPilotSettings();
 
     // Strategy Evaluation with Multi-Factor Confluence & Event Shield
@@ -438,13 +441,13 @@ class App {
     };
   }
 
-  async runFullEvaluation() {
+  async runFullEvaluation(isBoot = false) {
     const targetAsset = this.currentAsset;
     const adapter = this.getActiveAdapter();
 
     // Hyper-Sensitive Event Risk Scanner (Ultra-rapid news check)
     if (this.newsEngine.fetchBreakingNewsFeed) {
-      await this.newsEngine.fetchBreakingNewsFeed();
+      this.newsEngine.fetchBreakingNewsFeed().catch(() => {});
     }
 
     const evalData = await this.evaluateAsset(targetAsset);
@@ -508,7 +511,12 @@ class App {
 
     // 8. Auto-Pilot Multi-Asset Scanner (Fills open positions up to maxTrades across watchlist)
     if (this.autoPilotEnabled) {
-      await this.scanAndExecuteAutoPilot();
+      if (isBoot) {
+        // Defer heavy multi-asset watchlist scan by 1.5s after boot so screen loads instantly in < 2s
+        setTimeout(() => this.scanAndExecuteAutoPilot(), 1500);
+      } else {
+        await this.scanAndExecuteAutoPilot();
+      }
     }
   }
 

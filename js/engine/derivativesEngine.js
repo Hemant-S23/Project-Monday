@@ -272,7 +272,7 @@ export class DerivativesEngine {
     try {
       const symbol = `${clean}USDT`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      const timeoutId = setTimeout(() => controller.abort(), 1200);
       const resp = await fetch(`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${symbol}`, { signal: controller.signal });
       clearTimeout(timeoutId);
 

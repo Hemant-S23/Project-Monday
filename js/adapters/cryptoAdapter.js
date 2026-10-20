@@ -38,18 +38,25 @@ export class CryptoAdapter extends MarketAdapter {
   }
 
   async init() {
-    console.log('[CryptoAdapter] Initializing Coinbase pure USD feeds...');
-    // 1. Fetch full list of all available USD crypto pairs from Coinbase
-    await this.fetchAllMarkets();
-
-    // 2. Initial candle & stats fetch for default assets (BTC, ETH, SOL)
-    for (const asset of ['BTC', 'ETH', 'SOL']) {
-      await this.ensureAssetInitialized(asset);
-    }
-
+    console.log('[CryptoAdapter] Initializing Coinbase pure USD feeds (Fast-Path)...');
     this.startWebSocket();
-    this.startPolling();
     this.startHeartbeatSimulation();
+
+    // 1. Fast-Path: Initialize ONLY the primary coin (BTC) with parallel fetches (< 400ms)
+    await this.ensureAssetInitialized('BTC');
+
+    // 2. Background-Path: Fetch full market catalog and secondary assets non-blockingly
+    setTimeout(async () => {
+      try {
+        await this.fetchAllMarkets();
+        for (const asset of ['ETH', 'SOL']) {
+          await this.ensureAssetInitialized(asset);
+        }
+        this.startPolling();
+      } catch (err) {
+        console.warn('[CryptoAdapter] Background feed warmup:', err);
+      }
+    }, 100);
   }
 
   async fetchAllMarkets() {
@@ -131,15 +138,15 @@ export class CryptoAdapter extends MarketAdapter {
       };
     }
 
-    // Refresh stats to get live 24h high/low/open/price
-    await this.refreshStats(asset);
-
+    // Parallel candle and stats fetch for sub-second initialization
+    const fetches = [this.refreshStats(asset)];
     if (!this.cache[asset]['1H'] || this.cache[asset]['1H'].length === 0) {
-      await this.refreshCandles(asset, '1H');
+      fetches.push(this.refreshCandles(asset, '1H'));
     }
     if (!this.cache[asset]['5M'] || this.cache[asset]['5M'].length === 0) {
-      await this.refreshCandles(asset, '5M');
+      fetches.push(this.refreshCandles(asset, '5M'));
     }
+    await Promise.all(fetches);
 
     // Dynamically subscribe on live WebSocket if connected
     this.sendWsSubscription([symbol]);
@@ -150,7 +157,10 @@ export class CryptoAdapter extends MarketAdapter {
   async refreshStats(asset) {
     const symbol = this.symbolMap[asset] || `${asset}-USD`;
     try {
-      const res = await fetch(`https://api.exchange.coinbase.com/products/${symbol}/stats`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1800);
+      const res = await fetch(`https://api.exchange.coinbase.com/products/${symbol}/stats`, { signal: controller.signal });
+      clearTimeout(timeoutId);
       if (res.ok) {
         const stats = await res.json();
         const open = parseFloat(stats.open || 0);
@@ -180,7 +190,10 @@ export class CryptoAdapter extends MarketAdapter {
     const url = `https://api.exchange.coinbase.com/products/${symbol}/candles?granularity=${granularity}`;
 
     try {
-      const response = await fetch(url);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
 

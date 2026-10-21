@@ -870,8 +870,10 @@ class App {
     // 4. Autonomous Execution (Configured Margin & Leverage)
     const leverage = this.currentMarket === 'India' ? Math.min(5, settings.leverage) : settings.leverage;
     const marginUSD = settings.marginUSD;
-    const notionalUSD = +(marginUSD * leverage).toFixed(2);
-    const positionSize = +(notionalUSD / entry).toFixed(5);
+    const rawPosSize = notionalUSD / entry;
+    const positionSize = entry >= 1000 
+      ? +rawPosSize.toFixed(6) 
+      : (entry >= 1 ? +rawPosSize.toFixed(4) : (entry >= 0.01 ? +rawPosSize.toFixed(2) : Math.round(rawPosSize)));
     const riskUSD = marginUSD;
     const rewardUSD = +(riskUSD * rr).toFixed(2);
     const rawLiq = direction === 'LONG' 
@@ -901,7 +903,11 @@ class App {
       eventRisk: eventRisk.level || 'Low'
     };
 
-    await this.executeCurrentTrade(orderPacket);
+    const executedPos = await this.executeCurrentTrade(orderPacket);
+    if (!executedPos) {
+      console.warn(`[Auto-Pilot] Execution skipped or blocked by risk firewall for ${asset}`);
+      return;
+    }
 
     // Voice announcement
     this.voiceAssistant.speak(
@@ -1004,6 +1010,11 @@ class App {
     }
 
     const newPos = this.paperTrader.executePaperTrade(orderParams);
+    if (!newPos) {
+      console.warn('[App] Order placement rejected by PaperTrader firewall:', orderParams?.asset);
+      this.ui.showToast('Order Rejected', `Order for ${orderParams?.asset || 'asset'} was rejected by safety & risk firewall.`, 'warning');
+      return null;
+    }
 
     // Ensure live market tick listener is active for this asset
     await adapter.ensureAssetInitialized(newPos.asset);
@@ -1025,6 +1036,7 @@ class App {
     this.ui.updateHeaderAccountHUD(liveMetrics);
     this.updateTradeJournalAndStats();
     this.syncTradeToSupabase(newPos);
+    return newPos;
   }
 
   closeActiveTrade(tradeId) {

@@ -17,6 +17,24 @@ export class RiskEngine {
     this.riskPercentage = Math.min(5, Math.max(0.25, pct));
   }
 
+  formatDynamicPrice(val) {
+    const num = Number(val);
+    if (isNaN(num)) return 0;
+    if (num >= 1000) return +(num.toFixed(2));
+    if (num >= 1) return +(num.toFixed(4));
+    if (num >= 0.01) return +(num.toFixed(6));
+    return +(num.toFixed(8));
+  }
+
+  formatDynamicSize(val) {
+    const num = Number(val);
+    if (isNaN(num)) return 0;
+    if (num >= 1000) return +(num.toFixed(2));
+    if (num >= 1) return +(num.toFixed(4));
+    if (num >= 0.01) return +(num.toFixed(6));
+    return +(num.toFixed(8));
+  }
+
   calculateTradeParameters(entry, stopLoss, target, currencySymbol = '$') {
     const maxRiskAmount = +(this.accountBalance * (this.riskPercentage / 100)).toFixed(2);
     const slDistance = Math.abs(entry - stopLoss);
@@ -29,8 +47,9 @@ export class RiskEngine {
       };
     }
 
-    // Units / Shares: Position Size = Max Risk / SL Distance
-    const positionSizeCoins = +(maxRiskAmount / slDistance).toFixed(4);
+    // Units / Shares: Position Size = Max Risk / SL Distance (Dynamic precision for micro/high-value assets)
+    const rawPosSize = maxRiskAmount / slDistance;
+    const positionSizeCoins = this.formatDynamicSize(rawPosSize);
     const totalExposureUSD = +(positionSizeCoins * entry).toFixed(2);
     const potentialRewardUSD = +(positionSizeCoins * tpDistance).toFixed(2);
     const rrRatio = +(tpDistance / slDistance).toFixed(2);
@@ -42,11 +61,11 @@ export class RiskEngine {
       riskPercentage: this.riskPercentage,
       currencySymbol,
       maxRiskUSD: maxRiskAmount,
-      entry: +(Number(entry).toFixed(2)),
-      stopLoss: +(Number(stopLoss).toFixed(2)),
-      target: +(Number(target).toFixed(2)),
-      slDistanceUSD: +(Number(slDistance).toFixed(2)),
-      tpDistanceUSD: +(Number(tpDistance).toFixed(2)),
+      entry: this.formatDynamicPrice(entry),
+      stopLoss: this.formatDynamicPrice(stopLoss),
+      target: this.formatDynamicPrice(target),
+      slDistanceUSD: this.formatDynamicPrice(slDistance),
+      tpDistanceUSD: this.formatDynamicPrice(tpDistance),
       positionSizeCoins,
       totalExposureUSD,
       potentialRewardUSD,

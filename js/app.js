@@ -124,6 +124,10 @@ class App {
       onListeningStateChange: (listening) => this.ui.setVoiceListening(listening),
       onSpeakingStateChange: (speaking) => this.ui.setVoiceSpeaking(speaking)
     });
+
+    // Expose Global Chart Position Overlay Handlers (Delta Exchange Spec)
+    window.closePositionFromChart = (tradeId) => this.closeActiveTrade(tradeId);
+    window.cancelOrAdjustLevelFromChart = (tradeId, levelType) => this.cancelOrAdjustLevelFromChart(tradeId, levelType);
   }
 
   handleAuthSuccess(user) {
@@ -146,6 +150,7 @@ class App {
         this.updateTradeJournalAndStats();
         this.ui.updateOpenPositions(this.paperTrader.openPositions);
         this.ui.updateHeaderAccountHUD(this.paperTrader.getLiveEquity());
+        this.chartManager.updatePositionOverlay(this.paperTrader.openPositions);
       }
     }).catch(e => console.warn('[App] Post-login downtime audit err:', e));
     this.ui.showToast('Welcome!', `${user.name || 'Trader'}, trading session active.`, 'success');
@@ -250,6 +255,7 @@ class App {
     this.ui.renderWatchlistTray(this.currentMarket);
     await this.runFullEvaluation(true);
     this.ui.updateOpenPositions(this.paperTrader.openPositions);
+    this.chartManager.updatePositionOverlay(this.paperTrader.openPositions);
     this.updateTradeJournalAndStats();
 
     // Run Supabase sync asynchronously without blocking chart render
@@ -424,6 +430,7 @@ class App {
     }
 
     this.ui.updateOpenPositions(this.paperTrader.openPositions);
+    this.chartManager.updatePositionOverlay(this.paperTrader.openPositions, currentPrices);
 
     // Live Header Equity HUD: updates on every real-time price tick
     const liveMetrics = this.paperTrader.getLiveEquity(currentPrices);
@@ -531,6 +538,7 @@ class App {
     this.ui.updateContextTelemetry({ historicalContext: histContext, eventRisk, sentiment, fundingData });
     this.ui.updateRiskParameters(riskParams);
     this.chartManager.updateLevelsOverlay(riskParams);
+    this.chartManager.updatePositionOverlay(this.paperTrader.openPositions);
 
     // 6. Update Brain Context
     this.copilotBrain.updateContext({
@@ -1021,6 +1029,7 @@ class App {
     });
 
     this.ui.updateOpenPositions(this.paperTrader.openPositions);
+    this.chartManager.updatePositionOverlay(this.paperTrader.openPositions);
     const liveMetrics = this.paperTrader.getLiveEquity();
     this.ui.updateHeaderAccountHUD(liveMetrics);
     this.updateTradeJournalAndStats();
@@ -1043,6 +1052,7 @@ class App {
       });
 
       this.ui.updateOpenPositions(this.paperTrader.openPositions);
+      this.chartManager.updatePositionOverlay(this.paperTrader.openPositions);
       this.updateTradeJournalAndStats();
       this.syncTradeToSupabase(closed);
     }
@@ -1085,6 +1095,7 @@ class App {
       });
 
       this.ui.updateOpenPositions(this.paperTrader.openPositions);
+      this.chartManager.updatePositionOverlay(this.paperTrader.openPositions);
       const liveMetrics = this.paperTrader.getLiveEquity();
       this.ui.updateHeaderAccountHUD(liveMetrics);
       this.updateTradeJournalAndStats();
@@ -1093,6 +1104,29 @@ class App {
       for (const t of closedList) {
         this.syncTradeToSupabase(t);
       }
+    }
+  }
+
+  cancelOrAdjustLevelFromChart(tradeId, levelType) {
+    const pos = this.paperTrader?.openPositions?.find(p => p.id === tradeId);
+    if (!pos) return;
+    const isSL = levelType === 'SL';
+    const currentLevel = isSL ? pos.stopLoss : pos.target;
+    const promptVal = prompt(
+      `Adjust ${isSL ? 'Stop Loss' : 'Take Profit'} for ${pos.asset} (Current: ${currentLevel}):`,
+      currentLevel
+    );
+    if (promptVal === null) return;
+    const newPrice = parseFloat(promptVal);
+    if (!isNaN(newPrice) && newPrice > 0) {
+      if (isSL) pos.stopLoss = newPrice;
+      else pos.target = newPrice;
+      this.paperTrader.save();
+      const adapter = this.getActiveAdapter();
+      const prices = {};
+      prices[this.currentAsset] = adapter.getCurrentPrice(this.currentAsset);
+      this.chartManager.updatePositionOverlay(this.paperTrader.openPositions, prices);
+      this.ui.showToast('Level Updated', `${pos.asset} ${levelType} set to ${newPrice}`, 'success');
     }
   }
 

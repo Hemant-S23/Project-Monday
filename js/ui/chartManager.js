@@ -35,6 +35,8 @@ export class ChartManager {
     this.resizeObserver = null;
     this.currentBar = null;
     this.multiChartManager = null;
+    this.lastPositions = [];
+    this.lastPrices = {};
   }
 
   setAdapter(adapter) {
@@ -236,6 +238,9 @@ export class ChartManager {
     if (this.activeLevels) {
       this.updateLevelsOverlay(this.activeLevels);
     }
+    setTimeout(() => {
+      this.updatePositionOverlay(this.lastPositions, this.lastPrices);
+    }, 120);
   }
 
   // =========================================================================
@@ -453,6 +458,9 @@ export class ChartManager {
     if (this.activeLevels) {
       this.updateLevelsOverlay(this.activeLevels);
     }
+    setTimeout(() => {
+      this.updatePositionOverlay(this.lastPositions, this.lastPrices);
+    }, 120);
   }
 
   calculateEMA(candles, period = 20) {
@@ -556,5 +564,233 @@ export class ChartManager {
         });
       }
     }
+  }
+
+  // =========================================================================
+  // 4. INTERACTIVE POSITION OVERLAY (DELTA EXCHANGE SPEC)
+  // =========================================================================
+  updatePositionOverlay(openPositions = null, currentPrices = null) {
+    if (openPositions !== null) this.lastPositions = openPositions;
+    if (currentPrices !== null) this.lastPrices = currentPrices;
+
+    const container = document.getElementById(this.containerId);
+    if (!container) return;
+
+    // Ensure overlay container exists inside chart viewport
+    let layer = document.getElementById('chart_position_overlay_layer');
+    if (!layer) {
+      layer = document.createElement('div');
+      layer.id = 'chart_position_overlay_layer';
+      layer.className = 'chart-position-overlay-layer';
+      container.appendChild(layer);
+    }
+
+    const cleanAsset = (this.currentAsset || 'BTC').toUpperCase().replace(/(\/USD|USDT|USD)$/, '');
+    const positions = (this.lastPositions || []).filter(p => {
+      const pAsset = (p.asset || '').toUpperCase().replace(/(\/USD|USDT|USD)$/, '');
+      return pAsset === cleanAsset || p.asset === this.currentAsset;
+    });
+
+    if (positions.length === 0) {
+      layer.innerHTML = '';
+      return;
+    }
+
+    // Determine price envelope
+    let minPrice = Infinity;
+    let maxPrice = -Infinity;
+
+    // Check recent candles from active adapter
+    let candles = [];
+    if (this.adapter && this.adapter.cache && this.adapter.cache[cleanAsset]) {
+      const cached = this.adapter.cache[cleanAsset];
+      candles = cached[this.rawTimeframe] || cached['1H'] || cached['5M'] || [];
+    }
+
+    if (candles && candles.length > 0) {
+      const recent = candles.slice(-50);
+      for (const c of recent) {
+        if (c.high && c.high > maxPrice) maxPrice = c.high;
+        if (c.low && c.low < minPrice) minPrice = c.low;
+      }
+    }
+
+    if (minPrice === Infinity || maxPrice === -Infinity) {
+      const snap = this.adapter?.getSnapshot ? this.adapter.getSnapshot(cleanAsset) : null;
+      if (snap && snap.high24h && snap.low24h && snap.high24h > snap.low24h) {
+        maxPrice = snap.high24h;
+        minPrice = snap.low24h;
+      }
+    }
+
+    // Include open positions in envelope
+    for (const pos of positions) {
+      if (pos.entry) {
+        if (pos.entry > maxPrice) maxPrice = pos.entry;
+        if (pos.entry < minPrice) minPrice = pos.entry;
+      }
+      if (pos.target) {
+        if (pos.target > maxPrice) maxPrice = pos.target;
+        if (pos.target < minPrice) minPrice = pos.target;
+      }
+      if (pos.stopLoss) {
+        if (pos.stopLoss > maxPrice) maxPrice = pos.stopLoss;
+        if (pos.stopLoss < minPrice) minPrice = pos.stopLoss;
+      }
+    }
+
+    const livePrice = (this.lastPrices && (this.lastPrices[cleanAsset] || this.lastPrices[this.currentAsset]))
+      || (this.adapter ? this.adapter.getCurrentPrice(cleanAsset) : null)
+      || (positions[0] ? (positions[0].currentPrice || positions[0].entry) : 68000);
+
+    if (livePrice) {
+      if (livePrice > maxPrice) maxPrice = livePrice;
+      if (livePrice < minPrice) minPrice = livePrice;
+    }
+
+    if (minPrice === Infinity || maxPrice <= minPrice) {
+      minPrice = (livePrice || 68000) * 0.97;
+      maxPrice = (livePrice || 68000) * 1.03;
+    }
+
+    const priceSpan = maxPrice - minPrice;
+    const pad = priceSpan * 0.08;
+    const chartMax = maxPrice + pad;
+    const chartMin = minPrice - pad;
+    const chartRange = chartMax - chartMin;
+
+    const useCanvasCoords = this.currentMarket === 'India' && this.candleSeries && typeof this.candleSeries.priceToCoordinate === 'function';
+
+    const getCoordinate = (price) => {
+      if (!price || isNaN(price)) return { css: '50%', num: 50 };
+      if (useCanvasCoords) {
+        const coord = this.candleSeries.priceToCoordinate(price);
+        if (coord !== null && !isNaN(coord) && coord > 0) {
+          return { css: `${coord}px`, num: coord };
+        }
+      }
+      const pct = chartRange > 0 ? ((chartMax - price) / chartRange) * 100 : 50;
+      const clamped = Math.min(Math.max(pct, 6), 92);
+      return { css: `${clamped.toFixed(2)}%`, num: clamped };
+    };
+
+    const formatPriceStr = (val) => {
+      if (!val || isNaN(val)) return '--';
+      const num = Number(val);
+      const isIndia = this.currentMarket === 'India';
+      if (isIndia) {
+        return `₹${num.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}`;
+      }
+      if (num >= 1000) {
+        return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+      if (num < 1) return num.toFixed(6);
+      return num.toFixed(4);
+    };
+
+    const formatQtyStr = (pos) => {
+      if (!pos.positionSize) return `${pos.asset}`;
+      const sz = Number(pos.positionSize);
+      const formattedNum = sz < 0.01 ? sz.toFixed(5) : (sz < 1 ? sz.toFixed(4) : sz.toLocaleString('en-US', { maximumFractionDigits: 2 }));
+      return `${formattedNum} ${pos.asset}`;
+    };
+
+    let html = '';
+
+    // Render each active position of this asset
+    positions.forEach((pos, idx) => {
+      const isLong = (pos.direction || 'LONG').toUpperCase() === 'LONG';
+      const entryCoord = getCoordinate(pos.entry);
+      const slCoord = pos.stopLoss ? getCoordinate(pos.stopLoss) : null;
+      const tpCoord = pos.target ? getCoordinate(pos.target) : null;
+
+      // Calculate Shaded Risk/Reward Zones
+      if (tpCoord) {
+        const topVal = Math.min(entryCoord.num, tpCoord.num);
+        const heightVal = Math.abs(entryCoord.num - tpCoord.num);
+        const unit = entryCoord.css.endsWith('px') ? 'px' : '%';
+        html += `<div class="cpo-zone cpo-zone-profit" style="top: ${topVal.toFixed(2)}${unit}; height: ${heightVal.toFixed(2)}${unit};"></div>`;
+      }
+
+      if (slCoord) {
+        const topVal = Math.min(entryCoord.num, slCoord.num);
+        const heightVal = Math.abs(entryCoord.num - slCoord.num);
+        const unit = entryCoord.css.endsWith('px') ? 'px' : '%';
+        html += `<div class="cpo-zone cpo-zone-loss" style="top: ${topVal.toFixed(2)}${unit}; height: ${heightVal.toFixed(2)}${unit};"></div>`;
+      }
+
+      // Live PnL values for Entry Pill
+      const curP = (this.lastPrices && (this.lastPrices[cleanAsset] || this.lastPrices[pos.asset])) || pos.currentPrice || livePrice;
+      const priceDiff = isLong ? (curP - pos.entry) : (pos.entry - curP);
+      const liveUnrealized = pos.unrealizedPnlUSD !== undefined ? Number(pos.unrealizedPnlUSD) : +(priceDiff * (pos.positionSize || 1)).toFixed(2);
+      const pnlSign = liveUnrealized >= 0 ? '+' : '';
+      const pnlClass = liveUnrealized >= 0 ? 'text-bullish' : 'text-bearish';
+      const roePercent = pos.roePercent !== undefined ? Number(pos.roePercent) : (pos.marginUSD > 0 ? +((liveUnrealized / pos.marginUSD) * 100).toFixed(1) : 0);
+      const roeSign = roePercent >= 0 ? '+' : '';
+
+      // Quantity Strings
+      const baseQty = formatQtyStr(pos);
+      const entryQtyStr = isLong ? baseQty : `-${baseQty}`;
+
+      // Risk / Reward Values
+      const riskUSD = pos.riskUSD ? pos.riskUSD.toFixed(2) : (Math.abs(pos.entry - (pos.stopLoss || pos.entry * 0.98)) * (pos.positionSize || 1)).toFixed(2);
+      const rewardUSD = pos.rewardUSD ? pos.rewardUSD.toFixed(2) : (Math.abs((pos.target || pos.entry * 1.04) - pos.entry) * (pos.positionSize || 1)).toFixed(2);
+      const rrRatio = pos.rrRatio || '2.00';
+
+      const badgeOffsetLeft = idx > 0 ? `${48 + (idx * 24)}px` : '48px';
+
+      // 1. Take Profit Line (Green)
+      if (tpCoord && pos.target) {
+        html += `
+          <div class="cpo-line cpo-line-tp" style="top: ${tpCoord.css};">
+            <div class="cpo-pill-badge cpo-badge-tp" style="left: ${badgeOffsetLeft};">
+              <span class="cpo-badge-qty"><i class="ph ph-target"></i> ${baseQty}</span>
+              <span class="cpo-badge-divider">|</span>
+              <span class="cpo-badge-val text-bullish">+Reward $${rewardUSD} (+${rrRatio}R)</span>
+              <span class="cpo-badge-divider">|</span>
+              <button class="cpo-close-btn" onclick="window.cancelOrAdjustLevelFromChart('${pos.id}', 'TP')" title="Cancel / Adjust Take Profit">✕</button>
+            </div>
+            <div class="cpo-axis-price cpo-axis-tp">${formatPriceStr(pos.target)}</div>
+          </div>
+        `;
+      }
+
+      // 2. Entry Price Line (Blue for Long, Red for Short)
+      html += `
+        <div class="cpo-line cpo-line-entry ${isLong ? 'cpo-entry-long' : 'cpo-entry-short'}" style="top: ${entryCoord.css};">
+          <div class="cpo-pill-badge ${isLong ? 'cpo-badge-long' : 'cpo-badge-short'}" style="left: ${badgeOffsetLeft};">
+            <span class="cpo-badge-qty">
+              <span class="cpo-side-pill ${isLong ? 'side-long' : 'side-short'}">${isLong ? 'LONG' : 'SHORT'}</span>
+              ${entryQtyStr}
+            </span>
+            <span class="cpo-badge-divider">|</span>
+            <span class="cpo-badge-val ${pnlClass}">
+              ${pnlSign}$${liveUnrealized} (${roeSign}${roePercent}%)
+            </span>
+            <span class="cpo-badge-divider">|</span>
+            <button class="cpo-close-btn" onclick="window.closePositionFromChart('${pos.id}')" title="Close Position at Market">✕</button>
+          </div>
+          <div class="cpo-axis-price ${isLong ? 'cpo-axis-long' : 'cpo-axis-short'}">${formatPriceStr(pos.entry)}</div>
+        </div>
+      `;
+
+      // 3. Stop Loss Line (Orange)
+      if (slCoord && pos.stopLoss) {
+        html += `
+          <div class="cpo-line cpo-line-sl" style="top: ${slCoord.css};">
+            <div class="cpo-pill-badge cpo-badge-sl" style="left: ${badgeOffsetLeft};">
+              <span class="cpo-badge-qty"><i class="ph ph-shield-warning"></i> ${baseQty}</span>
+              <span class="cpo-badge-divider">|</span>
+              <span class="cpo-badge-val text-bearish">-Risk $${riskUSD} (-1.00R)</span>
+              <span class="cpo-badge-divider">|</span>
+              <button class="cpo-close-btn" onclick="window.cancelOrAdjustLevelFromChart('${pos.id}', 'SL')" title="Cancel / Adjust Stop Loss">✕</button>
+            </div>
+            <div class="cpo-axis-price cpo-axis-sl">${formatPriceStr(pos.stopLoss)}</div>
+          </div>
+        `;
+      }
+    });
+
+    layer.innerHTML = html;
   }
 }

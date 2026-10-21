@@ -252,6 +252,14 @@ class App {
     this.ui.updateOpenPositions(this.paperTrader.openPositions);
     this.updateTradeJournalAndStats();
 
+    // Initialize auth profile in UI if user is already logged in
+    if (this.authManager && this.authManager.isLoggedIn()) {
+      this.ui.updateUserProfile(this.authManager.getUser());
+    }
+
+    // Set up network online reconnect listener for automatic cloud sync
+    this.setupNetworkReconciliation();
+
     // Run Supabase sync asynchronously without blocking chart render
     setTimeout(() => this.syncWithSupabaseCloud(), 150);
 
@@ -1112,9 +1120,10 @@ class App {
     try {
       const cfg = window.MONDAY_SUPABASE_CONFIG;
       if (!cfg || !cfg.url || !cfg.anonKey || !trade) return;
+      const activeUserId = this.authManager && this.authManager.getUserId ? this.authManager.getUserId() : 'guest_autopilot';
       const payload = {
         id: trade.id,
-        user_id: 'guest_autopilot',
+        user_id: activeUserId,
         market: trade.market || 'Crypto',
         asset: trade.asset,
         direction: trade.direction,
@@ -1143,7 +1152,50 @@ class App {
         },
         body: JSON.stringify(payload)
       });
-    } catch (e) {}
+    } catch (e) {
+      console.warn('[App] Supabase trade sync offline/failed:', e.message);
+    }
+  }
+
+  async syncWithSupabaseCloud() {
+    await this.reconcileOfflineTradesWithSupabase();
+  }
+
+  async reconcileOfflineTradesWithSupabase() {
+    try {
+      const cfg = window.MONDAY_SUPABASE_CONFIG;
+      if (!cfg || !cfg.url || !cfg.anonKey) return;
+      const toSync = [...(this.paperTrader.openPositions || []), ...(this.paperTrader.trades || []).slice(0, 15)];
+      for (const trade of toSync) {
+        await this.syncTradeToSupabase(trade);
+      }
+      console.log(`[App] Supabase cloud sync reconciled ${toSync.length} items.`);
+    } catch (err) {
+      console.warn('[App] Cloud trade reconciliation failed:', err);
+    }
+  }
+
+  setupNetworkReconciliation() {
+    window.addEventListener('online', async () => {
+      console.log('[App] Network restored. Reconciling offline trades with Supabase...');
+      this.ui.showToast('Network Restored', 'Re-syncing paper trading ledger with cloud database...', 'info');
+      await this.reconcileOfflineTradesWithSupabase();
+    });
+  }
+
+  handleAuthSuccess(user) {
+    if (!user) return;
+    this.ui.hideAuthOverlay();
+    this.ui.updateUserProfile(user);
+    this.paperTrader.setUser(user.id);
+    this.riskEngine.setAccountBalance(this.paperTrader.balance);
+    this.updateTradeJournalAndStats();
+    this.ui.updateOpenPositions(this.paperTrader.openPositions);
+    const liveMetrics = this.paperTrader.getLiveEquity();
+    this.ui.updateHeaderAccountHUD(liveMetrics);
+    this.ui.showToast('Logged In', `Welcome back, ${user.name || user.email || 'Trader'}!`, 'success');
+    this.voiceAssistant.speak(`Welcome ${user.name || 'Trader'}. Account sync complete.`);
+    this.reconcileOfflineTradesWithSupabase();
   }
 
   async resetAccount() {

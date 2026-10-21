@@ -23,6 +23,9 @@ export class VoiceAssistant {
     this.indianVoice = null;
     this.englishVoice = null;
     this.availableVoices = [];
+    this.currentUtterance = null;
+    this.watchdogTimer = null;
+    this.resumeHeartbeat = null;
 
     this.initSpeechRecognition();
     this.initSpeechSynthesis();
@@ -265,13 +268,21 @@ export class VoiceAssistant {
   speak(text) {
     if (this.voiceMuted || !this.synthesis || !text) return;
 
-    // Stop any ongoing speech immediately
+    // Reset previous timers
+    clearTimeout(this.watchdogTimer);
+    clearInterval(this.resumeHeartbeat);
+
+    // Stop any ongoing speech immediately & resume if suspended
     this.synthesis.cancel();
+    if (this.synthesis.paused) {
+      this.synthesis.resume();
+    }
 
     const isHinglish = this.isHinglish(text);
     const spokenText = this.humanizePhonetics(text, isHinglish);
 
     const utterance = new SpeechSynthesisUtterance(spokenText);
+    this.currentUtterance = utterance; // Retain reference to prevent V8 Garbage Collection mid-speech
 
     if (isHinglish) {
       // 1. Hinglish Voice Profile: Authentic Indian female accent, natural pacing
@@ -281,7 +292,6 @@ export class VoiceAssistant {
       } else {
         utterance.lang = 'hi-IN';
       }
-      // Relaxed, conversational pacing (0.96) and warm human pitch (1.05)
       utterance.rate = 0.96;
       utterance.pitch = 1.05;
     } else {
@@ -292,27 +302,56 @@ export class VoiceAssistant {
       } else {
         utterance.lang = 'en-US';
       }
-      // Natural articulate pacing
       utterance.rate = 1.0;
       utterance.pitch = 1.03;
     }
 
+    const cleanup = () => {
+      clearTimeout(this.watchdogTimer);
+      clearInterval(this.resumeHeartbeat);
+      this.currentUtterance = null;
+      this.isSpeaking = false;
+      if (this.onSpeakingStateChange) this.onSpeakingStateChange(false);
+    };
+
     utterance.onstart = () => {
       this.isSpeaking = true;
       if (this.onSpeakingStateChange) this.onSpeakingStateChange(true);
+
+      // Chromium Engine Keep-Alive Heartbeat (Prevents silent pausing on long utterances)
+      this.resumeHeartbeat = setInterval(() => {
+        if (this.synthesis && this.synthesis.speaking && !this.synthesis.paused) {
+          this.synthesis.pause();
+          this.synthesis.resume();
+        } else {
+          clearInterval(this.resumeHeartbeat);
+        }
+      }, 9000);
+
+      // Watchdog Timer: Auto-release if utterance takes longer than 20 seconds
+      this.watchdogTimer = setTimeout(() => {
+        if (this.isSpeaking) {
+          console.warn('[VoiceAssistant] Speech timeout watchdog fired. Resetting speech state.');
+          cleanup();
+          this.synthesis.cancel();
+        }
+      }, 20000);
     };
 
     utterance.onend = () => {
-      this.isSpeaking = false;
-      if (this.onSpeakingStateChange) this.onSpeakingStateChange(false);
+      cleanup();
     };
 
     utterance.onerror = (e) => {
-      this.isSpeaking = false;
-      if (this.onSpeakingStateChange) this.onSpeakingStateChange(false);
+      cleanup();
     };
 
-    this.synthesis.speak(utterance);
+    // Small async tick avoids Chromium IPC race when speak() immediately follows cancel()
+    setTimeout(() => {
+      if (!this.voiceMuted && this.synthesis) {
+        this.synthesis.speak(utterance);
+      }
+    }, 40);
   }
 
   /**

@@ -255,6 +255,8 @@ class MondayAutoPilotDaemon {
             result: 'LOSS',
             exitPrice: pos.stopLoss,
             pnlUSD: pnl,
+            rMultiple: closed.rMultiple || -1.0
+          });
         }
         // Universal 10-minute cooldown on exit
         this.cooldowns.set(pos.asset, Date.now() + 600000);

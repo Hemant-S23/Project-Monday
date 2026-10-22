@@ -905,22 +905,40 @@ class App {
       }
     }
 
-    // Slippage Firewall: Live price must be within 0.4% of strategy calculated entry
-    const slippage = Math.abs(livePrice - rawEntry) / rawEntry;
-    if (slippage > 0.004) {
-      console.warn(`[Auto-Pilot Firewall] Execution blocked for ${asset}: Live price ($${livePrice}) drifted ${(slippage * 100).toFixed(2)}% from setup entry ($${rawEntry}).`);
+    // =========================================================================
+    // PILLAR A: EXACT-MATCH REALTIME ENTRY FILTER (ZERO-SLIPPAGE TOUCH EXECUTION)
+    // =========================================================================
+    // Strict Touch Rule: Order ONLY executes if live chart price physically touches/matches entry level.
+    // If live price has drifted, missed, or moved towards target/SL, Monday will NOT enter.
+    let maxTouchTolerance;
+    if (rawEntry >= 1000) {
+      maxTouchTolerance = 0.0003; // ~0.03% for high-value tokens (BTC, ETH)
+    } else if (rawEntry >= 1) {
+      maxTouchTolerance = 0.0006; // ~0.06% for mid-tier tokens (SOL, NEAR, AVAX, SUI)
+    } else {
+      maxTouchTolerance = 0.0008; // ~0.08% for sub-dollar tokens (XRP, ADA, DOGE)
+    }
+
+    const priceDiscrepancy = Math.abs(livePrice - rawEntry) / rawEntry;
+    const isChasing = direction === 'LONG' 
+      ? (livePrice > rawEntry * (1 + maxTouchTolerance)) 
+      : (livePrice < rawEntry * (1 - maxTouchTolerance));
+
+    if (priceDiscrepancy > maxTouchTolerance || isChasing) {
+      const diffFormatted = (priceDiscrepancy * 100).toFixed(3);
+      console.warn(`[Pillar A Guard] Execution REJECTED for ${asset}: Live market price ($${livePrice}) does not match entry level ($${rawEntry}). Discrepancy: ${diffFormatted}%. Zero-slippage exact touch policy active.`);
       this.ui.appendAutonomousDecisionCard({
         action: 'SKIPPED',
         asset,
         direction,
         openCount: currentOpenCount,
-        skipReason: '🚨 SLIPPAGE TOLERANCE BREACHED',
-        skipExplanation: `Market price moved ${(slippage * 100).toFixed(2)}% away from setup entry ($${rawEntry}). Order cancelled to prevent entering at bad fill prices.`
+        skipReason: '🎯 PILLAR A: EXACT-MATCH TICK REJECTED',
+        skipExplanation: `Live realtime price ($${livePrice}) is not at the exact setup entry ($${rawEntry}). Market has drifted by ${diffFormatted}%. Zero-slippage policy active — order discarded to eliminate loops and bad fills.`
       });
       return;
     }
 
-    // Fill at exact live market tick to the penny
+    // Fill at exact live market tick to the penny (Zero Slippage)
     const entry = livePrice;
 
     // 4. Autonomous Execution (Configured Margin & Leverage)

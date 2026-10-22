@@ -342,8 +342,16 @@ class MondayAutoPilotDaemon {
         if (dir === 'LONG' && (currentPrice >= levels.target || currentPrice <= levels.stopLoss)) return;
         if (dir === 'SHORT' && (currentPrice <= levels.target || currentPrice >= levels.stopLoss)) return;
 
-        const slippage = Math.abs(currentPrice - levels.entry) / levels.entry;
-        if (slippage > 0.004) return;
+        // PILLAR A: EXACT-MATCH REALTIME ENTRY FILTER (ZERO-SLIPPAGE TOUCH EXECUTION)
+        let maxTouchTolerance = levels.entry >= 1000 ? 0.0003 : (levels.entry >= 1 ? 0.0006 : 0.0008);
+        const priceDiscrepancy = Math.abs(currentPrice - levels.entry) / levels.entry;
+        const isChasing = dir === 'LONG' 
+          ? (currentPrice > levels.entry * (1 + maxTouchTolerance)) 
+          : (currentPrice < levels.entry * (1 - maxTouchTolerance));
+
+        if (priceDiscrepancy > maxTouchTolerance || isChasing) {
+          return; // Reject: Live price has drifted/departed from exact setup entry
+        }
 
         await this.executeAutonomousTrade(asset, strategyResult, currentPrice);
       }
@@ -359,17 +367,17 @@ class MondayAutoPilotDaemon {
     const balance = this.paperTrader.balance;
 
     const riskUSD = +(balance * 0.01).toFixed(2);
-    const stopLossDistance = Math.abs(levels.entry - levels.stopLoss);
+    const stopLossDistance = Math.abs(currentPrice - levels.stopLoss);
     if (stopLossDistance <= 0) return;
 
     const rawPosSize = +(riskUSD / stopLossDistance).toFixed(4);
     const posSize = Math.max(0.001, rawPosSize);
-    const notional = +(levels.entry * posSize).toFixed(2);
+    const notional = +(currentPrice * posSize).toFixed(2);
     const marginUSD = +(notional / lev).toFixed(2);
     const rewardUSD = +(riskUSD * (Number(levels.rrRatio) || 3.0)).toFixed(2);
 
     const liqPrice = this.derivativesEngine.calcLiquidationPrice({
-      entry: levels.entry,
+      entry: currentPrice,
       direction: dir,
       leverage: lev,
       asset,
@@ -377,14 +385,14 @@ class MondayAutoPilotDaemon {
     });
 
     this.log(`⚡ [AUTO-PILOT SIGNAL CONFIRMED] ${asset} ${dir}`, 'SIGNAL');
-    this.log(`Entry: $${levels.entry} | SL: $${levels.stopLoss} | TP: $${levels.target} | RR: 1:${levels.rrRatio}`);
+    this.log(`Entry: $${currentPrice} (Live Tick) | SL: $${levels.stopLoss} | TP: $${levels.target} | RR: 1:${levels.rrRatio}`);
     this.log(`Confluence: ${strategyResult.confluenceScore}% (${strategyResult.confluenceGrade}) | Risk: $${riskUSD} (1.0%)`);
 
     const trade = this.paperTrader.executePaperTrade({
       asset,
       market: 'Crypto',
       direction: dir,
-      entry: levels.entry,
+      entry: currentPrice,
       stopLoss: levels.stopLoss,
       target: levels.target,
       positionSize: posSize,

@@ -78,6 +78,8 @@ class MondayAutoPilotDaemon {
 
     this.livePrices = {};
     this.candleCache = {};
+    this.cooldowns = new Map();
+    this.exhaustedSetups = new Map();
     this.ws = null;
     this.isWsConnected = false;
     this.isScanning = false;
@@ -253,9 +255,11 @@ class MondayAutoPilotDaemon {
             result: 'LOSS',
             exitPrice: pos.stopLoss,
             pnlUSD: pnl,
-            rMultiple: closed.rMultiple || -1.0
-          });
         }
+        // Universal 10-minute cooldown on exit
+        this.cooldowns.set(pos.asset, Date.now() + 600000);
+        const setupKey = `${pos.asset}_${pos.direction}_${Number(pos.entry).toFixed(4)}_${Number(pos.target).toFixed(4)}`;
+        this.exhaustedSetups.set(setupKey, Date.now() + 1800000);
       }
     }
   }
@@ -313,14 +317,31 @@ class MondayAutoPilotDaemon {
       const eventRisk = this.newsEngine.getOverallEventRisk(asset, 'Crypto');
       if (eventRisk.isShieldTriggered) return;
 
+      // 1. Cooldown & Setup Exhaustion Checks
+      const cdExp = this.cooldowns.get(asset);
+      if (cdExp && Date.now() < cdExp) return;
+
       const isConfirmed = strategyResult.state === 'CONFIRMED' && strategyResult.levels;
       const score = Math.round(strategyResult.confluenceScore || 0);
       const rr = Number(strategyResult.levels?.rrRatio || 0);
+
+      const setupKey = `${asset}_${strategyResult.direction}_${Number(strategyResult.levels.entry).toFixed(4)}_${Number(strategyResult.levels.target).toFixed(4)}`;
+      const exhExp = this.exhaustedSetups.get(setupKey);
+      if (exhExp && Date.now() < exhExp) return;
 
       // Strict institutional rules: Grade A confluence (>= 75%) and minimum 1:3.0 RR
       if (isConfirmed && score >= 75 && rr >= 3.0) {
         const alreadyOpen = this.paperTrader.openPositions.some(p => p.asset === asset);
         if (alreadyOpen) return;
+
+        // Zero-tolerance price check
+        const dir = strategyResult.direction || 'LONG';
+        const levels = strategyResult.levels;
+        if (dir === 'LONG' && (currentPrice >= levels.target || currentPrice <= levels.stopLoss)) return;
+        if (dir === 'SHORT' && (currentPrice <= levels.target || currentPrice >= levels.stopLoss)) return;
+
+        const slippage = Math.abs(currentPrice - levels.entry) / levels.entry;
+        if (slippage > 0.004) return;
 
         await this.executeAutonomousTrade(asset, strategyResult, currentPrice);
       }

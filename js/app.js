@@ -408,10 +408,11 @@ class App {
     if (closedTrades.length > 0) {
       closedTrades.forEach(({ pos, result, price }) => {
         const isWin = result === 'WIN';
-        if (!isWin) {
-          // Trigger 3-minute direction-specific cooldown for this asset to prevent rapid-fire churn
-          this.setAssetCooldown(pos.asset, pos.direction, 3 * 60 * 1000);
-        }
+        // MANDATORY UNIVERSAL COOLDOWN: 10-minute cooldown on EVERY trade exit (Win OR Loss) to prevent loop churn
+        this.setAssetCooldown(pos.asset, pos.direction, 10 * 60 * 1000);
+        // Permanently exhaust the completed setup levels for 30 minutes
+        this.markSetupExhausted(pos.asset, pos.direction, pos.entry, pos.target, 30 * 60 * 1000);
+
         const title = isWin ? '🎯 TARGET HIT!' : '🛑 STOP LOSS HIT!';
         const formattedPrice = this.ui.formatPrice(price, pos.market === 'India' ? '₹' : '$');
         const pnlSign = pos.unrealizedPnlUSD >= 0 ? '+' : '';
@@ -570,11 +571,11 @@ class App {
     }
   }
 
-  setAssetCooldown(asset, direction, durationMs = 180000) {
+  setAssetCooldown(asset, direction, durationMs = 600000) {
     if (!this.assetCooldowns) this.assetCooldowns = new Map();
     const key = `${asset}_${(direction || 'LONG').toUpperCase()}`;
     this.assetCooldowns.set(key, Date.now() + durationMs);
-    console.log(`[Cooldown Guard] Set ${key} post-loss cooldown for ${durationMs / 1000}s`);
+    console.log(`[Cooldown Guard] Set ${key} universal exit cooldown for ${durationMs / 1000}s`);
   }
 
   isAssetOnCooldown(asset, direction) {
@@ -584,6 +585,25 @@ class App {
     if (!expiry) return false;
     if (Date.now() > expiry) {
       this.assetCooldowns.delete(key);
+      return false;
+    }
+    return true;
+  }
+
+  markSetupExhausted(asset, direction, entry, target, durationMs = 1800000) {
+    if (!this.exhaustedSetups) this.exhaustedSetups = new Map();
+    const key = `${asset}_${(direction || 'LONG').toUpperCase()}_${Number(entry).toFixed(4)}_${Number(target).toFixed(4)}`;
+    this.exhaustedSetups.set(key, Date.now() + durationMs);
+    console.log(`[Setup Lock] Setup ${key} permanently exhausted for ${durationMs / 60000} mins`);
+  }
+
+  isSetupExhausted(asset, direction, entry, target) {
+    if (!this.exhaustedSetups) return false;
+    const key = `${asset}_${(direction || 'LONG').toUpperCase()}_${Number(entry).toFixed(4)}_${Number(target).toFixed(4)}`;
+    const expiry = this.exhaustedSetups.get(key);
+    if (!expiry) return false;
+    if (Date.now() > expiry) {
+      this.exhaustedSetups.delete(key);
       return false;
     }
     return true;
@@ -633,10 +653,18 @@ class App {
 
         const { strategyResult } = evalData;
         const proposedDir = strategyResult.direction || 'LONG';
+        const entryLvl = strategyResult.levels?.entry;
+        const targetLvl = strategyResult.levels?.target;
 
-        // Direction-Specific Post-Loss Cooldown Guard (3-Minute Safety Cushion)
+        // 1. Mandatory Cooldown Guard
         if (this.isAssetOnCooldown(asset, proposedDir)) {
-          console.log(`[Auto-Pilot] Skipping ${asset} ${proposedDir}: In 3-minute post-loss cooldown.`);
+          console.log(`[Auto-Pilot] Skipping ${asset} ${proposedDir}: On active post-exit cooldown.`);
+          continue;
+        }
+
+        // 2. Setup Exhaustion Guard: Prevent re-trading identical completed setup
+        if (entryLvl && targetLvl && this.isSetupExhausted(asset, proposedDir, entryLvl, targetLvl)) {
+          console.log(`[Auto-Pilot] Skipping ${asset} ${proposedDir}: Setup levels already completed & exhausted.`);
           continue;
         }
 
@@ -840,13 +868,15 @@ class App {
       return;
     }
 
-    // 3.5. Extract setup levels & Pre-Flight Price Sanity Firewall: Ensure live market tick hasn't crossed SL
-    const entry = Number(strategyResult.levels.entry);
+    // 3.5. Extract setup levels & Pre-Flight Price Sanity Firewall
+    const rawEntry = Number(strategyResult.levels.entry);
     const stopLoss = Number(strategyResult.levels.stopLoss);
     const target = Number(strategyResult.levels.target);
 
     const adapter = this.getActiveAdapter();
-    const livePrice = adapter.getCurrentPrice(asset) || entry;
+    const livePrice = adapter.getCurrentPrice(asset) || rawEntry;
+
+    // Zero-Tolerance Price Sanity Check: If market has reached or crossed SL or TP, block order
     if (direction === 'LONG') {
       if (livePrice <= stopLoss || livePrice >= target) {
         console.warn(`[Auto-Pilot Firewall] LONG blocked for ${asset}: Live price ($${livePrice}) is at/past SL ($${stopLoss}) or TP ($${target}).`);
@@ -856,7 +886,7 @@ class App {
           direction,
           openCount: currentOpenCount,
           skipReason: '🚨 PRE-FLIGHT PRICE FIREWALL ACTIVE',
-          skipExplanation: `Live market price ($${livePrice}) has already crossed or breached setup Stop Loss ($${stopLoss}). Order discarded to protect capital against instant slippage.`
+          skipExplanation: `Live market price ($${livePrice}) is already at or past setup target ($${target}) or stop loss ($${stopLoss}). Order discarded to protect capital.`
         });
         return;
       }
@@ -869,15 +899,34 @@ class App {
           direction,
           openCount: currentOpenCount,
           skipReason: '🚨 PRE-FLIGHT PRICE FIREWALL ACTIVE',
-          skipExplanation: `Live market price ($${livePrice}) has already crossed or breached setup Stop Loss ($${stopLoss}). Order discarded to protect capital against instant slippage.`
+          skipExplanation: `Live market price ($${livePrice}) is already at or past setup target ($${target}) or stop loss ($${stopLoss}). Order discarded to protect capital.`
         });
         return;
       }
     }
 
+    // Slippage Firewall: Live price must be within 0.4% of strategy calculated entry
+    const slippage = Math.abs(livePrice - rawEntry) / rawEntry;
+    if (slippage > 0.004) {
+      console.warn(`[Auto-Pilot Firewall] Execution blocked for ${asset}: Live price ($${livePrice}) drifted ${(slippage * 100).toFixed(2)}% from setup entry ($${rawEntry}).`);
+      this.ui.appendAutonomousDecisionCard({
+        action: 'SKIPPED',
+        asset,
+        direction,
+        openCount: currentOpenCount,
+        skipReason: '🚨 SLIPPAGE TOLERANCE BREACHED',
+        skipExplanation: `Market price moved ${(slippage * 100).toFixed(2)}% away from setup entry ($${rawEntry}). Order cancelled to prevent entering at bad fill prices.`
+      });
+      return;
+    }
+
+    // Fill at exact live market tick to the penny
+    const entry = livePrice;
+
     // 4. Autonomous Execution (Configured Margin & Leverage)
     const leverage = this.currentMarket === 'India' ? Math.min(5, settings.leverage) : settings.leverage;
     const marginUSD = settings.marginUSD;
+    const notionalUSD = +(marginUSD * leverage).toFixed(2);
     const rawPosSize = notionalUSD / entry;
     const positionSize = entry >= 1000 
       ? +rawPosSize.toFixed(6) 
@@ -916,6 +965,9 @@ class App {
       console.warn(`[Auto-Pilot] Execution skipped or blocked by risk firewall for ${asset}`);
       return;
     }
+
+    // Lock setup fingerprint immediately so this exact setup cannot be re-entered
+    this.markSetupExhausted(asset, direction, rawEntry, target);
 
     // Voice announcement
     this.voiceAssistant.speak(

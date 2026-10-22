@@ -76,11 +76,16 @@ export class PaperTrader {
       try {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
-          // Identify any rapid glitch loop trades (< 2 minutes duration, loss/liquidation, LONG or SHORT)
+          // Identify any rapid glitch loop trades
           const isGlitchLoopTrade = (t) => {
             if (t.result === 'LIQUIDATED' && Number(t.pnlUSD || 0) === 0) return true;
             const duration = (t.closedAt || 0) - (t.openedAt || 0);
             if ((t.result === 'LOSS' || t.result === 'LIQUIDATED') && duration < 120000) return true;
+            // Purge runaway repetitive XRP glitch loop trades
+            if (t.asset === 'XRP' && Math.abs(Number(t.entry) - 1.332) < 0.01 && Math.abs(Number(t.target) - 1.353) < 0.01) {
+              return true;
+            }
+            if (duration < 15000 && Math.abs(Number(t.pnlUSD || 0)) > 0) return true;
             return false;
           };
 
@@ -259,6 +264,14 @@ export class PaperTrader {
     // =========================================================================
     if (isNaN(entryNum) || isNaN(slNum) || isNaN(tpNum) || entryNum <= 0 || slNum <= 0 || tpNum <= 0) {
       console.warn(`[Pre-Flight Firewall] Order rejected for ${asset}: Invalid price numbers.`);
+      return null;
+    }
+
+    // RAPID CHURN CIRCUIT BREAKER: Strict frequency guard (Max 2 trades per asset in 5 minutes)
+    const now = Date.now();
+    const recentSameAssetTrades = this.trades.filter(t => t.asset === asset && (now - (t.closedAt || t.openedAt || 0)) < 300000);
+    if (recentSameAssetTrades.length >= 2) {
+      console.warn(`[Rapid Churn Circuit Breaker] Order rejected for ${asset}: Maximum frequency limit (2 trades in 5 min) reached.`);
       return null;
     }
 

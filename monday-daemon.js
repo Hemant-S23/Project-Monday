@@ -253,6 +253,12 @@ class MondayAutoPilotDaemon {
             rMultiple: closed.rMultiple || 3.0
           });
         }
+        // WIN: 0 Cooldown — allow immediate continuation if fresh setup forms
+        this.cooldowns.delete(pos.asset);
+        const entryStr = this.formatDynamicPrice(pos.entry);
+        const targetStr = this.formatDynamicPrice(pos.target);
+        const setupKey = `${pos.asset}_${pos.direction}_${entryStr}_${targetStr}`;
+        this.exhaustedSetups.set(setupKey, Date.now() + 1800000);
       } else if (hitStop) {
         const closed = this.paperTrader.closePosition(pos.id, 'LOSS', pos.stopLoss);
         if (closed) {
@@ -267,8 +273,8 @@ class MondayAutoPilotDaemon {
             rMultiple: closed.rMultiple || -1.0
           });
         }
-        // Universal 10-minute cooldown on exit
-        this.cooldowns.set(pos.asset, Date.now() + 600000);
+        // LOSS: Refined 3-minute structural pause (falling knife / revenge trading protection)
+        this.cooldowns.set(pos.asset, Date.now() + 180000);
         const entryStr = this.formatDynamicPrice(pos.entry);
         const targetStr = this.formatDynamicPrice(pos.target);
         const setupKey = `${pos.asset}_${pos.direction}_${entryStr}_${targetStr}`;

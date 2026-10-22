@@ -408,8 +408,15 @@ class App {
     if (closedTrades.length > 0) {
       closedTrades.forEach(({ pos, result, price }) => {
         const isWin = result === 'WIN';
-        // MANDATORY UNIVERSAL COOLDOWN: 10-minute cooldown on EVERY trade exit (Win OR Loss) to prevent loop churn
-        this.setAssetCooldown(pos.asset, pos.direction, 10 * 60 * 1000);
+        if (!isWin) {
+          // REFINED COOLDOWN: 3-minute structural pause on LOSS (falling-knife / revenge trading guard)
+          this.setAssetCooldown(pos.asset, pos.direction, 3 * 60 * 1000);
+        } else {
+          // On WIN: 0 Cooldown — allow immediate trend continuation if fresh setup forms
+          if (this.assetCooldowns) {
+            this.assetCooldowns.delete(`${pos.asset}_${(pos.direction || 'LONG').toUpperCase()}`);
+          }
+        }
         // Permanently exhaust the completed setup levels for 30 minutes
         this.markSetupExhausted(pos.asset, pos.direction, pos.entry, pos.target, 30 * 60 * 1000);
 

@@ -590,16 +590,29 @@ class App {
     return true;
   }
 
+  formatDynamicPrice(val) {
+    const num = Number(val);
+    if (isNaN(num)) return '0.00';
+    if (num >= 1000) return num.toFixed(2);
+    if (num >= 1) return num.toFixed(4);
+    if (num >= 0.01) return num.toFixed(6);
+    return num.toFixed(8);
+  }
+
   markSetupExhausted(asset, direction, entry, target, durationMs = 1800000) {
     if (!this.exhaustedSetups) this.exhaustedSetups = new Map();
-    const key = `${asset}_${(direction || 'LONG').toUpperCase()}_${Number(entry).toFixed(4)}_${Number(target).toFixed(4)}`;
+    const entryStr = this.formatDynamicPrice(entry);
+    const targetStr = this.formatDynamicPrice(target);
+    const key = `${asset}_${(direction || 'LONG').toUpperCase()}_${entryStr}_${targetStr}`;
     this.exhaustedSetups.set(key, Date.now() + durationMs);
     console.log(`[Setup Lock] Setup ${key} permanently exhausted for ${durationMs / 60000} mins`);
   }
 
   isSetupExhausted(asset, direction, entry, target) {
     if (!this.exhaustedSetups) return false;
-    const key = `${asset}_${(direction || 'LONG').toUpperCase()}_${Number(entry).toFixed(4)}_${Number(target).toFixed(4)}`;
+    const entryStr = this.formatDynamicPrice(entry);
+    const targetStr = this.formatDynamicPrice(target);
+    const key = `${asset}_${(direction || 'LONG').toUpperCase()}_${entryStr}_${targetStr}`;
     const expiry = this.exhaustedSetups.get(key);
     if (!expiry) return false;
     if (Date.now() > expiry) {
@@ -956,7 +969,7 @@ class App {
       : entry * (1 + (1 / leverage) * 0.95);
     const liqPrice = entry >= 1000 
       ? +rawLiq.toFixed(2) 
-      : (entry >= 1 ? +rawLiq.toFixed(4) : +rawLiq.toFixed(6));
+      : (entry >= 1 ? +rawLiq.toFixed(4) : (entry >= 0.01 ? +rawLiq.toFixed(6) : +rawLiq.toFixed(8)));
 
     const orderPacket = {
       asset,

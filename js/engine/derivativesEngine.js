@@ -115,7 +115,7 @@ export class DerivativesEngine {
     const mmr = spec.mmr;
     const isLong = (direction || 'LONG').toUpperCase() === 'LONG';
 
-    const decimals = p < 0.1 ? 6 : p < 1 ? 5 : p < 10 ? 4 : 2;
+    const decimals = p < 0.01 ? 8 : (p < 1 ? 6 : (p < 1000 ? 4 : 2));
 
     if (isLong) {
       const factor = 1 - (1 / lev) + mmr;

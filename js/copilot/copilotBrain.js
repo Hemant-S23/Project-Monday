@@ -15,9 +15,8 @@ export class CopilotBrain {
     const num = Number(p);
     const locale = this.currentContext?.market === 'India' ? 'en-IN' : 'en-US';
     if (num >= 1000) return `${symbol}${num.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    if (num >= 1) return `${symbol}${num.toFixed(2)}`;
-    if (num >= 0.001) return `${symbol}${num.toFixed(5)}`;
-    if (num >= 0.00001) return `${symbol}${num.toFixed(7)}`;
+    if (num >= 1) return `${symbol}${num.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: (this.currentContext?.market === 'India' ? 2 : 4) })}`;
+    if (num >= 0.01) return `${symbol}${num.toFixed(6)}`;
     return `${symbol}${num.toFixed(8)}`;
   }
 

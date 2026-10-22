@@ -95,6 +95,15 @@ class MondayAutoPilotDaemon {
     console.log(`${prefix} ${msg}`);
   }
 
+  formatDynamicPrice(val) {
+    const num = Number(val);
+    if (isNaN(num)) return '0.00';
+    if (num >= 1000) return num.toFixed(2);
+    if (num >= 1) return num.toFixed(4);
+    if (num >= 0.01) return num.toFixed(6);
+    return num.toFixed(8);
+  }
+
   async init() {
     console.log('========================================================================');
     console.log('   PROJECT MONDAY — 24/7 ULTRA-LOW LATENCY WEBSOCKET AUTOPILOT DAEMON  ');
@@ -260,7 +269,9 @@ class MondayAutoPilotDaemon {
         }
         // Universal 10-minute cooldown on exit
         this.cooldowns.set(pos.asset, Date.now() + 600000);
-        const setupKey = `${pos.asset}_${pos.direction}_${Number(pos.entry).toFixed(4)}_${Number(pos.target).toFixed(4)}`;
+        const entryStr = this.formatDynamicPrice(pos.entry);
+        const targetStr = this.formatDynamicPrice(pos.target);
+        const setupKey = `${pos.asset}_${pos.direction}_${entryStr}_${targetStr}`;
         this.exhaustedSetups.set(setupKey, Date.now() + 1800000);
       }
     }
@@ -327,7 +338,9 @@ class MondayAutoPilotDaemon {
       const score = Math.round(strategyResult.confluenceScore || 0);
       const rr = Number(strategyResult.levels?.rrRatio || 0);
 
-      const setupKey = `${asset}_${strategyResult.direction}_${Number(strategyResult.levels.entry).toFixed(4)}_${Number(strategyResult.levels.target).toFixed(4)}`;
+      const entryStr = this.formatDynamicPrice(strategyResult.levels.entry);
+      const targetStr = this.formatDynamicPrice(strategyResult.levels.target);
+      const setupKey = `${asset}_${strategyResult.direction}_${entryStr}_${targetStr}`;
       const exhExp = this.exhaustedSetups.get(setupKey);
       if (exhExp && Date.now() < exhExp) return;
 

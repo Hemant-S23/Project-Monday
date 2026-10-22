@@ -70,16 +70,27 @@ export class PaperTrader {
     return [];
   }
 
+  formatDynamicPrice(val) {
+    const num = Number(val);
+    if (isNaN(num)) return '0.00';
+    if (num >= 1000) return num.toFixed(2);
+    if (num >= 1) return num.toFixed(4);
+    if (num >= 0.01) return num.toFixed(6);
+    return num.toFixed(8);
+  }
+
   loadTrades() {
     const raw = localStorage.getItem(this.storageKey);
     if (raw !== null) {
       try {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
-          // Count occurrences of identical setups to catch any runaway loops across any coin
+          // Count occurrences of identical setups using dynamic precision to protect micro & sub-dollar coins
           const signatureCounts = {};
           parsed.forEach(t => {
-            const sig = `${t.asset}_${t.direction}_${Number(t.entry).toFixed(3)}_${Number(t.target || t.exitPrice).toFixed(3)}`;
+            const entryStr = this.formatDynamicPrice(t.entry);
+            const exitStr = this.formatDynamicPrice(t.target || t.exitPrice);
+            const sig = `${t.asset}_${t.direction}_${entryStr}_${exitStr}`;
             signatureCounts[sig] = (signatureCounts[sig] || 0) + 1;
           });
 
@@ -96,7 +107,9 @@ export class PaperTrader {
             if (t.asset === 'DOGE' && Math.abs(Number(t.entry) - 0.0795) < 0.01) return true;
 
             // Universal loop detector: if same identical setup was repeated > 3 times, keep only 1 and purge duplicates
-            const sig = `${t.asset}_${t.direction}_${Number(t.entry).toFixed(3)}_${Number(t.target || t.exitPrice).toFixed(3)}`;
+            const entryStr = this.formatDynamicPrice(t.entry);
+            const exitStr = this.formatDynamicPrice(t.target || t.exitPrice);
+            const sig = `${t.asset}_${t.direction}_${entryStr}_${exitStr}`;
             if (signatureCounts[sig] > 3) {
               seenSignatures[sig] = (seenSignatures[sig] || 0) + 1;
               if (seenSignatures[sig] > 1) {

@@ -76,15 +76,34 @@ export class PaperTrader {
       try {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
+          // Count occurrences of identical setups to catch any runaway loops across any coin
+          const signatureCounts = {};
+          parsed.forEach(t => {
+            const sig = `${t.asset}_${t.direction}_${Number(t.entry).toFixed(3)}_${Number(t.target || t.exitPrice).toFixed(3)}`;
+            signatureCounts[sig] = (signatureCounts[sig] || 0) + 1;
+          });
+
+          const seenSignatures = {};
           // Identify any rapid glitch loop trades
           const isGlitchLoopTrade = (t) => {
             if (t.result === 'LIQUIDATED' && Number(t.pnlUSD || 0) === 0) return true;
             const duration = (t.closedAt || 0) - (t.openedAt || 0);
             if ((t.result === 'LOSS' || t.result === 'LIQUIDATED') && duration < 120000) return true;
-            // Purge runaway repetitive XRP glitch loop trades
-            if (t.asset === 'XRP' && Math.abs(Number(t.entry) - 1.332) < 0.01 && Math.abs(Number(t.target) - 1.353) < 0.01) {
-              return true;
+
+            // Specific known runaway glitch loops (XRP, NEAR, DOGE)
+            if (t.asset === 'XRP' && Math.abs(Number(t.entry) - 1.332) < 0.05) return true;
+            if (t.asset === 'NEAR' && Math.abs(Number(t.entry) - 5.032) < 0.05) return true;
+            if (t.asset === 'DOGE' && Math.abs(Number(t.entry) - 0.0795) < 0.01) return true;
+
+            // Universal loop detector: if same identical setup was repeated > 3 times, keep only 1 and purge duplicates
+            const sig = `${t.asset}_${t.direction}_${Number(t.entry).toFixed(3)}_${Number(t.target || t.exitPrice).toFixed(3)}`;
+            if (signatureCounts[sig] > 3) {
+              seenSignatures[sig] = (seenSignatures[sig] || 0) + 1;
+              if (seenSignatures[sig] > 1) {
+                return true; // Duplicate of the runaway loop!
+              }
             }
+
             if (duration < 15000 && Math.abs(Number(t.pnlUSD || 0)) > 0) return true;
             return false;
           };
@@ -105,7 +124,7 @@ export class PaperTrader {
             const netRealized = +clean.reduce((acc, t) => acc + (Number(t.pnlUSD) || 0), 0).toFixed(2);
             this.balance = Math.max(2000, +(2000 + netRealized).toFixed(2));
             localStorage.setItem(this.balanceStorageKey, this.balance.toFixed(2));
-            console.log(`[PaperTrader] Auto-purged ${parsed.length - clean.length} glitch trades. Balance restored to $${this.balance}`);
+            console.log(`[PaperTrader] Auto-purged ${parsed.length - clean.length} glitch loop trades. Balance restored to $${this.balance}`);
           }
           return clean;
         }

@@ -25,16 +25,41 @@ export class CryptoAdapter extends MarketAdapter {
 
     this.cache = {
       'BTC': { price: lastBtc, '1H': [], '5M': [], lastUpdate: Date.now() },
-      'ETH': { price: 3480.2, '1H': [], '5M': [], lastUpdate: Date.now() },
-      'SOL': { price: 154.8, '1H': [], '5M': [], lastUpdate: Date.now() }
+      'ETH': { price: 2550.0, '1H': [], '5M': [], lastUpdate: Date.now() },
+      'SOL': { price: 155.0, '1H': [], '5M': [], lastUpdate: Date.now() },
+      'LINK': { price: 12.18, '1H': [], '5M': [], lastUpdate: Date.now() },
+      'AVAX': { price: 28.5, '1H': [], '5M': [], lastUpdate: Date.now() },
+      'DOGE': { price: 0.142, '1H': [], '5M': [], lastUpdate: Date.now() },
+      'NEAR': { price: 5.15, '1H': [], '5M': [], lastUpdate: Date.now() },
+      'SUI': { price: 2.05, '1H': [], '5M': [], lastUpdate: Date.now() },
+      'XRP': { price: 0.54, '1H': [], '5M': [], lastUpdate: Date.now() },
+      'ADA': { price: 0.355, '1H': [], '5M': [], lastUpdate: Date.now() }
     };
 
     this.allMarkets = [];
     this.ws = null;
     this.isWsConnected = false;
-    this.activeSubscriptions = new Set(['BTC-USD', 'ETH-USD', 'SOL-USD']);
+    this.activeSubscriptions = new Set(['BTC-USD', 'ETH-USD', 'SOL-USD', 'LINK-USD', 'AVAX-USD', 'DOGE-USD', 'NEAR-USD', 'SUI-USD', 'XRP-USD', 'ADA-USD']);
     this.simulationTimer = null;
     this.pollingTimer = null;
+  }
+
+  getDefaultAssetPrice(asset) {
+    const defaults = {
+      'BTC': 68500.0,
+      'ETH': 2550.0,
+      'SOL': 155.0,
+      'AVAX': 28.5,
+      'LINK': 12.18,
+      'DOGE': 0.142,
+      'NEAR': 5.15,
+      'SUI': 2.05,
+      'XRP': 0.54,
+      'ADA': 0.355,
+      'PEPE': 0.0000105,
+      'SHIB': 0.0000185
+    };
+    return defaults[asset] || 1.0;
   }
 
   async init() {
@@ -127,7 +152,7 @@ export class CryptoAdapter extends MarketAdapter {
     if (!this.cache[asset]) {
       const marketMeta = this.allMarkets.find(m => m.baseAsset === asset);
       this.cache[asset] = {
-        price: marketMeta && marketMeta.price > 0 ? marketMeta.price : (asset === 'BTC' ? 82960 : 100),
+        price: marketMeta && marketMeta.price > 0 ? marketMeta.price : this.getDefaultAssetPrice(asset),
         high24h: marketMeta ? marketMeta.high24h : 105,
         low24h: marketMeta ? marketMeta.low24h : 95,
         changePercent: marketMeta ? marketMeta.changePercent : 0,
@@ -232,7 +257,7 @@ export class CryptoAdapter extends MarketAdapter {
   }
 
   generateSyntheticCandles(asset, timeframe) {
-    const currentPrice = this.cache[asset]?.price || (asset === 'BTC' ? 82165 : asset === 'ETH' ? 2415 : asset === 'SOL' ? 104 : 100);
+    const currentPrice = this.cache[asset]?.price || this.getDefaultAssetPrice(asset);
     const count = 60;
     const intervalSec = timeframe === '1H' ? 3600 : 300;
     const now = Math.floor(Date.now() / 1000);

@@ -101,10 +101,12 @@ export class PaperTrader {
             const duration = (t.closedAt || 0) - (t.openedAt || 0);
             if ((t.result === 'LOSS' || t.result === 'LIQUIDATED') && duration < 120000) return true;
 
-            // Specific known runaway glitch loops (XRP, NEAR, DOGE)
+            // Specific known runaway glitch loops (XRP, NEAR, DOGE, LINK dummy glitch)
             if (t.asset === 'XRP' && Math.abs(Number(t.entry) - 1.332) < 0.05) return true;
             if (t.asset === 'NEAR' && Math.abs(Number(t.entry) - 5.032) < 0.05) return true;
             if (t.asset === 'DOGE' && Math.abs(Number(t.entry) - 0.0795) < 0.01) return true;
+            if (t.asset === 'LINK' && (Number(t.exitPrice) > 50 || Number(t.pnlUSD) > 500)) return true;
+            if (Number(t.rMultiple) > 30 || (Number(t.riskUSD) > 0 && Number(t.pnlUSD) / Number(t.riskUSD) > 30)) return true;
 
             // Universal loop detector: if same identical setup was repeated > 3 times, keep only 1 and purge duplicates
             const entryStr = this.formatDynamicPrice(t.entry);
@@ -446,7 +448,20 @@ export class PaperTrader {
     const pos = this.openPositions[index];
     this.openPositions.splice(index, 1);
 
-    const actualExit = exitPrice !== null ? exitPrice : pos.currentPrice;
+    // STRICT LIMIT / STOP FILL EXECUTION (Exchange Order Book Standards)
+    // When Take Profit hits (WIN), the Limit Order fills strictly at the target price (pos.target).
+    // When Stop Loss hits (LOSS), the Stop Order fills at the planned stop loss level (pos.stopLoss).
+    // When Liquidated, exit price is pos.liquidationPrice.
+    let actualExit;
+    if (resultType === 'WIN' && pos.target) {
+      actualExit = Number(pos.target);
+    } else if (resultType === 'LOSS' && pos.stopLoss) {
+      actualExit = Number(pos.stopLoss);
+    } else if (resultType === 'LIQUIDATED' && (pos.liquidationPrice || pos.stopLoss)) {
+      actualExit = Number(pos.liquidationPrice || pos.stopLoss);
+    } else {
+      actualExit = exitPrice !== null ? Number(exitPrice) : Number(pos.currentPrice);
+    }
     const isLong = pos.direction === 'LONG';
     const priceDelta = isLong ? (actualExit - pos.entry) : (pos.entry - actualExit);
     

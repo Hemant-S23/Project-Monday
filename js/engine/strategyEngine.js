@@ -44,8 +44,22 @@ export class StrategyEngine {
     // --- STEP 3: Related-Asset SMT Divergence ---
     const smtAnalysis = this.calculateSMTDivergence(targetCandles5M, relatedCandles5M, htfTrend.direction);
 
+    // Extract user-configured target RR from telemetry / settings
+    let targetRR = externalTelemetry?.userStandards?.minRR || externalTelemetry?.minRR || null;
+    if (!targetRR) {
+      try {
+        if (typeof localStorage !== 'undefined') {
+          const raw = localStorage.getItem('monday_autopilot_settings');
+          if (raw) {
+            const s = JSON.parse(raw);
+            if (s && s.minRR) targetRR = parseFloat(s.minRR);
+          }
+        }
+      } catch (e) {}
+    }
+
     // --- STEP 4 & 5: Targets, Stop Loss, and Risk:Reward ---
-    const levels = this.calculateLevelsAndRR(targetCandles5M, htfTrend.direction, currentPrice);
+    const levels = this.calculateLevelsAndRR(targetCandles5M, htfTrend.direction, currentPrice, targetRR);
 
     // --- STEP 6: Multi-Timeframe RSI Momentum (14-Period Wilder RSI) ---
     const rsi1H = this.calculateRSI(targetCandles1H, 14);
@@ -112,7 +126,7 @@ export class StrategyEngine {
     // --- DYNAMIC USER STANDARDS (from Auto-Pilot Settings panel) ---
     const standards = externalTelemetry?.userStandards || {};
     const minConfluence = typeof standards.minConfluence === 'number' ? standards.minConfluence : 75;
-    const minRR = typeof standards.minRR === 'number' ? standards.minRR : 3.0;
+    const minRR = typeof standards.minRR === 'number' ? standards.minRR : (Number(targetRR) > 0 ? Number(targetRR) : 2.5);
     const isShieldEnforced = standards.eventShieldEnabled !== false;
 
     // Check 5: Dynamic Asymmetric Risk / Reward Rule
@@ -357,7 +371,7 @@ export class StrategyEngine {
     };
   }
 
-  calculateLevelsAndRR(candles, trendDirection, currentPrice) {
+  calculateLevelsAndRR(candles, trendDirection, currentPrice, targetRR = 2.5) {
     const slice = candles.slice(-20);
     const highs = slice.map(c => c.high);
     const lows = slice.map(c => c.low);
@@ -367,16 +381,19 @@ export class StrategyEngine {
     // Guaranteed minimum 0.5% stop distance so market noise doesn't trigger instant stop outs
     const minBuffer = currentPrice * 0.005;
 
+    // Use precisely user-configured R:R ratio (defaults to 2.5 if unprovided)
+    const rrMult = Number(targetRR) > 0 ? Number(targetRR) : 2.5;
+
     if (trendDirection === 'BULLISH') {
       const swingLow = Math.min(...lows);
       stopLoss = Math.min(swingLow * 0.998, currentPrice - minBuffer);
       const risk = currentPrice - stopLoss;
-      target = currentPrice + (risk * 3.2);
+      target = currentPrice + (risk * rrMult);
     } else {
       const swingHigh = Math.max(...highs);
       stopLoss = Math.max(swingHigh * 1.002, currentPrice + minBuffer);
       const risk = stopLoss - currentPrice;
-      target = currentPrice - (risk * 3.2);
+      target = currentPrice - (risk * rrMult);
     }
 
     const risk = Math.abs(currentPrice - stopLoss);
@@ -389,7 +406,7 @@ export class StrategyEngine {
       target,
       riskDistance: risk,
       rewardDistance: reward,
-      rrRatio: +rrRatio.toFixed(2)
+      rrRatio: +rrRatio.toFixed(1)
     };
   }
 

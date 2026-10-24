@@ -104,6 +104,31 @@ class MondayAutoPilotDaemon {
     return num.toFixed(8);
   }
 
+  getAutoPilotSettings() {
+    try {
+      const raw = globalThis.localStorage.getItem('monday_autopilot_settings');
+      if (raw) {
+        const s = JSON.parse(raw);
+        return {
+          minConfluence: Math.max(50, Math.min(95, parseInt(s.minConfluence, 10) || 75)),
+          minRR: Math.max(1.5, Math.min(5.0, parseFloat(s.minRR) || 2.5)),
+          marginUSD: Math.max(5, Math.min(500, parseFloat(s.marginUSD) || 20)),
+          leverage: Math.max(1, Math.min(50, parseInt(s.leverage, 10) || 20)),
+          maxTrades: Math.max(1, Math.min(100, parseInt(s.maxTrades, 10) || 2)),
+          eventShieldEnabled: s.eventShieldEnabled !== false
+        };
+      }
+    } catch (e) {}
+    return {
+      minConfluence: 75,
+      minRR: 2.5,
+      marginUSD: 20,
+      leverage: 20,
+      maxTrades: 2,
+      eventShieldEnabled: true
+    };
+  }
+
   async init() {
     console.log('========================================================================');
     console.log('   PROJECT MONDAY — 24/7 ULTRA-LOW LATENCY WEBSOCKET AUTOPILOT DAEMON  ');
@@ -322,6 +347,8 @@ class MondayAutoPilotDaemon {
       const relatedAsset = asset === 'BTC' ? 'ETH' : 'BTC';
       const related5M = this.candleCache[`${relatedAsset}_300`] || candles5M;
 
+      const settings = this.getAutoPilotSettings();
+
       const strategyResult = this.strategyEngine.evaluate(
         asset,
         candles1H,
@@ -329,12 +356,15 @@ class MondayAutoPilotDaemon {
         related5M,
         currentPrice,
         '$',
-        relatedAsset
+        relatedAsset,
+        { userStandards: settings }
       );
 
       // Event Risk Shield
-      const eventRisk = this.newsEngine.getOverallEventRisk(asset, 'Crypto');
-      if (eventRisk.isShieldTriggered) return;
+      if (settings.eventShieldEnabled) {
+        const eventRisk = this.newsEngine.getOverallEventRisk(asset, 'Crypto');
+        if (eventRisk.isShieldTriggered) return;
+      }
 
       // 1. Cooldown & Setup Exhaustion Checks
       const cdExp = this.cooldowns.get(asset);
@@ -350,8 +380,8 @@ class MondayAutoPilotDaemon {
       const exhExp = this.exhaustedSetups.get(setupKey);
       if (exhExp && Date.now() < exhExp) return;
 
-      // Strict institutional rules: Grade A confluence (>= 75%) and minimum 1:3.0 RR
-      if (isConfirmed && score >= 75 && rr >= 3.0) {
+      // Dynamic execution eligibility matching user configured confluence and minRR
+      if (isConfirmed && score >= settings.minConfluence && rr >= settings.minRR) {
         const alreadyOpen = this.paperTrader.openPositions.some(p => p.asset === asset);
         if (alreadyOpen) return;
 
@@ -380,9 +410,10 @@ class MondayAutoPilotDaemon {
   }
 
   async executeAutonomousTrade(asset, strategyResult, currentPrice) {
+    const settings = this.getAutoPilotSettings();
     const dir = strategyResult.direction || 'LONG';
     const levels = strategyResult.levels;
-    const lev = 20;
+    const lev = settings.leverage || 20;
     const balance = this.paperTrader.balance;
 
     const riskUSD = +(balance * 0.01).toFixed(2);
@@ -393,7 +424,7 @@ class MondayAutoPilotDaemon {
     const posSize = Math.max(0.001, rawPosSize);
     const notional = +(currentPrice * posSize).toFixed(2);
     const marginUSD = +(notional / lev).toFixed(2);
-    const rewardUSD = +(riskUSD * (Number(levels.rrRatio) || 3.0)).toFixed(2);
+    const rewardUSD = +(riskUSD * (Number(levels.rrRatio) || 2.5)).toFixed(2);
 
     const liqPrice = this.derivativesEngine.calcLiquidationPrice({
       entry: currentPrice,

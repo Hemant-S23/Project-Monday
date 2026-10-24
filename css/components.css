@@ -4241,20 +4241,34 @@
 }
 
 .passbook-modal-header {
-  padding: 14px 18px;
+  padding: 16px 20px 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(13, 21, 39, 0.98);
+}
+
+.passbook-header-main-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 12px;
 }
 
 .passbook-header-left {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .passbook-icon-wrapper {
   width: 36px;
   height: 36px;
-  border-radius: 8px;
+  border-radius: 9px;
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.2));
   border: 1px solid rgba(16, 185, 129, 0.4);
   display: flex;
@@ -4262,6 +4276,7 @@
   justify-content: center;
   color: #34d399;
   font-size: 1.25rem;
+  flex-shrink: 0;
 }
 
 .passbook-modal-title {
@@ -4270,6 +4285,95 @@
   color: #ffffff;
   letter-spacing: -0.01em;
   margin: 0;
+  white-space: nowrap;
+}
+
+.passbook-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Premium Minimalist Reset & Restore Button */
+.btn-purge-ledger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 13px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.09) 0%, rgba(225, 29, 72, 0.04) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  color: #fca5a5;
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  position: relative;
+  outline: none;
+}
+
+.btn-purge-ledger i {
+  font-size: 0.92rem;
+  color: #f87171;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-purge-ledger .purge-btn-text {
+  line-height: 1;
+  font-weight: 600;
+}
+
+.btn-purge-ledger:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(225, 29, 72, 0.12) 100%);
+  border-color: rgba(239, 68, 68, 0.55);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.btn-purge-ledger:hover i {
+  color: #ffe4e6;
+  transform: rotate(-180deg);
+}
+
+.btn-purge-ledger:active {
+  transform: translateY(0px) scale(0.97);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.passbook-close-btn,
+.passbook-modal-header .icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+}
+
+.passbook-close-btn:hover,
+.passbook-modal-header .icon-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  transform: translateY(-1px);
 }
 
 .passbook-compliance-row {
@@ -4278,7 +4382,8 @@
   gap: 6px;
   font-size: 0.68rem;
   color: #94a3b8;
-  margin-top: 2px;
+  margin-top: 1px;
+  padding-left: 48px;
 }
 
 .compliance-tag {
@@ -5559,13 +5664,37 @@
   color: #b45309 !important;
 }
 
-[data-theme="light"] .passbook-modal-header .icon-btn {
+[data-theme="light"] .btn-purge-ledger {
+  background: rgba(239, 68, 68, 0.07) !important;
+  border-color: rgba(239, 68, 68, 0.25) !important;
+  color: #dc2626 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-theme="light"] .btn-purge-ledger i {
+  color: #dc2626 !important;
+}
+
+[data-theme="light"] .btn-purge-ledger:hover {
+  background: rgba(239, 68, 68, 0.14) !important;
+  border-color: rgba(239, 68, 68, 0.45) !important;
+  color: #991b1b !important;
+  box-shadow: 0 3px 12px rgba(239, 68, 68, 0.18) !important;
+}
+
+[data-theme="light"] .btn-purge-ledger:hover i {
+  color: #7f1d1d !important;
+}
+
+[data-theme="light"] .passbook-modal-header .icon-btn,
+[data-theme="light"] .passbook-close-btn {
   color: #64748b !important;
   background: #f1f5f9 !important;
   border: 1px solid #e2e8f0 !important;
 }
 
-[data-theme="light"] .passbook-modal-header .icon-btn:hover {
+[data-theme="light"] .passbook-modal-header .icon-btn:hover,
+[data-theme="light"] .passbook-close-btn:hover {
   color: #0f172a !important;
   background: #e2e8f0 !important;
 }

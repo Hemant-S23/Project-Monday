@@ -795,6 +795,9 @@ export class TerminalUI {
         if (this.callbacks.onResetAccount) {
           this.callbacks.onResetAccount();
         }
+        if (typeof this.renderFinancialPassbook === 'function') {
+          this.renderFinancialPassbook();
+        }
       });
     }
 
@@ -919,17 +922,7 @@ export class TerminalUI {
     };
     const purgePassbookBtn = document.getElementById('btn_purge_passbook');
     if (purgePassbookBtn) {
-      purgePassbookBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (confirm('Are you sure you want to purge all glitch trades and restore your balance to $2,000.00?')) {
-          if (this.callbacks.onResetAccount) {
-            this.callbacks.onResetAccount();
-          }
-          this.renderFinancialPassbook();
-          this.showToast('Ledger Restored', 'All glitch trades purged. Balance restored to $2,000.00', 'success');
-        }
-      });
+      purgePassbookBtn.addEventListener('click', openResetConfirmModal);
     }
 
     if (closePassbookBtn) closePassbookBtn.addEventListener('click', handleClosePassbook);

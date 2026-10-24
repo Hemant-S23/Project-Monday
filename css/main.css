@@ -2948,8 +2948,11 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   .btn-purge-ledger {
-    padding: 4px 8px !important;
-    font-size: 0.72rem !important;
+    height: 28px !important;
+    padding: 0 9px !important;
+    font-size: 0.70rem !important;
+    border-radius: 6px !important;
+    gap: 5px !important;
     white-space: nowrap !important;
   }
 

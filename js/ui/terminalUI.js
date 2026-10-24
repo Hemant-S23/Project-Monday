@@ -3327,7 +3327,19 @@ export class TerminalUI {
       const isGrossProfit = gross > 0;
       const postBal = trade.postTradeBalance ? Number(trade.postTradeBalance) : null;
       
-      const reasonLabel = trade.result === 'WIN' ? '🎯 Take Profit Hit' : trade.result === 'LIQUIDATED' ? '⚠️ Liquidation Exit' : trade.result === 'LOSS' ? '🛑 Stop Loss Hit' : '✋ Manual Close';
+      const isManual = trade.exitReason === 'MANUAL' || trade.closeReason === 'MANUAL' ||
+        (trade.target && Math.abs(Number(trade.exitPrice) - Number(trade.target)) / Number(trade.target) > 0.005 &&
+         trade.stopLoss && Math.abs(Number(trade.exitPrice) - Number(trade.stopLoss)) / Number(trade.stopLoss) > 0.005);
+      
+      const reasonLabel = isManual
+        ? (isNetProfit ? '✋ Manual Close (Profit)' : isLoss ? '✋ Manual Close (Loss)' : '✋ Manual Close')
+        : trade.result === 'WIN' 
+          ? '🎯 Take Profit Hit' 
+          : trade.result === 'LIQUIDATED' 
+            ? '⚠️ Liquidation Exit' 
+            : trade.result === 'LOSS' 
+              ? '🛑 Stop Loss Hit' 
+              : '✋ Manual Close';
 
       const formattedAmount = isNetProfit
         ? `+$${netPnl.toFixed(2)}`
@@ -3380,7 +3392,7 @@ export class TerminalUI {
                 <span class="val">-$${entryFee.toFixed(2)}</span>
               </div>
               <div class="receipt-line sub-fee">
-                <span>• Exit Brokerage Fee (${trade.result === 'WIN' ? '0.02% Maker TP' : '0.05% Taker'})</span>
+                <span>• Exit Brokerage Fee (${isManual ? '0.05% Taker Manual' : trade.result === 'WIN' ? '0.02% Maker TP' : '0.05% Taker SL'})</span>
                 <span class="val">-$${exitFee.toFixed(2)}</span>
               </div>
               <div class="receipt-line sub-fee">

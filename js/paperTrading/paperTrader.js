@@ -85,6 +85,25 @@ export class PaperTrader {
       try {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
+          // Retrospectively tag past manual closes that were closed before hitting exact TP or SL
+          parsed.forEach(t => {
+            if (!t.exitReason && !t.closeReason) {
+              const hitExactTP = t.target && Math.abs(Number(t.exitPrice) - Number(t.target)) / Number(t.target) < 0.005;
+              const hitExactSL = t.stopLoss && Math.abs(Number(t.exitPrice) - Number(t.stopLoss)) / Number(t.stopLoss) < 0.005;
+              if (t.result === 'WIN' && !hitExactTP) {
+                t.exitReason = 'MANUAL';
+                t.closeReason = 'MANUAL';
+              } else if (t.result === 'LOSS' && !hitExactSL) {
+                t.exitReason = 'MANUAL';
+                t.closeReason = 'MANUAL';
+              } else if (t.result === 'WIN') {
+                t.exitReason = 'TAKE_PROFIT';
+              } else if (t.result === 'LOSS') {
+                t.exitReason = 'STOP_LOSS';
+              }
+            }
+          });
+
           // Count occurrences of identical setups using dynamic precision to protect micro & sub-dollar coins
           const signatureCounts = {};
           parsed.forEach(t => {
@@ -509,6 +528,8 @@ export class PaperTrader {
       ...pos,
       status: 'CLOSED',
       result,
+      exitReason: resultType,
+      closeReason: resultType,
       exitPrice: actualExit < 0.1 ? +actualExit.toFixed(6) : actualExit < 1 ? +actualExit.toFixed(5) : actualExit < 10 ? +actualExit.toFixed(4) : +actualExit.toFixed(2),
       grossPnlUSD,
       entryFeeUSD: entryFee,

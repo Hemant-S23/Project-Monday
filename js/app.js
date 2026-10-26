@@ -295,9 +295,12 @@ class App {
       const cfg = window.MONDAY_SUPABASE_CONFIG;
       if (!cfg || !cfg.url || !cfg.anonKey) return;
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
-      const res = await fetch(`${cfg.url}/rest/v1/paper_trades?select=*&order=created_at.desc&limit=100`, {
+      const activeUserId = this.authManager && this.authManager.getUserId ? this.authManager.getUserId() : 'guest_autopilot';
+      const userFilter = activeUserId === 'guest_autopilot' 
+        ? `user_id=eq.guest_autopilot`
+        : `user_id=in.(${activeUserId},guest_autopilot)`;
+
+      const res = await fetch(`${cfg.url}/rest/v1/paper_trades?select=*&${userFilter}&order=created_at.desc&limit=100`, {
         headers: {
           'apikey': cfg.anonKey,
           'Authorization': `Bearer ${cfg.anonKey}`

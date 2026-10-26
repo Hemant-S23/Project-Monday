@@ -169,6 +169,19 @@ class App {
       this.ui.showAuthOverlay();
     }
 
+    // 0.5 Fast-Path Cloud Hydration: Reconcile with Supabase Cloud BEFORE first UI paint
+    // Gives a fast 350ms window. Supabase typically responds in ~100-200ms.
+    // If it succeeds, the UI will paint 100% FRESH data on Frame 1, with zero lag and zero stale flash!
+    // If offline/slow, it times out in 350ms and falls back gracefully to cached localStorage.
+    try {
+      await Promise.race([
+        this.syncWithSupabaseCloud(),
+        new Promise(resolve => setTimeout(resolve, 350))
+      ]);
+    } catch (e) {
+      console.warn('[App] Pre-render cloud sync timeout/err:', e);
+    }
+
     // Immediate Synchronous State Sync (Zero-Lag HUD, Open Positions, and Journal Restoration)
     this.updateTradeJournalAndStats();
     this.ui.updateOpenPositions(this.paperTrader.openPositions);
@@ -193,9 +206,8 @@ class App {
       this.indiaAdapter.init()
     ]);
 
-    // 2.5 Audit Downtime Trades (Historical Catch-Up for Stop-Loss / Take-Profit)
-    try {
-      const downtimeResolved = await this.paperTrader.auditDowntimeTrades(this.cryptoAdapter);
+    // 2.5 Audit Downtime Trades in Background (Non-blocking: UI and chart render immediately without lag!)
+    this.paperTrader.auditDowntimeTrades(this.cryptoAdapter).then(downtimeResolved => {
       if (downtimeResolved && downtimeResolved.length > 0) {
         console.log(`[App] Downtime Catch-Up: Resolved ${downtimeResolved.length} trade(s) with accurate historical timestamps.`);
         this.updateTradeJournalAndStats();
@@ -224,9 +236,9 @@ class App {
           });
         });
       }
-    } catch (downtimeErr) {
+    }).catch(downtimeErr => {
       console.warn('[App] Downtime audit error:', downtimeErr);
-    }
+    });
 
     // 3. Subscribe to default asset streams
     ['BTC', 'ETH', 'SOL'].forEach(asset => {
@@ -283,100 +295,141 @@ class App {
       const cfg = window.MONDAY_SUPABASE_CONFIG;
       if (!cfg || !cfg.url || !cfg.anonKey) return;
 
-      const res = await fetch(`${cfg.url}/rest/v1/paper_trades?select=*&order=created_at.desc`, {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const res = await fetch(`${cfg.url}/rest/v1/paper_trades?select=*&order=created_at.desc&limit=100`, {
         headers: {
           'apikey': cfg.anonKey,
           'Authorization': `Bearer ${cfg.anonKey}`
-        }
+        },
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
       if (!res.ok) return;
 
       const cloudTrades = await res.json();
       if (!Array.isArray(cloudTrades)) return;
 
       let changed = false;
+
+      // Index cloud trades by status
+      const cloudOpenMap = new Map();
+      const cloudClosedMap = new Map();
+
       for (const ct of cloudTrades) {
         if (ct.status === 'OPEN') {
-          const exists = this.paperTrader.openPositions.find(p => p.id === ct.id);
-          if (!exists) {
-            const entryP = Number(ct.entry_price) || 0;
-            const posSz = Number(ct.position_size || 0);
-            const notional = +(entryP * posSz).toFixed(2);
-            const entryFee = +(notional * 0.0005).toFixed(2);
-            this.paperTrader.openPositions.push({
-              id: ct.id,
-              market: ct.market || 'Crypto',
-              asset: ct.asset,
-              direction: ct.direction,
-              entry: entryP,
-              stopLoss: Number(ct.stop_loss),
-              target: Number(ct.target_price),
-              positionSize: posSz,
-              riskUSD: Number(ct.risk_usd || 20),
-              rewardUSD: Number(ct.reward_usd || 60),
-              rrRatio: Number(ct.rr_ratio || 3.0),
-              leverage: 20,
-              marginUSD: Number(ct.risk_usd || 20),
-              notionalUSD: notional,
-              entryFeeUSD: entryFee,
-              estExitFeeUSD: entryFee,
-              status: 'OPEN',
-              currentPrice: entryP,
-              unrealizedPnlUSD: 0,
-              unrealizedGrossPnlUSD: 0,
-              unrealizedR: 0,
-              roePercent: 0,
-              feesUSD: +(entryFee * 2 * 1.18).toFixed(2),
-              openedAt: new Date(ct.created_at).getTime()
-            });
-            changed = true;
-          }
+          cloudOpenMap.set(ct.id, ct);
         } else if (ct.status === 'CLOSED') {
-          // Skip 0-pnl ghost liquidations
-          if (ct.result === 'LIQUIDATED' && Number(ct.pnl_usd || 0) === 0) {
-            continue;
-          }
-          const openIdx = this.paperTrader.openPositions.findIndex(p => p.id === ct.id);
-          if (openIdx !== -1) {
-            this.paperTrader.openPositions.splice(openIdx, 1);
-            changed = true;
-          }
-          const existsClosed = this.paperTrader.trades.find(t => t.id === ct.id);
-          if (!existsClosed) {
-            this.paperTrader.trades.unshift({
-              id: ct.id,
-              market: ct.market || 'Crypto',
-              asset: ct.asset,
-              direction: ct.direction,
-              entry: Number(ct.entry_price),
-              stopLoss: Number(ct.stop_loss),
-              target: Number(ct.target_price),
-              positionSize: Number(ct.position_size || 0),
-              riskUSD: Number(ct.risk_usd || 20),
-              rewardUSD: Number(ct.reward_usd || 60),
-              rrRatio: Number(ct.rr_ratio || 3.0),
-              status: 'CLOSED',
-              result: ct.result || 'WIN',
-              pnlUSD: Number(ct.pnl_usd || 0),
-              rMultiple: Number(ct.r_multiple || 0),
-              exitPrice: ct.exit_price ? Number(ct.exit_price) : null,
-              openedAt: ct.created_at ? new Date(ct.created_at).getTime() : Date.now(),
-              closedAt: ct.closed_at ? new Date(ct.closed_at).getTime() : (ct.created_at ? new Date(ct.created_at).getTime() : Date.now())
-            });
-            changed = true;
+          if (!(ct.result === 'LIQUIDATED' && Number(ct.pnl_usd || 0) === 0)) {
+            cloudClosedMap.set(ct.id, ct);
           }
         }
       }
 
+      // 1. Reconcile existing local open positions:
+      // Remove any position that cloud has marked CLOSED or purged
+      const reconciledOpen = [];
+      for (const pos of this.paperTrader.openPositions) {
+        if (cloudClosedMap.has(pos.id)) {
+          // Closed in cloud! Prune from local open
+          changed = true;
+        } else if (pos.id && pos.id.startsWith('TRADE-') && !cloudOpenMap.has(pos.id) && cloudClosedMap.size > 0) {
+          // Ghost position from earlier session that is no longer in cloud
+          changed = true;
+        } else {
+          reconciledOpen.push(pos);
+        }
+      }
+      this.paperTrader.openPositions = reconciledOpen;
+
+      // 2. Add any active cloud OPEN positions not yet tracked locally
+      for (const [id, ct] of cloudOpenMap.entries()) {
+        const exists = this.paperTrader.openPositions.find(p => p.id === id);
+        if (!exists) {
+          const entryP = Number(ct.entry_price) || 0;
+          const posSz = Number(ct.position_size || 0);
+          const notional = +(entryP * posSz).toFixed(2);
+          const entryFee = +(notional * 0.0005).toFixed(2);
+          this.paperTrader.openPositions.push({
+            id: ct.id,
+            market: ct.market || 'Crypto',
+            asset: ct.asset,
+            direction: ct.direction,
+            entry: entryP,
+            stopLoss: Number(ct.stop_loss),
+            target: Number(ct.target_price),
+            positionSize: posSz,
+            riskUSD: Number(ct.risk_usd || 20),
+            rewardUSD: Number(ct.reward_usd || 60),
+            rrRatio: Number(ct.rr_ratio || 3.0),
+            leverage: 20,
+            marginUSD: Number(ct.risk_usd || 20),
+            notionalUSD: notional,
+            entryFeeUSD: entryFee,
+            estExitFeeUSD: entryFee,
+            status: 'OPEN',
+            currentPrice: entryP,
+            unrealizedPnlUSD: 0,
+            unrealizedGrossPnlUSD: 0,
+            unrealizedR: 0,
+            roePercent: 0,
+            feesUSD: +(entryFee * 2 * 1.18).toFixed(2),
+            openedAt: new Date(ct.created_at).getTime()
+          });
+          changed = true;
+        }
+      }
+
+      // 3. Add any cloud CLOSED trades into local trades ledger
+      for (const [id, ct] of cloudClosedMap.entries()) {
+        const existsClosed = this.paperTrader.trades.find(t => t.id === id);
+        if (!existsClosed) {
+          this.paperTrader.trades.unshift({
+            id: ct.id,
+            market: ct.market || 'Crypto',
+            asset: ct.asset,
+            direction: ct.direction,
+            entry: Number(ct.entry_price),
+            stopLoss: Number(ct.stop_loss),
+            target: Number(ct.target_price),
+            positionSize: Number(ct.position_size || 0),
+            riskUSD: Number(ct.risk_usd || 20),
+            rewardUSD: Number(ct.reward_usd || 60),
+            rrRatio: Number(ct.rr_ratio || 3.0),
+            status: 'CLOSED',
+            result: ct.result || 'WIN',
+            pnlUSD: Number(ct.pnl_usd || 0),
+            rMultiple: Number(ct.r_multiple || 0),
+            exitPrice: ct.exit_price ? Number(ct.exit_price) : null,
+            openedAt: ct.created_at ? new Date(ct.created_at).getTime() : Date.now(),
+            closedAt: ct.closed_at ? new Date(ct.closed_at).getTime() : (ct.created_at ? new Date(ct.created_at).getTime() : Date.now())
+          });
+          changed = true;
+        }
+      }
+
+      // 4. Update balance & save if any change occurred
       if (changed) {
+        this.paperTrader.trades.sort((a, b) => (b.closedAt || 0) - (a.closedAt || 0));
+        const totalRealized = this.paperTrader.trades
+          .filter(t => t.status === 'CLOSED')
+          .reduce((sum, t) => sum + (Number(t.pnlUSD) || 0), 0);
+        this.paperTrader.balance = +(this.paperTrader.initialBalance + totalRealized).toFixed(2);
+
         this.paperTrader.save();
         this.updateTradeJournalAndStats();
         this.ui.updateOpenPositions(this.paperTrader.openPositions);
         const liveMetrics = this.paperTrader.getLiveEquity();
         this.ui.updateHeaderAccountHUD(liveMetrics);
+        if (this.ui.orderState) {
+          this.ui.orderState.availableBalance = liveMetrics.availableMargin !== undefined
+            ? liveMetrics.availableMargin
+            : Math.max(0, this.paperTrader.balance - (liveMetrics.usedMargin || 0));
+          this.ui.refreshDerivativesOrderDesk();
+        }
       }
     } catch (e) {
-      // Supabase sync failure non-blocking
+      console.warn('[App] Supabase cloud sync error:', e.message);
     }
   }
 
@@ -1247,19 +1300,13 @@ class App {
     }
   }
 
-  async syncWithSupabaseCloud() {
-    await this.reconcileOfflineTradesWithSupabase();
-  }
-
   async reconcileOfflineTradesWithSupabase() {
     try {
       const cfg = window.MONDAY_SUPABASE_CONFIG;
       if (!cfg || !cfg.url || !cfg.anonKey) return;
       const toSync = [...(this.paperTrader.openPositions || []), ...(this.paperTrader.trades || []).slice(0, 15)];
-      for (const trade of toSync) {
-        await this.syncTradeToSupabase(trade);
-      }
-      console.log(`[App] Supabase cloud sync reconciled ${toSync.length} items.`);
+      await Promise.all(toSync.map(trade => this.syncTradeToSupabase(trade)));
+      console.log(`[App] Supabase cloud sync reconciled ${toSync.length} items in parallel.`);
     } catch (err) {
       console.warn('[App] Cloud trade reconciliation failed:', err);
     }

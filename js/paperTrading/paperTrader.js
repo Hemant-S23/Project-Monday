@@ -566,8 +566,12 @@ export class PaperTrader {
     const resolvedTrades = [];
     const positionsToAudit = [...this.openPositions];
 
-    for (const pos of positionsToAudit) {
+    // Audit all open positions concurrently in parallel rather than sequential blocking waterfall
+    await Promise.all(positionsToAudit.map(async (pos) => {
       try {
+        // If position was already closed by Supabase or another process, skip
+        if (!this.openPositions.some(p => p.id === pos.id)) return;
+
         const isCrypto = !pos.market || pos.market === 'Crypto';
         let candles = [];
 
@@ -578,7 +582,7 @@ export class PaperTrader {
 
           try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 4000);
+            const timeoutId = setTimeout(() => controller.abort(), 2500);
             const res = await fetch(url, { signal: controller.signal });
             clearTimeout(timeoutId);
             if (res.ok) {
@@ -655,7 +659,7 @@ export class PaperTrader {
       } catch (posErr) {
         console.error(`[PaperTrader] Error auditing downtime trade ${pos.id}:`, posErr);
       }
-    }
+    }));
 
     if (resolvedTrades.length > 0) {
       this.trades.sort((a, b) => (b.closedAt || 0) - (a.closedAt || 0));

@@ -372,9 +372,12 @@ class MondayAutoPilotDaemon {
       const cdExp = this.cooldowns.get(asset);
       if (cdExp && Date.now() < cdExp) return;
 
-      const isConfirmed = strategyResult.state === 'CONFIRMED' && strategyResult.levels;
+      // Ensure strategy generated valid levels before checking exhaustion and execution
+      if (!strategyResult || !strategyResult.levels) return;
+
+      const isConfirmed = strategyResult.state === 'CONFIRMED';
       const score = Math.round(strategyResult.confluenceScore || 0);
-      const rr = Number(strategyResult.levels?.rrRatio || 0);
+      const rr = Number(strategyResult.levels.rrRatio || 0);
 
       const entryStr = this.formatDynamicPrice(strategyResult.levels.entry);
       const targetStr = this.formatDynamicPrice(strategyResult.levels.target);

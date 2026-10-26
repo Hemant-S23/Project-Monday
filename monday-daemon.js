@@ -14,6 +14,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import http from 'http';
 
 // File-backed LocalStorage Polyfill for Node.js
 const storageFile = path.resolve('scratch/daemon_storage.json');
@@ -144,9 +145,10 @@ class MondayAutoPilotDaemon {
     // 2. Start Native WebSocket Feed (Millisecond Ticks)
     this.startWebSocketFeed();
 
-    // 3. Start Strategy Scanner & Keep-Alive Loops
+    // 3. Start Strategy Scanner, Keep-Alive Loops & HTTP Health Server
     this.startScanningLoop();
     this.startHeartbeatLoop();
+    this.startHttpServer();
 
     this.log('🟢 24/7 Daemon is live. Real-time sub-second execution engaged.\n', 'SUCCESS');
   }
@@ -538,6 +540,31 @@ class MondayAutoPilotDaemon {
 
       this.log(`💓 [Heartbeat] Uptime: ${uptimeSec}s | Wallet: $${bal} | Open Trades: ${openCount} | Closed: ${closedCount} | WS: ${wsStatus}`);
     }, this.heartbeatIntervalMs);
+  }
+
+  startHttpServer() {
+    const port = process.env.PORT || 10000;
+    try {
+      const server = http.createServer((req, res) => {
+        const uptimeSec = Math.round((Date.now() - this.startTime) / 1000);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          status: 'ONLINE',
+          daemon: 'Project MONDAY Autonomous Core',
+          uptimeSeconds: uptimeSec,
+          balanceUSD: this.paperTrader.balance,
+          openPositionsCount: this.paperTrader.openPositions.length,
+          wsConnected: this.isWsConnected,
+          timestamp: new Date().toISOString()
+        }));
+      });
+
+      server.listen(port, () => {
+        this.log(`🌐 24/7 Cloud Health Server listening on port ${port} (Render & UptimeRobot active).`, 'SUCCESS');
+      });
+    } catch (err) {
+      this.log(`Health Server Warning: ${err.message}`, 'WARN');
+    }
   }
 }
 

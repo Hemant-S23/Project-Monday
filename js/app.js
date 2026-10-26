@@ -342,10 +342,11 @@ class App {
       }
       this.paperTrader.openPositions = reconciledOpen;
 
-      // 2. Add any active cloud OPEN positions not yet tracked locally
+      // 2. Add any active cloud OPEN positions not yet tracked locally (strictly enforcing 1 position per asset)
       for (const [id, ct] of cloudOpenMap.entries()) {
         const exists = this.paperTrader.openPositions.find(p => p.id === id);
-        if (!exists) {
+        const assetAlreadyOpen = this.paperTrader.openPositions.some(p => p.asset === ct.asset);
+        if (!exists && !assetAlreadyOpen) {
           const entryP = Number(ct.entry_price) || 0;
           const posSz = Number(ct.position_size || 0);
           const notional = +(entryP * posSz).toFixed(2);
@@ -717,8 +718,8 @@ class App {
         // Immediate termination if user disabled Auto-Pilot mid-scan
         if (!this.autoPilotEnabled) break;
 
-        // Stop if maxTrades limit reached (bypassed in testing mode)
-        if (settings.maxTrades < 900 && this.paperTrader.openPositions.length >= settings.maxTrades) break;
+        // Stop if maxTrades limit reached
+        if (this.paperTrader.openPositions.length >= settings.maxTrades) break;
 
         // Evaluate candidate asset
         const evalData = await this.evaluateAsset(asset);

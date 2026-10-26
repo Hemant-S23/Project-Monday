@@ -387,6 +387,12 @@ class MondayAutoPilotDaemon {
 
       // Dynamic execution eligibility matching user configured confluence and minRR
       if (isConfirmed && score >= settings.minConfluence && rr >= settings.minRR) {
+        // Enforce maximum concurrent active basket limit (e.g. 10 trades)
+        if (this.paperTrader.openPositions.length >= settings.maxTrades) {
+          return;
+        }
+
+        // Per-Asset Mutual Exclusion Lock: Never open multiple trades or opposing Long/Short on the same coin
         const alreadyOpen = this.paperTrader.openPositions.some(p => p.asset === asset);
         if (alreadyOpen) return;
 

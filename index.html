@@ -1462,10 +1462,82 @@
         <div class="passbook-monthly-card">
           <div class="passbook-filter-bar">
             <div class="passbook-select-group">
-              <label for="passbook_month_filter"><i class="ph ph-calendar"></i> Statement Period:</label>
-              <select id="passbook_month_filter" class="passbook-month-dropdown">
-                <option value="ALL">All Time Statement</option>
-              </select>
+              <label for="passbook_period_picker_btn"><i class="ph ph-calendar"></i> Statement Period:</label>
+              <div class="passbook-picker-container" id="passbook_picker_container">
+                <button type="button" id="passbook_period_picker_btn" class="passbook-period-trigger" aria-haspopup="true" aria-expanded="false" title="Click to open calendar and select any month or date">
+                  <i class="ph-bold ph-calendar-blank trigger-cal-icon"></i>
+                  <span id="passbook_period_label">This Month (October 2026)</span>
+                  <i class="ph-bold ph-caret-down trigger-arrow"></i>
+                </button>
+                
+                <!-- Sleek Minimalist Calendar & Month Picker Popover -->
+                <div id="passbook_calendar_popover" class="passbook-calendar-popover hidden" role="dialog" aria-modal="true">
+                  <!-- 1-Click Quick Presets -->
+                  <div class="cal-quick-presets">
+                    <button type="button" class="cal-preset-btn" data-period="TODAY">Today</button>
+                    <button type="button" class="cal-preset-btn active" data-period="THIS_MONTH">This Month</button>
+                    <button type="button" class="cal-preset-btn" data-period="ALL">All-Time</button>
+                  </div>
+
+                  <div class="cal-divider"></div>
+
+                  <!-- Month & Year Navigation Header -->
+                  <div class="cal-header-bar">
+                    <button type="button" class="cal-nav-btn" id="cal_prev_month_btn" title="Previous Month">
+                      <i class="ph-bold ph-caret-left"></i>
+                    </button>
+                    <div class="cal-selectors-group">
+                      <select id="cal_month_select" class="cal-select cal-select-month" aria-label="Select Month">
+                        <option value="0">January</option>
+                        <option value="1">February</option>
+                        <option value="2">March</option>
+                        <option value="3">April</option>
+                        <option value="4">May</option>
+                        <option value="5">June</option>
+                        <option value="6">July</option>
+                        <option value="7">August</option>
+                        <option value="8">September</option>
+                        <option value="9">October</option>
+                        <option value="10">November</option>
+                        <option value="11">December</option>
+                      </select>
+                      <select id="cal_year_select" class="cal-select cal-select-year" aria-label="Select Year">
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                        <option value="2028">2028</option>
+                      </select>
+                    </div>
+                    <button type="button" class="cal-nav-btn" id="cal_next_month_btn" title="Next Month">
+                      <i class="ph-bold ph-caret-right"></i>
+                    </button>
+                  </div>
+
+                  <!-- Action: View Entire Month -->
+                  <button type="button" id="btn_cal_select_month" class="cal-full-month-btn">
+                    <i class="ph-bold ph-calendar-check"></i>
+                    <span>Apply Full Month: <b id="cal_selected_month_label">October 2026</b></span>
+                  </button>
+
+                  <div class="cal-divider"></div>
+
+                  <!-- Day Calendar Grid for Specific Date Selection -->
+                  <div class="cal-month-grid-wrapper">
+                    <div class="cal-weekdays-row">
+                      <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                    </div>
+                    <div class="cal-days-grid" id="cal_days_grid">
+                      <!-- Dynamically rendered day buttons with trade dots -->
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Hidden select for programmatic / legacy access -->
+                <select id="passbook_month_filter" style="display:none;">
+                  <option value="THIS_MONTH">This Month</option>
+                </select>
+              </div>
             </div>
             <div class="passbook-type-filters">
               <button class="passbook-filter-chip active" data-filter="ALL" type="button" id="passbook_filter_all">All (0)</button>

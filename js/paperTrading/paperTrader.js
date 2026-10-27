@@ -812,6 +812,11 @@ export class PaperTrader {
       if (filterMonth === 'THIS_MONTH') {
         return monthKey === currentMonthKey;
       }
+      if (typeof filterMonth === 'string' && filterMonth.startsWith('DATE:')) {
+        const targetDate = filterMonth.replace('DATE:', '');
+        const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        return dateKey === targetDate;
+      }
       return monthKey === filterMonth;
     });
 

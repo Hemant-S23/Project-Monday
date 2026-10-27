@@ -62,6 +62,13 @@ export class TerminalUI {
       };
     }
 
+    // Financial Passbook & Calendar Filter State
+    this.passbookCurrentMonth = 'THIS_MONTH';
+    this.passbookFilterType = 'ALL';
+    const nowCal = new Date();
+    this.calViewYear = nowCal.getFullYear();
+    this.calViewMonth = nowCal.getMonth();
+
     this.bindEvents();
     this.bindDerivativesOrderDesk();
 
@@ -936,7 +943,98 @@ export class TerminalUI {
       });
     }
 
-    // Passbook Month Filter & Type Chips
+    // Passbook Calendar & Statement Period Picker Handlers
+    const periodTriggerBtn = document.getElementById('passbook_period_picker_btn');
+    if (periodTriggerBtn) {
+      periodTriggerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleCalendarPopover();
+      });
+    }
+
+    // 1-Click Preset Buttons (Today, This Month, All-Time)
+    document.querySelectorAll('.cal-preset-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const period = e.currentTarget.dataset.period || 'THIS_MONTH';
+        this.passbookCurrentMonth = period;
+        this.closeCalendarPopover();
+        this.renderFinancialPassbook();
+      });
+    });
+
+    // Month & Year Selectors in Popover
+    const calMonthSelect = document.getElementById('cal_month_select');
+    const calYearSelect = document.getElementById('cal_year_select');
+    if (calMonthSelect) {
+      calMonthSelect.addEventListener('change', (e) => {
+        this.calViewMonth = parseInt(e.target.value, 10);
+        this.renderCalendarPopoverGrid(this._lastLedgerTrades || []);
+      });
+    }
+    if (calYearSelect) {
+      calYearSelect.addEventListener('change', (e) => {
+        this.calViewYear = parseInt(e.target.value, 10);
+        this.renderCalendarPopoverGrid(this._lastLedgerTrades || []);
+      });
+    }
+
+    // Previous / Next Month Navigation Buttons
+    const calPrevBtn = document.getElementById('cal_prev_month_btn');
+    const calNextBtn = document.getElementById('cal_next_month_btn');
+    if (calPrevBtn) {
+      calPrevBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (this.calViewMonth === 0) {
+          this.calViewMonth = 11;
+          this.calViewYear--;
+        } else {
+          this.calViewMonth--;
+        }
+        this.renderCalendarPopoverGrid(this._lastLedgerTrades || []);
+      });
+    }
+    if (calNextBtn) {
+      calNextBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (this.calViewMonth === 11) {
+          this.calViewMonth = 0;
+          this.calViewYear++;
+        } else {
+          this.calViewMonth++;
+        }
+        this.renderCalendarPopoverGrid(this._lastLedgerTrades || []);
+      });
+    }
+
+    // "Apply Full Month" Action Button
+    const calFullMonthBtn = document.getElementById('btn_cal_select_month');
+    if (calFullMonthBtn) {
+      calFullMonthBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const y = this.calViewYear;
+        const m = String(this.calViewMonth + 1).padStart(2, '0');
+        this.passbookCurrentMonth = `${y}-${m}`;
+        this.closeCalendarPopover();
+        this.renderFinancialPassbook();
+      });
+    }
+
+    // Close calendar popover on outside click or Escape
+    document.addEventListener('click', (e) => {
+      const pickerCont = document.getElementById('passbook_picker_container');
+      if (pickerCont && !pickerCont.contains(e.target)) {
+        this.closeCalendarPopover();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        this.closeCalendarPopover();
+      }
+    });
+
+    // Passbook Month Filter (legacy programmatic access)
     const passbookMonthSelect = document.getElementById('passbook_month_filter');
     if (passbookMonthSelect) {
       passbookMonthSelect.addEventListener('change', () => {
@@ -3170,9 +3268,151 @@ export class TerminalUI {
     }
   }
 
+  toggleCalendarPopover() {
+    const popover = document.getElementById('passbook_calendar_popover');
+    const trigger = document.getElementById('passbook_period_picker_btn');
+    if (!popover || !trigger) return;
+    const isHidden = popover.classList.contains('hidden');
+    if (isHidden) {
+      popover.classList.remove('hidden');
+      trigger.classList.add('open');
+      trigger.setAttribute('aria-expanded', 'true');
+      this.renderCalendarPopoverGrid(this._lastLedgerTrades || []);
+    } else {
+      this.closeCalendarPopover();
+    }
+  }
+
+  closeCalendarPopover() {
+    const popover = document.getElementById('passbook_calendar_popover');
+    const trigger = document.getElementById('passbook_period_picker_btn');
+    if (popover) popover.classList.add('hidden');
+    if (trigger) {
+      trigger.classList.remove('open');
+      trigger.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  renderCalendarPopoverGrid(allTrades = []) {
+    const daysGrid = document.getElementById('cal_days_grid');
+    const monthSelect = document.getElementById('cal_month_select');
+    const yearSelect = document.getElementById('cal_year_select');
+    const monthActionLabel = document.getElementById('cal_selected_month_label');
+
+    if (!daysGrid) return;
+
+    if (this.calViewYear === undefined || this.calViewMonth === undefined) {
+      const now = new Date();
+      this.calViewYear = now.getFullYear();
+      this.calViewMonth = now.getMonth();
+    }
+
+    // Sync dropdowns in header
+    if (monthSelect) monthSelect.value = String(this.calViewMonth);
+    if (yearSelect) yearSelect.value = String(this.calViewYear);
+
+    // Format current view month title for the full month action button
+    const viewDate = new Date(this.calViewYear, this.calViewMonth, 1);
+    const viewMonthTitle = viewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    if (monthActionLabel) monthActionLabel.textContent = viewMonthTitle;
+
+    // Index all closed trades by date key (YYYY-MM-DD) -> { pnl, count }
+    const tradeDailyMap = {};
+    allTrades.forEach(t => {
+      const d = new Date(t.closedAt || t.openedAt || Date.now());
+      const dk = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      if (!tradeDailyMap[dk]) tradeDailyMap[dk] = { pnl: 0, count: 0 };
+      tradeDailyMap[dk].pnl += Number(t.pnlUSD || 0);
+      tradeDailyMap[dk].count += 1;
+    });
+
+    const now = new Date();
+    const todayY = now.getFullYear();
+    const todayM = now.getMonth();
+    const todayD = now.getDate();
+
+    // Check if user has an exact date selected
+    let selectedDateKey = null;
+    if (typeof this.passbookCurrentMonth === 'string' && this.passbookCurrentMonth.startsWith('DATE:')) {
+      selectedDateKey = this.passbookCurrentMonth.replace('DATE:', '');
+    }
+
+    // Days in current view month
+    const firstDayIndex = new Date(this.calViewYear, this.calViewMonth, 1).getDay(); // 0 is Sunday
+    const lastDayOfMonth = new Date(this.calViewYear, this.calViewMonth + 1, 0).getDate();
+    const lastDayOfPrevMonth = new Date(this.calViewYear, this.calViewMonth, 0).getDate();
+
+    let gridHtml = '';
+
+    // Prev month trailing days
+    for (let i = firstDayIndex - 1; i >= 0; i--) {
+      const dNum = lastDayOfPrevMonth - i;
+      const prevM = this.calViewMonth === 0 ? 11 : this.calViewMonth - 1;
+      const prevY = this.calViewMonth === 0 ? this.calViewYear - 1 : this.calViewYear;
+      const dKey = `${prevY}-${String(prevM + 1).padStart(2, '0')}-${String(dNum).padStart(2, '0')}`;
+      const isSel = selectedDateKey === dKey;
+      gridHtml += `
+        <button type="button" class="cal-day-cell other-month ${isSel ? 'is-selected' : ''}" data-date="${dKey}">
+          <span>${dNum}</span>
+        </button>
+      `;
+    }
+
+    // Current month days
+    for (let day = 1; day <= lastDayOfMonth; day++) {
+      const dKey = `${this.calViewYear}-${String(this.calViewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const isToday = this.calViewYear === todayY && this.calViewMonth === todayM && day === todayD;
+      const isSel = selectedDateKey === dKey;
+      const tradeStat = tradeDailyMap[dKey];
+
+      let dotHtml = '';
+      if (tradeStat) {
+        const dotClass = tradeStat.pnl > 0 ? 'profit' : tradeStat.pnl < 0 ? 'loss' : 'neutral';
+        dotHtml = `<span class="cal-day-dot ${dotClass}" title="${tradeStat.count} trade(s), Net: $${tradeStat.pnl.toFixed(2)}"></span>`;
+      }
+
+      gridHtml += `
+        <button type="button" class="cal-day-cell ${isToday ? 'is-today' : ''} ${isSel ? 'is-selected' : ''}" data-date="${dKey}" title="${day} ${viewMonthTitle}">
+          <span>${day}</span>
+          ${dotHtml}
+        </button>
+      `;
+    }
+
+    // Next month leading days (fill row up to 7)
+    const totalRendered = firstDayIndex + lastDayOfMonth;
+    const remaining = (7 - (totalRendered % 7)) % 7;
+    for (let nextDay = 1; nextDay <= remaining; nextDay++) {
+      const nextM = this.calViewMonth === 11 ? 0 : this.calViewMonth + 1;
+      const nextY = this.calViewMonth === 11 ? this.calViewYear + 1 : this.calViewYear;
+      const dKey = `${nextY}-${String(nextM + 1).padStart(2, '0')}-${String(nextDay).padStart(2, '0')}`;
+      const isSel = selectedDateKey === dKey;
+      gridHtml += `
+        <button type="button" class="cal-day-cell other-month ${isSel ? 'is-selected' : ''}" data-date="${dKey}">
+          <span>${nextDay}</span>
+        </button>
+      `;
+    }
+
+    daysGrid.innerHTML = gridHtml;
+
+    // Attach click handler to all date cells
+    daysGrid.querySelectorAll('.cal-day-cell').forEach(cell => {
+      cell.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const dateKey = cell.dataset.date;
+        if (!dateKey) return;
+        this.passbookCurrentMonth = `DATE:${dateKey}`;
+        this.closeCalendarPopover();
+        this.renderFinancialPassbook();
+      });
+    });
+  }
+
   renderFinancialPassbook() {
     const feedContainer = document.getElementById('passbook_transactions_feed');
     const monthSelect = document.getElementById('passbook_month_filter');
+    const periodLabelEl = document.getElementById('passbook_period_label');
     const grossEl = document.getElementById('passbook_gross_pnl');
     const brokerageEl = document.getElementById('passbook_brokerage_total');
     const gstEl = document.getElementById('passbook_gst_total');
@@ -3181,16 +3421,47 @@ export class TerminalUI {
 
     if (!this.callbacks.onGetFinancialLedger) return;
 
-    const filterMonth = this.passbookCurrentMonth || 'ALL';
+    const filterMonth = this.passbookCurrentMonth || 'THIS_MONTH';
     const ledger = this.callbacks.onGetFinancialLedger(filterMonth);
     if (!ledger) return;
 
-    // 1. Populate Available Month Dropdown with smart options
-    if (monthSelect) {
-      const now = new Date();
-      const currentMonthName = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-      const todayDateStr = now.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+    this._lastLedgerTrades = ledger.allTrades || ledger.trades || [];
 
+    // 1. Update Statement Period Trigger Label
+    const now = new Date();
+    const currentMonthName = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const todayDateStr = now.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+
+    let labelText = `This Month (${currentMonthName})`;
+    if (filterMonth === 'ALL') {
+      labelText = '🌐 All-Time Statement';
+    } else if (filterMonth === 'TODAY') {
+      labelText = `🌟 Today (${todayDateStr})`;
+    } else if (filterMonth === 'THIS_MONTH') {
+      labelText = `🗓️ This Month (${currentMonthName})`;
+    } else if (typeof filterMonth === 'string' && filterMonth.startsWith('DATE:')) {
+      const parts = filterMonth.replace('DATE:', '').split('-');
+      const dObj = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      const formatted = dObj.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+      labelText = `📅 Date: ${formatted}`;
+    } else if (typeof filterMonth === 'string' && filterMonth.includes('-')) {
+      const [y, m] = filterMonth.split('-');
+      const dObj = new Date(Number(y), Number(m) - 1, 1);
+      const mName = dObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      labelText = `📁 Full Month: ${mName}`;
+    }
+
+    if (periodLabelEl) {
+      periodLabelEl.textContent = labelText;
+    }
+
+    // Sync 1-Click Preset Buttons Active State
+    document.querySelectorAll('.cal-preset-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.period === filterMonth);
+    });
+
+    // Populate / Sync legacy month dropdown
+    if (monthSelect) {
       const opts = [
         `<option value="ALL" ${filterMonth === 'ALL' ? 'selected' : ''}>🌐 All-Time Statement</option>`,
         `<option value="TODAY" ${filterMonth === 'TODAY' ? 'selected' : ''}>🌟 Today (${todayDateStr})</option>`,
@@ -3208,6 +3479,9 @@ export class TerminalUI {
       monthSelect.innerHTML = opts.join('');
       monthSelect.value = filterMonth;
     }
+
+    // Keep Calendar Popover Grid in sync with current trade data
+    this.renderCalendarPopoverGrid(this._lastLedgerTrades);
 
     // 2. Update 4-Pillar Financial Audit Grid
     if (grossEl) {
@@ -3320,7 +3594,6 @@ export class TerminalUI {
     }
 
     let lastDateKey = null;
-    const now = new Date();
     const todayDateKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
     const yesterday = new Date(now.getTime() - 86400000);
     const yesterdayDateKey = `${yesterday.getFullYear()}-${yesterday.getMonth()}-${yesterday.getDate()}`;

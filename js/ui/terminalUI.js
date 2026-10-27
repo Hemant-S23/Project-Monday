@@ -3185,13 +3185,26 @@ export class TerminalUI {
     const ledger = this.callbacks.onGetFinancialLedger(filterMonth);
     if (!ledger) return;
 
-    // 1. Populate Available Month Dropdown if options differ
+    // 1. Populate Available Month Dropdown with smart options
     if (monthSelect) {
-      const currentSelected = monthSelect.value;
+      const now = new Date();
+      const currentMonthName = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      const todayDateStr = now.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+
       const opts = [
-        '<option value="ALL">All Time Statement</option>',
-        ...ledger.availableMonths.map(m => `<option value="${m.key}" ${m.key === filterMonth ? 'selected' : ''}>${m.label}</option>`)
+        `<option value="ALL" ${filterMonth === 'ALL' ? 'selected' : ''}>🌐 All-Time Statement</option>`,
+        `<option value="TODAY" ${filterMonth === 'TODAY' ? 'selected' : ''}>🌟 Today (${todayDateStr})</option>`,
+        `<option value="THIS_MONTH" ${filterMonth === 'THIS_MONTH' ? 'selected' : ''}>🗓️ This Month (${currentMonthName})</option>`
       ];
+
+      if (ledger.availableMonths && ledger.availableMonths.length > 0) {
+        ledger.availableMonths.forEach(m => {
+          if (!m.isCurrent) {
+            opts.push(`<option value="${m.key}" ${m.key === filterMonth ? 'selected' : ''}>📁 ${m.label}</option>`);
+          }
+        });
+      }
+
       monthSelect.innerHTML = opts.join('');
       monthSelect.value = filterMonth;
     }
@@ -3217,48 +3230,57 @@ export class TerminalUI {
       netEl.className = `audit-val ${isNetPos ? 'text-bullish' : 'text-bearish'}`;
     }
 
-    // 2.5. Populate 24-Hour Rolling Performance Digest Ribbon
+    // 2.5. Populate Today's Performance Summary Ribbon (Minimal & Breathable)
     const ribbonEl = document.getElementById('passbook_daily_ribbon');
     if (ribbonEl) {
       const allClosed = ledger.allTrades || ledger.trades || [];
-      const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-      const trades24h = allClosed.filter(t => {
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      const todayTrades = allClosed.filter(t => {
         const cTime = t.closedAt ? new Date(t.closedAt).getTime() : 0;
-        return cTime >= oneDayAgo;
+        return cTime >= startOfToday;
       });
 
-      const count24h = trades24h.length;
-      const wins24h = trades24h.filter(t => t.result === 'WIN' || (Number(t.pnlUSD || 0) > 0)).length;
-      const losses24h = trades24h.filter(t => t.result === 'LOSS' || t.result === 'LIQUIDATED' || (Number(t.pnlUSD || 0) < 0)).length;
-      const winRate24h = count24h > 0 ? ((wins24h / count24h) * 100).toFixed(1) : '0.0';
+      const countToday = todayTrades.length;
+      const winsToday = todayTrades.filter(t => t.result === 'WIN' || (Number(t.pnlUSD || 0) > 0)).length;
+      const lossesToday = todayTrades.filter(t => t.result === 'LOSS' || t.result === 'LIQUIDATED' || (Number(t.pnlUSD || 0) < 0)).length;
+      const winRateToday = countToday > 0 ? ((winsToday / countToday) * 100).toFixed(1) : '0.0';
 
-      const netPnl24h = +trades24h.reduce((acc, t) => acc + (Number(t.pnlUSD) || 0), 0).toFixed(2);
-      const netR24h = +trades24h.reduce((acc, t) => acc + (Number(t.rMultiple) || 0), 0).toFixed(1);
-      const charges24h = +trades24h.reduce((acc, t) => {
+      const netPnlToday = +todayTrades.reduce((acc, t) => acc + (Number(t.pnlUSD) || 0), 0).toFixed(2);
+      const netRToday = +todayTrades.reduce((acc, t) => acc + (Number(t.rMultiple) || 0), 0).toFixed(1);
+      const chargesToday = +todayTrades.reduce((acc, t) => {
         const brokerage = Number(t.brokerageFeeUSD || (t.totalFeesUSD ? +(t.totalFeesUSD / 1.18).toFixed(2) : 0));
         const gst = Number(t.gstUSD || (t.totalFeesUSD ? +(t.totalFeesUSD - brokerage).toFixed(2) : 0));
         return acc + Number(t.totalChargesUSD || t.totalFeesUSD || +(brokerage + gst).toFixed(2));
       }, 0).toFixed(2);
 
+      const dBadge = document.getElementById('daily_date_label');
       const dCount = document.getElementById('daily_trades_count');
       const dWinRate = document.getElementById('daily_win_rate');
       const dSplit = document.getElementById('daily_win_loss_split');
       const dNet = document.getElementById('daily_net_pnl');
       const dCharges = document.getElementById('daily_charges_pill');
 
-      if (dCount) dCount.textContent = `${count24h} Trade${count24h === 1 ? '' : 's'}`;
-      if (dWinRate) {
-        dWinRate.textContent = `${winRate24h}% Win Rate`;
-        dWinRate.className = `daily-ribbon-winrate ${Number(winRate24h) >= 50 ? 'text-bullish' : count24h > 0 ? 'text-bearish' : ''}`;
+      if (dBadge) {
+        const dayName = now.toLocaleDateString('en-US', { weekday: 'short' });
+        const dayNum = now.getDate();
+        const monthName = now.toLocaleDateString('en-US', { month: 'short' });
+        dBadge.textContent = `Today • ${dayName}, ${dayNum} ${monthName}`;
       }
-      if (dSplit) dSplit.textContent = `(${wins24h}W / ${losses24h}L)`;
+
+      if (dCount) dCount.textContent = `${countToday} Trade${countToday === 1 ? '' : 's'}`;
+      if (dWinRate) {
+        dWinRate.textContent = `${winRateToday}% Win`;
+        dWinRate.className = `daily-ribbon-winrate ${Number(winRateToday) >= 50 ? 'text-bullish' : countToday > 0 ? 'text-bearish' : ''}`;
+      }
+      if (dSplit) dSplit.textContent = `(${winsToday}W / ${lossesToday}L)`;
       if (dNet) {
-        const isPos = netPnl24h >= 0;
-        dNet.textContent = `${isPos ? '+' : '-'}$${Math.abs(netPnl24h).toFixed(2)} (${netR24h >= 0 ? '+' : ''}${netR24h.toFixed(1)}R)`;
+        const isPos = netPnlToday >= 0;
+        dNet.textContent = `${isPos ? '+' : '-'}$${Math.abs(netPnlToday).toFixed(2)} (${netRToday >= 0 ? '+' : ''}${netRToday.toFixed(1)}R)`;
         dNet.className = `daily-net-val ${isPos ? 'text-bullish' : 'negative'}`;
       }
       if (dCharges) {
-        dCharges.textContent = `-$${charges24h.toFixed(2)} Fees`;
+        dCharges.textContent = `-$${chargesToday.toFixed(2)} Fees`;
       }
     }
 
@@ -3283,7 +3305,7 @@ export class TerminalUI {
     if (chipProfit) chipProfit.textContent = `🟢 Profit (${ledger.winCount})`;
     if (chipLoss) chipLoss.textContent = `🔴 Loss (${ledger.lossCount})`;
 
-    // 4. Render Chronological Feed
+    // 4. Render Chronological Feed with Day-Wise Dividers
     if (!feedContainer) return;
 
     if (filteredTrades.length === 0) {
@@ -3297,6 +3319,22 @@ export class TerminalUI {
       return;
     }
 
+    let lastDateKey = null;
+    const now = new Date();
+    const todayDateKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+    const yesterday = new Date(now.getTime() - 86400000);
+    const yesterdayDateKey = `${yesterday.getFullYear()}-${yesterday.getMonth()}-${yesterday.getDate()}`;
+
+    // Pre-calculate daily totals for day divider badges
+    const dayTotals = {};
+    filteredTrades.forEach(trade => {
+      const d = new Date(trade.closedAt || trade.openedAt || Date.now());
+      const dk = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      if (!dayTotals[dk]) dayTotals[dk] = { pnl: 0, count: 0 };
+      dayTotals[dk].pnl += Number(trade.pnlUSD || 0);
+      dayTotals[dk].count += 1;
+    });
+
     feedContainer.innerHTML = filteredTrades.map((trade, idx) => {
       const seqNum = filteredTrades.length - idx;
       const netPnl = Number(trade.pnlUSD || 0);
@@ -3308,6 +3346,36 @@ export class TerminalUI {
       const dateObj = new Date(trade.closedAt || trade.openedAt || Date.now());
       const dateFormatted = dateObj.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
       const timeFormatted = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const tradeDateKey = `${dateObj.getFullYear()}-${dateObj.getMonth()}-${dateObj.getDate()}`;
+
+      let dividerHtml = '';
+      if (tradeDateKey !== lastDateKey) {
+        lastDateKey = tradeDateKey;
+        let dayTitle = dateObj.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+        if (tradeDateKey === todayDateKey) {
+          dayTitle = `Today • ${dayTitle}`;
+        } else if (tradeDateKey === yesterdayDateKey) {
+          dayTitle = `Yesterday • ${dayTitle}`;
+        } else {
+          dayTitle = dateObj.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+        }
+
+        const dayStat = dayTotals[tradeDateKey];
+        const dayPnlFormatted = dayStat ? (dayStat.pnl >= 0 ? `+$${dayStat.pnl.toFixed(2)}` : `-$${Math.abs(dayStat.pnl).toFixed(2)}`) : '';
+        const dayPnlClass = dayStat && dayStat.pnl >= 0 ? 'text-bullish' : 'text-bearish';
+
+        dividerHtml = `
+          <div class="passbook-day-divider">
+            <div class="day-divider-line"></div>
+            <div class="day-divider-badge">
+              <i class="ph-bold ph-calendar-blank"></i>
+              <span>${dayTitle}</span>
+              ${dayStat ? `<span class="day-divider-sub ${dayPnlClass}">${dayStat.count} trade${dayStat.count === 1 ? '' : 's'} • ${dayPnlFormatted}</span>` : ''}
+            </div>
+            <div class="day-divider-line"></div>
+          </div>
+        `;
+      }
       
       const dirClass = (trade.direction || 'LONG').toLowerCase();
       
@@ -3341,6 +3409,7 @@ export class TerminalUI {
           : `$${netPnl.toFixed(2)}`;
 
       return `
+        ${dividerHtml}
         <div class="passbook-txn-card" data-trade-id="${trade.id}">
           <div class="passbook-txn-header" role="button" tabindex="0" title="Tap to expand itemized tax & charge receipt">
             <div class="txn-left-col">

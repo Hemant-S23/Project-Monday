@@ -765,11 +765,22 @@ export class PaperTrader {
     }
     const closed = this.trades.filter(t => t.status === 'CLOSED');
     
-    // Group / filter by month if specified (Format: YYYY-MM)
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    // Group / filter by period: TODAY, THIS_MONTH, specific YYYY-MM, or ALL
     const filtered = closed.filter(t => {
       if (filterMonth === 'ALL') return true;
+      const cTime = t.closedAt ? new Date(t.closedAt).getTime() : 0;
+      if (filterMonth === 'TODAY') {
+        return cTime >= startOfToday;
+      }
       const d = new Date(t.closedAt || Date.now());
       const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      if (filterMonth === 'THIS_MONTH') {
+        return monthKey === currentMonthKey;
+      }
       return monthKey === filterMonth;
     });
 
@@ -798,7 +809,7 @@ export class PaperTrader {
       const [year, month] = key.split('-');
       const dateObj = new Date(Number(year), Number(month) - 1, 1);
       const label = dateObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-      return { key, label };
+      return { key, label, isCurrent: key === currentMonthKey };
     });
 
     return {

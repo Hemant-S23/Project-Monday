@@ -219,18 +219,21 @@ class App {
           const exitTimeStr = new Date(trade.closedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
           const formattedPrice = this.ui.formatPrice(trade.exitPrice, trade.market === 'India' ? '₹' : '$');
           const pnlSign = (trade.pnlUSD || 0) >= 0 ? '+' : '';
+          const isLiq = trade.result === 'LIQUIDATED';
           
           this.ui.showToast(
-            isWin ? '🎯 Downtime Target Hit' : '🛑 Downtime Stop Triggered',
+            isWin ? '🎯 Downtime Target Hit' : isLiq ? '⚠️ Downtime Liquidation' : '🛑 Downtime Stop Loss Hit',
             `${trade.asset} ${trade.direction} resolved at ${exitTimeStr} (${formattedPrice}). Net PnL: ${pnlSign}$${trade.pnlUSD}`,
             isWin ? 'success' : 'danger'
           );
 
           this.ui.addNotification({
-            type: isWin ? 'target' : 'stop',
+            type: isWin ? 'target' : isLiq ? 'liquidation' : 'stop',
             title: isWin 
               ? `Target Hit (Downtime) • ${trade.asset} ${trade.direction}` 
-              : `Stop Loss Hit (Downtime) • ${trade.asset} ${trade.direction}`,
+              : isLiq
+                ? `Liquidated (Downtime) • ${trade.asset} ${trade.direction}`
+                : `Stop Loss Hit (Downtime) • ${trade.asset} ${trade.direction}`,
             message: `${pnlSign}$${trade.pnlUSD} settled at ${exitTimeStr} (${formattedPrice}). Recorded in Passbook.`,
             tradeId: trade.id
           });
@@ -477,18 +480,23 @@ class App {
         // Permanently exhaust the completed setup levels for 30 minutes
         this.markSetupExhausted(pos.asset, pos.direction, pos.entry, pos.target, 30 * 60 * 1000);
 
-        const title = isWin ? '🎯 TARGET HIT!' : '🛑 STOP LOSS HIT!';
+        const isLiq = result === 'LIQUIDATED';
+        const title = isWin ? '🎯 TARGET HIT!' : isLiq ? '⚠️ LIQUIDATION EXIT!' : '🛑 STOP LOSS HIT!';
         const formattedPrice = this.ui.formatPrice(price, pos.market === 'India' ? '₹' : '$');
         const pnlSign = pos.unrealizedPnlUSD >= 0 ? '+' : '';
         const msg = `${pos.asset} paper trade closed at ${formattedPrice} (${result}). PnL: ${pnlSign}$${pos.unrealizedPnlUSD}`;
         this.ui.showToast(title, msg, isWin ? 'success' : 'danger');
-        this.voiceAssistant.speak(`${pos.asset} trade hit ${isWin ? 'Target' : 'Stop loss'}. Position closed.`);
+        this.voiceAssistant.speak(`${pos.asset} trade hit ${isWin ? 'Target' : isLiq ? 'Liquidation' : 'Stop loss'}. Position closed.`);
 
         // Dispatch persistent notification
         const rStr = pos.unrealizedR !== undefined ? ` (${pos.unrealizedR >= 0 ? '+' : ''}${pos.unrealizedR}R)` : '';
         this.ui.addNotification({
-          type: isWin ? 'target' : 'stop',
-          title: isWin ? `Target Hit • ${pos.asset} ${pos.direction}` : `Stop Loss Hit • ${pos.asset} ${pos.direction}`,
+          type: isWin ? 'target' : isLiq ? 'liquidation' : 'stop',
+          title: isWin 
+            ? `Target Hit • ${pos.asset} ${pos.direction}` 
+            : isLiq 
+              ? `Liquidated • ${pos.asset} ${pos.direction}` 
+              : `Stop Loss Hit • ${pos.asset} ${pos.direction}`,
           message: `${pnlSign}$${pos.unrealizedPnlUSD}${rStr} closed at ${formattedPrice}`,
           tradeId: pos.id
         });

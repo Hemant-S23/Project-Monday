@@ -431,9 +431,13 @@ export class PaperTrader {
       pos.unrealizedR = Number(pos.riskUSD) > 0 ? +(grossPnl / pos.riskUSD).toFixed(2) : 0;
       pos.roePercent = Number(pos.marginUSD) > 0 ? +((grossPnl / pos.marginUSD) * 100).toFixed(1) : 0;
 
-      // 1. Check Liquidation (Delta Exchange Standard)
+      // 1. Check Stop Loss FIRST (Protective stop order sitting on book triggers before liquidation)
+      let hitStop = pos.stopLoss ? (isLong ? (livePrice <= pos.stopLoss) : (livePrice >= pos.stopLoss)) : false;
+      let hitTarget = pos.target ? (isLong ? (livePrice >= pos.target) : (livePrice <= pos.target)) : false;
+
+      // 2. Check Liquidation ONLY if position has NO Stop Loss set
       let hitLiquidation = false;
-      if (pos.liquidationPrice && pos.liquidationPrice > 0) {
+      if (!pos.stopLoss && pos.liquidationPrice && pos.liquidationPrice > 0) {
         // Strict sanity guard: For LONG, liquidation must strictly be below entry. For SHORT, strictly above entry.
         const isLiqSane = isLong ? (pos.liquidationPrice < pos.entry) : (pos.liquidationPrice > pos.entry);
         if (isLiqSane) {
@@ -441,19 +445,15 @@ export class PaperTrader {
         }
       }
 
-      // 2. Check SL or TP Hit
-      let hitTarget = isLong ? (livePrice >= pos.target) : (livePrice <= pos.target);
-      let hitStop = isLong ? (livePrice <= pos.stopLoss) : (livePrice >= pos.stopLoss);
-
-      if (hitLiquidation) {
-        this.closePosition(pos.id, 'LIQUIDATED', pos.liquidationPrice);
-        closedList.push({ pos, result: 'LIQUIDATED', price: pos.liquidationPrice });
+      if (hitStop) {
+        const closed = this.closePosition(pos.id, 'LOSS', pos.stopLoss);
+        closedList.push({ pos: closed || pos, result: 'LOSS', price: pos.stopLoss });
       } else if (hitTarget) {
-        this.closePosition(pos.id, 'WIN', pos.target);
-        closedList.push({ pos, result: 'WIN', price: pos.target });
-      } else if (hitStop) {
-        this.closePosition(pos.id, 'LOSS', pos.stopLoss);
-        closedList.push({ pos, result: 'LOSS', price: pos.stopLoss });
+        const closed = this.closePosition(pos.id, 'WIN', pos.target);
+        closedList.push({ pos: closed || pos, result: 'WIN', price: pos.target });
+      } else if (hitLiquidation) {
+        const closed = this.closePosition(pos.id, 'LIQUIDATED', pos.liquidationPrice);
+        closedList.push({ pos: closed || pos, result: 'LIQUIDATED', price: pos.liquidationPrice });
       }
     });
 
@@ -467,19 +467,46 @@ export class PaperTrader {
     const pos = this.openPositions[index];
     this.openPositions.splice(index, 1);
 
+    // Normalize result type and determine canonical exit reason
+    let canonicalReason = 'MANUAL';
+    let baseResult = 'MANUAL';
+    if (resultType === 'WIN' || resultType === 'TAKE_PROFIT') {
+      canonicalReason = 'WIN';
+      baseResult = 'WIN';
+    } else if (resultType === 'LOSS' || resultType === 'STOP_LOSS') {
+      canonicalReason = 'LOSS';
+      baseResult = 'LOSS';
+    } else if (resultType === 'LIQUIDATED' || resultType === 'LIQUIDATION') {
+      canonicalReason = 'LIQUIDATED';
+      baseResult = 'LIQUIDATED';
+    } else {
+      canonicalReason = 'MANUAL';
+      baseResult = 'MANUAL';
+    }
+
+    // CAPITAL PROTECTION GUARANTEE:
+    // If a Stop Loss is configured, the stop order rests on the exchange orderbook.
+    // Price MUST trigger the Stop Loss before it could ever reach liquidation price.
+    // A trade with a valid Stop Loss NEVER forfeits 100% margin to liquidation.
+    if (baseResult === 'LIQUIDATED' && pos.stopLoss) {
+      console.warn(`[PaperTrader] Protected: Trade ${pos.id} had Stop Loss at ${pos.stopLoss}. Executing as LOSS (Stop Loss) instead of liquidation.`);
+      baseResult = 'LOSS';
+      canonicalReason = 'LOSS';
+    }
+
     // STRICT LIMIT / STOP FILL EXECUTION (Exchange Order Book Standards)
     // When Take Profit hits (WIN), the Limit Order fills strictly at the target price (pos.target).
     // When Stop Loss hits (LOSS), the Stop Order fills at the planned stop loss level (pos.stopLoss).
     // When Liquidated, exit price is pos.liquidationPrice.
     let actualExit;
-    if (resultType === 'WIN' && pos.target) {
+    if (baseResult === 'WIN' && pos.target) {
       actualExit = Number(pos.target);
-    } else if (resultType === 'LOSS' && pos.stopLoss) {
+    } else if (baseResult === 'LOSS' && pos.stopLoss) {
       actualExit = Number(pos.stopLoss);
-    } else if (resultType === 'LIQUIDATED' && (pos.liquidationPrice || pos.stopLoss)) {
-      actualExit = Number(pos.liquidationPrice || pos.stopLoss);
+    } else if (baseResult === 'LIQUIDATED' && pos.liquidationPrice) {
+      actualExit = Number(pos.liquidationPrice);
     } else {
-      actualExit = exitPrice !== null ? Number(exitPrice) : Number(pos.currentPrice);
+      actualExit = exitPrice !== null ? Number(exitPrice) : Number(pos.currentPrice || pos.entry);
     }
     const isLong = pos.direction === 'LONG';
     const priceDelta = isLong ? (actualExit - pos.entry) : (pos.entry - actualExit);
@@ -489,7 +516,7 @@ export class PaperTrader {
     const notional = Number(pos.notionalUSD) || +(Number(pos.entry || actualExit) * posSize).toFixed(2) || 0;
     const entryFee = Number(pos.entryFeeUSD) || +(notional * DELTA_FEE_RATES.TAKER).toFixed(2) || 0;
     // TP exit is Maker (0.02%), SL / Manual exit is Taker (0.05%)
-    const exitRate = resultType === 'WIN' ? DELTA_FEE_RATES.MAKER : DELTA_FEE_RATES.TAKER;
+    const exitRate = baseResult === 'WIN' ? DELTA_FEE_RATES.MAKER : DELTA_FEE_RATES.TAKER;
     const exitNotional = +(actualExit * posSize).toFixed(2) || 0;
     const exitFee = +(exitNotional * exitRate).toFixed(2) || 0;
     const brokerageFee = +(entryFee + exitFee).toFixed(2);
@@ -499,9 +526,9 @@ export class PaperTrader {
     let grossPnlUSD;
     let pnlUSD;
     let rMultiple;
-    let result = resultType;
+    let result = baseResult;
 
-    if (resultType === 'LIQUIDATED') {
+    if (baseResult === 'LIQUIDATED') {
       const margin = Number(pos.marginUSD) || +(notional / (Number(pos.leverage) || 20)).toFixed(2) || 0;
       grossPnlUSD = -margin;
       pnlUSD = -margin;
@@ -512,7 +539,7 @@ export class PaperTrader {
       pnlUSD = +(grossPnlUSD - totalCharges).toFixed(2) || 0; // Net Realized Settled to Wallet
       const risk = Number(pos.riskUSD) || 0;
       rMultiple = risk > 0 ? +(pnlUSD / risk).toFixed(2) : 0;
-      if (resultType === 'MANUAL') {
+      if (baseResult === 'MANUAL') {
         result = pnlUSD > 0 ? 'WIN' : pnlUSD < 0 ? 'LOSS' : 'BREAKEVEN';
       }
     }
@@ -528,8 +555,8 @@ export class PaperTrader {
       ...pos,
       status: 'CLOSED',
       result,
-      exitReason: resultType,
-      closeReason: resultType,
+      exitReason: canonicalReason,
+      closeReason: canonicalReason,
       exitPrice: actualExit < 0.1 ? +actualExit.toFixed(6) : actualExit < 1 ? +actualExit.toFixed(5) : actualExit < 10 ? +actualExit.toFixed(4) : +actualExit.toFixed(2),
       grossPnlUSD,
       entryFeeUSD: entryFee,
@@ -617,8 +644,30 @@ export class PaperTrader {
           let hitTime = null;
 
           for (const candle of relevantCandles) {
-            // 1. Check Liquidation (Conservative Safety)
-            if (pos.liquidationPrice && pos.liquidationPrice > 0) {
+            // 1. Check Stop Loss FIRST (Protective stop order sitting on book triggers before liquidation)
+            if (pos.stopLoss) {
+              const stopHit = isLong ? (candle.low <= pos.stopLoss) : (candle.high >= pos.stopLoss);
+              if (stopHit) {
+                hitResult = 'LOSS';
+                hitPrice = pos.stopLoss;
+                hitTime = candle.time;
+                break;
+              }
+            }
+
+            // 2. Check Take Profit
+            if (pos.target) {
+              const targetHit = isLong ? (candle.high >= pos.target) : (candle.low <= pos.target);
+              if (targetHit) {
+                hitResult = 'WIN';
+                hitPrice = pos.target;
+                hitTime = candle.time;
+                break;
+              }
+            }
+
+            // 3. Check Liquidation ONLY if position had NO Stop Loss configured
+            if (!pos.stopLoss && pos.liquidationPrice && pos.liquidationPrice > 0) {
               const liqHit = isLong ? (candle.low <= pos.liquidationPrice) : (candle.high >= pos.liquidationPrice);
               if (liqHit) {
                 hitResult = 'LIQUIDATED';
@@ -626,24 +675,6 @@ export class PaperTrader {
                 hitTime = candle.time;
                 break;
               }
-            }
-
-            // 2. Check Stop Loss (Evaluated before target to enforce risk discipline)
-            const stopHit = isLong ? (candle.low <= pos.stopLoss) : (candle.high >= pos.stopLoss);
-            if (stopHit) {
-              hitResult = 'LOSS';
-              hitPrice = pos.stopLoss;
-              hitTime = candle.time;
-              break;
-            }
-
-            // 3. Check Take Profit
-            const targetHit = isLong ? (candle.high >= pos.target) : (candle.low <= pos.target);
-            if (targetHit) {
-              hitResult = 'WIN';
-              hitPrice = pos.target;
-              hitTime = candle.time;
-              break;
             }
           }
 

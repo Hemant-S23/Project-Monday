@@ -3388,19 +3388,23 @@ export class TerminalUI {
       const isGrossProfit = gross > 0;
       const postBal = trade.postTradeBalance ? Number(trade.postTradeBalance) : null;
       
-      const isManual = trade.exitReason === 'MANUAL' || trade.closeReason === 'MANUAL' ||
-        (trade.target && Math.abs(Number(trade.exitPrice) - Number(trade.target)) / Number(trade.target) > 0.005 &&
-         trade.stopLoss && Math.abs(Number(trade.exitPrice) - Number(trade.stopLoss)) / Number(trade.stopLoss) > 0.005);
-      
-      const reasonLabel = isManual
-        ? (isNetProfit ? '✋ Manual Close (Profit)' : isLoss ? '✋ Manual Close (Loss)' : '✋ Manual Close')
-        : trade.result === 'WIN' 
-          ? '🎯 Take Profit Hit' 
-          : trade.result === 'LIQUIDATED' 
-            ? '⚠️ Liquidation Exit' 
-            : trade.result === 'LOSS' 
-              ? '🛑 Stop Loss Hit' 
-              : '✋ Manual Close';
+      const isManual = trade.exitReason === 'MANUAL' || trade.closeReason === 'MANUAL';
+      const isLiquidated = trade.result === 'LIQUIDATED' || trade.exitReason === 'LIQUIDATION' || trade.closeReason === 'LIQUIDATION' || trade.exitReason === 'LIQUIDATED';
+      const isSL = trade.result === 'LOSS' || trade.exitReason === 'STOP_LOSS' || trade.closeReason === 'STOP_LOSS' || trade.exitReason === 'LOSS' || trade.closeReason === 'LOSS';
+      const isTP = trade.result === 'WIN' || trade.exitReason === 'TAKE_PROFIT' || trade.closeReason === 'TAKE_PROFIT' || trade.exitReason === 'WIN' || trade.closeReason === 'WIN';
+
+      let reasonLabel;
+      if (isManual) {
+        reasonLabel = isNetProfit ? '✋ Manual Close (Profit)' : isLoss ? '✋ Manual Close (Loss)' : '✋ Manual Close';
+      } else if (isLiquidated) {
+        reasonLabel = '⚠️ Liquidation Exit';
+      } else if (isTP) {
+        reasonLabel = '🎯 Take Profit Hit';
+      } else if (isSL) {
+        reasonLabel = '🛑 Stop Loss Hit';
+      } else {
+        reasonLabel = isNetProfit ? '🎯 Take Profit Hit' : isLoss ? '🛑 Stop Loss Hit' : '✋ Closed';
+      }
 
       const formattedAmount = isNetProfit
         ? `+$${netPnl.toFixed(2)}`

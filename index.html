@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="css/components.css?v=5.2">
   <link rel="stylesheet" href="css/auth.css?v=4.7">
   <link rel="stylesheet" href="css/multi-chart.css?v=6.1">
+  <link rel="stylesheet" href="css/saas-layout.css?v=1.0">
 
   <!-- Supabase JS Client (Non-blocking defer for instant HTML paint) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -367,7 +368,74 @@
     </div>
   </aside>
 
-  <div class="terminal-wrapper" id="terminal_wrapper">
+  <!-- SAAS APP SHELL & NAVIGATION WRAPPER -->
+  <div class="saas-app-container" id="saas_app_container">
+    <!-- Desktop Left Sidebar -->
+    <aside class="saas-sidebar" id="saas_sidebar">
+      <div class="saas-sidebar-header">
+        <div class="saas-brand-group">
+          <div class="saas-brand-icon">
+            <i class="ph ph-sparkle"></i>
+          </div>
+          <div class="saas-brand-text">
+            <div class="saas-brand-title">
+              MONDAY <span class="saas-brand-tag">v2.5</span>
+            </div>
+            <div class="saas-brand-sub">Neural Derivatives Desk</div>
+          </div>
+        </div>
+        <button class="saas-sidebar-toggle-btn" id="saas_sidebar_toggle_btn" type="button" title="Toggle Sidebar">
+          <i class="ph ph-sidebar-simple"></i>
+        </button>
+      </div>
+
+      <nav class="saas-nav-menu">
+        <div class="saas-nav-section-title">Platform</div>
+        <button class="saas-nav-item active" data-page="terminal" type="button">
+          <span class="saas-nav-icon"><i class="ph ph-chart-line-up"></i></span>
+          <span class="saas-nav-label">Terminal</span>
+        </button>
+        <button class="saas-nav-item" data-page="positions" type="button">
+          <span class="saas-nav-icon"><i class="ph ph-briefcase"></i></span>
+          <span class="saas-nav-label">Positions</span>
+          <span class="saas-nav-badge" id="saas_pos_badge">0</span>
+        </button>
+        <button class="saas-nav-item" data-page="passbook" type="button">
+          <span class="saas-nav-icon"><i class="ph ph-book-open"></i></span>
+          <span class="saas-nav-label">Passbook & Yearbook</span>
+        </button>
+        <button class="saas-nav-item" data-page="copilot" type="button">
+          <span class="saas-nav-icon"><i class="ph ph-chats-circle"></i></span>
+          <span class="saas-nav-label">AI Copilot</span>
+        </button>
+
+        <div class="saas-nav-section-title">Control</div>
+        <button class="saas-nav-item" data-page="settings" type="button">
+          <span class="saas-nav-icon"><i class="ph ph-sliders"></i></span>
+          <span class="saas-nav-label">Risk & Engine</span>
+        </button>
+      </nav>
+
+      <div class="saas-sidebar-footer">
+        <div class="saas-footer-equity-card">
+          <div class="saas-footer-equity-lbl">Portfolio Equity</div>
+          <div class="saas-footer-equity-val" id="saas_sidebar_equity">$2,000.00</div>
+        </div>
+        <div class="saas-footer-user-row" id="saas_sidebar_account_btn">
+          <div class="saas-footer-avatar">HS</div>
+          <div class="saas-footer-user-meta">
+            <span class="saas-footer-user-name">Delta Pro Trader</span>
+            <span class="saas-footer-user-sub">Paper Trading Mode</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Viewport -->
+    <main class="saas-main-viewport" id="saas_main_viewport">
+      <!-- VIEW 1: TRADING TERMINAL -->
+      <div class="saas-page-view active" id="view_terminal">
+        <div class="terminal-wrapper" id="terminal_wrapper">
     <!-- Top Header & Global Telemetry Strip -->
     <header class="terminal-header">
       <!-- Mobile Topbar Left: Hamburger Drawer Toggle -->
@@ -1318,6 +1386,490 @@
 
     </main>
   </div>
+      </div> <!-- End #view_terminal -->
+
+      <!-- VIEW 2: DEDICATED POSITIONS & DERIVATIVES DESK -->
+      <div class="saas-page-view" id="view_positions">
+        <div class="positions-page-container">
+          <div class="positions-header-banner">
+            <div class="positions-banner-title-group">
+              <div class="positions-banner-icon">
+                <i class="ph-bold ph-briefcase"></i>
+              </div>
+              <div>
+                <h2 class="positions-banner-title">Institutional Derivatives Desk</h2>
+                <div class="positions-banner-sub">Real-time Margin, Liquidation Proximity & Position Management</div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <button class="btn-primary" id="positions_page_new_trade_btn" type="button" style="padding: 8px 16px; font-size: 0.8rem;">
+                <i class="ph ph-plus-circle"></i> Go to Terminal
+              </button>
+              <button class="btn-panic-close hidden" id="positions_page_close_all_btn" type="button">
+                <i class="ph-bold ph-lightning"></i> Close All Positions
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Stats Metric Strip -->
+          <div class="positions-stats-strip">
+            <div class="pos-stat-card">
+              <span class="lbl">Unrealized PnL</span>
+              <span class="val text-neutral" id="desk_stat_unpnl">$0.00</span>
+            </div>
+            <div class="pos-stat-card">
+              <span class="lbl">Total Active Margin</span>
+              <span class="val" id="desk_stat_margin">$0.00</span>
+            </div>
+            <div class="pos-stat-card">
+              <span class="lbl">Total Notional Exposure</span>
+              <span class="val" id="desk_stat_notional">$0.00</span>
+            </div>
+            <div class="pos-stat-card">
+              <span class="lbl">Open Contracts</span>
+              <span class="val" id="desk_stat_count">0</span>
+            </div>
+          </div>
+
+          <!-- Institutional Detailed Positions Table / Grid -->
+          <div class="positions-grid-card">
+            <div class="positions-grid-header">
+              <span class="positions-grid-title">
+                <i class="ph ph-list-dashes"></i> Active Perpetual Contracts
+              </span>
+              <span class="text-muted" style="font-size: 0.75rem;" id="desk_live_indicator">
+                <span class="live-dot" style="display:inline-block; width:8px; height:8px; background:#10b981; border-radius:50%; margin-right:4px;"></span> Mark Price Live
+              </span>
+            </div>
+            <div class="positions-table-wrapper" id="desk_positions_table_wrapper">
+              <!-- Dynamically rendered by terminalUI.renderPositionsPage() -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 3: DEDICATED PASSBOOK & 365-DAY YEARBOOK HEATMAP -->
+      <div class="saas-page-view" id="view_passbook">
+        <div class="passbook-page-container">
+          <!-- Page Header Banner -->
+          <div class="positions-header-banner">
+            <div class="positions-banner-title-group">
+              <div class="positions-banner-icon" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); color: #10b981;">
+                <i class="ph-bold ph-receipt"></i>
+              </div>
+              <div>
+                <h2 class="positions-banner-title">Trade Ledger & Financial Passbook</h2>
+                <div class="positions-banner-sub" style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
+                  <span class="compliance-tag" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;">
+                    <i class="ph-fill ph-shield-check"></i> Delta Exchange India Compliant
+                  </span>
+                  <span class="compliance-gst-pill" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;">
+                    18% GST Auto-Bifurcated
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <button class="btn-purge-ledger" id="btn_purge_passbook" type="button" title="Purge Glitch Trades & Restore $2,000 Balance">
+                <i class="ph-bold ph-arrow-counter-clockwise"></i> <span class="purge-btn-text">Reset & Restore $2,000</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 365-Day GitHub-Style PnL Yearbook Card -->
+          <div class="yearbook-heatmap-card" id="yearbook_heatmap_card">
+            <div class="yearbook-header">
+              <div class="yearbook-title-group">
+                <span class="yearbook-title"><i class="ph ph-calendar-blank"></i> 365-Day PnL Contribution Matrix</span>
+              </div>
+              <div class="yearbook-stats-row">
+                <span class="yearbook-stat-item">365d Net PnL: <b id="yb_stat_total_pnl" class="text-bullish">+$0.00</b></span>
+                <span class="yearbook-stat-item">Win Days: <b id="yb_stat_win_rate">0.0%</b></span>
+                <span class="yearbook-stat-item">Best Day: <b id="yb_stat_best_day" class="text-bullish">+$0.00</b></span>
+                <span class="yearbook-stat-item">Max DD: <b id="yb_stat_max_dd" class="text-bearish">-$0.00</b></span>
+              </div>
+            </div>
+
+            <div class="yearbook-grid-scroll-wrap">
+              <div class="yearbook-matrix-container">
+                <div class="yearbook-months-labels" id="yearbook_months_row">
+                  <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
+                  <span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+                </div>
+                <div class="yearbook-matrix-body">
+                  <div class="yearbook-weekdays-labels">
+                    <span>Mon</span><span>Wed</span><span>Fri</span>
+                  </div>
+                  <div class="yearbook-cells-grid" id="yearbook_cells_grid">
+                    <!-- Dynamically populated 52x7 cells -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="yearbook-footer">
+              <span class="text-muted"><i class="ph ph-info"></i> Click any square to filter ledger statements for that specific day.</span>
+              <div class="yearbook-legend">
+                <span>Loss</span>
+                <div class="yearbook-legend-cell" style="background: #f43f5e;"></div>
+                <div class="yearbook-legend-cell" style="background: rgba(244, 63, 94, 0.70);"></div>
+                <div class="yearbook-legend-cell" style="background: rgba(244, 63, 94, 0.40);"></div>
+                <div class="yearbook-legend-cell" style="background: rgba(255, 255, 255, 0.04);"></div>
+                <div class="yearbook-legend-cell" style="background: rgba(16, 185, 129, 0.35);"></div>
+                <div class="yearbook-legend-cell" style="background: rgba(16, 185, 129, 0.60);"></div>
+                <div class="yearbook-legend-cell" style="background: rgba(16, 185, 129, 0.85);"></div>
+                <div class="yearbook-legend-cell" style="background: #10b981;"></div>
+                <span>Profit</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Monthly Statement & Tax Summary Card -->
+          <div class="passbook-monthly-card">
+            <div class="passbook-filter-bar">
+              <div class="passbook-select-group">
+                <label for="passbook_period_picker_btn"><i class="ph ph-calendar"></i> Statement Period:</label>
+                <div class="passbook-picker-container" id="passbook_picker_container">
+                  <button type="button" id="passbook_period_picker_btn" class="passbook-period-trigger" aria-haspopup="true" aria-expanded="false" title="Click to open calendar and select any month or date">
+                    <i class="ph-bold ph-calendar-blank trigger-cal-icon"></i>
+                    <span id="passbook_period_label">This Month (October 2026)</span>
+                    <i class="ph-bold ph-caret-down trigger-arrow"></i>
+                  </button>
+                  
+                  <!-- Sleek Minimalist Calendar & Month Picker Popover -->
+                  <div id="passbook_calendar_popover" class="passbook-calendar-popover hidden" role="dialog" aria-modal="true">
+                    <!-- 1-Click Quick Presets -->
+                    <div class="cal-quick-presets">
+                      <button type="button" class="cal-preset-btn" data-period="TODAY">Today</button>
+                      <button type="button" class="cal-preset-btn active" data-period="THIS_MONTH">This Month</button>
+                      <button type="button" class="cal-preset-btn" data-period="ALL">All-Time</button>
+                    </div>
+
+                    <div class="cal-divider"></div>
+
+                    <!-- Month & Year Navigation Header -->
+                    <div class="cal-header-bar">
+                      <button type="button" class="cal-nav-btn" id="cal_prev_month_btn" title="Previous Month">
+                        <i class="ph-bold ph-caret-left"></i>
+                      </button>
+                      <div class="cal-selectors-group">
+                        <select id="cal_month_select" class="cal-select cal-select-month" aria-label="Select Month">
+                          <option value="0">January</option>
+                          <option value="1">February</option>
+                          <option value="2">March</option>
+                          <option value="3">April</option>
+                          <option value="4">May</option>
+                          <option value="5">June</option>
+                          <option value="6">July</option>
+                          <option value="7">August</option>
+                          <option value="8">September</option>
+                          <option value="9">October</option>
+                          <option value="10">November</option>
+                          <option value="11">December</option>
+                        </select>
+                        <select id="cal_year_select" class="cal-select cal-select-year" aria-label="Select Year">
+                          <option value="2024">2024</option>
+                          <option value="2025">2025</option>
+                          <option value="2026">2026</option>
+                          <option value="2027">2027</option>
+                          <option value="2028">2028</option>
+                        </select>
+                      </div>
+                      <button type="button" class="cal-nav-btn" id="cal_next_month_btn" title="Next Month">
+                        <i class="ph-bold ph-caret-right"></i>
+                      </button>
+                    </div>
+
+                    <!-- Action: View Entire Month -->
+                    <button type="button" id="btn_cal_select_month" class="cal-full-month-btn">
+                      <i class="ph-bold ph-calendar-check"></i>
+                      <span>Apply Full Month: <b id="cal_selected_month_label">October 2026</b></span>
+                    </button>
+
+                    <div class="cal-divider"></div>
+
+                    <!-- Day Calendar Grid for Specific Date Selection -->
+                    <div class="cal-month-grid-wrapper">
+                      <div class="cal-weekdays-row">
+                        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                      </div>
+                      <div class="cal-days-grid" id="cal_days_grid">
+                        <!-- Dynamically rendered day buttons with trade dots -->
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Hidden select for programmatic / legacy access -->
+                  <select id="passbook_month_filter" style="display:none;">
+                    <option value="THIS_MONTH">This Month</option>
+                  </select>
+                </div>
+              </div>
+              <div class="passbook-type-filters">
+                <button class="passbook-filter-chip active" data-filter="ALL" type="button" id="passbook_filter_all">All (0)</button>
+                <button class="passbook-filter-chip" data-filter="PROFIT" type="button" id="passbook_filter_profit">🟢 Profit</button>
+                <button class="passbook-filter-chip" data-filter="LOSS" type="button" id="passbook_filter_loss">🔴 Loss</button>
+              </div>
+            </div>
+
+            <!-- 4-Pillar Financial Audit Grid -->
+            <div class="passbook-audit-grid">
+              <div class="audit-stat-box">
+                <span class="audit-lbl">Gross Realized PnL</span>
+                <span class="audit-val text-bullish" id="passbook_gross_pnl">$0.00</span>
+                <span class="audit-sub">Pure price difference</span>
+              </div>
+              <div class="audit-stat-box">
+                <span class="audit-lbl">Delta Brokerage</span>
+                <span class="audit-val text-muted" id="passbook_brokerage_total">$0.00</span>
+                <span class="audit-sub">0.05% Taker / 0.02% Maker</span>
+              </div>
+              <div class="audit-stat-box">
+                <span class="audit-lbl">18% GST on Fees</span>
+                <span class="audit-val text-warning" id="passbook_gst_total">$0.00</span>
+                <span class="audit-sub">Govt tax on brokerage</span>
+              </div>
+              <div class="audit-stat-box highlight-net">
+                <span class="audit-lbl">Net Settled to Wallet</span>
+                <span class="audit-val text-bullish" id="passbook_net_settled">$0.00</span>
+                <span class="audit-sub">Final pocket credited/debited</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Today's Performance Summary Ribbon -->
+          <div class="passbook-daily-ribbon" id="passbook_daily_ribbon">
+            <div class="daily-ribbon-left">
+              <div class="daily-ribbon-badge" id="daily_ribbon_badge">
+                <i class="ph-bold ph-calendar-check"></i>
+                <span id="daily_date_label">Today</span>
+              </div>
+              <span class="daily-ribbon-stat" id="daily_trades_count">0 Trades</span>
+              <span class="daily-ribbon-sep">•</span>
+              <span class="daily-ribbon-winrate" id="daily_win_rate">0.0% Win</span>
+              <span class="daily-ribbon-breakdown" id="daily_win_loss_split">(0W / 0L)</span>
+            </div>
+            <div class="daily-ribbon-right">
+              <span class="daily-net-label" id="daily_net_label">Today's Net:</span>
+              <span class="daily-net-val text-bullish" id="daily_net_pnl">+$0.00 (+0.0R)</span>
+              <span class="daily-charges-pill" id="daily_charges_pill" title="Delta Brokerage + GST today">-$0.00 Fees</span>
+            </div>
+          </div>
+
+          <!-- Ledger Statement Header -->
+          <div class="passbook-feed-heading">
+            <span><i class="ph ph-list-dashes"></i> Transaction Ledger & Receipts</span>
+            <span class="feed-count-tag" id="passbook_feed_count">0 Settlements</span>
+          </div>
+
+          <!-- Chronological Transaction Feed -->
+          <div class="passbook-transactions-feed" id="passbook_transactions_feed">
+            <!-- Dynamically populated transaction cards with expandable tax receipts -->
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 4: DEDICATED COPILOT PAGE -->
+      <div class="saas-page-view" id="view_copilot">
+        <div class="copilot-page-container">
+          <div class="copilot-page-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="brand-icon-halo" style="width: 40px; height: 40px; border-radius: 10px; background: rgba(14, 165, 233, 0.2); border: 1px solid rgba(56, 189, 248, 0.4); display: flex; align-items: center; justify-content: center; color: #38bdf8; font-size: 1.3rem;">
+                <i class="ph ph-sparkle"></i>
+              </div>
+              <div>
+                <h2 style="font-size: 1.1rem; font-weight: 800; margin: 0; color: #ffffff;">MONDAY Neural Copilot</h2>
+                <div style="font-size: 0.75rem; color: #94a3b8;">Autonomous Market Intelligence & Strategy Companion</div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <span class="copilot-status-badge" style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.72rem; color: #10b981; font-weight: 700;">
+                <span class="live-dot" style="display:inline-block; width:6px; height:6px; background:#10b981; border-radius:50%;"></span> AI Sentinel Active
+              </span>
+              <button class="icon-btn" id="copilot_page_clear_btn" title="Clear Chat History" style="border-radius: 8px;">
+                <i class="ph ph-trash"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="copilot-chat-workspace">
+            <!-- Full page message stream -->
+            <div class="copilot-page-messages" id="copilot_page_messages_feed">
+              <div class="chat-message assistant">
+                <div class="chat-msg-header">
+                  <span class="chat-msg-role"><i class="ph ph-sparkle"></i> MONDAY Copilot</span>
+                  <span class="chat-msg-time">Online</span>
+                </div>
+                <div class="chat-msg-body">
+                  Namaste! Main MONDAY hoon — aapka personal AI trading companion. Live chart, orderflow, Delta Exchange leverage rules, aur risk management ke bare mein kuch bhi puchiye!
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Prompt Suggestion Chips -->
+            <div style="padding: 10px 16px; display: flex; gap: 8px; overflow-x: auto; border-top: 1px solid rgba(255, 255, 255, 0.05); background: rgba(0,0,0,0.2);">
+              <button type="button" class="copilot-chip-btn" data-query="Explain current market regime and bias">📊 Current Bias?</button>
+              <button type="button" class="copilot-chip-btn" data-query="Are there any high probability setups right now?">⚡ High Prob Setups?</button>
+              <button type="button" class="copilot-chip-btn" data-query="Audit my open positions and liquidation distance">🛡️ Audit Open Risk</button>
+              <button type="button" class="copilot-chip-btn" data-query="What is Delta Exchange funding rate trend?">📈 Funding Rate</button>
+            </div>
+
+            <!-- Chat Input Strip -->
+            <form class="chat-input-row" id="copilot_page_chat_form" style="padding: 12px 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); background: rgba(11, 17, 33, 0.8);">
+              <button type="button" class="chat-mic-btn" id="copilot_page_mic_btn" title="Speak to MONDAY">
+                <i class="ph ph-microphone"></i>
+              </button>
+              <input 
+                type="text" 
+                id="copilot_page_input" 
+                class="chat-text-input" 
+                placeholder="Type or speak (e.g. 'Abhi BTC ka support kahan hai?')..." 
+                autocomplete="off"
+              />
+              <button type="submit" class="chat-send-btn" id="copilot_page_send_btn" title="Send message">
+                <i class="ph ph-paper-plane-right"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 5: DEDICATED SETTINGS & RISK CONTROLS -->
+      <div class="saas-page-view" id="view_settings">
+        <div class="settings-page-container">
+          <!-- Header -->
+          <div class="positions-header-banner">
+            <div class="positions-banner-title-group">
+              <div class="positions-banner-icon" style="background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.3); color: #818cf8;">
+                <i class="ph-bold ph-sliders"></i>
+              </div>
+              <div>
+                <h2 class="positions-banner-title">Risk Engine & System Settings</h2>
+                <div class="positions-banner-sub">Configure AI Auto-Pilot, Capital Guardrails, Cloud Sync & Voice</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 1: Auto-Pilot & Autonomous Trading -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <span class="settings-card-title"><i class="ph ph-robot"></i> AI Strategy & Autopilot</span>
+            </div>
+            <div class="settings-field-row">
+              <div class="settings-field-label-group">
+                <span class="settings-field-name">Autonomous Auto-Pilot Execution</span>
+                <span class="settings-field-desc">Allow MONDAY Neural Engine to enter verified confluence setups autonomously.</span>
+              </div>
+              <div class="custom-switch-wrapper">
+                <input type="checkbox" id="settings_autopilot_toggle" class="custom-switch" />
+                <label for="settings_autopilot_toggle" class="custom-switch-label"></label>
+              </div>
+            </div>
+            <div class="settings-field-row">
+              <div class="settings-field-label-group">
+                <span class="settings-field-name">Risk Per Trade (% Wallet Equity)</span>
+                <span class="settings-field-desc">Maximum capital risked on any individual position setup.</span>
+              </div>
+              <select id="settings_risk_per_trade" class="cal-select" style="width: 170px;">
+                <option value="1">1.0% ($20 / trade)</option>
+                <option value="2" selected>2.0% ($40 / trade)</option>
+                <option value="3">3.0% ($60 / trade)</option>
+                <option value="5">5.0% ($100 / trade)</option>
+              </select>
+            </div>
+            <div class="settings-field-row">
+              <div class="settings-field-label-group">
+                <span class="settings-field-name">High-Impact News Risk Shield</span>
+                <span class="settings-field-desc">Auto-freeze new entries 15 minutes before US CPI, FOMC, and High Volatility events.</span>
+              </div>
+              <div class="custom-switch-wrapper">
+                <input type="checkbox" id="settings_news_shield_toggle" class="custom-switch" checked />
+                <label for="settings_news_shield_toggle" class="custom-switch-label"></label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Account Capital & Data Management -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <span class="settings-card-title"><i class="ph ph-wallet"></i> Capital & Data Synchronization</span>
+            </div>
+            <div class="settings-field-row">
+              <div class="settings-field-label-group">
+                <span class="settings-field-name">Supabase Cloud Database Sync</span>
+                <span class="settings-field-desc">Synchronize trade journal, settings, and performance across all your devices.</span>
+              </div>
+              <button class="btn-secondary" id="settings_open_supabase_btn" type="button" style="padding: 6px 14px; font-size: 0.8rem;">
+                <i class="ph ph-cloud-check"></i> Configure Cloud
+              </button>
+            </div>
+            <div class="settings-field-row">
+              <div class="settings-field-label-group">
+                <span class="settings-field-name">Reset Paper Balance ($2,000 Baseline)</span>
+                <span class="settings-field-desc">Purge all simulated glitch trades and restore initial account equity to $2,000.</span>
+              </div>
+              <button class="btn-purge-ledger" id="settings_reset_balance_btn" type="button" style="padding: 6px 14px; font-size: 0.8rem;">
+                <i class="ph-bold ph-arrow-counter-clockwise"></i> Reset to $2,000
+              </button>
+            </div>
+          </div>
+
+          <!-- Section 3: Audio & Copilot Voice -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <span class="settings-card-title"><i class="ph ph-speaker-high"></i> Voice & Audio Telemetry</span>
+            </div>
+            <div class="settings-field-row">
+              <div class="settings-field-label-group">
+                <span class="settings-field-name">Copilot Speech Feedback</span>
+                <span class="settings-field-desc">Spoken audio commentary in natural Hinglish for orders, targets, and market alerts.</span>
+              </div>
+              <div class="custom-switch-wrapper">
+                <input type="checkbox" id="settings_voice_speech_toggle" class="custom-switch" checked />
+                <label for="settings_voice_speech_toggle" class="custom-switch-label"></label>
+              </div>
+            </div>
+            <div class="settings-field-row">
+              <div class="settings-field-label-group">
+                <span class="settings-field-name">Voice Persona Accent</span>
+                <span class="settings-field-desc">Select conversational accent and vocal tone.</span>
+              </div>
+              <select id="settings_voice_accent" class="cal-select" style="width: 190px;">
+                <option value="IN_EN" selected>Indian English (Natural)</option>
+                <option value="US_EN">US English</option>
+                <option value="UK_EN">British English</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Mobile Native Bottom Bar -->
+    <nav class="saas-mobile-bottom-bar" id="saas_mobile_bottom_bar">
+      <button class="saas-mobile-tab-btn active" data-page="terminal" type="button">
+        <i class="ph ph-chart-line-up"></i>
+        <span>Terminal</span>
+      </button>
+      <button class="saas-mobile-tab-btn" data-page="positions" type="button">
+        <i class="ph ph-briefcase"></i>
+        <span>Positions</span>
+      </button>
+      <button class="saas-mobile-tab-btn" data-page="passbook" type="button">
+        <i class="ph ph-book-open"></i>
+        <span>Passbook</span>
+      </button>
+      <button class="saas-mobile-tab-btn" data-page="copilot" type="button">
+        <i class="ph ph-chats-circle"></i>
+        <span>Copilot</span>
+      </button>
+      <button class="saas-mobile-tab-btn" data-page="settings" type="button">
+        <i class="ph ph-sliders"></i>
+        <span>Settings</span>
+      </button>
+    </nav>
+  </div>
 
   <!-- TRADE JOURNAL & PERFORMANCE ANALYTICS MODAL (PRD Sections 27 & 28) -->
   <div class="modal-overlay" id="journal_modal">
@@ -1425,184 +1977,8 @@
     </div>
   </div>
 
-  <!-- FINANCIAL PASSBOOK & 18% GST TRADE LEDGER MODAL -->
-  <div class="modal-overlay" id="passbook_modal">
-    <div class="modal-window passbook-modal-window">
-      <div class="modal-header passbook-modal-header">
-        <div class="passbook-header-main-row">
-          <div class="passbook-header-left">
-            <button class="mobile-page-back-btn" id="m_back_passbook_btn" type="button" aria-label="Back to Chart" title="Back to Chart">
-              <i class="ph-bold ph-arrow-left"></i>
-            </button>
-            <div class="passbook-icon-wrapper">
-              <i class="ph-bold ph-receipt"></i>
-            </div>
-            <div>
-              <h2 class="passbook-modal-title">Trade Ledger & Passbook</h2>
-            </div>
-          </div>
-          <div class="passbook-header-right">
-            <button class="btn-purge-ledger" id="btn_purge_passbook" type="button" title="Purge Glitch Trades & Restore $2,000 Balance">
-              <i class="ph-bold ph-arrow-counter-clockwise"></i> <span class="purge-btn-text">Reset & Restore $2,000</span>
-            </button>
-            <button class="icon-btn passbook-close-btn" id="close_passbook_btn" type="button" title="Close Passbook" aria-label="Close Passbook">
-              <i class="ph ph-x"></i>
-            </button>
-          </div>
-        </div>
-        <div class="passbook-compliance-row">
-          <span class="compliance-tag"><i class="ph-fill ph-shield-check"></i> Delta Exchange India Compliant</span>
-          <span class="compliance-sep">•</span>
-          <span class="compliance-gst-pill">18% GST Auto-Bifurcated</span>
-        </div>
-      </div>
-
-      <div class="modal-body passbook-modal-body">
-        <!-- Monthly Statement & Tax Summary Card -->
-        <div class="passbook-monthly-card">
-          <div class="passbook-filter-bar">
-            <div class="passbook-select-group">
-              <label for="passbook_period_picker_btn"><i class="ph ph-calendar"></i> Statement Period:</label>
-              <div class="passbook-picker-container" id="passbook_picker_container">
-                <button type="button" id="passbook_period_picker_btn" class="passbook-period-trigger" aria-haspopup="true" aria-expanded="false" title="Click to open calendar and select any month or date">
-                  <i class="ph-bold ph-calendar-blank trigger-cal-icon"></i>
-                  <span id="passbook_period_label">This Month (October 2026)</span>
-                  <i class="ph-bold ph-caret-down trigger-arrow"></i>
-                </button>
-                
-                <!-- Sleek Minimalist Calendar & Month Picker Popover -->
-                <div id="passbook_calendar_popover" class="passbook-calendar-popover hidden" role="dialog" aria-modal="true">
-                  <!-- 1-Click Quick Presets -->
-                  <div class="cal-quick-presets">
-                    <button type="button" class="cal-preset-btn" data-period="TODAY">Today</button>
-                    <button type="button" class="cal-preset-btn active" data-period="THIS_MONTH">This Month</button>
-                    <button type="button" class="cal-preset-btn" data-period="ALL">All-Time</button>
-                  </div>
-
-                  <div class="cal-divider"></div>
-
-                  <!-- Month & Year Navigation Header -->
-                  <div class="cal-header-bar">
-                    <button type="button" class="cal-nav-btn" id="cal_prev_month_btn" title="Previous Month">
-                      <i class="ph-bold ph-caret-left"></i>
-                    </button>
-                    <div class="cal-selectors-group">
-                      <select id="cal_month_select" class="cal-select cal-select-month" aria-label="Select Month">
-                        <option value="0">January</option>
-                        <option value="1">February</option>
-                        <option value="2">March</option>
-                        <option value="3">April</option>
-                        <option value="4">May</option>
-                        <option value="5">June</option>
-                        <option value="6">July</option>
-                        <option value="7">August</option>
-                        <option value="8">September</option>
-                        <option value="9">October</option>
-                        <option value="10">November</option>
-                        <option value="11">December</option>
-                      </select>
-                      <select id="cal_year_select" class="cal-select cal-select-year" aria-label="Select Year">
-                        <option value="2024">2024</option>
-                        <option value="2025">2025</option>
-                        <option value="2026">2026</option>
-                        <option value="2027">2027</option>
-                        <option value="2028">2028</option>
-                      </select>
-                    </div>
-                    <button type="button" class="cal-nav-btn" id="cal_next_month_btn" title="Next Month">
-                      <i class="ph-bold ph-caret-right"></i>
-                    </button>
-                  </div>
-
-                  <!-- Action: View Entire Month -->
-                  <button type="button" id="btn_cal_select_month" class="cal-full-month-btn">
-                    <i class="ph-bold ph-calendar-check"></i>
-                    <span>Apply Full Month: <b id="cal_selected_month_label">October 2026</b></span>
-                  </button>
-
-                  <div class="cal-divider"></div>
-
-                  <!-- Day Calendar Grid for Specific Date Selection -->
-                  <div class="cal-month-grid-wrapper">
-                    <div class="cal-weekdays-row">
-                      <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
-                    </div>
-                    <div class="cal-days-grid" id="cal_days_grid">
-                      <!-- Dynamically rendered day buttons with trade dots -->
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Hidden select for programmatic / legacy access -->
-                <select id="passbook_month_filter" style="display:none;">
-                  <option value="THIS_MONTH">This Month</option>
-                </select>
-              </div>
-            </div>
-            <div class="passbook-type-filters">
-              <button class="passbook-filter-chip active" data-filter="ALL" type="button" id="passbook_filter_all">All (0)</button>
-              <button class="passbook-filter-chip" data-filter="PROFIT" type="button" id="passbook_filter_profit">🟢 Profit</button>
-              <button class="passbook-filter-chip" data-filter="LOSS" type="button" id="passbook_filter_loss">🔴 Loss</button>
-            </div>
-          </div>
-
-          <!-- 4-Pillar Financial Audit Grid -->
-          <div class="passbook-audit-grid">
-            <div class="audit-stat-box">
-              <span class="audit-lbl">Gross Realized PnL</span>
-              <span class="audit-val text-bullish" id="passbook_gross_pnl">$0.00</span>
-              <span class="audit-sub">Pure price difference</span>
-            </div>
-            <div class="audit-stat-box">
-              <span class="audit-lbl">Delta Brokerage</span>
-              <span class="audit-val text-muted" id="passbook_brokerage_total">$0.00</span>
-              <span class="audit-sub">0.05% Taker / 0.02% Maker</span>
-            </div>
-            <div class="audit-stat-box">
-              <span class="audit-lbl">18% GST on Fees</span>
-              <span class="audit-val text-warning" id="passbook_gst_total">$0.00</span>
-              <span class="audit-sub">Govt tax on brokerage</span>
-            </div>
-            <div class="audit-stat-box highlight-net">
-              <span class="audit-lbl">Net Settled to Wallet</span>
-              <span class="audit-val text-bullish" id="passbook_net_settled">$0.00</span>
-              <span class="audit-sub">Final pocket credited/debited</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Today's Performance Summary Ribbon (Minimal & Clean Aesthetic) -->
-        <div class="passbook-daily-ribbon" id="passbook_daily_ribbon">
-          <div class="daily-ribbon-left">
-            <div class="daily-ribbon-badge" id="daily_ribbon_badge">
-              <i class="ph-bold ph-calendar-check"></i>
-              <span id="daily_date_label">Today</span>
-            </div>
-            <span class="daily-ribbon-stat" id="daily_trades_count">0 Trades</span>
-            <span class="daily-ribbon-sep">•</span>
-            <span class="daily-ribbon-winrate" id="daily_win_rate">0.0% Win</span>
-            <span class="daily-ribbon-breakdown" id="daily_win_loss_split">(0W / 0L)</span>
-          </div>
-          <div class="daily-ribbon-right">
-            <span class="daily-net-label" id="daily_net_label">Today's Net:</span>
-            <span class="daily-net-val text-bullish" id="daily_net_pnl">+$0.00 (+0.0R)</span>
-            <span class="daily-charges-pill" id="daily_charges_pill" title="Delta Brokerage + GST today">-$0.00 Fees</span>
-          </div>
-        </div>
-
-        <!-- Ledger Statement Header -->
-        <div class="passbook-feed-heading">
-          <span><i class="ph ph-list-dashes"></i> Transaction Ledger & Receipts</span>
-          <span class="feed-count-tag" id="passbook_feed_count">0 Settlements</span>
-        </div>
-
-        <!-- Chronological Transaction Feed (Payment App Passbook Style) -->
-        <div class="passbook-transactions-feed" id="passbook_transactions_feed">
-          <!-- Dynamically populated transaction cards with expandable tax receipts -->
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- Passbook Modal Container Fallback (Upgraded to Dedicated SaaS Page #view_passbook) -->
+  <div class="modal-overlay hidden" id="passbook_modal" style="display: none;" aria-hidden="true"></div>
 
   <!-- R-Multiple & Equity Explainer Modal -->
   <div class="terminal-modal" id="modal_r_explainer" style="display: none;">

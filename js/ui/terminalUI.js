@@ -909,23 +909,14 @@ export class TerminalUI {
         profilePopoverWrapper.classList.remove('open');
         if (profileAvatarBtn) profileAvatarBtn.setAttribute('aria-expanded', 'false');
       }
-      if (window.innerWidth <= 860) {
-        this.switchMobilePage('passbook');
-      } else if (passbookModal) {
-        passbookModal.classList.add('open');
-        this.renderFinancialPassbook();
-      }
+      this.switchPage('passbook');
     };
 
     if (openHistoryBtn) openHistoryBtn.addEventListener('click', openPassbook);
     if (quickPassbookBtn) quickPassbookBtn.addEventListener('click', openPassbook);
 
     const handleClosePassbook = () => {
-      if (window.innerWidth <= 860) {
-        this.switchMobilePage('chart');
-      } else if (passbookModal) {
-        passbookModal.classList.remove('open');
-      }
+      this.switchPage('terminal');
     };
     const purgePassbookBtn = document.getElementById('btn_purge_passbook');
     if (purgePassbookBtn) {
@@ -933,6 +924,102 @@ export class TerminalUI {
     }
 
     if (closePassbookBtn) closePassbookBtn.addEventListener('click', handleClosePassbook);
+    if (mBackPassbookBtn) mBackPassbookBtn.addEventListener('click', handleClosePassbook);
+
+    // PROJECT MONDAY SaaS Layout & Navigation Bindings
+    const sidebarToggleBtn = document.getElementById('saas_sidebar_toggle_btn');
+    const sidebarEl = document.getElementById('saas_sidebar');
+    if (sidebarToggleBtn && sidebarEl) {
+      sidebarToggleBtn.addEventListener('click', () => {
+        sidebarEl.classList.toggle('collapsed');
+      });
+    }
+
+    document.querySelectorAll('.saas-nav-item, .saas-mobile-tab-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const pageKey = e.currentTarget.dataset.page;
+        if (pageKey) this.switchPage(pageKey);
+      });
+    });
+
+    const posNewTradeBtn = document.getElementById('positions_page_new_trade_btn');
+    if (posNewTradeBtn) {
+      posNewTradeBtn.addEventListener('click', () => this.switchPage('terminal'));
+    }
+
+    const posCloseAllBtn = document.getElementById('positions_page_close_all_btn');
+    if (posCloseAllBtn) {
+      posCloseAllBtn.addEventListener('click', () => {
+        if (this.callbacks.onCloseAllPositions) {
+          this.callbacks.onCloseAllPositions();
+        }
+      });
+    }
+
+    const copilotPageForm = document.getElementById('copilot_page_chat_form');
+    const copilotPageInput = document.getElementById('copilot_page_input');
+    if (copilotPageForm && copilotPageInput) {
+      copilotPageForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = copilotPageInput.value.trim();
+        if (text) {
+          if (this.callbacks.onSendMessage) this.callbacks.onSendMessage(text);
+          copilotPageInput.value = '';
+        }
+      });
+    }
+
+    document.querySelectorAll('.copilot-chip-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const query = e.currentTarget.dataset.query;
+        if (query && this.callbacks.onSendMessage) {
+          this.callbacks.onSendMessage(query);
+        }
+      });
+    });
+
+    const copilotPageMic = document.getElementById('copilot_page_mic_btn');
+    const voiceMicBtn = document.getElementById('voice_mic_btn');
+    if (copilotPageMic && voiceMicBtn) {
+      copilotPageMic.addEventListener('click', () => {
+        voiceMicBtn.click();
+      });
+    }
+
+    const copilotClearBtn = document.getElementById('copilot_page_clear_btn');
+    if (copilotClearBtn) {
+      copilotClearBtn.addEventListener('click', () => {
+        const feed = document.getElementById('copilot_page_messages_feed');
+        if (feed) {
+          feed.innerHTML = `
+            <div class="chat-message assistant">
+              <div class="chat-msg-header"><span class="chat-msg-role"><i class="ph ph-sparkle"></i> MONDAY Copilot</span><span class="chat-msg-time">Online</span></div>
+              <div class="chat-msg-body">Chat history cleared. Main aapki kya madad kar sakti hoon?</div>
+            </div>
+          `;
+        }
+      });
+    }
+
+    const settingsResetBtn = document.getElementById('settings_reset_balance_btn');
+    if (settingsResetBtn) {
+      settingsResetBtn.addEventListener('click', openResetConfirmModal);
+    }
+
+    const settingsCloudBtn = document.getElementById('settings_open_supabase_btn');
+    if (settingsCloudBtn) {
+      settingsCloudBtn.addEventListener('click', () => {
+        const modal = document.getElementById('modal_supabase_setup') || document.getElementById('supabase_modal');
+        if (modal) modal.classList.add('open');
+      });
+    }
+
+    const settingsAutopilotToggle = document.getElementById('settings_autopilot_toggle');
+    if (settingsAutopilotToggle) {
+      settingsAutopilotToggle.addEventListener('change', () => {
+        toggleAutoPilot();
+      });
+    }
     if (mBackPassbookBtn) mBackPassbookBtn.addEventListener('click', handleClosePassbook);
 
     if (passbookModal) {
@@ -1468,6 +1555,52 @@ export class TerminalUI {
   }
 
   /**
+   * Switch SaaS Page (Terminal, Positions, Passbook, Copilot, Settings)
+   * Ultra-responsive for Android, phones, tablets, and Desktop windows.
+   */
+  switchPage(pageKey = 'terminal') {
+    this.currentSaaSPage = pageKey;
+
+    // 1. Update Desktop Sidebar Nav Items
+    document.querySelectorAll('.saas-nav-item').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.page === pageKey);
+    });
+
+    // 2. Update Mobile Bottom Bar Tabs
+    document.querySelectorAll('.saas-mobile-tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.page === pageKey);
+    });
+
+    // 3. Switch Active Page View
+    document.querySelectorAll('.saas-page-view').forEach(view => {
+      view.classList.toggle('active', view.id === `view_${pageKey}`);
+    });
+
+    // 4. Page Specific Data Refresh
+    if (pageKey === 'positions') {
+      this.renderPositionsPage(this._lastPositions || []);
+    } else if (pageKey === 'passbook') {
+      this.renderFinancialPassbook();
+      this.renderYearbookHeatmap(this._lastLedgerTrades || this._lastTrades || []);
+    } else if (pageKey === 'copilot') {
+      const feed = document.getElementById('copilot_page_messages_feed');
+      if (feed) feed.scrollTop = feed.scrollHeight;
+    } else if (pageKey === 'settings') {
+      this.renderSettingsPage();
+    } else if (pageKey === 'terminal') {
+      // Trigger lightweight chart resize
+      if (this.chartManager && typeof this.chartManager.resize === 'function') {
+        setTimeout(() => this.chartManager.resize(), 60);
+      }
+      window.dispatchEvent(new Event('resize'));
+    }
+
+    // Scroll viewport to top
+    const viewport = document.getElementById('saas_main_viewport');
+    if (viewport) viewport.scrollTo(0, 0);
+  }
+
+  /**
    * Switch mobile view between dedicated 100% full-screen pages
    * Options: 'chart' | 'strategy' | 'copilot' | 'passbook' | 'journal'
    * Designed for multi-billion-dollar-tier SaaS APK UX with Android hardware back-button support
@@ -1475,6 +1608,22 @@ export class TerminalUI {
   switchMobilePage(pageKey = 'chart', pushHistory = true) {
     if (!pageKey) pageKey = 'chart';
     this.currentMobilePage = pageKey;
+
+    if (pageKey === 'passbook') {
+      this.switchPage('passbook');
+      return;
+    }
+    if (pageKey === 'positions') {
+      this.switchPage('positions');
+      return;
+    }
+    if (pageKey === 'settings') {
+      this.switchPage('settings');
+      return;
+    }
+
+    // If chart, strategy, copilot: ensure terminal view is active
+    this.switchPage('terminal');
 
     // Apply strict page attribute to body & terminal wrapper
     document.body.dataset.mobilePage = pageKey;
@@ -1497,16 +1646,7 @@ export class TerminalUI {
     const journalModal = document.getElementById('journal_modal');
 
     // 2. Manage dedicated mobile pages & modals
-    if (pageKey === 'passbook') {
-      if (journalModal) journalModal.classList.remove('open');
-      if (passbookModal) {
-        passbookModal.classList.add('open');
-        this.renderFinancialPassbook();
-      }
-      document.querySelectorAll('.terminal-panel').forEach(panel => {
-        panel.classList.remove('active-mobile-panel');
-      });
-    } else if (pageKey === 'journal') {
+    if (pageKey === 'journal') {
       if (passbookModal) passbookModal.classList.remove('open');
       if (journalModal) {
         journalModal.classList.add('open');
@@ -1518,7 +1658,6 @@ export class TerminalUI {
         this.updateJournalAndAnalytics(this._lastAnalytics, this._lastTrades);
       }
     } else {
-      // chart, strategy, copilot: hide modals and activate respective terminal panel
       if (passbookModal) passbookModal.classList.remove('open');
       if (journalModal) journalModal.classList.remove('open');
 
@@ -2874,10 +3013,7 @@ export class TerminalUI {
 
   appendChatMessage(sender, text) {
     const container = document.getElementById('chat_messages');
-    if (!container) return;
-
-    const msgEl = document.createElement('div');
-    msgEl.className = `chat-bubble ${sender}-bubble`;
+    const pageContainer = document.getElementById('copilot_page_messages_feed');
 
     // Simple markdown conversion for bold, bullets, line breaks
     let formatted = text
@@ -2885,16 +3021,27 @@ export class TerminalUI {
       .replace(/\n/g, '<br/>')
       .replace(/•/g, '&bull;');
 
-    msgEl.innerHTML = `
-      <div class="bubble-header">
-        <span class="sender-name">${sender === 'user' ? '👤 You' : '🤖 MONDAY'}</span>
-        <span class="msg-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-      </div>
-      <div class="bubble-body">${formatted}</div>
-    `;
+    const createMsgBubble = () => {
+      const msgEl = document.createElement('div');
+      msgEl.className = `chat-bubble ${sender}-bubble`;
+      msgEl.innerHTML = `
+        <div class="bubble-header">
+          <span class="sender-name">${sender === 'user' ? '👤 You' : '🤖 MONDAY'}</span>
+          <span class="msg-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+        <div class="bubble-body">${formatted}</div>
+      `;
+      return msgEl;
+    };
 
-    container.appendChild(msgEl);
-    container.scrollTop = container.scrollHeight;
+    if (container) {
+      container.appendChild(createMsgBubble());
+      container.scrollTop = container.scrollHeight;
+    }
+    if (pageContainer) {
+      pageContainer.appendChild(createMsgBubble());
+      pageContainer.scrollTop = pageContainer.scrollHeight;
+    }
   }
 
   setVoiceListening(isListening) {
@@ -2924,6 +3071,9 @@ export class TerminalUI {
   }
 
   updateOpenPositions(positions) {
+    this._lastPositions = positions || [];
+    this.renderPositionsPage(this._lastPositions);
+
     const container = document.getElementById('open_positions_list');
     const countBadge = document.getElementById('open_positions_count');
     const closeAllBtn = document.getElementById('btn_close_all_positions');
@@ -3124,6 +3274,14 @@ export class TerminalUI {
       }
       if (liveChip) liveChip.style.display = 'none';
       if (pill) pill.classList.remove('in-position');
+    }
+
+    const sidebarEquity = document.getElementById('saas_sidebar_equity');
+    if (sidebarEquity) {
+      const eqVal = (liveMetrics.equity !== null && !isNaN(liveMetrics.equity) && isFinite(liveMetrics.equity))
+        ? liveMetrics.equity
+        : (Number(liveMetrics.balance) || 2000.0);
+      sidebarEquity.textContent = `$${eqVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
 
     // Always update net R and PnL
@@ -3483,6 +3641,9 @@ export class TerminalUI {
     // Keep Calendar Popover Grid in sync with current trade data
     this.renderCalendarPopoverGrid(this._lastLedgerTrades);
 
+    // Keep 365-Day PnL Yearbook Heatmap in sync
+    this.renderYearbookHeatmap(this._lastLedgerTrades);
+
     // 2. Update 4-Pillar Financial Audit Grid
     if (grossEl) {
       const isPos = ledger.totalGrossPnl >= 0;
@@ -3763,6 +3924,285 @@ export class TerminalUI {
         card.classList.toggle('expanded');
       });
     });
+  }
+
+  renderYearbookHeatmap(allTrades = []) {
+    const gridContainer = document.getElementById('yearbook_cells_grid');
+    if (!gridContainer) return;
+
+    const list = allTrades || this._lastLedgerTrades || this._lastTrades || [];
+    
+    // Map trades by YYYY-MM-DD
+    const dailyMap = new Map();
+    list.forEach(t => {
+      const raw = t.closedAt || t.exitTime || t.time || t.timestamp;
+      if (!raw) return;
+      const d = new Date(raw);
+      if (isNaN(d.getTime())) return;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      if (!dailyMap.has(key)) {
+        dailyMap.set(key, { trades: [], netPnl: 0, count: 0 });
+      }
+      const entry = dailyMap.get(key);
+      entry.trades.push(t);
+      entry.count++;
+      entry.netPnl += Number(t.netSettledPnl !== undefined ? t.netSettledPnl : (t.pnlUSD || 0));
+    });
+
+    // 52 weeks = 364 cells. We populate from (today - 363 days) to today
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - 363);
+
+    let total365Pnl = 0;
+    let activeDays = 0;
+    let winDays = 0;
+    let bestDayPnl = 0;
+    let maxDDPnl = 0;
+
+    let cellsHtml = '';
+
+    for (let i = 0; i < 364; i++) {
+      const day = new Date(startDate);
+      day.setDate(startDate.getDate() + i);
+
+      const y = day.getFullYear();
+      const m = String(day.getMonth() + 1).padStart(2, '0');
+      const d = String(day.getDate()).padStart(2, '0');
+      const dateKey = `${y}-${m}-${d}`;
+
+      const dayData = dailyMap.get(dateKey);
+      let levelClass = 'level-0';
+      const formattedDate = day.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      let tooltip = `${formattedDate}: No trades recorded`;
+
+      if (dayData && dayData.count > 0) {
+        activeDays++;
+        const net = +dayData.netPnl.toFixed(2);
+        total365Pnl += net;
+        if (net > bestDayPnl) bestDayPnl = net;
+        if (net < maxDDPnl) maxDDPnl = net;
+
+        if (net > 0) {
+          winDays++;
+          if (net <= 20) levelClass = 'pnl-win-1';
+          else if (net <= 50) levelClass = 'pnl-win-2';
+          else if (net <= 100) levelClass = 'pnl-win-3';
+          else levelClass = 'pnl-win-4';
+        } else if (net < 0) {
+          if (net >= -20) levelClass = 'pnl-loss-1';
+          else if (net >= -50) levelClass = 'pnl-loss-2';
+          else levelClass = 'pnl-loss-3';
+        } else {
+          levelClass = 'pnl-win-1';
+        }
+
+        tooltip = `${formattedDate}: ${dayData.count} trade${dayData.count === 1 ? '' : 's'} (${net >= 0 ? '+' : ''}$${net.toFixed(2)})`;
+      }
+
+      const isCurrentSelected = this.passbookCurrentMonth === `DATE:${dateKey}`;
+      cellsHtml += `<div class="yearbook-cell ${levelClass} ${isCurrentSelected ? 'selected' : ''}" data-date="${dateKey}" title="${tooltip}"></div>`;
+    }
+
+    gridContainer.innerHTML = cellsHtml;
+
+    // Attach click events to cells
+    gridContainer.querySelectorAll('.yearbook-cell').forEach(cell => {
+      cell.addEventListener('click', (e) => {
+        const dKey = e.currentTarget.dataset.date;
+        if (dKey) {
+          this.passbookCurrentMonth = `DATE:${dKey}`;
+          this.renderFinancialPassbook();
+        }
+      });
+    });
+
+    // Update Stats in Yearbook Header
+    const ybTotal = document.getElementById('yb_stat_total_pnl');
+    const ybWinRate = document.getElementById('yb_stat_win_rate');
+    const ybBest = document.getElementById('yb_stat_best_day');
+    const ybDD = document.getElementById('yb_stat_max_dd');
+
+    if (ybTotal) {
+      const isPos = total365Pnl >= 0;
+      ybTotal.textContent = `${isPos ? '+' : ''}$${total365Pnl.toFixed(2)}`;
+      ybTotal.className = isPos ? 'text-bullish' : 'text-bearish';
+    }
+    if (ybWinRate) {
+      const rate = activeDays > 0 ? ((winDays / activeDays) * 100).toFixed(1) : '0.0';
+      ybWinRate.textContent = `${rate}% (${winDays}/${activeDays}d)`;
+    }
+    if (ybBest) {
+      ybBest.textContent = `+$${bestDayPnl.toFixed(2)}`;
+    }
+    if (ybDD) {
+      ybDD.textContent = `-$${Math.abs(maxDDPnl).toFixed(2)}`;
+    }
+  }
+
+  renderPositionsPage(positions = []) {
+    const list = positions || this._lastPositions || [];
+    const wrapper = document.getElementById('desk_positions_table_wrapper');
+    const unpnlEl = document.getElementById('desk_stat_unpnl');
+    const marginEl = document.getElementById('desk_stat_margin');
+    const notionalEl = document.getElementById('desk_stat_notional');
+    const countEl = document.getElementById('desk_stat_count');
+    const closeAllBtn = document.getElementById('positions_page_close_all_btn');
+    const navBadge = document.getElementById('saas_pos_badge');
+
+    if (navBadge) navBadge.textContent = list.length;
+    if (countEl) countEl.textContent = list.length;
+
+    let totalUnPnl = 0;
+    let totalMargin = 0;
+    let totalNotional = 0;
+
+    list.forEach(pos => {
+      const pnl = Number(pos.unrealizedPnlUSD || pos.unrealizedGrossPnlUSD || 0);
+      const m = Number(pos.marginUSD || pos.riskUSD || 0);
+      const n = Number(pos.notionalUSD || (pos.entry * (pos.positionSize || 1)) || 0);
+      totalUnPnl += pnl;
+      totalMargin += m;
+      totalNotional += n;
+    });
+
+    if (unpnlEl) {
+      const isPos = totalUnPnl >= 0;
+      unpnlEl.textContent = `${isPos ? '+' : ''}$${totalUnPnl.toFixed(2)}`;
+      unpnlEl.className = `val ${isPos ? 'text-bullish' : 'text-bearish'}`;
+    }
+    if (marginEl) marginEl.textContent = `$${totalMargin.toFixed(2)}`;
+    if (notionalEl) notionalEl.textContent = `$${totalNotional.toFixed(2)}`;
+
+    if (closeAllBtn) {
+      if (list.length > 0) {
+        closeAllBtn.classList.remove('hidden');
+      } else {
+        closeAllBtn.classList.add('hidden');
+      }
+    }
+
+    if (!wrapper) return;
+
+    if (list.length === 0) {
+      wrapper.innerHTML = `
+        <div style="padding: 48px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px;">
+          <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #38bdf8;">
+            <i class="ph ph-briefcase"></i>
+          </div>
+          <div>
+            <div style="font-size: 0.95rem; font-weight: 800; color: #f1f5f9; margin-bottom: 4px;">No Open Positions</div>
+            <div style="font-size: 0.78rem; color: #64748b; max-width: 360px;">Your desk is flat. Scan real-time neural confluence setups and execute orders on the trading terminal.</div>
+          </div>
+          <button type="button" class="btn-primary" id="btn_empty_to_terminal" style="padding: 8px 18px; font-size: 0.8rem; margin-top: 6px;">
+            <i class="ph ph-chart-line-up"></i> Open Trading Terminal
+          </button>
+        </div>
+      `;
+      const btnToTerm = wrapper.querySelector('#btn_empty_to_terminal');
+      if (btnToTerm) {
+        btnToTerm.addEventListener('click', () => this.switchPage('terminal'));
+      }
+      return;
+    }
+
+    // Render Institutional Derivatives Table
+    let tableHtml = `
+      <table class="positions-detailed-table">
+        <thead>
+          <tr>
+            <th>Market & Direction</th>
+            <th>Size & Notional</th>
+            <th>Entry Price</th>
+            <th>Mark Price</th>
+            <th>Est. Liq Price</th>
+            <th>Safety Buffer</th>
+            <th>Margin Locked</th>
+            <th>Unrealized PnL (ROE%)</th>
+            <th>Targets</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    list.forEach(pos => {
+      const isLong = (pos.direction || 'LONG').toUpperCase() === 'LONG';
+      const unPnl = Number(pos.unrealizedPnlUSD || pos.unrealizedGrossPnlUSD || 0);
+      const isPos = unPnl >= 0;
+      const margin = Number(pos.marginUSD || pos.riskUSD || 20);
+      const roe = pos.roePercent !== undefined ? pos.roePercent : (margin > 0 ? ((unPnl / margin) * 100).toFixed(1) : 0);
+      const curP = Number(pos.currentPrice || pos.entry || 0);
+      const entryP = Number(pos.entry || 0);
+      const liqP = Number(pos.liquidationPrice || 0);
+      
+      let safetyBuffer = 'Safe';
+      let safetyClass = 'text-bullish';
+      if (liqP > 0 && curP > 0) {
+        const distPct = Math.abs((curP - liqP) / curP * 100).toFixed(1);
+        safetyBuffer = `${distPct}%`;
+        if (Number(distPct) < 5) safetyClass = 'text-bearish';
+        else if (Number(distPct) < 12) safetyClass = 'text-warning';
+      }
+
+      tableHtml += `
+        <tr data-pos-id="${pos.id}">
+          <td>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-weight: 800; color: #ffffff;">${pos.asset}/USDT</span>
+              <span class="pos-direction-pill ${(pos.direction || 'LONG').toLowerCase()}" style="font-size: 0.65rem; padding: 2px 6px;">${pos.direction || 'LONG'}</span>
+              <span class="pos-lev-pill" style="font-size: 0.65rem;">${pos.leverage || 20}x</span>
+            </div>
+          </td>
+          <td>
+            <div style="font-family: var(--font-mono, monospace); font-weight: 700; color: #f1f5f9;">${pos.positionSize || 1} ${pos.asset}</div>
+            <div style="font-size: 0.7rem; color: #64748b;">$${pos.notionalUSD || (entryP * (pos.positionSize || 1)).toFixed(0)}</div>
+          </td>
+          <td style="font-family: var(--font-mono, monospace); font-weight: 700;">${this.formatPrice(entryP)}</td>
+          <td style="font-family: var(--font-mono, monospace); font-weight: 800; color: #38bdf8;">${this.formatPrice(curP)}</td>
+          <td style="font-family: var(--font-mono, monospace); font-weight: 700; color: #f59e0b;">${liqP ? this.formatPrice(liqP) : 'N/A'}</td>
+          <td style="font-family: var(--font-mono, monospace); font-weight: 800;" class="${safetyClass}">${safetyBuffer}</td>
+          <td>
+            <span style="font-family: var(--font-mono, monospace); font-weight: 700;">$${margin.toFixed(2)}</span>
+            <span style="font-size: 0.62rem; color: #64748b; background: rgba(255,255,255,0.06); padding: 1px 4px; border-radius: 3px; margin-left: 4px;">ISO</span>
+          </td>
+          <td>
+            <span style="font-family: var(--font-mono, monospace); font-weight: 900;" class="${isPos ? 'text-bullish' : 'text-bearish'}">
+              ${isPos ? '+' : ''}$${unPnl.toFixed(2)} (${isPos ? '+' : ''}${roe}%)
+            </span>
+          </td>
+          <td style="font-size: 0.72rem; color: #94a3b8;">
+            <div>SL: <b style="color: #f43f5e;">${pos.stopLoss ? this.formatPrice(pos.stopLoss) : '--'}</b></div>
+            <div>TP: <b style="color: #10b981;">${pos.target ? this.formatPrice(pos.target) : '--'}</b></div>
+          </td>
+          <td>
+            <button class="btn-quick-close-pos desk-action-close" data-trade-id="${pos.id}" type="button" style="padding: 5px 12px; font-size: 0.75rem;">
+              <i class="ph ph-x"></i> <span>Close</span>
+            </button>
+          </td>
+        </tr>
+      `;
+    });
+
+    tableHtml += `</tbody></table>`;
+    wrapper.innerHTML = tableHtml;
+
+    // Attach click events to close buttons in desk table
+    wrapper.querySelectorAll('.desk-action-close').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const tradeId = e.currentTarget.dataset.tradeId;
+        if (tradeId && this.callbacks.onCloseTrade) {
+          this.callbacks.onCloseTrade(tradeId);
+        }
+      });
+    });
+  }
+
+  renderSettingsPage() {
+    const autopilotToggle = document.getElementById('settings_autopilot_toggle');
+    if (autopilotToggle) {
+      autopilotToggle.checked = !!this.autoPilotEnabled;
+    }
   }
 
   showToast(title, message, type = 'info') {

@@ -1,0 +1,818 @@
+/**
+ * PROJECT MONDAY — Premium SaaS Multi-Page Layout & Navigation
+ * Ultra-Responsive for Desktop, Windows, Tablets, Android & Phones.
+ */
+
+/* =========================================================================
+   1. SAAS APP SHELL & LAYOUT WRAPPER
+   ========================================================================= */
+.saas-app-container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg-base, #070b14);
+  color: var(--text-main, #f1f5f9);
+}
+
+/* =========================================================================
+   2. DESKTOP SAAS SIDEBAR
+   ========================================================================= */
+.saas-sidebar {
+  width: 240px;
+  min-width: 240px;
+  height: 100vh;
+  background: rgba(11, 17, 33, 0.95);
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  z-index: 100;
+  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), min-width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.saas-sidebar.collapsed {
+  width: 72px;
+  min-width: 72px;
+}
+
+/* Sidebar Top Brand Header */
+.saas-sidebar-header {
+  padding: 18px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.saas-brand-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  overflow: hidden;
+}
+
+.saas-brand-icon {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.3), rgba(99, 102, 241, 0.3));
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #38bdf8;
+  font-size: 1.15rem;
+  box-shadow: 0 0 15px rgba(14, 165, 233, 0.2);
+}
+
+.saas-brand-text {
+  display: flex;
+  flex-direction: column;
+  transition: opacity 0.2s ease;
+}
+
+.saas-sidebar.collapsed .saas-brand-text {
+  display: none;
+}
+
+.saas-brand-title {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.saas-brand-tag {
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: #38bdf8;
+  background: rgba(14, 165, 233, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.saas-brand-sub {
+  font-size: 0.65rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.saas-sidebar-toggle-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.saas-sidebar-toggle-btn:hover {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Sidebar Nav Menu Links */
+.saas-nav-menu {
+  flex: 1;
+  padding: 16px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+}
+
+.saas-nav-section-title {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 8px 8px 4px 8px;
+  transition: opacity 0.2s ease;
+}
+
+.saas-sidebar.collapsed .saas-nav-section-title {
+  display: none;
+}
+
+.saas-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  width: 100%;
+  text-align: left;
+}
+
+.saas-nav-item:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.saas-nav-item.active {
+  color: #38bdf8;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(99, 102, 241, 0.1));
+  border-color: rgba(56, 189, 248, 0.3);
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.12);
+}
+
+.saas-nav-icon {
+  font-size: 1.15rem;
+  min-width: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.saas-nav-item.active .saas-nav-icon {
+  color: #38bdf8;
+}
+
+.saas-nav-label {
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+
+.saas-sidebar.collapsed .saas-nav-label {
+  display: none;
+}
+
+.saas-nav-badge {
+  margin-left: auto;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+
+.saas-nav-item.active .saas-nav-badge {
+  background: rgba(14, 165, 233, 0.25);
+  color: #38bdf8;
+}
+
+.saas-sidebar.collapsed .saas-nav-badge {
+  display: none;
+}
+
+/* Sidebar Footer Profile & Balance */
+.saas-sidebar-footer {
+  padding: 14px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.saas-footer-equity-card {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.saas-sidebar.collapsed .saas-footer-equity-card {
+  display: none;
+}
+
+.saas-footer-equity-lbl {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.saas-footer-equity-val {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #10b981;
+}
+
+.saas-footer-user-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.saas-footer-user-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.saas-footer-avatar {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.75rem;
+  color: #ffffff;
+}
+
+.saas-footer-user-meta {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.saas-sidebar.collapsed .saas-footer-user-meta {
+  display: none;
+}
+
+.saas-footer-user-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.saas-footer-user-sub {
+  font-size: 0.65rem;
+  color: #64748b;
+}
+
+/* =========================================================================
+   3. SAAS MAIN CONTENT WRAPPER & PAGE VIEWS
+   ========================================================================= */
+.saas-main-viewport {
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: #070b14;
+}
+
+.saas-page-view {
+  display: none;
+  width: 100%;
+  height: 100%;
+  animation: pageFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.saas-page-view.active {
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================================================
+   4. DEDICATED PAGE: POSITIONS & DERIVATIVES DESK
+   ========================================================================= */
+.positions-page-container {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.positions-header-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.positions-banner-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.positions-banner-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(14, 165, 233, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+.positions-banner-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+}
+
+.positions-banner-sub {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.positions-stats-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.pos-stat-card {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pos-stat-card .lbl {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pos-stat-card .val {
+  font-family: var(--font-mono, monospace);
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #f1f5f9;
+}
+
+/* Detailed Positions Table / Grid */
+.positions-grid-card {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.positions-grid-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.positions-grid-title {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.positions-table-wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.positions-detailed-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.8rem;
+}
+
+.positions-detailed-table th {
+  background: rgba(0, 0, 0, 0.3);
+  color: #64748b;
+  font-weight: 800;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.positions-detailed-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: #cbd5e1;
+  vertical-align: middle;
+}
+
+.positions-detailed-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* =========================================================================
+   5. DEDICATED PAGE: PASSBOOK & GITHUB-STYLE YEARBOOK HEATMAP
+   ========================================================================= */
+.passbook-page-container {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* GitHub-Style 365-Day PnL Yearbook Card */
+.yearbook-heatmap-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.yearbook-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.yearbook-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.yearbook-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.yearbook-stats-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.yearbook-stat-item b {
+  color: #ffffff;
+}
+
+/* The 365-Day Heatmap Matrix Grid */
+.yearbook-grid-scroll-wrap {
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.yearbook-matrix-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 780px;
+}
+
+.yearbook-months-labels {
+  display: flex;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #64748b;
+  padding-left: 28px;
+  justify-content: space-between;
+}
+
+.yearbook-matrix-body {
+  display: flex;
+  gap: 8px;
+}
+
+.yearbook-weekdays-labels {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #475569;
+  width: 20px;
+  text-align: right;
+  padding-right: 4px;
+}
+
+.yearbook-cells-grid {
+  display: grid;
+  grid-template-rows: repeat(7, 12px);
+  grid-auto-flow: column;
+  grid-auto-columns: 12px;
+  gap: 3px;
+}
+
+.yearbook-cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: transform 0.1s ease, filter 0.1s ease;
+  position: relative;
+}
+
+.yearbook-cell:hover {
+  transform: scale(1.35);
+  z-index: 10;
+  filter: brightness(1.2);
+}
+
+/* Heatmap PnL Intensity Levels */
+.yearbook-cell.level-0 { background: rgba(255, 255, 255, 0.04); }
+.yearbook-cell.pnl-win-1 { background: rgba(16, 185, 129, 0.35); }
+.yearbook-cell.pnl-win-2 { background: rgba(16, 185, 129, 0.60); }
+.yearbook-cell.pnl-win-3 { background: rgba(16, 185, 129, 0.85); }
+.yearbook-cell.pnl-win-4 { background: #10b981; box-shadow: 0 0 6px rgba(16, 185, 129, 0.4); }
+
+.yearbook-cell.pnl-loss-1 { background: rgba(244, 63, 94, 0.40); }
+.yearbook-cell.pnl-loss-2 { background: rgba(244, 63, 94, 0.70); }
+.yearbook-cell.pnl-loss-3 { background: #f43f5e; box-shadow: 0 0 6px rgba(244, 63, 94, 0.4); }
+
+/* Heatmap Legend */
+.yearbook-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.68rem;
+  color: #64748b;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.yearbook-legend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.yearbook-legend-cell {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+/* =========================================================================
+   6. DEDICATED PAGE: SETTINGS & RISK CONTROLS
+   ========================================================================= */
+.settings-page-container {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.settings-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 12px;
+}
+
+.settings-card-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-field-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.settings-field-label-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-field-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.settings-field-desc {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+/* =========================================================================
+   7. MOBILE NATIVE BOTTOM NAVIGATION BAR
+   ========================================================================= */
+.saas-mobile-bottom-bar {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .saas-sidebar {
+    display: none;
+  }
+
+  .saas-mobile-bottom-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: rgba(11, 17, 33, 0.95);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    z-index: 1000;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 4px;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .saas-mobile-tab-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: transparent;
+    border: none;
+    color: #64748b;
+    font-size: 0.65rem;
+    font-weight: 700;
+    cursor: pointer;
+    flex: 1;
+    height: 100%;
+    transition: color 0.15s ease;
+  }
+
+  .saas-mobile-tab-btn i {
+    font-size: 1.25rem;
+  }
+
+  .saas-mobile-tab-btn.active {
+    color: #38bdf8;
+  }
+
+  .saas-main-viewport {
+    padding-bottom: 70px;
+  }
+
+  .positions-page-container,
+  .passbook-page-container,
+  .settings-page-container {
+    padding: 16px 12px;
+  }
+}
+
+/* =========================================================================
+   8. DEDICATED PAGE: COPILOT AI CHAT & COMPANION
+   ========================================================================= */
+.copilot-page-container {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.copilot-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.copilot-chat-workspace {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  min-height: 400px;
+}
+
+.copilot-page-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}

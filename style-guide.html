@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROJECT MONDAY — Foundation Design System & Style Guide</title>
+  <meta name="description" content="Design tokens, liquid-glass glassmorphism, semantic colors, and typography hierarchy for Project MONDAY.">
+
+  <!-- Phosphor Icons -->
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+
+  <!-- Project Monday Foundation Styles -->
+  <link rel="stylesheet" href="styles/main.css">
+
+  <style>
+    /* Style Guide Specific Visuals */
+    .style-guide-nav {
+      position: sticky;
+      top: var(--space-2);
+      z-index: 100;
+      margin-bottom: var(--space-6);
+    }
+
+    .swatch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: var(--space-2);
+    }
+
+    .color-swatch-card {
+      padding: var(--space-2);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+
+    .swatch-color-box {
+      height: 64px;
+      border-radius: var(--radius-sm);
+      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .swatch-label {
+      font-weight: 600;
+      font-size: var(--text-body-sm);
+      color: var(--text-hi);
+    }
+
+    .swatch-val {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--text-low);
+    }
+
+    .copy-toast {
+      position: fixed;
+      bottom: var(--space-4);
+      right: var(--space-4);
+      background: var(--bg-obsidian);
+      border: 1px solid var(--profit-border);
+      color: var(--profit);
+      padding: 10px 18px;
+      border-radius: var(--radius-full);
+      font-family: var(--font-mono);
+      font-size: var(--text-body-sm);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all var(--dur-component) var(--ease-spring);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .copy-toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toggle-bar {
+      display: flex;
+      gap: var(--space-1);
+      background: rgba(0, 0, 0, 0.4);
+      padding: 4px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--glass-border);
+    }
+
+    .toggle-btn {
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      color: var(--text-mid);
+      transition: all var(--dur-micro) var(--ease-entrance);
+    }
+
+    .toggle-btn.active {
+      background: var(--glass-fill-ultra);
+      color: var(--text-hi);
+      border: 1px solid var(--glass-border-hi);
+    }
+
+    .type-specimen-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--glass-border);
+      padding: var(--space-3) 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Background Layer (Violet, Cyan & Emerald Orbs + Noise + Grid) -->
+  <div class="ambient-background-layer" id="ambient_layer">
+    <div class="ambient-orb orb-violet" id="orb_violet"></div>
+    <div class="ambient-orb orb-cyan" id="orb_cyan"></div>
+    <div class="ambient-orb orb-emerald" id="orb_emerald"></div>
+    <div class="ambient-grid" id="ambient_grid"></div>
+    <div class="ambient-noise" id="ambient_noise"></div>
+  </div>
+
+  <!-- Sticky Top Navigation Bar -->
+  <header class="style-guide-nav container">
+    <div class="glass-pill justify-between" style="width: 100%; padding: 12px 24px;">
+      <div class="flex items-center gap-2">
+        <div style="width: 10px; height: 10px; background: var(--profit); border-radius: 50%; box-shadow: 0 0 10px var(--profit);"></div>
+        <span class="font-display" style="font-weight: 700; font-size: 1.1rem; letter-spacing: -0.02em;">PROJECT MONDAY</span>
+        <span class="text-micro glass-pill" style="padding: 2px 8px; color: var(--cyan); border-color: var(--cyan-border);">FOUNDATION v1.0</span>
+      </div>
+
+      <!-- Quick Section Anchor Links -->
+      <nav class="flex items-center gap-3" style="display: none; @media(min-width: 768px){ display: flex; }">
+        <a href="#colors" class="text-body-sm text-mid" style="transition: color 0.2s;">Colors</a>
+        <a href="#typography" class="text-body-sm text-mid" style="transition: color 0.2s;">Typography</a>
+        <a href="#glass" class="text-body-sm text-mid" style="transition: color 0.2s;">Glass Surfaces</a>
+        <a href="#controls" class="text-body-sm text-mid" style="transition: color 0.2s;">Controls</a>
+      </nav>
+
+      <!-- Live Environment Debug Controls -->
+      <div class="toggle-bar">
+        <button type="button" class="toggle-btn active" id="btn_toggle_orbs">Orbs: ON</button>
+        <button type="button" class="toggle-btn active" id="btn_toggle_grid">Grid: ON</button>
+        <button type="button" class="toggle-btn active" id="btn_toggle_noise">Noise: ON</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Showcase Container -->
+  <main class="container" style="position: relative; z-index: 10; padding-bottom: 120px;">
+    
+    <!-- Hero Header -->
+    <section class="section-header" style="text-align: left; max-width: 900px; margin-bottom: var(--space-10);">
+      <div class="section-tag glass-pill" style="color: var(--cyan); border-color: var(--cyan-border);">
+        <i class="ph-bold ph-faders"></i> DESIGN TOKENS & LIQUID-GLASS ARCHITECTURE
+      </div>
+      <h1 class="text-display-hero">
+        Precision Engineering for a <span class="text-gradient-institutional">$100M Fintech Shell</span>
+      </h1>
+      <p class="text-body-lg" style="margin-top: var(--space-2); max-width: 680px;">
+        Every token in Project MONDAY serves an asymmetric mathematical purpose. Colors strictly communicate execution states, typography guarantees microsecond readability, and glass refraction breathes without cognitive clutter.
+      </p>
+    </section>
+
+    <!-- =========================================================================
+         SECTION 1: SEMANTIC COLOR PALETTE
+         ========================================================================= -->
+    <section id="colors" style="margin-bottom: var(--space-12);">
+      <div class="flex items-center justify-between" style="margin-bottom: var(--space-4);">
+        <div>
+          <h2 class="text-h1">1. Semantic Color System</h2>
+          <p class="text-body-sm text-mid">Click any color swatch to copy its hex token to clipboard.</p>
+        </div>
+        <span class="text-micro text-low">STRICT SEMANTIC USAGE ONLY</span>
+      </div>
+
+      <div class="swatch-grid">
+        <!-- Void -->
+        <div class="glass-card color-swatch-card" data-copy="#06070a">
+          <div class="swatch-color-box" style="background: var(--bg-void);"></div>
+          <span class="swatch-label">Canvas Void</span>
+          <span class="swatch-val">--bg-void: #06070a</span>
+        </div>
+
+        <!-- Obsidian -->
+        <div class="glass-card color-swatch-card" data-copy="#0d0f17">
+          <div class="swatch-color-box" style="background: var(--bg-obsidian);"></div>
+          <span class="swatch-label">Obsidian Surface</span>
+          <span class="swatch-val">--bg-obsidian: #0d0f17</span>
+        </div>
+
+        <!-- Profit Emerald -->
+        <div class="glass-card color-swatch-card glass-profit-border" data-copy="#10b981">
+          <div class="swatch-color-box" style="background: var(--profit); box-shadow: 0 0 20px var(--profit-glow);"></div>
+          <span class="swatch-label text-profit">Long / Profit</span>
+          <span class="swatch-val">--profit: #10b981</span>
+        </div>
+
+        <!-- Risk Rose -->
+        <div class="glass-card color-swatch-card glass-risk-border" data-copy="#f43f5e">
+          <div class="swatch-color-box" style="background: var(--risk); box-shadow: 0 0 20px var(--risk-glow);"></div>
+          <span class="swatch-label text-risk">Short / Risk Stop</span>
+          <span class="swatch-val">--risk: #f43f5e</span>
+        </div>
+
+        <!-- Shield Amber -->
+        <div class="glass-card color-swatch-card glass-shield-border" data-copy="#f59e0b">
+          <div class="swatch-color-box" style="background: var(--shield); box-shadow: 0 0 20px var(--shield-glow);"></div>
+          <span class="swatch-label text-shield">Event Shield Active</span>
+          <span class="swatch-val">--shield: #f59e0b</span>
+        </div>
+
+        <!-- Telemetry Cyan -->
+        <div class="glass-card color-swatch-card glass-cyan-border" data-copy="#06b6d4">
+          <div class="swatch-color-box" style="background: var(--cyan); box-shadow: 0 0 20px var(--cyan-glow);"></div>
+          <span class="swatch-label text-cyan">WSS Telemetry / SMT</span>
+          <span class="swatch-val">--cyan: #06b6d4</span>
+        </div>
+
+        <!-- Neural Violet -->
+        <div class="glass-card color-swatch-card glass-violet-border" data-copy="#8b5cf6">
+          <div class="swatch-color-box" style="background: var(--violet); box-shadow: 0 0 20px var(--violet-glow);"></div>
+          <span class="swatch-label text-violet">AI Copilot (MONDAY)</span>
+          <span class="swatch-val">--violet: #8b5cf6</span>
+        </div>
+
+        <!-- Text Hi -->
+        <div class="glass-card color-swatch-card" data-copy="#f4f6fb">
+          <div class="swatch-color-box" style="background: var(--text-hi);"></div>
+          <span class="swatch-label">Primary Header</span>
+          <span class="swatch-val">--text-hi: #f4f6fb</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         SECTION 2: TYPOGRAPHY & TABULAR NUMERICS
+         ========================================================================= -->
+    <section id="typography" style="margin-bottom: var(--space-12);">
+      <div class="flex items-center justify-between" style="margin-bottom: var(--space-4);">
+        <div>
+          <h2 class="text-h1">2. Typography & Numerical Hierarchy</h2>
+          <p class="text-body-sm text-mid">Space Grotesk (Tight Display) • Inter (UI/Body) • JetBrains Mono (Tabular Data)</p>
+        </div>
+        <span class="text-micro text-low">FLUID CLAMP SCALING</span>
+      </div>
+
+      <div class="glass-panel" style="padding: var(--space-4);">
+        <!-- Specimen 1 -->
+        <div class="type-specimen-row">
+          <div>
+            <div class="text-display-hero">The Dual-Market Terminal</div>
+            <div class="text-xs text-low">Display Hero (clamp: 2.75rem - 5.25rem) • Space Grotesk Bold</div>
+          </div>
+          <span class="num-ticker text-xs text-mid">font-display</span>
+        </div>
+
+        <!-- Specimen 2 -->
+        <div class="type-specimen-row">
+          <div>
+            <div class="text-display-1 text-gradient-institutional">Stop gambling on predictions.</div>
+            <div class="text-xs text-low">Display 1 (clamp: 2.25rem - 3.75rem) • Gradient Mask</div>
+          </div>
+          <span class="num-ticker text-xs text-mid">text-gradient</span>
+        </div>
+
+        <!-- Specimen 3 -->
+        <div class="type-specimen-row">
+          <div>
+            <div class="text-h1">Quantitative Confluence Engine</div>
+            <div class="text-xs text-low">Heading 1 (clamp: 1.5rem - 2.25rem)</div>
+          </div>
+          <span class="num-ticker text-xs text-mid">text-h1</span>
+        </div>
+
+        <!-- Specimen 4: Tickers & Prices (Live Animated) -->
+        <div class="type-specimen-row">
+          <div>
+            <div class="flex items-center gap-3">
+              <span class="num-ticker" id="live_btc_val" style="font-size: 1.75rem; font-weight: 700; color: var(--profit);">$68,432.50</span>
+              <span class="glass-pill text-profit text-micro" id="live_btc_delta">+4.18% 24h</span>
+              <span class="num-ticker text-cyan text-h3" style="margin-left: 20px;">+3.20R TARGET</span>
+            </div>
+            <div class="text-xs text-low">JetBrains Mono Tabular Numerals • Zero Column Wobble on Tick</div>
+          </div>
+          <span class="num-ticker text-xs text-profit">LIVE TICK TEST</span>
+        </div>
+
+        <!-- Specimen 5: Body -->
+        <div class="type-specimen-row" style="border-bottom: none;">
+          <div>
+            <p class="text-body" style="max-width: 640px;">
+              Inter UI provides fatigue-free reading across prolonged trading sessions. Micro text scales dynamically down to 11px while preserving strict optical clarity.
+            </p>
+            <div class="text-xs text-low">Body (1rem / 16px) • Inter Regular</div>
+          </div>
+          <span class="num-ticker text-xs text-mid">text-body</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         SECTION 3: LIQUID-GLASS ELEVATION & CURSOR SPECULAR HIGHLIGHT
+         ========================================================================= -->
+    <section id="glass" style="margin-bottom: var(--space-12);">
+      <div class="flex items-center justify-between" style="margin-bottom: var(--space-4);">
+        <div>
+          <h2 class="text-h1">3. Glassmorphism Elevation & Cursor Specular Reflection</h2>
+          <p class="text-body-sm text-mid">Move your mouse across these cards to see the real-time optical radial reflection.</p>
+        </div>
+        <span class="text-micro text-low">HARDWARE ACCELERATED GPU SHADER</span>
+      </div>
+
+      <div class="bento-grid">
+        <!-- Card 1: Standard Glass -->
+        <div class="glass-card glass-card-hover-lift bento-col-4" style="padding: var(--space-4);">
+          <div class="flex items-center justify-between" style="margin-bottom: var(--space-3);">
+            <div class="glass-pill" style="color: var(--cyan); border-color: var(--cyan-border);">
+              <i class="ph ph-cpu"></i> TIER 1
+            </div>
+            <span class="text-micro text-low">--elevation-1</span>
+          </div>
+          <h3 class="text-h3" style="margin-bottom: var(--space-1);">Standard Glass Card</h3>
+          <p class="text-body-sm text-mid">
+            Base card component with 20px blur, 160% saturation, and cursor-following radial highlight.
+          </p>
+        </div>
+
+        <!-- Card 2: Functional Border (Profit) -->
+        <div class="glass-card glass-card-hover-lift glass-profit-border bento-col-4" style="padding: var(--space-4);">
+          <div class="flex items-center justify-between" style="margin-bottom: var(--space-3);">
+            <div class="glass-pill" style="color: var(--profit); border-color: var(--profit-border);">
+              <i class="ph-bold ph-shield-check"></i> GRADE A+
+            </div>
+            <span class="num-ticker text-profit text-micro">96.4% CONFLUENCE</span>
+          </div>
+          <h3 class="text-h3 text-profit" style="margin-bottom: var(--space-1);">Confirmed Setup Card</h3>
+          <p class="text-body-sm text-mid">
+            Luminous emerald perimeter glow triggers only when all 8 technical rules are locked.
+          </p>
+        </div>
+
+        <!-- Card 3: Functional Border (Shield) -->
+        <div class="glass-card glass-card-hover-lift glass-shield-border bento-col-4" style="padding: var(--space-4);">
+          <div class="flex items-center justify-between" style="margin-bottom: var(--space-3);">
+            <div class="glass-pill" style="color: var(--shield); border-color: var(--shield-border);">
+              <i class="ph-bold ph-warning"></i> EVENT SHIELD
+            </div>
+            <span class="num-ticker text-shield text-micro">15m LOCKOUT</span>
+          </div>
+          <h3 class="text-h3 text-shield" style="margin-bottom: var(--space-1);">Risk Sentinel Active</h3>
+          <p class="text-body-sm text-mid">
+            Hyper-sensitive macro news shield automatically freezes autopilot during US CPI / FOMC releases.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         SECTION 4: INTERACTIVE CONTROLS & CHIPS
+         ========================================================================= -->
+    <section id="controls" style="margin-bottom: var(--space-12);">
+      <div class="flex items-center justify-between" style="margin-bottom: var(--space-4);">
+        <div>
+          <h2 class="text-h1">4. Control Pills, Badges & Interactive States</h2>
+          <p class="text-body-sm text-mid">Precision capsules for market toggles, asset chips, and telemetry indicators.</p>
+        </div>
+        <span class="text-micro text-low">NO TEMPLATE CLICHE</span>
+      </div>
+
+      <div class="glass-panel" style="padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-4);">
+        <!-- Row 1: Market & Asset Pills -->
+        <div class="flex items-center gap-2" style="flex-wrap: wrap;">
+          <button type="button" class="glass-pill" style="background: var(--glass-fill-ultra); border-color: var(--glass-border-hi);">
+            <i class="ph-bold ph-chart-line-up"></i> Crypto Universe
+          </button>
+          <button type="button" class="glass-pill">
+            <i class="ph ph-bank"></i> NSE India (150+ F&O)
+          </button>
+          <button type="button" class="glass-pill">
+            <i class="ph ph-sparkle"></i> Mega IPO Basket
+          </button>
+          <button type="button" class="glass-pill" style="margin-left: auto; color: var(--cyan); border-color: var(--cyan-border);">
+            <i class="ph-bold ph-command"></i> Ctrl + K Terminal Search
+          </button>
+        </div>
+
+        <!-- Row 2: Status Badges -->
+        <div class="flex items-center gap-2" style="flex-wrap: wrap;">
+          <span class="glass-pill text-profit text-micro" style="border-color: var(--profit-border);">
+            <span style="width: 6px; height: 6px; background: var(--profit); border-radius: 50%;"></span>
+            1.0% Hard Stop Verified
+          </span>
+          <span class="glass-pill text-cyan text-micro" style="border-color: var(--cyan-border);">
+            <i class="ph-bold ph-lightning"></i> 24/7 Coinbase WSS Daemon
+          </span>
+          <span class="glass-pill text-violet text-micro" style="border-color: var(--violet-border);">
+            <i class="ph-bold ph-waveform"></i> Hinglish Voice AI Active
+          </span>
+          <span class="glass-pill text-shield text-micro" style="border-color: var(--shield-border);">
+            <i class="ph-bold ph-receipt"></i> 18% GST Auto-Bifurcated
+          </span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Interactive Hex Code Copy Toast Notification -->
+  <div class="copy-toast" id="copy_toast">
+    <i class="ph-bold ph-check-circle"></i>
+    <span id="toast_msg">Copied to clipboard</span>
+  </div>
+
+  <!-- Foundation Scripts -->
+  <script type="module" src="js/foundation/cursorGlow.js"></script>
+  <script type="module" src="js/foundation/smoothScroll.js"></script>
+
+  <script type="module">
+    // Live Ticker Simulator for Tabular Numerals Demonstration
+    const btcValEl = document.getElementById('live_btc_val');
+    let currentBtc = 68432.50;
+    setInterval(() => {
+      const delta = (Math.random() - 0.49) * 24.5;
+      currentBtc += delta;
+      btcValEl.textContent = `$${currentBtc.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      btcValEl.style.color = delta >= 0 ? 'var(--profit)' : 'var(--risk)';
+      setTimeout(() => {
+        btcValEl.style.color = 'var(--text-hi)';
+      }, 400);
+    }, 1800);
+
+    // Interactive Swatch Click-to-Copy
+    const toast = document.getElementById('copy_toast');
+    const toastMsg = document.getElementById('toast_msg');
+    let toastTimeout;
+
+    document.querySelectorAll('[data-copy]').forEach(card => {
+      card.addEventListener('click', () => {
+        const val = card.getAttribute('data-copy');
+        navigator.clipboard.writeText(val).then(() => {
+          toastMsg.textContent = `Copied ${val} to clipboard!`;
+          toast.classList.add('show');
+          clearTimeout(toastTimeout);
+          toastTimeout = setTimeout(() => {
+            toast.classList.remove('show');
+          }, 2400);
+        });
+      });
+    });
+
+    // Environment Toggles (Orbs, Grid, Noise)
+    const orbs = [
+      document.getElementById('orb_violet'),
+      document.getElementById('orb_cyan'),
+      document.getElementById('orb_emerald')
+    ];
+    const grid = document.getElementById('ambient_grid');
+    const noise = document.getElementById('ambient_noise');
+
+    const btnOrbs = document.getElementById('btn_toggle_orbs');
+    const btnGrid = document.getElementById('btn_toggle_grid');
+    const btnNoise = document.getElementById('btn_toggle_noise');
+
+    btnOrbs.addEventListener('click', () => {
+      const isActive = btnOrbs.classList.toggle('active');
+      btnOrbs.textContent = `Orbs: ${isActive ? 'ON' : 'OFF'}`;
+      orbs.forEach(o => o.style.display = isActive ? 'block' : 'none');
+    });
+
+    btnGrid.addEventListener('click', () => {
+      const isActive = btnGrid.classList.toggle('active');
+      btnGrid.textContent = `Grid: ${isActive ? 'ON' : 'OFF'}`;
+      grid.style.display = isActive ? 'block' : 'none';
+    });
+
+    btnNoise.addEventListener('click', () => {
+      const isActive = btnNoise.classList.toggle('active');
+      btnNoise.textContent = `Noise: ${isActive ? 'ON' : 'OFF'}`;
+      noise.style.display = isActive ? 'block' : 'none';
+    });
+  </script>
+</body>
+</html>

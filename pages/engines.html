@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROJECT MONDAY — The 8 Core Neural Engines</title>
+  <meta name="description" content="Deep-dive architectural blueprints and mathematical formulations for the 8 proprietary engines powering Project MONDAY.">
+
+  <!-- Phosphor Icons -->
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="../styles/main.css">
+  <link rel="stylesheet" href="../styles/components.css">
+
+  <style>
+    .engine-deepdive-card {
+      padding: var(--space-6);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      margin-bottom: var(--space-8);
+      position: relative;
+    }
+
+    .formula-box {
+      background: rgba(0, 0, 0, 0.55);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      padding: var(--space-3) var(--space-4);
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      color: var(--cyan);
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6);
+      overflow-x: auto;
+    }
+
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: var(--space-2);
+    }
+
+    .spec-table th, .spec-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--glass-border);
+      font-size: var(--text-body-sm);
+      text-align: left;
+    }
+
+    .spec-table th {
+      color: var(--text-low);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Dynamic Background -->
+  <div class="ambient-background-layer">
+    <div class="ambient-orb orb-violet"></div>
+    <div class="ambient-orb orb-cyan"></div>
+    <div class="ambient-orb orb-emerald"></div>
+    <div class="ambient-grid"></div>
+    <div class="ambient-noise"></div>
+  </div>
+
+  <!-- Floating Navbar -->
+  <header class="nav-floating">
+    <a href="../index.html" class="nav-brand">
+      <div class="ai-pulse-dot"></div>
+      <span class="font-display">MONDAY</span>
+      <span class="code-badge" style="margin-left: 4px;">ENGINES</span>
+    </a>
+
+    <nav class="nav-links" style="display: none; @media(min-width: 820px){ display: flex; }">
+      <a href="../index.html" class="nav-link">Home</a>
+      <a href="engines.html" class="nav-link active">Engines</a>
+      <a href="markets.html" class="nav-link">Markets</a>
+      <a href="pricing.html" class="nav-link">Pricing</a>
+      <a href="learn.html" class="nav-link">Learn</a>
+      <a href="about.html" class="nav-link">About</a>
+    </nav>
+
+    <div class="flex items-center gap-2">
+      <a href="auth.html" class="btn-ghost" style="font-size: 0.85rem;">Sign In</a>
+      <a href="../terminal.html" class="btn-primary">
+        Launch Terminal <i class="ph-bold ph-arrow-up-right"></i>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container" style="padding-top: 130px; padding-bottom: 120px;">
+    
+    <!-- Hero Header -->
+    <section class="section-header" style="text-align: left; max-width: 860px; margin-bottom: var(--space-10);">
+      <div class="section-tag glass-pill" style="color: var(--cyan); border-color: var(--cyan-border);">
+        <i class="ph-bold ph-cpu"></i> QUANTITATIVE CORE ARCHITECTURE
+      </div>
+      <h1 class="text-display-hero">
+        The 8 Proprietary Engines of <span class="text-gradient-institutional">Project MONDAY</span>
+      </h1>
+      <p class="text-body-lg text-mid" style="margin-top: var(--space-2);">
+        Each engine is mathematically decoupled, deterministic, and built to operate autonomously under low-latency microsecond conditions.
+      </p>
+    </section>
+
+    <!-- ENGINE 1: STRATEGY ENGINE -->
+    <article class="glass-card engine-deepdive-card" id="strategy">
+      <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 10px;">
+        <div class="flex items-center gap-3">
+          <div class="mega-item-icon" style="color: var(--cyan);"><i class="ph-bold ph-chart-polar"></i></div>
+          <div>
+            <span class="text-micro text-cyan">ENGINE 01</span>
+            <h2 class="text-h1">Strategy & 8-Step Confluence Engine</h2>
+          </div>
+        </div>
+        <span class="glass-pill text-profit text-micro" style="border-color: var(--profit-border);">
+          <i class="ph-bold ph-check-circle"></i> Grade A+ Threshold: &ge; 75%
+        </span>
+      </div>
+
+      <p class="text-body text-mid">
+        The strategy engine fuses Smart Money Concepts (ICT/SMC) with quantitative momentum indicators. It enforces a strict <b>Higher Timeframe (1H) Directional Lock</b>: if the 1H Triple-EMA stack (EMA 12 &gt; EMA 26 &gt; EMA 50) is Bullish, the engine exclusively evaluates LONG setups. Counter-trend trades are completely blocked at the architecture level.
+      </p>
+
+      <div class="formula-box">
+        Confluence Score = &Sigma; [ HTF_Trend(20) + Pullback_Zone(20) + Confirmation_Wick(20) + RR_Asymmetry(15) + RSI_Momentum(10) + Whale_Volume(10) + SMT_Divergence(10) ]
+      </div>
+
+      <div class="bento-grid">
+        <div class="bento-col-6">
+          <h4 class="text-h3" style="margin-bottom: 8px;">Confluence State Machine</h4>
+          <table class="spec-table">
+            <thead><tr><th>State</th><th>Condition</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td><b class="text-low">WAIT</b></td><td>Pullback pending / extended price</td><td>Monitor order flow</td></tr>
+              <tr><td><b class="text-shield">DEVELOPING</b></td><td>Price entered 5M Fib 0.618–0.786 zone</td><td>Pin radar card</td></tr>
+              <tr><td><b class="text-profit">CONFIRMED</b></td><td>Score &ge; 75% + 1:3.2 RR locked</td><td>Issue execution blueprint</td></tr>
+              <tr><td><b class="text-risk">CANCELLED</b></td><td>Invalidation level breached</td><td>Purge order ticket</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="bento-col-6">
+          <h4 class="text-h3" style="margin-bottom: 8px;">Asymmetric Target Formulation</h4>
+          <table class="spec-table">
+            <thead><tr><th>Parameter</th><th>Formula</th></tr></thead>
+            <tbody>
+              <tr><td>Risk Distance</td><td>| Entry &minus; StopLoss |</td></tr>
+              <tr><td>Target (Long)</td><td>Entry + (Risk Distance &times; 3.2)</td></tr>
+              <tr><td>Target (Short)</td><td>Entry &minus; (Risk Distance &times; 3.2)</td></tr>
+              <tr><td>Max Risk</td><td>Strictly 1.0% of Account Balance (1.0R)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </article>
+
+    <!-- ENGINE 2: LIQUIDATION FIREWALL -->
+    <article class="glass-card engine-deepdive-card" id="firewall">
+      <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 10px;">
+        <div class="flex items-center gap-3">
+          <div class="mega-item-icon" style="color: var(--risk);"><i class="ph-bold ph-prohibit"></i></div>
+          <div>
+            <span class="text-micro text-risk">ENGINE 02</span>
+            <h2 class="text-h1">Derivatives & Liquidation Firewall</h2>
+          </div>
+        </div>
+        <span class="glass-pill text-risk text-micro" style="border-color: var(--risk-border);">
+          <i class="ph-bold ph-shield"></i> Delta Exchange Standard
+        </span>
+      </div>
+
+      <p class="text-body text-mid">
+        Designed to permanently eliminate exchange margin liquidations. The engine evaluates the Maintenance Margin Rate (MMR) across Tier-1 assets and enforces the <b>Liquidation Priority Firewall</b>: an order cannot execute if its Stop Loss is placed at or beyond the liquidation threshold.
+      </p>
+
+      <div class="formula-box">
+        Long Liquidation = Entry &times; (1 &minus; 1/Leverage + MMR) &nbsp;&nbsp;|&nbsp;&nbsp; Short Liquidation = Entry &times; (1 + 1/Leverage &minus; MMR)
+      </div>
+
+      <div class="bento-grid">
+        <div class="bento-col-12">
+          <table class="spec-table">
+            <thead><tr><th>Asset Class</th><th>Max Leverage</th><th>Maintenance Margin (MMR)</th><th>Firewall Rule</th></tr></thead>
+            <tbody>
+              <tr><td>BTC / ETH</td><td>200x</td><td>0.40% &ndash; 0.50%</td><td>SL must be strictly &gt; Liq Price + 0.5% buffer</td></tr>
+              <tr><td>SOL / BNB / XRP</td><td>75x</td><td>1.00% &ndash; 1.20%</td><td>SL must be strictly &gt; Liq Price + 1.0% buffer</td></tr>
+              <tr><td>Mid-Cap Alts (AVAX, SUI, DOGE)</td><td>25x &ndash; 50x</td><td>1.50% &ndash; 2.00%</td><td>SL must be strictly &gt; Liq Price + 1.5% buffer</td></tr>
+              <tr><td>Indian Equities (NSE Intraday MIS)</td><td>5x</td><td>20.00%</td><td>SEBI intraday MIS margin auto-enforced</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </article>
+
+    <!-- ENGINE 3: EVENT RISK SHIELD -->
+    <article class="glass-card engine-deepdive-card" id="shield">
+      <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 10px;">
+        <div class="flex items-center gap-3">
+          <div class="mega-item-icon" style="color: var(--shield);"><i class="ph-bold ph-warning"></i></div>
+          <div>
+            <span class="text-micro text-shield">ENGINE 03</span>
+            <h2 class="text-h1">Hyper-Sensitive Event Risk Shield</h2>
+          </div>
+        </div>
+        <span class="glass-pill text-shield text-micro" style="border-color: var(--shield-border);">
+          <i class="ph-bold ph-clock-countdown"></i> Auto-Pause &plusmn;15 min Window
+        </span>
+      </div>
+
+      <p class="text-body text-mid">
+        Real-time macroeconomic sentinel scanning public RSS wires, economic calendars, and high-impact token unlock events. When extreme volatility catalysts (US CPI, FOMC, Non-Farm Payrolls, RBI MPC) approach, AutoPilot automatically freezes 15 minutes prior to release to protect orders against institutional slippage.
+      </p>
+
+      <div class="formula-box">
+        Circuit Breaker Trigger = (Event_Time &minus; 15 min) &le; T_current &le; (Event_Time + 15 min) &rarr; Daemon Execution Halted
+      </div>
+    </article>
+
+    <!-- ENGINE 4: HISTORICAL REGIME -->
+    <article class="glass-card engine-deepdive-card" id="regime">
+      <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 10px;">
+        <div class="flex items-center gap-3">
+          <div class="mega-item-icon" style="color: var(--cyan);"><i class="ph-bold ph-git-commit"></i></div>
+          <div>
+            <span class="text-micro text-cyan">ENGINE 04</span>
+            <h2 class="text-h1">Historical Regime & Context Engine</h2>
+          </div>
+        </div>
+        <span class="glass-pill text-cyan text-micro" style="border-color: var(--cyan-border);">
+          20-Period ATR Dynamic Profiling
+        </span>
+      </div>
+
+      <p class="text-body text-mid">
+        Computes real-time candle range expansion and ATR ratios to classify the active market regime into four statistical buckets:
+        <b>Supportive Trending</b> (High expectancy pullbacks), <b>Breakout Expansion</b> (Trailing stop recommended), <b>Mean-Reverting Range</b> (Fade extremes), and <b>High-Volatility Choppy</b> (Autopilot caution alert).
+      </p>
+
+      <div class="formula-box">
+        Range Expansion Ratio = Current_Candle_Range / ATR_20 &nbsp;&nbsp;|&nbsp;&nbsp; High Volatility Threshold: &gt; 1.15 (Crypto) / &gt; 0.65 (India)
+      </div>
+    </article>
+
+    <!-- ENGINE 5: PAPER TRADER & PASSBOOK -->
+    <article class="glass-card engine-deepdive-card" id="passbook">
+      <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 10px;">
+        <div class="flex items-center gap-3">
+          <div class="mega-item-icon" style="color: var(--profit);"><i class="ph-bold ph-book-open"></i></div>
+          <div>
+            <span class="text-micro text-profit">ENGINE 05</span>
+            <h2 class="text-h1">Paper Trader & Financial Passbook Ledger</h2>
+          </div>
+        </div>
+        <span class="glass-pill text-profit text-micro" style="border-color: var(--profit-border);">
+          Delta India Compliant (18% GST)
+        </span>
+      </div>
+
+      <p class="text-body text-mid">
+        Strict 1R unit capital accounting ($20 risk on $2,000 baseline). Logs every execution with Delta Exchange India compliant brokerage rates (0.05% Taker, 0.02% Maker) and automatically separates 18% GST into independent tax ledger line items.
+      </p>
+
+      <div class="formula-box">
+        Net PnL = Gross Realized PnL &minus; Brokerage &minus; (Brokerage &times; 0.18 GST) &nbsp;&nbsp;|&nbsp;&nbsp; 1R = Predefined 1% Account Risk Unit
+      </div>
+    </article>
+
+    <!-- ENGINE 6: AI COPILOT -->
+    <article class="glass-card engine-deepdive-card" id="copilot">
+      <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 10px;">
+        <div class="flex items-center gap-3">
+          <div class="mega-item-icon" style="color: var(--violet);"><i class="ph-bold ph-waveform"></i></div>
+          <div>
+            <span class="text-micro text-violet">ENGINE 06</span>
+            <h2 class="text-h1">Conversational AI Co-Pilot (MONDAY)</h2>
+          </div>
+        </div>
+        <span class="glass-pill text-violet text-micro" style="border-color: var(--violet-border);">
+          Bilingual Hinglish / English Voice
+        </span>
+      </div>
+
+      <p class="text-body text-mid">
+        A context-aware, empathetic female trading partner. Possesses an intelligent <b>Anti-Tilt Psychological Shield</b> that detects frustration, consecutive losses, and revenge trading tendencies, guiding traders back to mathematical discipline.
+      </p>
+    </article>
+
+    <!-- ENGINE 7: 24/7 DAEMON -->
+    <article class="glass-card engine-deepdive-card" id="daemon">
+      <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 10px;">
+        <div class="flex items-center gap-3">
+          <div class="mega-item-icon" style="color: var(--cyan);"><i class="ph-bold ph-lightning"></i></div>
+          <div>
+            <span class="text-micro text-cyan">ENGINE 07</span>
+            <h2 class="text-h1">24/7 Autonomous Daemon</h2>
+          </div>
+        </div>
+        <span class="glass-pill text-cyan text-micro" style="border-color: var(--cyan-border);">
+          Native Coinbase WebSocket Stream
+        </span>
+      </div>
+
+      <p class="text-body text-mid">
+        Headless Node.js process connected directly to <code>wss://ws-feed.exchange.coinbase.com</code>. Sub-millisecond tick processing verifies active positions on every price crossing, triggering instant TP/SL closes with real-time Supabase PostgreSQL cloud sync.
+      </p>
+    </article>
+
+    <!-- ENGINE 8: DUAL MARKETS -->
+    <article class="glass-card engine-deepdive-card" id="markets">
+      <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 10px;">
+        <div class="flex items-center gap-3">
+          <div class="mega-item-icon" style="color: var(--profit);"><i class="ph-bold ph-globe-hemisphere-east"></i></div>
+          <div>
+            <span class="text-micro text-profit">ENGINE 08</span>
+            <h2 class="text-h1">Dual-Market Universe (Web3 & India)</h2>
+          </div>
+        </div>
+        <span class="glass-pill text-profit text-micro" style="border-color: var(--profit-border);">
+          150+ NSE Stocks & Mega IPOs
+        </span>
+      </div>
+
+      <p class="text-body text-mid">
+        Universal coverage uniting top crypto liquidity pairs with the Indian stock market: Benchmark indices (NIFTY 50, BANK NIFTY, SENSEX, FINNIFTY), Sector baskets (Defense, Green Energy, Auto, EMS), and landmark Mega IPOs (Hyundai, Swiggy, Waaree).
+      </p>
+    </article>
+
+  </main>
+
+  <!-- Legal Footer -->
+  <footer style="background: rgba(10, 12, 19, 0.85); border-top: 1px solid var(--glass-border); padding: var(--space-8) 0;">
+    <div class="container text-center">
+      <p class="text-xs text-low">
+        <b>MANDATORY RISK DISCLOSURE:</b> All mathematical models, confluence scores, and R-multiple formulations operate within a simulated paper trading environment and do not constitute financial advice. Project MONDAY is not affiliated with Delta Exchange, Zerodha, Coinbase, or SEBI.
+      </p>
+      <div class="text-micro text-dim" style="margin-top: 12px;">
+        &copy; 2026 Project MONDAY. Engineered with Liquid-Glass Precision.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script type="module" src="../js/foundation/cursorGlow.js"></script>
+  <script type="module" src="../js/foundation/smoothScroll.js"></script>
+</body>
+</html>
+

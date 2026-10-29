@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROJECT MONDAY — Global UI Component Library & Gallery</title>
+  <meta name="description" content="Living, interactive component gallery for Project MONDAY. Enterprise $100M fintech craft with Liquid-Glass dark glassmorphism.">
+
+  <!-- Phosphor Icons -->
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+
+  <!-- Project Monday Styles -->
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/components.css">
+
+  <style>
+    /* Gallery Layout Helpers */
+    .gallery-container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 100px var(--space-3) var(--space-16) var(--space-3);
+      position: relative;
+      z-index: 10;
+    }
+
+    .gallery-section {
+      margin-bottom: var(--space-12);
+    }
+
+    .component-card-wrap {
+      padding: var(--space-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .component-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--glass-border);
+      padding-bottom: var(--space-2);
+    }
+
+    .code-badge {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--cyan);
+      background: var(--cyan-glow);
+      border: 1px solid var(--cyan-border);
+      padding: 2px 8px;
+      border-radius: var(--radius-xs);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Dynamic Background -->
+  <div class="ambient-background-layer">
+    <div class="ambient-orb orb-violet"></div>
+    <div class="ambient-orb orb-cyan"></div>
+    <div class="ambient-orb orb-emerald"></div>
+    <div class="ambient-grid"></div>
+    <div class="ambient-noise"></div>
+  </div>
+
+  <!-- FLOATING NAVBAR DEMO -->
+  <header class="nav-floating">
+    <div class="nav-brand">
+      <div class="ai-pulse-dot"></div>
+      <span class="font-display">MONDAY</span>
+      <span class="code-badge" style="margin-left: 6px;">COMPONENTS v2.0</span>
+    </div>
+
+    <!-- Center Nav Links with Mega-Menu Dropdown -->
+    <nav class="nav-links" style="display: none; @media(min-width: 768px){ display: flex; }">
+      <div class="has-dropdown" style="position: relative;">
+        <a href="#navigation" class="nav-link">Product <i class="ph-bold ph-caret-down" style="font-size: 0.75rem;"></i></a>
+        <!-- Mega Menu Panel -->
+        <div class="mega-menu-dropdown">
+          <div class="mega-menu-item">
+            <div class="mega-item-icon"><i class="ph-bold ph-chart-polar"></i></div>
+            <div>
+              <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-hi);">Strategy Engine</div>
+              <div style="font-size: 0.75rem; color: var(--text-mid);">8-step confluence & SMT</div>
+            </div>
+          </div>
+          <div class="mega-menu-item">
+            <div class="mega-item-icon"><i class="ph-bold ph-shield-check"></i></div>
+            <div>
+              <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-hi);">Liquidation Firewall</div>
+              <div style="font-size: 0.75rem; color: var(--text-mid);">Mathematical margin armor</div>
+            </div>
+          </div>
+          <div class="mega-menu-item">
+            <div class="mega-item-icon"><i class="ph-bold ph-waveform"></i></div>
+            <div>
+              <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-hi);">Audio Copilot</div>
+              <div style="font-size: 0.75rem; color: var(--text-mid);">Hinglish voice companion</div>
+            </div>
+          </div>
+          <div class="mega-menu-item">
+            <div class="mega-item-icon"><i class="ph-bold ph-lightning"></i></div>
+            <div>
+              <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-hi);">24/7 Daemon</div>
+              <div style="font-size: 0.75rem; color: var(--text-mid);">Sub-second TP/SL execution</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <a href="#overlays" class="nav-link">Overlays</a>
+      <a href="#controls" class="nav-link">Controls</a>
+      <a href="#dataviz" class="nav-link">Data Viz</a>
+    </nav>
+
+    <!-- Right Action Items -->
+    <div class="flex items-center gap-2">
+      <button type="button" class="cmd-k-chip" id="btn_trigger_cmdk">
+        <i class="ph-bold ph-command"></i> Ctrl+K
+      </button>
+      <button type="button" class="btn-primary" id="btn_test_trade">
+        Launch Terminal <i class="ph-bold ph-arrow-up-right"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN GALLERY CONTENT -->
+  <main class="gallery-container">
+
+    <section class="section-header" style="text-align: left; max-width: 800px; margin-bottom: var(--space-8);">
+      <div class="section-tag glass-pill" style="color: var(--cyan); border-color: var(--cyan-border);">
+        <i class="ph-bold ph-stack"></i> LIVING COMPONENT GALLERY
+      </div>
+      <h1 class="text-display-1">
+        Production Components for <span class="text-gradient-institutional">Project MONDAY</span>
+      </h1>
+      <p class="text-body" style="margin-top: var(--space-2);">
+        Every button, overlay, slider, and data visualization primitive built with precision dark glassmorphism. Test interactions in real time below.
+      </p>
+    </section>
+
+    <!-- =========================================================================
+         SECTION 1: BUTTONS & CAPSULES
+         ========================================================================= -->
+    <section class="gallery-section" id="buttons">
+      <div class="glass-panel component-card-wrap">
+        <div class="component-title-row">
+          <div>
+            <h2 class="text-h2">Buttons, Capsules & Audio Triggers</h2>
+            <p class="text-body-sm text-mid">Tactile feedback with WebAudio procedural synthesizer.</p>
+          </div>
+          <span class="code-badge">.btn-primary / .btn-secondary</span>
+        </div>
+
+        <div class="flex items-center gap-3" style="flex-wrap: wrap;">
+          <button type="button" class="btn-primary" id="btn_click_primary">
+            Primary Action <i class="ph-bold ph-lightning"></i>
+          </button>
+          <button type="button" class="btn-secondary" id="btn_click_secondary">
+            <i class="ph-bold ph-sliders"></i> Secondary Glass
+          </button>
+          <button type="button" class="btn-ghost">
+            Ghost Action
+          </button>
+          <button type="button" class="btn-danger" id="btn_click_danger">
+            <i class="ph-bold ph-power"></i> Panic Liquidate
+          </button>
+          <button type="button" class="btn-primary" disabled>
+            Disabled State
+          </button>
+          <button type="button" class="btn-secondary" id="btn_toggle_sfx">
+            <i class="ph-bold ph-speaker-high" id="sfx_icon"></i> SFX: Unmuted
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         SECTION 2: OVERLAYS (MODALS, DRAWERS, TOASTS & COMMAND PALETTE)
+         ========================================================================= -->
+    <section class="gallery-section" id="overlays">
+      <div class="glass-panel component-card-wrap">
+        <div class="component-title-row">
+          <div>
+            <h2 class="text-h2">Overlays & Dialog System</h2>
+            <p class="text-body-sm text-mid">Glass Modals, Slide-Over Drawers, Toast Notification Stack and Command Palette.</p>
+          </div>
+          <span class="code-badge">Ctrl+K / .drawer-panel / .modal-dialog</span>
+        </div>
+
+        <div class="flex items-center gap-3" style="flex-wrap: wrap;">
+          <button type="button" class="btn-secondary" id="btn_open_modal">
+            <i class="ph-bold ph-browser"></i> Open Glass Modal
+          </button>
+          <button type="button" class="btn-secondary" id="btn_open_drawer">
+            <i class="ph-bold ph-sidebar-simple"></i> Open Engine Drawer
+          </button>
+          <button type="button" class="btn-secondary" id="btn_toast_profit">
+            <i class="ph-bold ph-check-circle" style="color: var(--profit);"></i> Profit Toast
+          </button>
+          <button type="button" class="btn-secondary" id="btn_toast_shield">
+            <i class="ph-bold ph-shield-warning" style="color: var(--shield);"></i> Shield Warning Toast
+          </button>
+          <button type="button" class="btn-secondary" id="btn_open_cmdk">
+            <i class="ph-bold ph-command" style="color: var(--cyan);"></i> Command Palette (Ctrl+K)
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         SECTION 3: CONTROLS (SEGMENTED, SLIDERS, TOGGLES, ACCORDION)
+         ========================================================================= -->
+    <section class="gallery-section" id="controls">
+      <div class="bento-grid">
+        <!-- Segmented Controls & Sliders -->
+        <div class="glass-card bento-col-6 component-card-wrap">
+          <div class="component-title-row">
+            <div>
+              <h3 class="text-h3">Segmented Tabs & Sliders</h3>
+              <p class="text-body-sm text-mid">Dynamic leverage & direction switcher</p>
+            </div>
+            <span class="code-badge">.segmented-control</span>
+          </div>
+
+          <!-- Long / Short Switcher -->
+          <div class="segmented-control">
+            <button type="button" class="segment-btn segment-btn-long active" id="seg_long">LONG</button>
+            <button type="button" class="segment-btn segment-btn-short" id="seg_short">SHORT</button>
+          </div>
+
+          <!-- Timeframe Switcher -->
+          <div class="segmented-control">
+            <button type="button" class="segment-btn active">1H</button>
+            <button type="button" class="segment-btn">15M</button>
+            <button type="button" class="segment-btn">5M</button>
+            <button type="button" class="segment-btn">1M</button>
+          </div>
+
+          <!-- Interactive Leverage Slider -->
+          <div class="slider-group" style="margin-top: var(--space-2);">
+            <div class="slider-header">
+              <span>Dynamic Leverage (Tier-1 Crypto)</span>
+              <span class="slider-val-bubble" id="lev_val_bubble">20x</span>
+            </div>
+            <input type="range" class="custom-range" id="slider_leverage" min="1" max="100" value="20">
+            <div class="flex justify-between text-micro text-low">
+              <span>1x (Spot)</span>
+              <span>25x</span>
+              <span>50x</span>
+              <span>100x (Max)</span>
+            </div>
+          </div>
+
+          <!-- Spring Toggle Switches -->
+          <div class="flex items-center gap-4" style="margin-top: var(--space-2);">
+            <div class="toggle-switch-wrapper" id="toggle_autopilot_wrap">
+              <div class="toggle-switch checked" id="toggle_autopilot">
+                <div class="toggle-knob"></div>
+              </div>
+              <span class="text-body-sm">24/7 Autonomous Daemon</span>
+            </div>
+
+            <div class="toggle-switch-wrapper" id="toggle_shield_wrap">
+              <div class="toggle-switch checked" id="toggle_shield">
+                <div class="toggle-knob"></div>
+              </div>
+              <span class="text-body-sm">Event Risk Shield</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accordion Component -->
+        <div class="glass-card bento-col-6 component-card-wrap">
+          <div class="component-title-row">
+            <div>
+              <h3 class="text-h3">Accordion & Disclosures</h3>
+              <p class="text-body-sm text-mid">Smooth expansion with rotating chevron</p>
+            </div>
+            <span class="code-badge">.accordion-item</span>
+          </div>
+
+          <div class="accordion-item open">
+            <button type="button" class="accordion-trigger">
+              <span>How does MONDAY prevent liquidation?</span>
+              <i class="ph-bold ph-caret-down accordion-chevron"></i>
+            </button>
+            <div class="accordion-content">
+              <p class="text-body-sm text-mid">
+                The Derivatives & Liquidation Firewall Engine mathematically verifies the exact maintenance margin before order execution. Any trade whose Stop Loss falls beyond the liquidation price is rejected instantly.
+              </p>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button type="button" class="accordion-trigger">
+              <span>Why is 1:3.2 Asymmetry mandated?</span>
+              <i class="ph-bold ph-caret-down accordion-chevron"></i>
+            </button>
+            <div class="accordion-content">
+              <p class="text-body-sm text-mid">
+                With a strict 1:3.2 Risk:Reward ratio and 1% risk per trade, a trader remains mathematically profitable even with a modest 35% win rate over a 100-trade sequence.
+              </p>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button type="button" class="accordion-trigger">
+              <span>How does the Hinglish Voice Copilot work?</span>
+              <i class="ph-bold ph-caret-down accordion-chevron"></i>
+            </button>
+            <div class="accordion-content">
+              <p class="text-body-sm text-mid">
+                MONDAY uses a dual-accent Web Speech synthesizer: natural Indian accent for empathetic conversational advice, and crisp global English for price numerals and R-multiples.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         SECTION 4: DATA VISUALIZATION PRIMITIVES
+         ========================================================================= -->
+    <section class="gallery-section" id="dataviz">
+      <div class="bento-grid">
+        
+        <!-- Confluence Gauge Card -->
+        <div class="glass-card bento-col-4 component-card-wrap items-center" style="text-align: center;">
+          <div class="component-title-row" style="width: 100%;">
+            <h3 class="text-h3">Confluence Gauge</h3>
+            <span class="code-badge">SVG Ring</span>
+          </div>
+
+          <!-- Interactive SVG Gauge -->
+          <div class="confluence-gauge-wrap" id="demo_gauge">
+            <svg class="gauge-svg" viewBox="0 0 140 140">
+              <circle class="gauge-track" cx="70" cy="70" r="56"></circle>
+              <circle class="gauge-progress" cx="70" cy="70" r="56"></circle>
+            </svg>
+            <div class="gauge-inner-val">
+              <div class="gauge-score">85%</div>
+              <div class="gauge-grade">GRADE A+</div>
+            </div>
+          </div>
+
+          <!-- Slider to test Gauge -->
+          <div style="width: 100%; margin-top: var(--space-2);">
+            <div class="flex justify-between text-xs text-low">
+              <span>Score Simulator</span>
+              <span id="gauge_val_label">85%</span>
+            </div>
+            <input type="range" class="custom-range" id="slider_gauge" min="0" max="100" value="85">
+          </div>
+        </div>
+
+        <!-- Audio Waveform Visualizer & Hinglish AI Voice Card -->
+        <div class="glass-card bento-col-4 component-card-wrap">
+          <div class="component-title-row">
+            <h3 class="text-h3">Voice Waveform HUD</h3>
+            <span class="code-badge text-violet">AI Copilot</span>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(139, 92, 246, 0.2); border: 1px solid var(--violet-border); display: flex; align-items: center; justify-content: center; color: var(--violet); font-size: 1.5rem;">
+              <i class="ph-bold ph-waveform"></i>
+            </div>
+            <div>
+              <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-hi);">MONDAY AI Voice</div>
+              <div class="text-micro text-violet">Bilingual Hinglish / Eng</div>
+            </div>
+          </div>
+
+          <!-- Dynamic Waveform Bars -->
+          <div class="waveform-bars" style="margin: var(--space-2) 0;">
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+          </div>
+
+          <p class="text-xs text-mid" style="background: rgba(0, 0, 0, 0.4); padding: 10px; border-radius: var(--radius-sm); border-left: 2px solid var(--violet);">
+            "Bhai, 1H EMA stack aligned hai. Pullback discount zone me aate hi confirmation wick mil gaya!"
+          </p>
+
+          <button type="button" class="btn-secondary" id="btn_speak_demo" style="width: 100%;">
+            <i class="ph-bold ph-play"></i> Play Voice Briefing
+          </button>
+        </div>
+
+        <!-- 365-Day Heatmap Miniature Preview -->
+        <div class="glass-card bento-col-4 component-card-wrap">
+          <div class="component-title-row">
+            <h3 class="text-h3">365-Day PnL Matrix</h3>
+            <span class="code-badge">52x7 Grid</span>
+          </div>
+
+          <div class="flex justify-between items-center text-xs">
+            <span class="text-mid">Sample 26 Weeks:</span>
+            <span class="text-profit num-ticker" style="font-weight: 700;">+4.18R Total</span>
+          </div>
+
+          <div class="heatmap-mini-grid" id="demo_heatmap_grid">
+            <!-- Dynamically populated -->
+          </div>
+
+          <div class="flex justify-between items-center text-micro text-low" style="margin-top: auto;">
+            <span>Loss (-1R)</span>
+            <div class="flex gap-1">
+              <span style="width: 8px; height: 8px; background: #f43f5e; border-radius: 2px;"></span>
+              <span style="width: 8px; height: 8px; background: rgba(255, 255, 255, 0.05); border-radius: 2px;"></span>
+              <span style="width: 8px; height: 8px; background: #10b981; border-radius: 2px;"></span>
+            </div>
+            <span>Profit (+3R)</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         SECTION 5: FEEDBACK, SKELETONS & STATUSES
+         ========================================================================= -->
+    <section class="gallery-section" id="feedback">
+      <div class="glass-panel component-card-wrap">
+        <div class="component-title-row">
+          <div>
+            <h2 class="text-h2">Feedback States, Skeletons & Status Dots</h2>
+            <p class="text-body-sm text-mid">Smooth loading shimmers and live pulse indicators.</p>
+          </div>
+          <span class="code-badge">.skeleton-shimmer</span>
+        </div>
+
+        <div class="bento-grid">
+          <!-- Live Status Chips -->
+          <div class="bento-col-6 flex items-center gap-3" style="flex-wrap: wrap;">
+            <div class="glass-pill text-profit">
+              <span class="ai-pulse-dot" style="background: var(--profit); box-shadow: 0 0 8px var(--profit);"></span>
+              Live Coinbase WebSocket (2ms)
+            </div>
+            <div class="glass-pill text-shield">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--shield); box-shadow: 0 0 8px var(--shield);"></span>
+              FOMC Lockout in 14m
+            </div>
+            <div class="glass-pill text-cyan">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 8px var(--cyan);"></span>
+              NSE 150+ Feed Connected
+            </div>
+          </div>
+
+          <!-- Skeleton Loaders -->
+          <div class="bento-col-6 flex flex-col gap-2">
+            <div class="skeleton-shimmer" style="height: 16px; width: 65%;"></div>
+            <div class="skeleton-shimmer" style="height: 12px; width: 90%;"></div>
+            <div class="skeleton-shimmer" style="height: 12px; width: 45%;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =========================================================================
+       MODAL DEMO
+       ========================================================================= -->
+  <div class="modal-backdrop" id="demo_modal">
+    <div class="modal-dialog">
+      <div class="flex justify-between items-center" style="margin-bottom: var(--space-3); border-bottom: 1px solid var(--glass-border); padding-bottom: var(--space-2);">
+        <div class="flex items-center gap-2">
+          <i class="ph-bold ph-shield-check" style="color: var(--profit); font-size: 1.25rem;"></i>
+          <h3 class="text-h3">Quantitative Risk Firewall</h3>
+        </div>
+        <button type="button" class="btn-ghost" id="btn_close_modal"><i class="ph-bold ph-x"></i></button>
+      </div>
+      <p class="text-body-sm text-mid" style="margin-bottom: var(--space-4);">
+        Institutional order placement requires strict 1% maximum account risk allocation. Stop loss distance is mathematically locked at $67,820.00.
+      </p>
+      <div class="flex justify-between items-center">
+        <span class="num-ticker text-profit" style="font-weight: 700;">Risk: $20.00 (1.0R)</span>
+        <div class="flex gap-2">
+          <button type="button" class="btn-ghost" id="btn_cancel_modal">Cancel</button>
+          <button type="button" class="btn-primary" id="btn_confirm_modal">Confirm Order</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       DRAWER DEMO (ENGINE DEEP DIVE)
+       ========================================================================= -->
+  <div class="drawer-backdrop" id="demo_drawer">
+    <div class="drawer-panel">
+      <div class="flex justify-between items-center" style="margin-bottom: var(--space-4); border-bottom: 1px solid var(--glass-border); padding-bottom: var(--space-2);">
+        <div class="flex items-center gap-2">
+          <i class="ph-bold ph-chart-polar text-cyan" style="font-size: 1.5rem;"></i>
+          <h3 class="text-h3">Strategy Engine Blueprint</h3>
+        </div>
+        <button type="button" class="btn-ghost" id="btn_close_drawer"><i class="ph-bold ph-x"></i></button>
+      </div>
+
+      <div class="flex flex-col gap-4">
+        <div>
+          <span class="text-micro text-cyan">RULE 1 OF 8</span>
+          <h4 class="text-h3" style="margin-top: 4px;">1H Triple-EMA Directional Gate</h4>
+          <p class="text-body-sm text-mid" style="margin-top: 4px;">
+            EMA 12 > EMA 26 > EMA 50 enforces hard bullish stack. Counter-trend trades are completely blocked at the engine level.
+          </p>
+        </div>
+
+        <div style="background: rgba(0, 0, 0, 0.4); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border);">
+          <div class="text-micro text-profit">ASYMMETRIC FORMULATION</div>
+          <div class="num-ticker text-hi" style="font-size: 1.1rem; margin-top: 4px;">
+            Target = Entry + (Risk &times; 3.2)
+          </div>
+        </div>
+
+        <button type="button" class="btn-primary" id="btn_drawer_action" style="width: 100%; margin-top: var(--space-4);">
+          Simulate Engine Scan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       COMMAND PALETTE MODAL (Ctrl+K)
+       ========================================================================= -->
+  <div class="modal-backdrop" id="cmd_palette_modal">
+    <div class="modal-dialog cmd-palette-dialog">
+      <div class="cmd-palette-input-wrap">
+        <i class="ph ph-magnifying-glass" style="font-size: 1.25rem; color: var(--cyan);"></i>
+        <input type="text" class="cmd-palette-input" placeholder="Type a ticker, engine or command..." id="cmd_input">
+        <span class="code-badge">ESC to close</span>
+      </div>
+      <div class="cmd-palette-results">
+        <div class="cmd-item selected" data-action="btc">
+          <div class="flex items-center gap-2">
+            <i class="ph-bold ph-currency-btc text-profit"></i>
+            <span style="font-weight: 600;">BTC/USD Perpetual</span>
+          </div>
+          <span class="num-ticker text-xs text-profit">$68,432.50</span>
+        </div>
+        <div class="cmd-item" data-action="nifty">
+          <div class="flex items-center gap-2">
+            <i class="ph-bold ph-chart-line-up text-cyan"></i>
+            <span style="font-weight: 600;">NIFTY 50 Futures</span>
+          </div>
+          <span class="num-ticker text-xs text-cyan">₹25,120.40</span>
+        </div>
+        <div class="cmd-item" data-action="autopilot">
+          <div class="flex items-center gap-2">
+            <i class="ph-bold ph-lightning text-shield"></i>
+            <span>Toggle 24/7 Autonomous Daemon</span>
+          </div>
+          <span class="text-micro text-shield">RUNNING</span>
+        </div>
+        <div class="cmd-item" data-action="passbook">
+          <div class="flex items-center gap-2">
+            <i class="ph-bold ph-book-open"></i>
+            <span>View 365-Day PnL Passbook</span>
+          </div>
+          <span class="text-micro text-mid">LEDGER</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script type="module" src="js/foundation/cursorGlow.js"></script>
+  <script type="module" src="js/foundation/smoothScroll.js"></script>
+
+  <script type="module">
+    import { sfx } from './components/sfx.js';
+    import { overlays } from './components/overlays.js';
+    import { DataVizEngine } from './components/dataViz.js';
+
+    // 1. Audio SFX Buttons
+    document.getElementById('btn_click_primary').addEventListener('click', () => {
+      sfx.playClick();
+      overlays.showToast({ title: 'Order Ticket Ready', message: 'Calculated 1% account risk.', type: 'cyan' });
+    });
+
+    document.getElementById('btn_click_secondary').addEventListener('click', () => {
+      sfx.playClick();
+    });
+
+    document.getElementById('btn_click_danger').addEventListener('click', () => {
+      sfx.playShieldAlert();
+      overlays.showToast({ title: 'Emergency Close', message: 'All open positions liquidated safely.', type: 'risk' });
+    });
+
+    document.getElementById('btn_test_trade').addEventListener('click', () => {
+      sfx.playOrderExecuted();
+      overlays.showToast({ title: 'Trade Confirmed (+3.20R)', message: 'Order filled at $68,432.50', type: 'profit' });
+    });
+
+    // SFX Mute Toggle
+    const btnSfxToggle = document.getElementById('btn_toggle_sfx');
+    const sfxIcon = document.getElementById('sfx_icon');
+    btnSfxToggle.addEventListener('click', () => {
+      const isMuted = sfx.toggleMute();
+      btnSfxToggle.innerHTML = isMuted 
+        ? '<i class="ph-bold ph-speaker-simple-slash" id="sfx_icon"></i> SFX: Muted'
+        : '<i class="ph-bold ph-speaker-high" id="sfx_icon"></i> SFX: Unmuted';
+    });
+
+    // 2. Overlays Demo
+    document.getElementById('btn_open_modal').addEventListener('click', () => overlays.openModal('demo_modal'));
+    document.getElementById('btn_close_modal').addEventListener('click', () => overlays.closeModal('demo_modal'));
+    document.getElementById('btn_cancel_modal').addEventListener('click', () => overlays.closeModal('demo_modal'));
+    document.getElementById('btn_confirm_modal').addEventListener('click', () => {
+      overlays.closeModal('demo_modal');
+      overlays.showToast({ title: 'Execution Locked', message: 'Strict 1% SL active.', type: 'profit' });
+    });
+
+    document.getElementById('btn_open_drawer').addEventListener('click', () => overlays.openDrawer('demo_drawer'));
+    document.getElementById('btn_close_drawer').addEventListener('click', () => overlays.closeDrawer('demo_drawer'));
+    document.getElementById('btn_drawer_action').addEventListener('click', () => {
+      sfx.playClick();
+      overlays.showToast({ title: 'Engine Scan Triggered', message: 'Triple-EMA stack verified.', type: 'cyan' });
+    });
+
+    // Toast Triggers
+    document.getElementById('btn_toast_profit').addEventListener('click', () => {
+      overlays.showToast({ title: 'Target Hit (+3.2R)', message: 'Net profit +$64.00 credited to ledger.', type: 'profit' });
+    });
+
+    document.getElementById('btn_toast_shield').addEventListener('click', () => {
+      overlays.showToast({ title: 'Event Risk Shield Triggered', message: 'Autopilot suspended: High-impact US CPI release in 14m.', type: 'shield' });
+    });
+
+    // Command Palette
+    document.getElementById('btn_open_cmdk').addEventListener('click', () => overlays.openModal('cmd_palette_modal'));
+    document.getElementById('btn_trigger_cmdk').addEventListener('click', () => overlays.openModal('cmd_palette_modal'));
+
+    // 3. Segmented Long/Short
+    const segLong = document.getElementById('seg_long');
+    const segShort = document.getElementById('seg_short');
+    segLong.addEventListener('click', () => {
+      segLong.classList.add('active');
+      segShort.classList.remove('active');
+      sfx.playClick();
+    });
+    segShort.addEventListener('click', () => {
+      segShort.classList.add('active');
+      segLong.classList.remove('active');
+      sfx.playClick();
+    });
+
+    // 4. Sliders
+    const levSlider = document.getElementById('slider_leverage');
+    const levBubble = document.getElementById('lev_val_bubble');
+    levSlider.addEventListener('input', (e) => {
+      levBubble.textContent = `${e.target.value}x`;
+    });
+
+    // 5. Accordion
+    document.querySelectorAll('.accordion-trigger').forEach(trigger => {
+      trigger.addEventListener('click', () => {
+        const item = trigger.closest('.accordion-item');
+        const isOpen = item.classList.contains('open');
+        document.querySelectorAll('.accordion-item').forEach(i => i.classList.remove('open'));
+        if (!isOpen) item.classList.add('open');
+        sfx.playClick();
+      });
+    });
+
+    // 6. Confluence Gauge Simulator
+    const gaugeWrap = document.getElementById('demo_gauge');
+    const gaugeSlider = document.getElementById('slider_gauge');
+    const gaugeLabel = document.getElementById('gauge_val_label');
+
+    function updateGaugeView(val) {
+      gaugeLabel.textContent = `${val}%`;
+      let grade = 'GRADE C [NO EDGE]';
+      if (val >= 85) grade = 'GRADE A+ [INSTITUTIONAL]';
+      else if (val >= 75) grade = 'GRADE A [CONFIRMED]';
+      else if (val >= 50) grade = 'GRADE B [DEVELOPING]';
+      DataVizEngine.updateConfluenceGauge(gaugeWrap, val, grade);
+    }
+    updateGaugeView(85);
+    gaugeSlider.addEventListener('input', (e) => updateGaugeView(Number(e.target.value)));
+
+    // 7. 365-Day Heatmap
+    const heatmapGrid = document.getElementById('demo_heatmap_grid');
+    DataVizEngine.render365Heatmap(heatmapGrid, ({ day, pnlR }) => {
+      sfx.playClick();
+      overlays.showToast({ 
+        title: `Day ${day} Statement`, 
+        message: `Net PnL: ${pnlR >= 0 ? '+' : ''}${pnlR}R (${pnlR >= 0 ? 'Profit' : 'Loss'})`, 
+        type: pnlR >= 0 ? 'profit' : 'risk' 
+      });
+    });
+
+    // 8. Hinglish Voice Synthesis Demo
+    document.getElementById('btn_speak_demo').addEventListener('click', () => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const text = "Bhai, 1H EMA stack aligned hai. 5M pullback discount zone me enter hua aur rejection wick confirm ho chuki hai. Target strict 1:3.2 lock rakhein!";
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'hi-IN';
+        utterance.rate = 1.05;
+        window.speechSynthesis.speak(utterance);
+      } else {
+        overlays.showToast({ title: 'Speech Synthesis', message: 'Web Speech API not supported in this browser.', type: 'risk' });
+      }
+    });
+  </script>
+</body>
+</html>
+

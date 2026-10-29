@@ -1,0 +1,150 @@
+/**
+ * PROJECT MONDAY — LIQUID-GLASS GLASSMORPHISM SYSTEM
+ * Soft refraction, luminous top edges, interactive cursor-following specular highlight
+ */
+
+/* Baseline Glass Surface */
+.glass-card,
+.glass-panel,
+.glass-pill,
+.glass-input,
+.glass-hero-card {
+  position: relative;
+  background: var(--glass-fill);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-fill-hi), 0 20px 60px -20px rgba(0, 0, 0, 0.6);
+  border-radius: var(--radius-md);
+  transition: border-color var(--dur-component) var(--ease-entrance),
+              box-shadow var(--dur-component) var(--ease-entrance),
+              transform var(--dur-component) var(--ease-entrance);
+  overflow: hidden;
+}
+
+/* Luminous Top-Edge Light Reflection */
+.glass-card::before,
+.glass-panel::before,
+.glass-hero-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.22) 35%,
+    rgba(255, 255, 255, 0.35) 50%,
+    rgba(255, 255, 255, 0.22) 65%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Cursor-Following Radial Highlight (Hover Specular Reflection) */
+.glass-card::after,
+.glass-hero-card::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: radial-gradient(
+    450px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.03) 40%,
+    transparent 80%
+  );
+  opacity: 0;
+  transition: opacity var(--dur-component) var(--ease-smooth);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.glass-card:hover::after,
+.glass-hero-card:hover::after {
+  opacity: 1;
+}
+
+.glass-card:hover {
+  border-color: var(--glass-border-hi);
+  box-shadow: inset 0 1px 0 var(--glass-fill-ultra),
+              0 24px 70px -15px rgba(0, 0, 0, 0.75);
+}
+
+/* Interactive Lift on Hover */
+.glass-card-hover-lift:hover {
+  transform: translateY(-3px);
+}
+
+/* Tier Variations */
+.glass-panel {
+  background: var(--glass-fill-dense);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-2);
+}
+
+.glass-hero-card {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border-hi);
+  box-shadow: var(--elevation-3);
+}
+
+.glass-pill {
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.glass-pill:hover {
+  border-color: var(--glass-border-hi);
+  background: var(--glass-fill-hi);
+}
+
+/* Semantic Edge Accents (Functional Indicators) */
+.glass-profit-border {
+  border-color: var(--profit-border) !important;
+  box-shadow: inset 0 1px 0 var(--profit-glow),
+              0 15px 40px -10px var(--profit-glow) !important;
+}
+
+.glass-risk-border {
+  border-color: var(--risk-border) !important;
+  box-shadow: inset 0 1px 0 var(--risk-glow),
+              0 15px 40px -10px var(--risk-glow) !important;
+}
+
+.glass-shield-border {
+  border-color: var(--shield-border) !important;
+  box-shadow: inset 0 1px 0 var(--shield-glow),
+              0 15px 40px -10px var(--shield-glow) !important;
+}
+
+.glass-cyan-border {
+  border-color: var(--cyan-border) !important;
+  box-shadow: inset 0 1px 0 var(--cyan-glow),
+              0 15px 40px -10px var(--cyan-glow) !important;
+}
+
+.glass-violet-border {
+  border-color: var(--violet-border) !important;
+  box-shadow: inset 0 1px 0 var(--violet-glow),
+              0 15px 40px -10px var(--violet-glow) !important;
+}
+
+/* Fallback for Low-Power Devices or When Backdrop-Filter is Unsupported */
+@supports not (backdrop-filter: blur(20px)) {
+  .glass-card,
+  .glass-panel,
+  .glass-hero-card {
+    background: #0f131f;
+  }
+}
+

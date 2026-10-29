@@ -1,0 +1,2363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MONDAY — Market-Oriented Neural Decision Assistant for You</title>
+  <meta name="description" content="Meet MONDAY (Market-Oriented Neural Decision Assistant for You) — a real-time, multi-market AI trading companion combining live data, charts, historical context, and natural Hinglish/English voice interaction.">
+  
+  <!-- PWA & Mobile Meta -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#06070a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- High-Speed DNS Pre-connect for Zero-Lag Boot -->
+  <link rel="preconnect" href="https://api.exchange.coinbase.com" crossorigin>
+  <link rel="preconnect" href="https://s3.tradingview.com" crossorigin>
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Phosphor Icons -->
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="styles/tokens.css">
+  <link rel="stylesheet" href="styles/glass.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="styles/background.css">
+  <link rel="stylesheet" href="css/main.css?v=5.3">
+  <link rel="stylesheet" href="css/components.css?v=5.2">
+  <link rel="stylesheet" href="css/auth.css?v=4.7">
+  <link rel="stylesheet" href="css/multi-chart.css?v=6.1">
+  <link rel="stylesheet" href="css/saas-layout.css?v=1.0">
+  <!-- Master $1,000 Million FinTech Cockpit Master Stylesheet -->
+  <link rel="stylesheet" href="styles/terminal-billion.css?v=3.5">
+
+  <!-- Supabase JS Client (Non-blocking defer for instant HTML paint) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body data-mobile-page="chart">
+
+  <!-- Ambient Chromatic Background Orbs, 3D Liquidity Canvas & Tech Grid -->
+  <div class="ambient-background-layer" aria-hidden="true">
+    <div class="hero-3d-canvas-wrap" id="terminal_canvas_3d"></div>
+    <div class="ambient-orb orb-violet"></div>
+    <div class="ambient-orb orb-cyan"></div>
+    <div class="ambient-orb orb-emerald"></div>
+    <div class="ambient-grid"></div>
+    <div class="ambient-noise"></div>
+  </div>
+
+  <!-- =========================================================================
+       TWO-WAY SPLIT AUTH & LOGIN VIEW (Financial Intelligence & Multi-User)
+       ========================================================================= -->
+  <div class="auth-view-overlay" id="auth_view_overlay">
+    <div class="auth-split-container">
+      
+      <!-- LEFT SIDE: Trading Intelligence & Philosophy Hero -->
+      <div class="auth-hero-panel">
+        <div class="auth-brand-pill">
+          <div class="auth-brand-dot"></div>
+          <i class="ph ph-cpu"></i>
+          <span>MONDAY NEURAL ENGINE v2.5</span>
+        </div>
+
+        <h1 class="auth-hero-title">
+          The dual-market terminal that <span class="auth-gradient-text">thinks before you execute.</span>
+        </h1>
+
+        <p class="auth-hero-desc">
+          Institutional liquidity sweeps, autonomous 1:3 asymmetric risk firewalls, and an active Hinglish audio copilot engineered to protect your capital from emotional tilt.
+        </p>
+
+        <!-- Neural Market Confluence Radar Cockpit -->
+        <div class="auth-radar-card">
+          <div class="radar-card-header">
+            <div class="radar-live-status">
+              <span class="live-pulse-dot"></span>
+              <span class="radar-live-title">LIVE TELEMETRY STREAM</span>
+            </div>
+            <div class="radar-market-tickers">
+              <span class="ticker-chip nse">🇮🇳 NIFTY 24,912 <i class="ph-bold ph-trend-up"></i></span>
+              <span class="ticker-chip crypto">⚡ BTC $68,430 <i class="ph-bold ph-trend-up"></i></span>
+            </div>
+          </div>
+
+          <div class="radar-streams">
+            <!-- Row 1: Order Flow & Smart Money -->
+            <div class="radar-stream-row">
+              <div class="radar-icon-box flow"><i class="ph-bold ph-chart-polar"></i></div>
+              <div class="radar-stream-body">
+                <div class="radar-stream-head">
+                  <span class="radar-stream-name">Institutional Liquidity Sweep</span>
+                  <span class="radar-tag tag-bullish">FVG + SMT CONFIRMED</span>
+                </div>
+                <div class="radar-stream-sub">Smart money accumulation zone triggered across 15M/1H</div>
+              </div>
+            </div>
+
+            <!-- Row 2: Mathematical Risk Armor -->
+            <div class="radar-stream-row">
+              <div class="radar-icon-box shield"><i class="ph-bold ph-shield-check"></i></div>
+              <div class="radar-stream-body">
+                <div class="radar-stream-head">
+                  <span class="radar-stream-name">Quantitative Risk Firewall</span>
+                  <span class="radar-tag tag-shield">1.0% HARD STOP</span>
+                </div>
+                <div class="radar-stream-sub">Strict 1:3.2 asymmetric R-multiple • Zero emotional tilt allowed</div>
+              </div>
+            </div>
+
+            <!-- Row 3: Bilingual Voice Sentinel -->
+            <div class="radar-stream-row">
+              <div class="radar-icon-box voice"><i class="ph-bold ph-waveform"></i></div>
+              <div class="radar-stream-body">
+                <div class="radar-stream-head">
+                  <span class="radar-stream-name">Neural Audio Copilot (Hinglish)</span>
+                  <span class="radar-tag tag-voice">ACTIVE HUD</span>
+                </div>
+                <div class="radar-stream-quote">"Bhai, breakout trap confirm ho gaya. Stoploss strictly 24,840 pe lock rakho."</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Real-Time Confluence Probability Meter -->
+          <div class="radar-confluence-meter">
+            <div class="meter-labels">
+              <span class="meter-title">NEURAL CONFLUENCE SCORE</span>
+              <span class="meter-val">96.4% <span class="meter-grade">[GRADE A+ SETUP]</span></span>
+            </div>
+            <div class="radar-progress-track">
+              <div class="radar-progress-fill" style="width: 96.4%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metric Stat Boxes -->
+        <div class="auth-stats-row">
+          <div class="auth-stat-box">
+            <div class="auth-stat-icon fire"><i class="ph-bold ph-lightning"></i></div>
+            <div class="auth-stat-info">
+              <span class="auth-stat-val">+4.18R Asymmetry</span>
+              <span class="auth-stat-sub">Strict Mathematical Edge</span>
+            </div>
+          </div>
+          <div class="auth-stat-box">
+            <div class="auth-stat-icon lightning"><i class="ph-bold ph-globe-hemisphere-east"></i></div>
+            <div class="auth-stat-info">
+              <span class="auth-stat-val">NSE & Crypto Dual-Engine</span>
+              <span class="auth-stat-sub">150+ Stocks, IPOs & Web3 Feeds</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trading Philosophy Quote -->
+        <div class="auth-quote">
+          "Amateurs gamble on random predictions. Professionals calculate asymmetric probabilities. MONDAY bridges the gap."
+        </div>
+      </div>
+
+      <!-- RIGHT SIDE: Modern Auth Card -->
+      <div class="auth-card-panel">
+        <div class="auth-card">
+          <div class="auth-card-header">
+            <h2 class="auth-card-title" id="auth_card_title">Welcome Back</h2>
+            <p class="auth-card-subtitle" id="auth_card_subtitle">
+              Sign in or create your account to sync your trades
+            </p>
+          </div>
+
+          <!-- Segmented Tab Switcher -->
+          <div class="auth-segmented-control" role="tablist">
+            <button class="auth-segment-btn active" id="auth_tab_signin" type="button">Sign In</button>
+            <button class="auth-segment-btn" id="auth_tab_signup" type="button">Create Account</button>
+          </div>
+
+          <!-- Alert Box -->
+          <div class="auth-alert-box" id="auth_alert_box" style="display: none;"></div>
+
+          <!-- Auth Form -->
+          <form class="auth-form" id="auth_form">
+            <!-- Full Name (Only visible for Signup) -->
+            <div class="auth-input-group" id="auth_group_name" style="display: none;">
+              <label for="auth_input_name" class="auth-label">FULL NAME</label>
+              <input 
+                type="text" 
+                id="auth_input_name" 
+                class="auth-input" 
+                placeholder="Trader Name" 
+                autocomplete="name"
+              />
+            </div>
+
+            <div class="auth-input-group">
+              <label for="auth_input_email" class="auth-label">EMAIL ADDRESS</label>
+              <input 
+                type="email" 
+                id="auth_input_email" 
+                class="auth-input" 
+                placeholder="name@example.com" 
+                required 
+                autocomplete="email"
+              />
+            </div>
+
+            <div class="auth-input-group">
+              <div class="auth-label-row">
+                <label for="auth_input_password" class="auth-label">PASSWORD</label>
+                <a href="#" class="auth-forgot-link" id="auth_forgot_link">Forgot password?</a>
+              </div>
+              <div class="auth-password-wrapper">
+                <input 
+                  type="password" 
+                  id="auth_input_password" 
+                  class="auth-input" 
+                  placeholder="••••••••" 
+                  required 
+                  autocomplete="current-password"
+                />
+                <button type="button" class="auth-pwd-toggle" id="auth_pwd_toggle" title="Show/Hide password">
+                  <i class="ph ph-eye" id="auth_pwd_eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" class="auth-btn-primary" id="auth_submit_btn">
+              <span id="auth_submit_text">Sign In with Email</span>
+              <i class="ph ph-arrow-right"></i>
+            </button>
+          </form>
+
+          <div class="auth-divider">
+            <span>OR</span>
+          </div>
+
+          <!-- Social & Guest Buttons -->
+          <div class="auth-social-group">
+            <button class="auth-btn-social" id="auth_google_btn" type="button">
+              <svg class="google-icon" viewBox="0 0 24 24" width="18" height="18">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+              <span>Continue with Google</span>
+            </button>
+
+            <button class="auth-btn-guest" id="auth_guest_btn" type="button" title="Start instant trading session">
+              <i class="ph ph-user"></i>
+              <span>Continue as Guest</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Floating Corner Badge (Matching sample QR badge) -->
+        <div class="auth-corner-badge">
+          <div class="badge-qr-box">
+            <i class="ph ph-qr-code"></i>
+          </div>
+          <div class="badge-text-box">
+            <span class="badge-title">PROJECT MONDAY</span>
+            <span class="badge-sub">Web Terminal v2.5 • Dual Market</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Slide-In Mobile Drawer (Android Native APK Drawer) -->
+  <div class="mobile-drawer-backdrop" id="mobile_drawer_backdrop"></div>
+  <aside class="mobile-drawer" id="mobile_drawer" aria-label="Navigation Drawer">
+    <div class="drawer-header">
+      <div class="drawer-user-info">
+        <div class="drawer-avatar"><span id="drawer_avatar_initials">GT</span></div>
+        <div class="drawer-user-meta">
+          <span class="drawer-user-name" id="drawer_user_name">Guest Trader</span>
+          <span class="drawer-badge"><i class="ph-fill ph-shield-check"></i> Pro Paper Account</span>
+        </div>
+      </div>
+      <button class="drawer-close-btn" id="drawer_close_btn" type="button" aria-label="Close Drawer"><i class="ph ph-x"></i></button>
+    </div>
+
+    <div class="drawer-balance-card">
+      <div class="d-bal-lbl">Total Paper Equity</div>
+      <div class="d-bal-val" id="drawer_total_equity">$2,000.00</div>
+      <div class="d-bal-sub">
+        <span>Available: <strong id="drawer_avail_cash">$2,000.00</strong></span>
+        <span>Margin: <strong id="drawer_used_margin">$0.00</strong></span>
+      </div>
+    </div>
+
+    <!-- Quick Market Switch Segment -->
+    <div class="drawer-section-title">Trading Market</div>
+    <div class="drawer-market-selector">
+      <button class="d-market-btn active" data-market="Crypto" id="d_market_crypto" type="button">
+        <i class="ph ph-currency-btc"></i> <span>Crypto (Binance)</span>
+      </button>
+      <button class="d-market-btn" data-market="India" id="d_market_india" type="button">
+        <i class="ph ph-buildings"></i> <span>India (NSE/BSE)</span>
+      </button>
+    </div>
+
+    <!-- Market Intelligence Hub (Pattern Scan & Macro Radar for Mobile) -->
+    <div class="drawer-section-title d-flex-between">
+      <span>Market Intelligence</span>
+      <span class="d-live-pulse-badge"><span class="live-dot pulse-cyan"></span> LIVE SYNC</span>
+    </div>
+
+    <div class="drawer-radar-hub" id="drawer_radar_hub">
+      <div class="drawer-radar-nav">
+        <button class="d-radar-tab-btn active" id="d_tab_pattern" data-deck-view="hist" type="button">
+          <i class="ph ph-git-commit"></i> Pattern Scan
+        </button>
+        <button class="d-radar-tab-btn" id="d_tab_macro" data-deck-view="news" type="button">
+          <i class="ph ph-broadcast"></i> Macro Radar
+        </button>
+      </div>
+
+      <!-- Pattern Scan Drawer Card -->
+      <div class="d-radar-view active" id="drawer_historical_pattern_card">
+        <div class="d-pattern-header">
+          <div class="d-pattern-title" id="d_pattern_title"><i class="ph ph-git-commit"></i> Regime Pattern Matching</div>
+          <div class="d-pattern-badge" id="d_pattern_badge">Supportive</div>
+        </div>
+        <div class="d-pattern-stats-grid">
+          <div class="d-p-stat"><span class="k">Sample:</span> <span class="v" id="d_stat_sample">84 setups</span></div>
+          <div class="d-p-stat"><span class="k">Win Rate:</span> <span class="v text-bullish" id="d_stat_winrate">64.3%</span></div>
+          <div class="d-p-stat"><span class="k">Avg RR:</span> <span class="v" id="d_stat_rr">1:2.65</span></div>
+          <div class="d-p-stat"><span class="k">Regime:</span> <span class="v text-bullish" id="d_stat_regime">Supportive</span></div>
+        </div>
+        <div class="d-pattern-desc" id="d_pattern_desc">
+          Evaluating similar discount pullback behavior following Asian liquidity sweeps.
+        </div>
+      </div>
+
+      <!-- Macro Radar News Drawer List -->
+      <div class="d-radar-view" id="drawer_news_radar_list">
+        <div class="d-macro-empty"><span class="live-dot pulse-green"></span> Live Macro Feed syncing...</div>
+      </div>
+    </div>
+
+    <div class="drawer-section-title">Navigation & Tools</div>
+    <div class="drawer-menu-list">
+      <button class="drawer-menu-item" id="d_open_search" type="button">
+        <i class="ph ph-magnifying-glass item-ico cyan"></i>
+        <span>Search Asset / Watchlist</span>
+        <i class="ph ph-arrow-right arr-ico"></i>
+      </button>
+
+      <button class="drawer-menu-item" id="d_open_passbook" type="button">
+        <i class="ph ph-receipt item-ico emerald"></i>
+        <span>Financial Passbook & History</span>
+        <span class="d-chip">18% GST</span>
+        <i class="ph ph-arrow-right arr-ico"></i>
+      </button>
+
+      <button class="drawer-menu-item" id="d_open_journal" type="button">
+        <i class="ph ph-notebook item-ico purple"></i>
+        <span>Trade Journal & Analytics</span>
+        <i class="ph ph-arrow-right arr-ico"></i>
+      </button>
+
+      <button class="drawer-menu-item" id="d_toggle_autopilot" type="button">
+        <i class="ph-bold ph-robot item-ico purple"></i>
+        <span>Auto-Pilot Execution</span>
+        <span class="d-toggle-badge" id="d_autopilot_badge">OFF</span>
+      </button>
+
+      <button class="drawer-menu-item" id="d_toggle_voice" type="button">
+        <i class="ph ph-speaker-high item-ico cyan"></i>
+        <span>Hinglish Audio Copilot</span>
+        <span class="d-toggle-badge active" id="d_voice_badge">ON</span>
+      </button>
+
+      <div class="drawer-menu-item d-theme-row">
+        <div class="d-row-left">
+          <i class="ph ph-sun-dim item-ico amber"></i>
+          <span>Theme Mode</span>
+        </div>
+        <button class="d-theme-toggle-btn" id="d_theme_toggle_btn" type="button">
+          <span id="d_theme_mode_text">Dark</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="drawer-footer">
+      <span>MONDAY Neural Engine v2.5 • Capacitor APK Ready</span>
+    </div>
+  </aside>
+
+  <!-- SAAS APP SHELL & NAVIGATION WRAPPER -->
+  <div class="saas-app-container" id="saas_app_container">
+    <!-- Desktop Left Sidebar -->
+    <aside class="saas-sidebar" id="saas_sidebar">
+      <div class="saas-sidebar-header">
+        <div class="saas-brand-group">
+          <div class="saas-brand-icon">
+            <i class="ph ph-sparkle"></i>
+          </div>
+          <div class="saas-brand-text">
+            <div class="saas-brand-title">
+              MONDAY <span class="saas-brand-tag">v2.5</span>
+            </div>
+            <div class="saas-brand-sub">Neural Derivatives Desk</div>
+          </div>
+        </div>
+        <button class="saas-sidebar-toggle-btn" id="saas_sidebar_toggle_btn" type="button" title="Toggle Sidebar">
+          <i class="ph ph-sidebar-simple"></i>
+        </button>
+      </div>
+
+      <nav class="saas-nav-menu">
+        <div class="saas-nav-section-title">Platform</div>
+        <button class="saas-nav-item active" data-page="terminal" type="button">
+          <span class="saas-nav-icon"><i class="ph ph-chart-line-up"></i></span>
+          <span class="saas-nav-label">Terminal</span>
+        </button>
+        <button class="saas-nav-item" data-page="positions" type="button">
+          <span class="saas-nav-icon"><i class="ph ph-briefcase"></i></span>
+          <span class="saas-nav-label">Positions</span>
+          <span class="saas-nav-badge" id="saas_pos_badge">0</span>
+        </button>
+        <button class="saas-nav-item" data-page="passbook" type="button">
+          <span class="saas-nav-icon"><i class="ph ph-book-open"></i></span>
+          <span class="saas-nav-label">Passbook & Yearbook</span>
+        </button>
+        <button class="saas-nav-item" data-page="copilot" type="button">
+          <span class="saas-nav-icon"><i class="ph ph-chats-circle"></i></span>
+          <span class="saas-nav-label">AI Copilot</span>
+        </button>
+
+        <div class="saas-nav-section-title">Control</div>
+        <button class="saas-nav-item" data-page="settings" type="button">
+          <span class="saas-nav-icon"><i class="ph ph-sliders"></i></span>
+          <span class="saas-nav-label">Risk & Engine</span>
+        </button>
+        <a href="index.html" class="saas-nav-item" style="text-decoration: none; margin-top: 4px;">
+          <span class="saas-nav-icon"><i class="ph ph-house"></i></span>
+          <span class="saas-nav-label">Marketing Home</span>
+        </a>
+      </nav>
+
+      <div class="saas-sidebar-footer">
+        <div class="saas-footer-equity-card">
+          <div class="saas-footer-equity-lbl">Portfolio Equity</div>
+          <div class="saas-footer-equity-val" id="saas_sidebar_equity">$2,000.00</div>
+        </div>
+        <div class="saas-footer-user-row" id="saas_sidebar_account_btn">
+          <div class="saas-footer-avatar">HS</div>
+          <div class="saas-footer-user-meta">
+            <span class="saas-footer-user-name">Delta Pro Trader</span>
+            <span class="saas-footer-user-sub">Paper Trading Mode</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Viewport -->
+    <main class="saas-main-viewport" id="saas_main_viewport">
+      <!-- VIEW 1: TRADING TERMINAL -->
+      <div class="saas-page-view active" id="view_terminal">
+        <div class="terminal-wrapper" id="terminal_wrapper">
+    <!-- Top Header & Global Telemetry Strip -->
+    <header class="terminal-header">
+      <!-- Mobile Topbar Left: Hamburger Drawer Toggle -->
+      <button class="mobile-drawer-toggle" id="mobile_drawer_toggle" type="button" aria-label="Open Navigation Menu">
+        <i class="ph ph-list"></i>
+      </button>
+
+      <!-- Mobile Topbar Center: Quick Asset Switcher Pill -->
+      <div class="mobile-asset-pill" id="mobile_asset_pill" title="Tap to switch asset or view watchlist">
+        <span class="m-asset-sym" id="m_asset_sym">BTC</span>
+        <span class="m-asset-price" id="m_asset_price">--</span>
+        <span class="m-asset-chg text-bullish" id="m_asset_chg">--%</span>
+        <i class="ph ph-caret-down m-caret"></i>
+      </div>
+
+      <!-- Left Cluster: Primary Market Selector (Clean, Un-duplicated) -->
+      <div class="header-left-cluster">
+        <!-- Compact Market Dropdown Selector -->
+        <div class="market-dropdown-wrapper" id="market_dropdown_wrapper">
+          <button class="market-dropdown-trigger" id="market_dropdown_trigger" type="button" aria-haspopup="true" aria-expanded="false" title="Switch Market">
+            <i class="ph ph-currency-btc" id="market_trigger_icon"></i>
+            <span class="market-trigger-label" id="market_trigger_label">Crypto</span>
+            <i class="ph ph-caret-down market-caret" id="market_trigger_caret"></i>
+          </button>
+
+          <!-- Dropdown Popover Menu -->
+          <div class="market-dropdown-menu" id="market_dropdown_menu">
+            <div class="market-menu-header">
+              <span>Switch Trading Market</span>
+            </div>
+            <button class="market-menu-item active" data-market="Crypto" type="button">
+              <div class="market-item-left">
+                <div class="market-icon-box crypto">
+                  <i class="ph ph-currency-btc"></i>
+                </div>
+                <div class="market-item-text">
+                  <span class="market-name">Crypto Market</span>
+                  <span class="market-sub">Binance Live • 700+ Pairs</span>
+                </div>
+              </div>
+              <i class="ph ph-check market-check"></i>
+            </button>
+
+            <button class="market-menu-item" data-market="India" type="button">
+              <div class="market-item-left">
+                <div class="market-icon-box india">
+                  <i class="ph ph-buildings"></i>
+                </div>
+                <div class="market-item-text">
+                  <span class="market-name">India (NSE/BSE)</span>
+                  <span class="market-sub">NIFTY 50, Bank Nifty, Stocks</span>
+                </div>
+              </div>
+              <i class="ph ph-check market-check"></i>
+            </button>
+
+            <button class="market-menu-item phase-lock" data-market="US" type="button" title="Scheduled for Phase 4">
+              <div class="market-item-left">
+                <div class="market-icon-box us">
+                  <i class="ph ph-globe-stand"></i>
+                </div>
+                <div class="market-item-text">
+                  <span class="market-name">US Market</span>
+                  <span class="market-sub">NASDAQ, S&P 500</span>
+                </div>
+              </div>
+              <span class="phase-tag">Phase 4</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center Cluster: Search, Watchlist Tray & Live Ticker Strip -->
+      <div class="header-ticker-strip">
+        <!-- Search Bar with Floating Auto-Complete Dropdown -->
+        <div class="crypto-search-container" id="crypto_search_container">
+          <div class="crypto-search-box">
+            <i class="ph ph-magnifying-glass search-icon"></i>
+            <input 
+              type="text" 
+              id="crypto_search_input" 
+              class="crypto-search-input" 
+              placeholder="Search stock / crypto..." 
+              autocomplete="off"
+            />
+            <button type="button" class="search-clear-btn" id="search_clear_btn" style="display: none;">
+              <i class="ph ph-x"></i>
+            </button>
+          </div>
+
+          <!-- Floating Search Results Dropdown -->
+          <div class="crypto-search-results" id="crypto_search_results">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Watchlist Hub: Starred & Quick Asset Hub -->
+        <div class="watchlist-hub" id="watchlist_hub">
+          <!-- Watchlist Dropdown Tray Trigger -->
+          <div class="watchlist-tray-wrapper" id="watchlist_tray_wrapper">
+            <button class="watchlist-tray-btn" id="watchlist_tray_btn" type="button" aria-haspopup="true" aria-expanded="false" title="Your Starred Watchlist Hub">
+              <i class="ph-fill ph-star text-gold"></i>
+              <span class="tray-btn-label">Watchlist</span>
+              <i class="ph ph-caret-down tray-caret" id="watchlist_tray_caret"></i>
+            </button>
+
+            <!-- Floating Watchlist Popover Tray -->
+            <div class="watchlist-tray-popover" id="watchlist_tray_popover">
+              <div class="watchlist-tray-header">
+                <span class="tray-title"><i class="ph-fill ph-star text-gold"></i> Watchlist & Quick Assets</span>
+                <button class="tray-close-btn" id="watchlist_tray_close" type="button"><i class="ph ph-x"></i></button>
+              </div>
+              <div class="watchlist-tray-search-wrap">
+                <i class="ph ph-magnifying-glass tray-search-ico"></i>
+                <input 
+                  type="text" 
+                  id="watchlist_tray_search_input" 
+                  class="watchlist-tray-search-input" 
+                  placeholder="Search asset (BTC, ETH, SOL, NIFTY...)" 
+                  autocomplete="off" 
+                />
+              </div>
+              <div class="watchlist-tray-body" id="watchlist_tray_body">
+                <!-- Dynamically loaded with starred assets + categorized market explorer -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="live-ticker-box" id="live_ticker_box">
+          <span class="ticker-price" id="live_ticker_price">--</span>
+          <span class="ticker-change bullish" id="live_ticker_change">--%</span>
+        </div>
+        <script>
+          // Instant Zero-Delay Rehydration: Restores last real live price before first browser paint
+          (function() {
+            try {
+              const cached = localStorage.getItem('monday_last_known_ticker');
+              if (cached) {
+                const data = JSON.parse(cached);
+                if (data && data.price) {
+                  const pEl = document.getElementById('live_ticker_price');
+                  const cEl = document.getElementById('live_ticker_change');
+                  if (pEl) pEl.textContent = data.formattedPrice || ('$' + Number(data.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                  if (cEl && data.changePercent !== undefined) {
+                    const isPos = Number(data.changePercent) >= 0;
+                    cEl.textContent = (isPos ? '+' : '') + Number(data.changePercent).toFixed(2) + '%';
+                    cEl.className = 'ticker-change ' + (isPos ? 'bullish' : 'bearish');
+                  }
+                }
+              }
+            } catch (e) {}
+          })();
+        </script>
+
+        <div class="feed-badge" id="feed_badge">
+          <span class="feed-pulse"></span>
+          <span id="feed_source_badge">Live Feed</span>
+        </div>
+      </div>
+
+      <!-- Right Cluster: Account Balance & Live Equity HUD -->
+      <div class="header-actions">
+        <div class="account-pill" id="header_account_pill">
+          <div class="account-pill-main">
+            <span class="account-label" id="header_balance_label">Paper Balance:</span>
+            <span class="account-balance" id="header_balance">$2,000.00</span>
+          </div>
+          <div class="account-stat-group">
+            <span class="stat-num" id="header_total_r">+0.00R</span>
+            <span class="stat-pnl-usd" id="header_pnl_usd">(+$0.00)</span>
+            <button class="r-info-btn" id="btn_explain_r" type="button" aria-label="What is R-Multiple?" title="What is R? Click to understand Risk Multiples & Live Equity">
+              <i class="ph ph-question"></i>
+            </button>
+          </div>
+          <!-- Live Floating PnL: updates in realtime when trade is open -->
+          <div class="account-live-chip" id="header_live_chip" style="display: none;" title="Realtime floating PnL updating on live market ticks">
+            <span class="live-dot-pulse"></span>
+            <span class="live-chip-text" id="header_live_text">+$0.00 (+0.00R)</span>
+          </div>
+        </div>
+
+        <!-- Mobile Quick Search Toggle (Clean Un-congested Header) -->
+        <button class="mobile-search-toggle-btn" id="mobile_search_toggle_btn" type="button" aria-label="Search Assets" title="Search Stocks & Crypto">
+          <i class="ph ph-magnifying-glass"></i>
+        </button>
+
+        <!-- Instant Zero-Lag Synchronous HUD Restoration Script -->
+        <script>
+          (function() {
+            try {
+              var userRaw = localStorage.getItem('monday_auth_user');
+              var uid = 'default';
+              if (userRaw) {
+                var u = JSON.parse(userRaw);
+                if (u && u.id) uid = u.id;
+              }
+              var savedBal = localStorage.getItem('ai_copilot_paper_balance_' + uid);
+              var balEl = document.getElementById('header_balance');
+              if (balEl && savedBal && !isNaN(parseFloat(savedBal))) {
+                balEl.textContent = '$' + parseFloat(savedBal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+              }
+              var savedTrades = localStorage.getItem('ai_copilot_paper_trades_' + uid);
+              if (savedTrades) {
+                var trs = JSON.parse(savedTrades);
+                if (Array.isArray(trs)) {
+                  var closed = trs.filter(function(t) { return t.status === 'CLOSED'; });
+                  var netPnl = closed.reduce(function(acc, t) { return acc + (t.pnlUSD || 0); }, 0);
+                  var totalR = closed.reduce(function(acc, t) { return acc + (t.rMultiple || 0); }, 0);
+                  var rEl = document.getElementById('header_total_r');
+                  var pnlEl = document.getElementById('header_pnl_usd');
+                  if (rEl) {
+                    rEl.textContent = (totalR >= 0 ? '+' : '') + totalR.toFixed(2) + 'R';
+                    rEl.className = 'stat-num ' + (totalR >= 0 ? 'bullish' : 'bearish');
+                  }
+                  if (pnlEl) {
+                    pnlEl.textContent = '(' + (netPnl >= 0 ? '+' : '') + '$' + netPnl.toFixed(2) + ')';
+                    pnlEl.className = 'stat-pnl-usd ' + (netPnl >= 0 ? 'bullish' : 'bearish');
+                  }
+                  var openTrades = trs.filter(function(t) { return t.status === 'OPEN'; });
+                  var usedMargin = openTrades.reduce(function(acc, t) { return acc + (t.marginUSD || 0); }, 0);
+                  var curBal = (savedBal && !isNaN(parseFloat(savedBal))) ? parseFloat(savedBal) : 2000;
+                  var availBal = Math.max(0, curBal - usedMargin);
+                  var availEl = document.getElementById('order_avail_balance');
+                  if (availEl) {
+                    availEl.textContent = '$' + availBal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  }
+                }
+              }
+            } catch (e) {}
+          })();
+        </script>
+
+        <!-- Quick Ledger & Financial Passbook Trigger -->
+        <button class="header-ledger-btn" id="btn_quick_passbook" type="button" title="View Financial Passbook & 18% GST Trade Ledger">
+          <i class="ph-bold ph-receipt"></i>
+          <span>Passbook</span>
+        </button>
+
+        <!-- Autonomous AI Auto-Pilot Switch (Max 2 Concurrent Trades) -->
+        <div class="autopilot-toggle-wrapper" id="autopilot_toggle_wrapper" title="Autonomous AI Execution: MONDAY will automatically enter confirmed Grade A setups with strict 1% risk (Max 2 open trades)">
+          <div class="autopilot-label-group">
+            <span class="autopilot-dot-pulse"></span>
+            <span class="autopilot-text" id="autopilot_label_text">Auto-Pilot</span>
+          </div>
+          <button class="autopilot-switch" id="autopilot_toggle_btn" type="button" role="switch" aria-checked="false" aria-label="Toggle Autonomous AI Trading Mode">
+            <span class="autopilot-switch-thumb"></span>
+          </button>
+        </div>
+
+        <!-- Auto-Pilot Settings Trigger (Execution & Risk Standards) -->
+        <button class="autopilot-settings-btn" id="btn_autopilot_settings" type="button" title="Configure Auto-Pilot Risk & Execution Standards" aria-label="Auto-Pilot Settings" onclick="if(window.openAutopilotSettings) window.openAutopilotSettings(event);">
+          <i class="ph-bold ph-gear-six"></i>
+        </button>
+
+        <!-- Modern Notification Center Hub -->
+        <div class="notif-popover-wrapper" id="notif_popover_wrapper">
+          <button class="notif-bell-btn" id="notif_bell_btn" type="button" aria-haspopup="true" aria-expanded="false" title="Trade Alerts & Notifications">
+            <i class="ph-bold ph-bell"></i>
+            <span class="notif-badge" id="notif_unread_badge" style="display: none;">0</span>
+          </button>
+
+          <!-- Floating Notification Popover Drawer -->
+          <div class="notif-popover-menu" id="notif_popover_menu" role="dialog" aria-label="Trade Notifications">
+            <div class="notif-popover-header">
+              <div class="notif-header-title">
+                <i class="ph-bold ph-bell-simple"></i>
+                <span class="notif-header-text">Alerts</span>
+                <span class="notif-count-pill" id="notif_header_count">0 alerts</span>
+              </div>
+              <div class="notif-header-actions">
+                <button class="notif-action-btn" id="notif_mark_read_btn" type="button" title="Mark all as read" onclick="window.markAllNotificationsRead(event);">
+                  <i class="ph ph-checks"></i> <span>Mark read</span>
+                </button>
+                <button class="notif-action-btn danger" id="notif_clear_btn" type="button" title="Clear all notifications" onclick="window.clearAllNotifications(event);">
+                  <i class="ph ph-trash"></i>
+                </button>
+              </div>
+            </div>
+
+            <script>
+              window.markAllNotificationsRead = function(e) {
+                if (e) {
+                  if (typeof e.stopPropagation === 'function') e.stopPropagation();
+                  if (typeof e.preventDefault === 'function') e.preventDefault();
+                }
+                if (window.notificationManager && typeof window.notificationManager.markAllAsRead === 'function') {
+                  window.notificationManager.markAllAsRead(e);
+                  return;
+                }
+                if (window.__AI_COPILOT_APP__ && window.__AI_COPILOT_APP__.ui && window.__AI_COPILOT_APP__.ui.notificationManager) {
+                  window.__AI_COPILOT_APP__.ui.notificationManager.markAllAsRead(e);
+                  return;
+                }
+                try {
+                  var data = localStorage.getItem('monday_notifications_v1');
+                  if (data) {
+                    var items = JSON.parse(data);
+                    items.forEach(function(n) { n.read = true; });
+                    localStorage.setItem('monday_notifications_v1', JSON.stringify(items));
+                  }
+                  var badge = document.getElementById('notif_unread_badge');
+                  if (badge) badge.style.display = 'none';
+                  var countEl = document.getElementById('notif_header_count');
+                  if (countEl) {
+                    countEl.textContent = '0 unread';
+                    countEl.className = 'notif-count-pill';
+                  }
+                  var list = document.getElementById('notif_list');
+                  if (list) {
+                    list.querySelectorAll('.notif-item').forEach(function(el) {
+                      el.classList.remove('unread');
+                      el.classList.add('read');
+                    });
+                    list.querySelectorAll('.notif-dot').forEach(function(el) {
+                      el.remove();
+                    });
+                  }
+                } catch(err) {
+                  console.warn('markAllNotificationsRead fallback err:', err);
+                }
+              };
+
+              window.clearAllNotifications = function(e) {
+                if (e) {
+                  if (typeof e.stopPropagation === 'function') e.stopPropagation();
+                  if (typeof e.preventDefault === 'function') e.preventDefault();
+                }
+                if (window.notificationManager && typeof window.notificationManager.clearAll === 'function') {
+                  window.notificationManager.clearAll(e);
+                  return;
+                }
+                if (window.__AI_COPILOT_APP__ && window.__AI_COPILOT_APP__.ui && window.__AI_COPILOT_APP__.ui.notificationManager) {
+                  window.__AI_COPILOT_APP__.ui.notificationManager.clearAll(e);
+                  return;
+                }
+                try {
+                  localStorage.setItem('monday_notifications_v1', '[]');
+                  var badge = document.getElementById('notif_unread_badge');
+                  if (badge) badge.style.display = 'none';
+                  var countEl = document.getElementById('notif_header_count');
+                  if (countEl) {
+                    countEl.textContent = '0 alerts';
+                    countEl.className = 'notif-count-pill';
+                  }
+                  var list = document.getElementById('notif_list');
+                  if (list) {
+                    list.innerHTML = '<div class="notif-empty-state"><div class="notif-empty-icon"><i class="ph ph-bell-simple-slash"></i></div><div class="notif-empty-title">All Caught Up</div><div class="notif-empty-desc">No trade or setup notifications yet.</div></div>';
+                  }
+                } catch(err) {
+                  console.warn('clearAllNotifications fallback err:', err);
+                }
+              };
+            </script>
+
+            <!-- Scrollable List of Notifications -->
+            <div class="notif-list" id="notif_list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Google-Style User Profile & Utilities Popover Hub -->
+        <div class="profile-popover-wrapper" id="profile_popover_wrapper">
+          <button class="profile-avatar-btn" id="profile_avatar_btn" type="button" aria-haspopup="true" aria-expanded="false" title="Account, Portfolio & Settings">
+            <div class="avatar-circle" id="profile_avatar_circle">
+              <span class="avatar-initials" id="profile_avatar_initials">GT</span>
+            </div>
+            <i class="ph ph-caret-down avatar-caret" id="profile_avatar_caret"></i>
+          </button>
+
+          <!-- Floating Profile Dropdown Popover Menu -->
+          <div class="profile-popover-menu" id="profile_popover_menu" role="menu">
+            <!-- User Header Card -->
+            <div class="popover-user-card">
+              <div class="popover-user-avatar">
+                <span class="popover-avatar-initials" id="popover_avatar_initials">GT</span>
+              </div>
+              <div class="popover-user-meta">
+                <span class="popover-user-name" id="user_display_name">Guest Trader</span>
+                <span class="popover-account-badge"><i class="ph-fill ph-shield-check"></i> Pro Paper Account</span>
+              </div>
+            </div>
+
+            <!-- Portfolio & Capital Allocation Snapshot -->
+            <div class="popover-portfolio-card" id="popover_portfolio_card">
+              <div class="popover-card-header">
+                <span class="popover-card-title"><i class="ph ph-briefcase"></i> My Portfolio</span>
+                <span class="popover-equity-tag" id="popover_equity_tag">$2,000.00</span>
+              </div>
+              <div class="popover-portfolio-grid">
+                <div class="portfolio-stat-cell">
+                  <span class="p-stat-lbl">Available Cash</span>
+                  <span class="p-stat-val" id="popover_avail_bal">$2,000.00</span>
+                </div>
+                <div class="portfolio-stat-cell">
+                  <span class="p-stat-lbl">Margin in Trades</span>
+                  <span class="p-stat-val" id="popover_used_margin">$0.00</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Popover Menu Actions -->
+            <div class="popover-menu-section">
+              <!-- Financial Passbook & History Trigger -->
+              <button class="popover-menu-item" id="open_history_btn" type="button">
+                <div class="menu-item-left">
+                  <i class="ph ph-receipt item-icon emerald"></i>
+                  <span>Financial Passbook & History</span>
+                </div>
+                <span class="passbook-chip-badge">18% GST</span>
+                <i class="ph ph-arrow-right item-arrow"></i>
+              </button>
+
+              <!-- Trade Journal Trigger -->
+              <button class="popover-menu-item" id="open_journal_btn" type="button">
+                <div class="menu-item-left">
+                  <i class="ph ph-notebook item-icon purple"></i>
+                  <span>Trade Journal & Analytics</span>
+                </div>
+                <i class="ph ph-arrow-right item-arrow"></i>
+              </button>
+
+              <!-- Autonomous Auto-Pilot Toggle Row in Popover -->
+              <button class="popover-menu-item" id="popover_autopilot_toggle" type="button">
+                <div class="menu-item-left">
+                  <i class="ph-bold ph-robot item-icon purple" id="popover_autopilot_icon"></i>
+                  <span>Auto-Pilot Execution (Max 2)</span>
+                </div>
+                <span class="popover-toggle-badge" id="popover_autopilot_badge">OFF</span>
+              </button>
+
+              <!-- Dark / Light Theme Toggle Row -->
+              <div class="popover-menu-item theme-row">
+                <div class="menu-item-left">
+                  <i class="ph ph-sun-dim item-icon amber" id="popover_theme_icon"></i>
+                  <span>Theme</span>
+                </div>
+                <button class="theme-toggle-btn" id="theme_toggle_btn" type="button" aria-label="Toggle Theme" title="Switch Theme (Dark / Light)">
+                  <div class="theme-toggle-track">
+                    <div class="theme-toggle-thumb">
+                      <i class="ph ph-moon theme-thumb-icon moon-icon"></i>
+                      <i class="ph ph-sun theme-thumb-icon sun-icon"></i>
+                    </div>
+                  </div>
+                  <span class="theme-toggle-text" id="theme_mode_text">Dark</span>
+                </button>
+              </div>
+
+              <!-- Audio Copilot Mute / Unmute Toggle -->
+              <button class="popover-menu-item" id="popover_voice_toggle" type="button">
+                <div class="menu-item-left">
+                  <i class="ph ph-speaker-high item-icon cyan" id="popover_voice_icon"></i>
+                  <span>Hinglish Audio Copilot</span>
+                </div>
+                <span class="popover-toggle-badge active" id="popover_voice_badge">ON</span>
+              </button>
+            </div>
+
+            <div class="popover-footer">
+              <button class="popover-logout-btn" id="header_logout_btn" type="button">
+                <i class="ph ph-sign-out"></i>
+                <span id="popover_logout_text">Sign Out / Switch Account</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mobile Native Bottom Navigation Bar (Capacitor Safe-Area Compatible) -->
+    <nav class="mobile-nav-tabs" id="mobile_nav_tabs" aria-label="Mobile Bottom Navigation">
+      <button class="mobile-tab-btn active" data-page="chart" data-target="panel_chart" id="m_tab_chart" type="button">
+        <i class="ph ph-chart-line-up"></i> <span>Chart</span>
+      </button>
+      <button class="mobile-tab-btn" data-page="strategy" data-target="panel_strategy" id="m_tab_strategy" type="button">
+        <i class="ph ph-crosshair"></i> <span>Strategy</span>
+      </button>
+      <button class="mobile-tab-btn" data-page="copilot" data-target="panel_copilot" id="m_tab_copilot" type="button">
+        <i class="ph ph-sparkle"></i> <span>Copilot</span>
+      </button>
+      <button class="mobile-tab-btn" data-page="passbook" id="m_tab_history" type="button">
+        <i class="ph ph-receipt"></i> <span>Passbook</span>
+      </button>
+      <button class="mobile-tab-btn" data-page="journal" id="m_tab_journal" type="button">
+        <i class="ph ph-notebook"></i> <span>Journal</span>
+      </button>
+    </nav>
+
+    <!-- Main Terminal Workspace -->
+    <main class="terminal-body">
+
+      <!-- LEFT COLUMN: Strategy Engine, Telemetry & Order Execution -->
+      <section class="terminal-panel panel-strategy" id="panel_strategy" aria-label="Strategy & Order Panel">
+        <div class="panel-header">
+          <span class="panel-title"><i class="ph ph-crosshair"></i> Strategy Engine</span>
+          <div id="ai_state_badge" class="state-badge state-wait">
+            <i class="ph ph-clock"></i> <span>WAIT</span>
+          </div>
+        </div>
+
+        <div class="panel-content">
+          <!-- Market Summary Telemetry Grid (PRD Section 32) -->
+          <div class="telemetry-grid">
+            <div class="telemetry-card">
+              <span class="meta-lbl">1H Direction</span>
+              <span class="meta-val bullish" id="meta_htf_trend">BULLISH</span>
+            </div>
+            <div class="telemetry-card">
+              <span class="meta-lbl">Trade Bias</span>
+              <span class="meta-val bullish" id="meta_direction">LONG</span>
+            </div>
+            <div class="telemetry-card">
+              <span class="meta-lbl">5M Setup Area</span>
+              <span class="meta-val" id="meta_setup">Pullback In Zone</span>
+            </div>
+            <div class="telemetry-card">
+              <span class="meta-lbl">Confirmation</span>
+              <span class="meta-val" id="meta_confirmation">Pending Reaction</span>
+            </div>
+            <div class="telemetry-card">
+              <span class="meta-lbl">Historical Context</span>
+              <span class="meta-val tag-supportive" id="meta_hist_context">Supportive (64%)</span>
+            </div>
+            <div class="telemetry-card">
+              <span class="meta-lbl">Event Risk</span>
+              <span class="meta-val risk-medium" id="meta_event_risk">Medium Risk</span>
+            </div>
+            <div class="telemetry-card">
+              <span class="meta-lbl">Calculated RR</span>
+              <span class="meta-val text-bullish" id="meta_rr">1:3.20</span>
+            </div>
+            <div class="telemetry-card">
+              <span class="meta-lbl">Risk Rule</span>
+              <span class="meta-val">1.0% Max</span>
+            </div>
+            <div class="telemetry-card" title="Real-time Crypto Fear & Greed Index from Alternative.me">
+              <span class="meta-lbl">Market Sentiment</span>
+              <span class="meta-val text-bullish" id="meta_sentiment_score">Greed (64)</span>
+            </div>
+            <div class="telemetry-card" title="Perpetual Contract Funding Rate (Delta / Binance Futures)">
+              <span class="meta-lbl">Funding / OI</span>
+              <span class="meta-val" id="meta_funding_rate">+0.0100% (Balanced)</span>
+            </div>
+            <div class="telemetry-card" title="14-Period Multi-Timeframe Wilder RSI Momentum">
+              <span class="meta-lbl">RSI Momentum</span>
+              <span class="meta-val text-bullish" id="meta_rsi_momentum">1H: 56.2 | 5M: 52.8</span>
+            </div>
+            <div class="telemetry-card" title="20-VMA Whale Volumetric Anomaly Filter">
+              <span class="meta-lbl">Whale Volume</span>
+              <span class="meta-val" id="meta_whale_volume">Normal (1.1x VMA)</span>
+            </div>
+          </div>
+
+          <!-- Algorithmic Confluence Score Meter (0 - 100%) -->
+          <div class="confluence-meter-card" id="confluence_meter_card">
+            <div class="confluence-header">
+              <span class="confluence-title"><i class="ph-bold ph-lightning"></i> NEURAL CONFLUENCE</span>
+              <span class="confluence-score-val" id="confluence_score_val">0% <span class="confluence-grade" id="confluence_grade_badge">[NO EDGE]</span></span>
+            </div>
+            <div class="confluence-track">
+              <div class="confluence-fill" id="confluence_fill_bar" style="width: 0%;"></div>
+            </div>
+            <div class="confluence-footer">
+              <span class="confluence-sub" id="confluence_sub_text">Min 75% required for Grade A Institutional Execution</span>
+            </div>
+          </div>
+
+          <!-- DELTA EXCHANGE PRO DERIVATIVES ORDER DESK -->
+          <div class="derivatives-order-desk">
+            <!-- Order Direction Segment (Long vs Short) -->
+            <div class="order-dir-segmented" role="tablist">
+              <button class="dir-btn long active" id="btn_order_dir_long" type="button">
+                <i class="ph-bold ph-trend-up"></i> Buy / Long
+              </button>
+              <button class="dir-btn short" id="btn_order_dir_short" type="button">
+                <i class="ph-bold ph-trend-down"></i> Sell / Short
+              </button>
+            </div>
+
+            <!-- Margin Mode & Order Type Bar -->
+            <div class="order-sub-modes">
+              <div class="mode-pill isolated" id="pill_margin_mode" title="Isolated margin locks only assigned trade margin">
+                <i class="ph ph-shield"></i> Isolated Margin
+              </div>
+              <div class="order-type-tabs">
+                <button class="type-tab active" id="tab_order_market" type="button">Market</button>
+                <button class="type-tab" id="tab_order_limit" type="button">Limit</button>
+              </div>
+            </div>
+
+            <!-- Dual-Control Leverage Selector (Slider + Numeric Input) -->
+            <div class="leverage-control-card">
+              <div class="lev-header">
+                <span class="lev-title"><i class="ph ph-sliders"></i> Leverage Selector</span>
+                <span class="lev-max-badge" id="leverage_max_badge">Max 200x</span>
+              </div>
+              <div class="lev-dual-row">
+                <div class="lev-input-wrapper">
+                  <input type="number" id="order_leverage_input" min="1" max="200" value="20" step="1" />
+                  <span class="lev-suffix">x</span>
+                </div>
+                <div class="lev-slider-wrapper">
+                  <input type="range" id="order_leverage_slider" min="1" max="200" value="20" step="1" class="custom-range-slider" />
+                </div>
+              </div>
+              <!-- Quick Preset Leverage Chips -->
+              <div class="lev-chips-row" id="lev_chips_container">
+                <button class="lev-chip" data-lev="5" type="button">5x</button>
+                <button class="lev-chip" data-lev="10" type="button">10x</button>
+                <button class="lev-chip active" data-lev="20" type="button">20x</button>
+                <button class="lev-chip" data-lev="50" type="button">50x</button>
+                <button class="lev-chip" data-lev="100" type="button">100x</button>
+                <button class="lev-chip" data-lev="200" type="button">200x</button>
+              </div>
+            </div>
+
+            <!-- Size / Margin Input & Balance Percentages -->
+            <div class="order-size-card">
+              <div class="size-header">
+                <span class="size-label">Order Size & Margin</span>
+                <span class="avail-balance">Avail: <strong id="order_avail_balance">$2,000.00</strong></span>
+              </div>
+              <div class="size-inputs-grid">
+                <div class="size-input-box">
+                  <span class="size-affix">$</span>
+                  <input type="number" id="order_margin_usdt" value="20" min="1" step="1" placeholder="Margin (USD)" />
+                  <span class="size-unit">USD</span>
+                </div>
+                <div class="size-input-box">
+                  <span class="size-affix"><i class="ph ph-coins"></i></span>
+                  <input type="number" id="order_size_qty" value="0.006" step="0.0001" placeholder="Quantity" />
+                  <span class="size-unit" id="order_qty_unit">BTC</span>
+                </div>
+              </div>
+              <!-- Quick Balance % Chips -->
+              <div class="pct-chips-row">
+                <button class="pct-chip active" data-pct="1" type="button">1% (Safe)</button>
+                <button class="pct-chip" data-pct="5" type="button">5%</button>
+                <button class="pct-chip" data-pct="10" type="button">10%</button>
+                <button class="pct-chip" data-pct="25" type="button">25%</button>
+                <button class="pct-chip" data-pct="50" type="button">50%</button>
+                <button class="pct-chip" data-pct="100" type="button">Max</button>
+              </div>
+            </div>
+
+            <!-- TP / SL Protective Inputs -->
+            <div class="tpsl-inputs-grid">
+              <div class="tpsl-input-box">
+                <div class="tpsl-lbl text-bullish">Take Profit (TP)</div>
+                <input type="number" id="order_tp_input" placeholder="TP Price" step="any" />
+                <span class="tpsl-roe text-bullish" id="order_tp_roe">+0.0% ROE</span>
+              </div>
+              <div class="tpsl-input-box">
+                <div class="tpsl-lbl text-bearish">Stop Loss (SL)</div>
+                <input type="number" id="order_sl_input" placeholder="SL Price" step="any" />
+                <span class="tpsl-roe text-bearish" id="order_sl_roe">-0.0% ROE</span>
+              </div>
+            </div>
+
+            <!-- Real-Time Delta Exchange Order Summary Telemetry -->
+            <div class="derivatives-telemetry-slip">
+              <div class="slip-row">
+                <span class="slip-k">Margin Required:</span>
+                <span class="slip-v" id="slip_cost_margin">$20.00</span>
+              </div>
+              <div class="slip-row">
+                <span class="slip-k">Notional Value:</span>
+                <span class="slip-v highlight" id="slip_notional_val">$400.00</span>
+              </div>
+              <div class="slip-row">
+                <span class="slip-k">Est. Liq Price:</span>
+                <span class="slip-v text-warning" id="slip_liq_price">$61,650.00</span>
+              </div>
+              <div class="slip-row">
+                <span class="slip-k">Risk / Reward:</span>
+                <span class="slip-v text-bullish" id="slip_rr_ratio">1:2.65</span>
+              </div>
+              <div class="slip-row">
+                <span class="slip-k">Delta Fee (Est.):</span>
+                <span class="slip-v text-muted" id="slip_est_fee">$0.40 (0.05%)</span>
+              </div>
+            </div>
+
+            <!-- Counter-Trend / Bias Indicator Pill (Hidden when matched, shows when counter-trend) -->
+            <div class="bias-indicator-pill" id="bias_indicator_pill" style="display: none;">
+              <i class="ph-bold ph-warning-circle"></i>
+              <span id="bias_indicator_text">Counter-Trend • AI Bias is Bullish</span>
+            </div>
+
+            <!-- Sleek Modern Execution Trigger Button -->
+            <button class="btn-exec-trade long" id="execute_trade_btn">
+              <div class="exec-btn-content">
+                <i class="ph-bold ph-lightning" id="exec_btn_icon"></i>
+                <span class="exec-btn-action" id="exec_btn_action">Open Long</span>
+                <span class="exec-btn-status-badge confirmed" id="exec_btn_badge">Confirmed</span>
+              </div>
+            </button>
+          </div>
+
+          <!-- Open Positions Section -->
+          <div class="panel-positions-subcard">
+            <div class="panel-subcard-header">
+              <span class="panel-title" style="white-space: nowrap;">
+                <i class="ph ph-chart-line-up"></i> Positions (<span id="open_positions_count">0</span>)
+              </span>
+              <button class="btn-close-all-positions hidden" id="btn_close_all_positions" type="button" title="Panic Flatten: Close all open positions immediately at market LTP">
+                <i class="ph-bold ph-lightning"></i>
+                <span>Close All</span>
+              </button>
+            </div>
+
+            <div id="open_positions_list" class="open-positions-container">
+              <div class="empty-state">No open positions. Setup awaiting confirmation.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CENTER COLUMN: TradingView Chart & Macro/Historical Context -->
+      <section class="terminal-panel chart-panel panel-chart active-mobile-panel" id="panel_chart" aria-label="Interactive Charting & Context">
+        <div class="chart-toolbar">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="panel-title"><i class="ph ph-chart-bar"></i> TradingView Live Chart</span>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <!-- TradingView Style Multi-Chart Layout Selector (1 to 8 Windows) -->
+            <div class="chart-layout-wrapper" id="chart_layout_wrapper">
+              <button class="chart-layout-btn" id="chart_layout_btn" type="button" aria-haspopup="true" aria-expanded="false" title="Select Chart Layout (1 to 8 Windows)">
+                <i class="ph ph-squares-four layout-icon" id="current_layout_icon"></i>
+                <span class="layout-btn-label" id="current_layout_label">Layout</span>
+                <i class="ph ph-caret-down layout-caret"></i>
+              </button>
+              <div class="chart-layout-popover" id="chart_layout_popover"></div>
+            </div>
+
+            <!-- Timeframe Selector Tray -->
+            <div class="tf-selector-wrapper">
+            <!-- Dropdown Tray Trigger -->
+            <div class="tf-dropdown-container">
+              <button class="tf-tray-trigger-btn" id="tf_tray_trigger" aria-haspopup="true" aria-expanded="false" title="Click to open Timeframe Tray">
+                <i class="ph ph-clock"></i>
+                <span id="current_tf_display">1H (Direction)</span>
+                <i class="ph ph-caret-down tf-caret" id="tf_tray_caret"></i>
+              </button>
+
+              <!-- Scrollable Timeframe Tray Popup -->
+              <div class="tf-tray-menu" id="tf_tray_menu">
+                <div class="tf-tray-header">
+                  <span><i class="ph ph-clock-countdown"></i> Select Timeframe</span>
+                  <button class="tf-tray-close" id="tf_tray_close_btn" type="button"><i class="ph ph-x"></i></button>
+                </div>
+
+                <div class="tf-tray-scroll-area">
+                  <!-- Section: Core Strategy -->
+                  <div class="tf-tray-section-title">Core Strategy Timeframes</div>
+                  <div class="tf-tray-group">
+                    <button class="tf-tray-item strategy-item active" data-tf="1H" data-label="1H (Direction)">
+                      <div class="tf-item-left">
+                        <span class="tf-item-name">1H (Direction)</span>
+                        <span class="tf-item-sub">Higher Timeframe Trend</span>
+                      </div>
+                      <span class="tf-item-badge">Core HTF</span>
+                    </button>
+                    <button class="tf-tray-item strategy-item" data-tf="5M" data-label="5M (Setup/Entry)">
+                      <div class="tf-item-left">
+                        <span class="tf-item-name">5M (Setup/Entry)</span>
+                        <span class="tf-item-sub">Lower Timeframe Reaction</span>
+                      </div>
+                      <span class="tf-item-badge">Core LTF</span>
+                    </button>
+                  </div>
+
+                  <!-- Section: Minutes -->
+                  <div class="tf-tray-section-title">Minutes</div>
+                  <div class="tf-tray-group grid-group">
+                    <button class="tf-tray-item" data-tf="1m" data-label="1m">1 minute</button>
+                    <button class="tf-tray-item" data-tf="3m" data-label="3m">3 minutes</button>
+                    <button class="tf-tray-item" data-tf="5m" data-label="5m">5 minutes</button>
+                    <button class="tf-tray-item" data-tf="15m" data-label="15m">15 minutes</button>
+                    <button class="tf-tray-item" data-tf="30m" data-label="30m">30 minutes</button>
+                    <button class="tf-tray-item" data-tf="45m" data-label="45m">45 minutes</button>
+                  </div>
+
+                  <!-- Section: Hours -->
+                  <div class="tf-tray-section-title">Hours</div>
+                  <div class="tf-tray-group grid-group">
+                    <button class="tf-tray-item" data-tf="1h" data-label="1h">1 hour</button>
+                    <button class="tf-tray-item" data-tf="2h" data-label="2h">2 hours</button>
+                    <button class="tf-tray-item" data-tf="3h" data-label="3h">3 hours</button>
+                    <button class="tf-tray-item" data-tf="4h" data-label="4h">4 hours</button>
+                  </div>
+
+                  <!-- Section: Days & Weeks -->
+                  <div class="tf-tray-section-title">Days & Weeks</div>
+                  <div class="tf-tray-group grid-group">
+                    <button class="tf-tray-item" data-tf="1D" data-label="1D">1 Day</button>
+                    <button class="tf-tray-item" data-tf="1W" data-label="1W">1 Week</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-viewport" id="tv_chart_container">
+        <!-- TradingView Widget & Overlays dynamically injected here -->
+      </div>
+
+      <!-- Avionics Glass HUD Overlays (Matching Master Landing Page) -->
+      <div class="chart-hud-overlay top-left" aria-hidden="true">
+        <div class="hud-pill hud-shield">
+          <span class="hud-dot-pulse amber"></span>
+          <i class="ph-bold ph-shield-check" style="color: #f59e0b;"></i>
+          <span>EVENT RISK SHIELD: 1% HARD STOP ARMED</span>
+        </div>
+      </div>
+
+      <div class="chart-hud-overlay top-right" aria-hidden="true">
+        <div class="hud-pill hud-confluence">
+          <span class="hud-dot-pulse emerald"></span>
+          <i class="ph-bold ph-lightning" style="color: #10b981;"></i>
+          <span>CONFLUENCE LOCKED: 96.4% GRADE A+</span>
+        </div>
+      </div>
+
+      <div class="chart-hud-overlay bottom-right" aria-hidden="true">
+        <div class="hud-pill hud-target">
+          <i class="ph-bold ph-crosshair" style="color: #06b6d4;"></i>
+          <span>ASYMMETRIC TARGET: +3.28R ($69,966)</span>
+        </div>
+      </div>
+
+        <!-- Lower Context Radar (Historical & Macro News) -->
+        <div class="chart-context-deck" id="chart_context_deck">
+          <div class="context-deck-mobile-nav" id="context_deck_mobile_nav">
+            <button class="deck-m-tab active" data-deck-view="hist" id="deck_tab_hist" type="button">
+              <i class="ph ph-git-commit"></i> <span>Pattern Scan</span>
+            </button>
+            <button class="deck-m-tab" data-deck-view="news" id="deck_tab_news" type="button">
+              <i class="ph ph-broadcast"></i> <span>Macro Radar</span>
+            </button>
+          </div>
+
+          <!-- Historical Intelligence -->
+          <div class="hist-card deck-card active-deck-card" id="historical_pattern_card">
+            <div class="hist-title"><i class="ph ph-git-commit"></i> Regime Pattern Matching</div>
+            <div class="hist-stats-row">
+              <div class="stat-col"><span class="k">Sample:</span> <span class="v">84 setups</span></div>
+              <div class="stat-col"><span class="k">Win Rate:</span> <span class="v text-bullish">64.3%</span></div>
+              <div class="stat-col"><span class="k">Avg RR:</span> <span class="v">1:2.65</span></div>
+            </div>
+            <div class="hist-desc">Evaluating similar discount pullback behavior following Asian liquidity sweeps.</div>
+          </div>
+
+          <!-- Macro & News Radar -->
+          <div class="news-radar-scroll deck-card" id="news_radar_list">
+            <!-- News items injected dynamically -->
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN: Conversational AI Co-Pilot (Voice + Chat) -->
+      <section class="terminal-panel chat-panel panel-copilot" id="panel_copilot" aria-label="Conversational AI Co-Pilot">
+        <div class="panel-header">
+          <span class="panel-title"><i class="ph ph-sparkle"></i> MONDAY Companion</span>
+          <div class="voice-controls">
+            <button class="icon-btn" id="voice_test_btn" title="Test MONDAY Voice (Indian & English Accents)">
+              <i class="ph ph-waveform"></i>
+            </button>
+            <button class="icon-btn" id="voice_mute_btn" title="Mute MONDAY Voice">
+              <i class="ph ph-speaker-high"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Voice Visualizer & Status -->
+        <div class="voice-status-bar" id="voice_activity_radar">
+          <div class="voice-radar-wrapper">
+            <div class="voice-wave" id="voice_wave_eq">
+              <span class="eq-bar bar-1"></span>
+              <span class="eq-bar bar-2"></span>
+              <span class="eq-bar bar-3"></span>
+              <span class="eq-bar bar-4"></span>
+              <span class="eq-bar bar-5"></span>
+            </div>
+            <span class="voice-status-text" id="voice_status_indicator">MONDAY Active • Ready</span>
+          </div>
+          <span class="voice-engine-tag">Hinglish / English</span>
+        </div>
+
+        <!-- Dynamic Pinned Live Setup Radar Card -->
+        <div class="chat-pinned-radar" id="chat_pinned_radar" style="display: none;">
+          <div class="pinned-radar-header">
+            <div class="pinned-radar-badge">
+              <span class="pinned-dot-pulse"></span>
+              <span id="pinned_radar_state">DEVELOPING SETUP</span>
+            </div>
+            <span class="pinned-radar-asset" id="pinned_radar_asset">BTC/USD LONG</span>
+            <button class="pinned-radar-dismiss" id="pinned_radar_dismiss" type="button" title="Dismiss Pinned Setup">
+              <i class="ph ph-x"></i>
+            </button>
+          </div>
+          <div class="pinned-radar-levels">
+            <div class="pinned-level-cell">
+              <span class="p-lbl">Entry Zone</span>
+              <span class="p-val" id="pinned_radar_entry">$86,200 - $86,500</span>
+            </div>
+            <div class="pinned-level-cell">
+              <span class="p-lbl">Stop Loss</span>
+              <span class="p-val text-bearish" id="pinned_radar_sl">$85,600</span>
+            </div>
+            <div class="pinned-level-cell">
+              <span class="p-lbl">Take Profit (1:3+)</span>
+              <span class="p-val text-bullish" id="pinned_radar_tp">$89,100</span>
+            </div>
+          </div>
+          <div class="pinned-radar-footer">
+            <span class="pinned-proximity" id="pinned_radar_proximity">⏳ Price $180 away from reaction zone</span>
+            <button class="btn-pinned-action" id="btn_pinned_action" type="button">
+              <i class="ph-bold ph-lightning"></i> <span id="btn_pinned_action_text">Load in Desk</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Chat Transcript -->
+        <div class="chat-transcript" id="chat_messages">
+          <!-- Chat bubbles injected dynamically -->
+        </div>
+
+        <!-- Quick Prompt Chips (PRD Section 22) -->
+        <div class="quick-chips-wrapper">
+          <button class="quick-chip" id="chip_what_happening">Abhi market me kya ho raha hai?</button>
+          <button class="quick-chip" id="chip_why_not_enter">Entry kyu nahi le rahe?</button>
+          <button class="quick-chip" id="chip_where_sl">SL aur Target kaha hai?</button>
+          <button class="quick-chip" id="chip_explain_risk">Risk simple language me samjhao</button>
+          <button class="quick-chip" id="chip_smt_diff">BTC aur ETH me kya difference hai?</button>
+          <button class="quick-chip" id="chip_past_event">Pichli baar aisa setup kab bana tha?</button>
+          <button class="quick-chip" id="chip_reject_scenario">Agar reject ho gaya toh kya scenario hai?</button>
+        </div>
+
+        <!-- Chat Input Form -->
+        <form class="chat-input-bar" id="chat_form">
+          <button type="button" class="mic-action-btn" id="voice_mic_btn" title="Speak to AI Co-Pilot">
+            <i class="ph ph-microphone"></i>
+          </button>
+          <input 
+            type="text" 
+            id="chat_input" 
+            class="chat-text-input" 
+            placeholder="Type or speak (e.g. 'Abhi trade kyu nahi le rahe?')..." 
+            autocomplete="off"
+          />
+          <button type="submit" class="chat-send-btn" id="chat_send_btn" title="Send message">
+            <i class="ph ph-paper-plane-right"></i>
+          </button>
+        </form>
+      </section>
+
+    </main>
+  </div>
+      </div> <!-- End #view_terminal -->
+
+      <!-- VIEW 2: DEDICATED POSITIONS & DERIVATIVES DESK -->
+      <div class="saas-page-view" id="view_positions">
+        <div class="positions-page-container">
+          <div class="positions-header-banner">
+            <div class="positions-banner-title-group">
+              <div class="positions-banner-icon">
+                <i class="ph-bold ph-briefcase"></i>
+              </div>
+              <div>
+                <h2 class="positions-banner-title">Institutional Derivatives Desk</h2>
+                <div class="positions-banner-sub">Real-time Margin, Liquidation Proximity & Position Management</div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <button class="btn-primary" id="positions_page_new_trade_btn" type="button" style="padding: 8px 16px; font-size: 0.8rem;">
+                <i class="ph ph-plus-circle"></i> Go to Terminal
+              </button>
+              <button class="btn-panic-close hidden" id="positions_page_close_all_btn" type="button">
+                <i class="ph-bold ph-lightning"></i> Close All Positions
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Stats Metric Strip -->
+          <div class="positions-stats-strip">
+            <div class="pos-stat-card">
+              <span class="lbl">Unrealized PnL</span>
+              <span class="val text-neutral" id="desk_stat_unpnl">$0.00</span>
+            </div>
+            <div class="pos-stat-card">
+              <span class="lbl">Total Active Margin</span>
+              <span class="val" id="desk_stat_margin">$0.00</span>
+            </div>
+            <div class="pos-stat-card">
+              <span class="lbl">Total Notional Exposure</span>
+              <span class="val" id="desk_stat_notional">$0.00</span>
+            </div>
+            <div class="pos-stat-card">
+              <span class="lbl">Open Contracts</span>
+              <span class="val" id="desk_stat_count">0</span>
+            </div>
+          </div>
+
+          <!-- Institutional Detailed Positions Table / Grid -->
+          <div class="positions-grid-card">
+            <div class="positions-grid-header">
+              <span class="positions-grid-title">
+                <i class="ph ph-list-dashes"></i> Active Perpetual Contracts
+              </span>
+              <span class="text-muted" style="font-size: 0.75rem;" id="desk_live_indicator">
+                <span class="live-dot" style="display:inline-block; width:8px; height:8px; background:#10b981; border-radius:50%; margin-right:4px;"></span> Mark Price Live
+              </span>
+            </div>
+            <div class="positions-table-wrapper" id="desk_positions_table_wrapper">
+              <!-- Dynamically rendered by terminalUI.renderPositionsPage() -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 3: DEDICATED PASSBOOK & 365-DAY YEARBOOK HEATMAP -->
+      <div class="saas-page-view" id="view_passbook">
+        <div class="passbook-page-container">
+          <!-- Page Header Banner -->
+          <div class="positions-header-banner">
+            <div class="positions-banner-title-group">
+              <div class="positions-banner-icon" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); color: #10b981;">
+                <i class="ph-bold ph-receipt"></i>
+              </div>
+              <div>
+                <h2 class="positions-banner-title">Trade Ledger & Financial Passbook</h2>
+                <div class="positions-banner-sub" style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
+                  <span class="compliance-tag" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;">
+                    <i class="ph-fill ph-shield-check"></i> Delta Exchange India Compliant
+                  </span>
+                  <span class="compliance-gst-pill" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;">
+                    18% GST Auto-Bifurcated
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <button class="btn-purge-ledger" id="btn_purge_passbook" type="button" title="Purge Glitch Trades & Restore $2,000 Balance">
+                <i class="ph-bold ph-arrow-counter-clockwise"></i> <span class="purge-btn-text">Reset & Restore $2,000</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 365-Day GitHub-Style PnL Yearbook Card -->
+          <div class="yearbook-heatmap-card" id="yearbook_heatmap_card">
+            <div class="yearbook-header">
+              <div class="yearbook-title-group">
+                <span class="yearbook-title"><i class="ph ph-calendar-blank"></i> 365-Day PnL Contribution Matrix</span>
+              </div>
+              <div class="yearbook-stats-row">
+                <span class="yearbook-stat-item">365d Net PnL: <b id="yb_stat_total_pnl" class="text-bullish">+$0.00</b></span>
+                <span class="yearbook-stat-item">Win Days: <b id="yb_stat_win_rate">0.0%</b></span>
+                <span class="yearbook-stat-item">Best Day: <b id="yb_stat_best_day" class="text-bullish">+$0.00</b></span>
+                <span class="yearbook-stat-item">Max DD: <b id="yb_stat_max_dd" class="text-bearish">-$0.00</b></span>
+              </div>
+            </div>
+
+            <div class="yearbook-grid-scroll-wrap">
+              <div class="yearbook-matrix-container">
+                <div class="yearbook-months-labels" id="yearbook_months_row">
+                  <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
+                  <span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+                </div>
+                <div class="yearbook-matrix-body">
+                  <div class="yearbook-weekdays-labels">
+                    <span></span>
+                    <span>Mon</span>
+                    <span></span>
+                    <span>Wed</span>
+                    <span></span>
+                    <span>Fri</span>
+                    <span></span>
+                  </div>
+                  <div class="yearbook-cells-grid" id="yearbook_cells_grid">
+                    <!-- Dynamically populated 52x7 cells -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="yearbook-footer">
+              <span class="text-muted"><i class="ph ph-info"></i> Click any square to filter ledger statements for that specific day.</span>
+              <div class="yearbook-legend">
+                <span>Loss</span>
+                <div class="yearbook-legend-cell" style="background: #f43f5e;"></div>
+                <div class="yearbook-legend-cell" style="background: rgba(244, 63, 94, 0.70);"></div>
+                <div class="yearbook-legend-cell" style="background: rgba(244, 63, 94, 0.40);"></div>
+                <div class="yearbook-legend-cell" style="background: rgba(255, 255, 255, 0.04);"></div>
+                <div class="yearbook-legend-cell" style="background: rgba(16, 185, 129, 0.35);"></div>
+                <div class="yearbook-legend-cell" style="background: rgba(16, 185, 129, 0.60);"></div>
+                <div class="yearbook-legend-cell" style="background: rgba(16, 185, 129, 0.85);"></div>
+                <div class="yearbook-legend-cell" style="background: #10b981;"></div>
+                <span>Profit</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Monthly Statement & Tax Summary Card -->
+          <div class="passbook-monthly-card">
+            <div class="passbook-filter-bar">
+              <div class="passbook-select-group">
+                <label for="passbook_period_picker_btn"><i class="ph ph-calendar"></i> Statement Period:</label>
+                <div class="passbook-picker-container" id="passbook_picker_container">
+                  <button type="button" id="passbook_period_picker_btn" class="passbook-period-trigger" aria-haspopup="true" aria-expanded="false" title="Click to open calendar and select any month or date">
+                    <i class="ph-bold ph-calendar-blank trigger-cal-icon"></i>
+                    <span id="passbook_period_label">This Month (October 2026)</span>
+                    <i class="ph-bold ph-caret-down trigger-arrow"></i>
+                  </button>
+                  
+                  <!-- Sleek Minimalist Calendar & Month Picker Popover -->
+                  <div id="passbook_calendar_popover" class="passbook-calendar-popover hidden" role="dialog" aria-modal="true">
+                    <!-- 1-Click Quick Presets -->
+                    <div class="cal-quick-presets">
+                      <button type="button" class="cal-preset-btn" data-period="TODAY">Today</button>
+                      <button type="button" class="cal-preset-btn active" data-period="THIS_MONTH">This Month</button>
+                      <button type="button" class="cal-preset-btn" data-period="ALL">All-Time</button>
+                    </div>
+
+                    <div class="cal-divider"></div>
+
+                    <!-- Month & Year Navigation Header -->
+                    <div class="cal-header-bar">
+                      <button type="button" class="cal-nav-btn" id="cal_prev_month_btn" title="Previous Month">
+                        <i class="ph-bold ph-caret-left"></i>
+                      </button>
+                      <div class="cal-selectors-group">
+                        <select id="cal_month_select" class="cal-select cal-select-month" aria-label="Select Month">
+                          <option value="0">January</option>
+                          <option value="1">February</option>
+                          <option value="2">March</option>
+                          <option value="3">April</option>
+                          <option value="4">May</option>
+                          <option value="5">June</option>
+                          <option value="6">July</option>
+                          <option value="7">August</option>
+                          <option value="8">September</option>
+                          <option value="9">October</option>
+                          <option value="10">November</option>
+                          <option value="11">December</option>
+                        </select>
+                        <select id="cal_year_select" class="cal-select cal-select-year" aria-label="Select Year">
+                          <option value="2024">2024</option>
+                          <option value="2025">2025</option>
+                          <option value="2026">2026</option>
+                          <option value="2027">2027</option>
+                          <option value="2028">2028</option>
+                        </select>
+                      </div>
+                      <button type="button" class="cal-nav-btn" id="cal_next_month_btn" title="Next Month">
+                        <i class="ph-bold ph-caret-right"></i>
+                      </button>
+                    </div>
+
+                    <!-- Action: View Entire Month -->
+                    <button type="button" id="btn_cal_select_month" class="cal-full-month-btn">
+                      <i class="ph-bold ph-calendar-check"></i>
+                      <span>Apply Full Month: <b id="cal_selected_month_label">October 2026</b></span>
+                    </button>
+
+                    <div class="cal-divider"></div>
+
+                    <!-- Day Calendar Grid for Specific Date Selection -->
+                    <div class="cal-month-grid-wrapper">
+                      <div class="cal-weekdays-row">
+                        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                      </div>
+                      <div class="cal-days-grid" id="cal_days_grid">
+                        <!-- Dynamically rendered day buttons with trade dots -->
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Hidden select for programmatic / legacy access -->
+                  <select id="passbook_month_filter" style="display:none;">
+                    <option value="THIS_MONTH">This Month</option>
+                  </select>
+                </div>
+              </div>
+              <div class="passbook-type-filters">
+                <button class="passbook-filter-chip active" data-filter="ALL" type="button" id="passbook_filter_all">All (0)</button>
+                <button class="passbook-filter-chip" data-filter="PROFIT" type="button" id="passbook_filter_profit">🟢 Profit</button>
+                <button class="passbook-filter-chip" data-filter="LOSS" type="button" id="passbook_filter_loss">🔴 Loss</button>
+              </div>
+            </div>
+
+            <!-- 4-Pillar Financial Audit Grid -->
+            <div class="passbook-audit-grid">
+              <div class="audit-stat-box">
+                <span class="audit-lbl">Gross Realized PnL</span>
+                <span class="audit-val text-bullish" id="passbook_gross_pnl">$0.00</span>
+                <span class="audit-sub">Pure price difference</span>
+              </div>
+              <div class="audit-stat-box">
+                <span class="audit-lbl">Delta Brokerage</span>
+                <span class="audit-val text-muted" id="passbook_brokerage_total">$0.00</span>
+                <span class="audit-sub">0.05% Taker / 0.02% Maker</span>
+              </div>
+              <div class="audit-stat-box">
+                <span class="audit-lbl">18% GST on Fees</span>
+                <span class="audit-val text-warning" id="passbook_gst_total">$0.00</span>
+                <span class="audit-sub">Govt tax on brokerage</span>
+              </div>
+              <div class="audit-stat-box highlight-net">
+                <span class="audit-lbl">Net Settled to Wallet</span>
+                <span class="audit-val text-bullish" id="passbook_net_settled">$0.00</span>
+                <span class="audit-sub">Final pocket credited/debited</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Today's Performance Summary Ribbon -->
+          <div class="passbook-daily-ribbon" id="passbook_daily_ribbon">
+            <div class="daily-ribbon-left">
+              <div class="daily-ribbon-badge" id="daily_ribbon_badge">
+                <i class="ph-bold ph-calendar-check"></i>
+                <span id="daily_date_label">Today</span>
+              </div>
+              <span class="daily-ribbon-stat" id="daily_trades_count">0 Trades</span>
+              <span class="daily-ribbon-sep">•</span>
+              <span class="daily-ribbon-winrate" id="daily_win_rate">0.0% Win</span>
+              <span class="daily-ribbon-breakdown" id="daily_win_loss_split">(0W / 0L)</span>
+            </div>
+            <div class="daily-ribbon-right">
+              <span class="daily-net-label" id="daily_net_label">Today's Net:</span>
+              <span class="daily-net-val text-bullish" id="daily_net_pnl">+$0.00 (+0.0R)</span>
+              <span class="daily-charges-pill" id="daily_charges_pill" title="Delta Brokerage + GST today">-$0.00 Fees</span>
+            </div>
+          </div>
+
+          <!-- Ledger Statement Header -->
+          <div class="passbook-feed-heading">
+            <span><i class="ph ph-list-dashes"></i> Transaction Ledger & Receipts</span>
+            <span class="feed-count-tag" id="passbook_feed_count">0 Settlements</span>
+          </div>
+
+          <!-- Chronological Transaction Feed -->
+          <div class="passbook-transactions-feed" id="passbook_transactions_feed">
+            <!-- Dynamically populated transaction cards with expandable tax receipts -->
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 4: DEDICATED COPILOT PAGE -->
+      <div class="saas-page-view" id="view_copilot">
+        <div class="copilot-page-container">
+          <div class="copilot-page-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="brand-icon-halo" style="width: 40px; height: 40px; border-radius: 10px; background: rgba(14, 165, 233, 0.2); border: 1px solid rgba(56, 189, 248, 0.4); display: flex; align-items: center; justify-content: center; color: #38bdf8; font-size: 1.3rem;">
+                <i class="ph ph-sparkle"></i>
+              </div>
+              <div>
+                <h2 style="font-size: 1.1rem; font-weight: 800; margin: 0; color: #ffffff;">MONDAY Neural Copilot</h2>
+                <div style="font-size: 0.75rem; color: #94a3b8;">Autonomous Market Intelligence & Strategy Companion</div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <span class="copilot-status-badge" style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.72rem; color: #10b981; font-weight: 700;">
+                <span class="live-dot" style="display:inline-block; width:6px; height:6px; background:#10b981; border-radius:50%;"></span> AI Sentinel Active
+              </span>
+              <button class="icon-btn" id="copilot_page_clear_btn" title="Clear Chat History" style="border-radius: 8px;">
+                <i class="ph ph-trash"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="copilot-chat-workspace">
+            <!-- Full page message stream -->
+            <div class="copilot-page-messages" id="copilot_page_messages_feed">
+              <div class="chat-message assistant">
+                <div class="chat-msg-header">
+                  <span class="chat-msg-role"><i class="ph ph-sparkle"></i> MONDAY Copilot</span>
+                  <span class="chat-msg-time">Online</span>
+                </div>
+                <div class="chat-msg-body">
+                  Namaste! Main MONDAY hoon — aapka personal AI trading companion. Live chart, orderflow, Delta Exchange leverage rules, aur risk management ke bare mein kuch bhi puchiye!
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Prompt Suggestion Chips -->
+            <div style="padding: 10px 16px; display: flex; gap: 8px; overflow-x: auto; border-top: 1px solid rgba(255, 255, 255, 0.05); background: rgba(0,0,0,0.2);">
+              <button type="button" class="copilot-chip-btn" data-query="Explain current market regime and bias">📊 Current Bias?</button>
+              <button type="button" class="copilot-chip-btn" data-query="Are there any high probability setups right now?">⚡ High Prob Setups?</button>
+              <button type="button" class="copilot-chip-btn" data-query="Audit my open positions and liquidation distance">🛡️ Audit Open Risk</button>
+              <button type="button" class="copilot-chip-btn" data-query="What is Delta Exchange funding rate trend?">📈 Funding Rate</button>
+            </div>
+
+            <!-- Chat Input Strip -->
+            <form class="chat-input-row" id="copilot_page_chat_form" style="padding: 12px 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); background: rgba(11, 17, 33, 0.8);">
+              <button type="button" class="chat-mic-btn" id="copilot_page_mic_btn" title="Speak to MONDAY">
+                <i class="ph ph-microphone"></i>
+              </button>
+              <input 
+                type="text" 
+                id="copilot_page_input" 
+                class="chat-text-input" 
+                placeholder="Type or speak (e.g. 'Abhi BTC ka support kahan hai?')..." 
+                autocomplete="off"
+              />
+              <button type="submit" class="chat-send-btn" id="copilot_page_send_btn" title="Send message">
+                <i class="ph ph-paper-plane-right"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 5: DEDICATED SETTINGS & RISK CONTROLS -->
+      <div class="saas-page-view" id="view_settings">
+        <div class="settings-page-container">
+          <!-- Header -->
+          <div class="positions-header-banner">
+            <div class="positions-banner-title-group">
+              <div class="positions-banner-icon" style="background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.3); color: #818cf8;">
+                <i class="ph-bold ph-sliders"></i>
+              </div>
+              <div>
+                <h2 class="positions-banner-title">Risk Engine & System Settings</h2>
+                <div class="positions-banner-sub">Configure AI Auto-Pilot, Capital Guardrails, Cloud Sync & Voice</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 1: Auto-Pilot & Autonomous Trading -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <span class="settings-card-title"><i class="ph ph-robot"></i> AI Strategy & Autopilot</span>
+            </div>
+            <div class="settings-field-row">
+              <div class="settings-field-label-group">
+                <span class="settings-field-name">Autonomous Auto-Pilot Execution</span>
+                <span class="settings-field-desc">Allow MONDAY Neural Engine to enter verified confluence setups autonomously.</span>
+              </div>
+              <div class="custom-switch-wrapper">
+                <input type="checkbox" id="settings_autopilot_toggle" class="custom-switch" />
+                <label for="settings_autopilot_toggle" class="custom-switch-label"></label>
+              </div>
+            </div>
+            <div class="settings-field-row">
+              <div class="settings-field-label-group">
+                <span class="settings-field-name">Risk Per Trade (% Wallet Equity)</span>
+                <span class="settings-field-desc">Maximum capital risked on any individual position setup.</span>
+              </div>
+              <select id="settings_risk_per_trade" class="cal-select" style="width: 170px;">
+                <option value="1">1.0% ($20 / trade)</option>
+                <option value="2" selected>2.0% ($40 / trade)</option>
+                <option value="3">3.0% ($60 / trade)</option>
+                <option value="5">5.0% ($100 / trade)</option>
+              </select>
+            </div>
+            <div class="settings-field-row">
+              <div class="settings-field-label-group">
+                <span class="settings-field-name">High-Impact News Risk Shield</span>
+                <span class="settings-field-desc">Auto-freeze new entries 15 minutes before US CPI, FOMC, and High Volatility events.</span>
+              </div>
+              <div class="custom-switch-wrapper">
+                <input type="checkbox" id="settings_news_shield_toggle" class="custom-switch" checked />
+                <label for="settings_news_shield_toggle" class="custom-switch-label"></label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Account Capital & Data Management -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <span class="settings-card-title"><i class="ph ph-wallet"></i> Capital & Data Synchronization</span>
+            </div>
+            <div class="settings-field-row">
+              <div class="settings-field-label-group">
+                <span class="settings-field-name">Supabase Cloud Database Sync</span>
+                <span class="settings-field-desc">Synchronize trade journal, settings, and performance across all your devices.</span>
+              </div>
+              <button class="btn-secondary" id="settings_open_supabase_btn" type="button" style="padding: 6px 14px; font-size: 0.8rem;">
+                <i class="ph ph-cloud-check"></i> Configure Cloud
+              </button>
+            </div>
+            <div class="settings-field-row">
+              <div class="settings-field-label-group">
+                <span class="settings-field-name">Reset Paper Balance ($2,000 Baseline)</span>
+                <span class="settings-field-desc">Purge all simulated glitch trades and restore initial account equity to $2,000.</span>
+              </div>
+              <button class="btn-purge-ledger" id="settings_reset_balance_btn" type="button" style="padding: 6px 14px; font-size: 0.8rem;">
+                <i class="ph-bold ph-arrow-counter-clockwise"></i> Reset to $2,000
+              </button>
+            </div>
+          </div>
+
+          <!-- Section 3: Audio & Copilot Voice -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <span class="settings-card-title"><i class="ph ph-speaker-high"></i> Voice & Audio Telemetry</span>
+            </div>
+            <div class="settings-field-row">
+              <div class="settings-field-label-group">
+                <span class="settings-field-name">Copilot Speech Feedback</span>
+                <span class="settings-field-desc">Spoken audio commentary in natural Hinglish for orders, targets, and market alerts.</span>
+              </div>
+              <div class="custom-switch-wrapper">
+                <input type="checkbox" id="settings_voice_speech_toggle" class="custom-switch" checked />
+                <label for="settings_voice_speech_toggle" class="custom-switch-label"></label>
+              </div>
+            </div>
+            <div class="settings-field-row">
+              <div class="settings-field-label-group">
+                <span class="settings-field-name">Voice Persona Accent</span>
+                <span class="settings-field-desc">Select conversational accent and vocal tone.</span>
+              </div>
+              <select id="settings_voice_accent" class="cal-select" style="width: 190px;">
+                <option value="IN_EN" selected>Indian English (Natural)</option>
+                <option value="US_EN">US English</option>
+                <option value="UK_EN">British English</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Mobile Native Bottom Bar -->
+    <nav class="saas-mobile-bottom-bar" id="saas_mobile_bottom_bar">
+      <button class="saas-mobile-tab-btn active" data-page="terminal" type="button">
+        <i class="ph ph-chart-line-up"></i>
+        <span>Terminal</span>
+      </button>
+      <button class="saas-mobile-tab-btn" data-page="positions" type="button">
+        <i class="ph ph-briefcase"></i>
+        <span>Positions</span>
+      </button>
+      <button class="saas-mobile-tab-btn" data-page="passbook" type="button">
+        <i class="ph ph-book-open"></i>
+        <span>Passbook</span>
+      </button>
+      <button class="saas-mobile-tab-btn" data-page="copilot" type="button">
+        <i class="ph ph-chats-circle"></i>
+        <span>Copilot</span>
+      </button>
+      <button class="saas-mobile-tab-btn" data-page="settings" type="button">
+        <i class="ph ph-sliders"></i>
+        <span>Settings</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- TRADE JOURNAL & PERFORMANCE ANALYTICS MODAL (PRD Sections 27 & 28) -->
+  <div class="modal-overlay" id="journal_modal">
+    <div class="modal-window journal-modal-window">
+      <div class="modal-header journal-modal-header">
+        <div class="journal-header-left" style="display: flex; align-items: center; gap: 8px;">
+          <button class="mobile-page-back-btn" id="m_back_journal_btn" type="button" aria-label="Back to Chart" title="Back to Chart">
+            <i class="ph-bold ph-arrow-left"></i>
+          </button>
+          <div class="passbook-icon-wrapper" style="background: rgba(192, 132, 252, 0.15); border-color: rgba(192, 132, 252, 0.35); color: #c084fc;">
+            <i class="ph ph-notebook"></i>
+          </div>
+          <div>
+            <h2 class="journal-modal-title" style="font-size: 1.05rem; display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 700;">
+              Trade Journal & Analytics
+            </h2>
+          </div>
+        </div>
+        <div class="journal-header-right" style="display: flex; gap: 8px; align-items: center;">
+          <button class="icon-btn" id="reset_account_btn" title="Reset Paper Account" style="width: auto; padding: 5px 10px; font-size: 0.76rem; border-radius: 6px;">
+            <i class="ph ph-arrow-counter-clockwise"></i> <span class="reset-journal-btn-text">Reset Balance</span>
+          </button>
+          <button class="icon-btn" id="close_journal_btn" title="Close Modal">
+            <i class="ph ph-x"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-body journal-modal-body">
+        <!-- Analytics Metrics Strip (PRD Section 28) -->
+        <div class="analytics-metrics-strip">
+          <div class="metric-box">
+            <div class="metric-title">Balance</div>
+            <div class="metric-value text-bullish" id="modal_stat_balance">$2,000.00</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-title">Total Trades</div>
+            <div class="metric-value" id="modal_stat_trades">3 (2W / 1L)</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-title">Win Rate</div>
+            <div class="metric-value text-bullish" id="modal_stat_winrate">66.7%</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-title">Total R</div>
+            <div class="metric-value text-bullish" id="modal_stat_total_r">+4.2R</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-title">Profit Factor</div>
+            <div class="metric-value" id="modal_stat_pf">5.2</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-title">Max Loss Streak</div>
+            <div class="metric-value" id="modal_stat_streak">1</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-title">Delta Fees Paid</div>
+            <div class="metric-value text-muted" id="modal_stat_fees">$0.00</div>
+          </div>
+        </div>
+
+        <!-- Full Trade Log Table (PRD Section 27) -->
+        <div style="overflow-x: auto; margin-top: 10px;">
+          <table class="journal-table">
+            <thead>
+              <tr>
+                <th>Trade ID</th>
+                <th>Date</th>
+                <th>Asset</th>
+                <th>Direction</th>
+                <th>Entry</th>
+                <th>Exit</th>
+                <th>RR</th>
+                <th>Outcome</th>
+                <th>Net PnL ($)</th>
+              </tr>
+            </thead>
+            <tbody id="journal_trades_tbody">
+              <!-- Dynamically rendered -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESET ACCOUNT & JOURNAL CONFIRMATION MODAL (TOP-LAYER MINIMAL & PLAIN) -->
+  <div class="terminal-modal reset-confirm-modal" id="modal_reset_confirm" style="display: none;">
+    <div class="modal-backdrop" id="backdrop_reset_confirm"></div>
+    <div class="modal-card reset-confirm-card" role="dialog" aria-modal="true" aria-labelledby="reset_confirm_title">
+      <button class="reset-close-btn" id="close_reset_confirm_btn" type="button" title="Close" aria-label="Close dialog">
+        <i class="ph ph-x"></i>
+      </button>
+      <div class="reset-icon-circle">
+        <i class="ph-bold ph-arrow-counter-clockwise"></i>
+      </div>
+      <h3 class="reset-title" id="reset_confirm_title">Reset Paper Account?</h3>
+      <p class="reset-body-text">
+        This will restore your balance to <strong>$2,000.00</strong> and clear all trade history. This action cannot be undone.
+      </p>
+      <div class="reset-confirm-actions">
+        <button class="btn-cancel-reset" id="btn_cancel_reset" type="button">Cancel</button>
+        <button class="btn-confirm-reset" id="btn_confirm_reset" type="button">Reset Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Passbook Modal Container Fallback (Upgraded to Dedicated SaaS Page #view_passbook) -->
+  <div class="modal-overlay hidden" id="passbook_modal" style="display: none;" aria-hidden="true"></div>
+
+  <!-- R-Multiple & Equity Explainer Modal -->
+  <div class="terminal-modal" id="modal_r_explainer" style="display: none;">
+    <div class="modal-backdrop" id="backdrop_r_explainer"></div>
+    <div class="modal-card r-explainer-card">
+      <div class="modal-header">
+        <h2 style="font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+          <i class="ph ph-shield-check" style="color: #38bdf8;"></i> Trading Concepts: "R-Multiple" & Live Equity
+        </h2>
+        <button class="icon-btn" id="close_r_explainer_btn" title="Close Modal">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+      <div class="modal-body r-explainer-body">
+        <div class="explainer-section">
+          <h3><i class="ph ph-chart-line-up"></i> 1. "+4.20R" kya hota hai? (What is R?)</h3>
+          <p>Trading aur Quantitative Risk Management me <strong>"R"</strong> ka matlab hota hai <strong>R-Multiple (Risk Unit)</strong>.</p>
+          <div class="concept-callout">
+            <strong>1R = 1 Trade par maximum predefined risk (1% of $2,000 = $20.00)</strong>
+          </div>
+          <ul>
+            <li>Agar kisi trade par aapka $20 ka Stop Loss hai aur aap <strong>+$50 profit</strong> banate ho, toh wo <strong>+2.5R</strong> hota hai ($50 ÷ $20).</li>
+            <li>Agar trade Stop Loss hit karti hai, toh exactly <strong>-1.0R (-$20)</strong> loss hota hai.</li>
+            <li><strong>+4.20R</strong> ka matlab hai ki past closed trades me aapne apne 1R risk ka <strong>4.2× net profit (+$84.12)</strong> banaya hai!</li>
+          </ul>
+        </div>
+
+        <div class="explainer-section">
+          <h3><i class="ph ph-arrows-left-right"></i> 2. Trade lene par Balance badha/ghata kyu nahi?</h3>
+          <div class="concept-grid">
+            <div class="concept-box">
+              <h4>💵 Cash Balance (Settled)</h4>
+              <p>Yeh amount tabhi settle hota hai jab trade <strong>Close</strong> hoti hai (Take Profit, Stop Loss ya manual close button dabane par).</p>
+            </div>
+            <div class="concept-box">
+              <h4>📈 Net Equity (Live Floating)</h4>
+              <p>Jab trade <strong>Open</strong> hoti hai, toh price ke har tick ke sath aapka <strong>Live PnL aur Net Equity</strong> realtime me up/down move karta hai!</p>
+            </div>
+          </div>
+          <p style="margin-top: 10px; font-size: 0.82rem; color: #94a3b8;">
+            💡 Ab MONDAY terminal ke header me <strong>Active Live Floating PnL</strong> aur <strong>Net Equity</strong> har Binance live tick ke sath realtime me move karega!
+          </p>
+        </div>
+
+        <div class="explainer-footer">
+          <button class="btn-primary" id="btn_got_it_r" type="button" style="width: 100%; justify-content: center;">
+            Samajh aa gaya! (Got It)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Autonomous AI Auto-Pilot Risk & Execution Standards Modal -->
+  <div class="terminal-modal" id="modal_autopilot_settings" style="display: none;">
+    <div class="modal-backdrop" id="backdrop_autopilot_settings"></div>
+    <div class="modal-card autopilot-settings-card" style="max-width: 500px;">
+      <div class="modal-header">
+        <div class="modal-header-title-box">
+          <div class="autopilot-modal-icon-badge">
+            <i class="ph-bold ph-sliders"></i>
+          </div>
+          <div>
+            <h2 class="autopilot-modal-title">Auto-Pilot Risk & Standards</h2>
+            <div class="autopilot-modal-sub">Execution Rules & Quantitative Risk Control</div>
+          </div>
+        </div>
+        <button class="icon-btn" id="close_autopilot_settings_btn" type="button" title="Close Settings">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+
+      <div class="modal-body autopilot-settings-body">
+        <!-- MONDAY Recommended Preset Minimal Strip -->
+        <div class="preset-banner-minimal">
+          <div class="preset-info-minimal">
+            <i class="ph-bold ph-lightning"></i>
+            <span><strong>Monday Preset:</strong> $20 Margin • 20x Leverage • Max 2 Trades • 75% Edge</span>
+          </div>
+          <button class="preset-apply-btn-minimal" id="btn_apply_recommended_preset" type="button" title="Apply Monday's recommended risk configuration">
+            Apply Preset
+          </button>
+        </div>
+
+        <!-- Custom Settings Form -->
+        <form class="autopilot-settings-form" id="form_autopilot_settings" onsubmit="return false;">
+          <div class="settings-form-grid">
+            <!-- Field 1: Margin Per Trade -->
+            <div class="settings-field">
+              <div class="field-label-row">
+                <label for="input_autopilot_margin" class="settings-label">
+                  Fixed Margin Per Trade
+                  <span class="help-tooltip-trigger" tabindex="0" title="Flat amount locked from wallet per setup. At $20 on $2,000 equity, your downside risk is strictly 1.0%." data-tooltip="Flat amount locked from wallet per setup. At $20 on $2,000 equity, your downside risk is strictly 1.0%.">
+                    <i class="ph ph-question"></i>
+                  </span>
+                </label>
+              </div>
+              <div class="input-with-affix">
+                <span class="input-affix">$</span>
+                <input 
+                  type="number" 
+                  id="input_autopilot_margin" 
+                  class="settings-input" 
+                  min="5" 
+                  max="500" 
+                  step="5" 
+                  value="20" 
+                  required
+                />
+              </div>
+            </div>
+
+            <!-- Field 2: Leverage -->
+            <div class="settings-field">
+              <div class="field-label-row">
+                <label for="select_autopilot_leverage" class="settings-label">
+                  Execution Leverage
+                  <span class="help-tooltip-trigger" tabindex="0" title="Multiplies purchasing power with strict isolated stop loss. Automatically derated to 5x on NSE/BSE." data-tooltip="Multiplies purchasing power with strict isolated stop loss. Automatically derated to 5x on NSE/BSE.">
+                    <i class="ph ph-question"></i>
+                  </span>
+                </label>
+              </div>
+              <select id="select_autopilot_leverage" class="settings-select">
+                <option value="5">5x (Ultra-Conservative)</option>
+                <option value="10">10x (Conservative)</option>
+                <option value="15">15x (Balanced)</option>
+                <option value="20" selected>20x (MONDAY Standard)</option>
+                <option value="25">25x (Aggressive Beta)</option>
+              </select>
+            </div>
+
+            <!-- Field 3: Max Concurrent Trades -->
+            <div class="settings-field">
+              <div class="field-label-row">
+                <label for="select_autopilot_maxtrades" class="settings-label">
+                  Max Concurrent Trades
+                  <span class="help-tooltip-trigger" tabindex="0" title="Auto-Pilot throttles and refuses new entries if this limit is reached until an open trade hits TP or SL." data-tooltip="Auto-Pilot throttles and refuses new entries if this limit is reached until an open trade hits TP or SL.">
+                    <i class="ph ph-question"></i>
+                  </span>
+                </label>
+              </div>
+              <select id="select_autopilot_maxtrades" class="settings-select">
+                <option value="2" selected>2 Trades (Conservative)</option>
+                <option value="5">5 Trades (Moderate)</option>
+                <option value="10">10 Trades (Active Basket)</option>
+                <option value="30">30 Trades (Multi-Asset Diversified)</option>
+                <option value="50">50 Trades (Portfolio Scale)</option>
+                <option value="70">70 Trades (High-Capacity Swarm)</option>
+                <option value="100">100 Trades (Institutional Max)</option>
+              </select>
+            </div>
+
+            <!-- Field 4: Minimum Confluence Score -->
+            <div class="settings-field">
+              <div class="field-label-row">
+                <label for="input_autopilot_confluence" class="settings-label">
+                  Min Confluence Threshold
+                  <span class="help-tooltip-trigger" tabindex="0" title="Requires multi-factor institutional alignment (HTF Trend + SMT + VMA + RSI + Liquidity Sweep) before entry." data-tooltip="Requires multi-factor institutional alignment (HTF Trend + SMT + VMA + RSI + Liquidity Sweep) before entry.">
+                    <i class="ph ph-question"></i>
+                  </span>
+                </label>
+                <span class="field-badge" id="badge_confluence_val">≥ 75% Grade A</span>
+              </div>
+              <div class="slider-row">
+                <input 
+                  type="range" 
+                  id="input_autopilot_confluence" 
+                  class="settings-range" 
+                  min="50" 
+                  max="90" 
+                  step="5" 
+                  value="75"
+                />
+                <span class="slider-val-tag" id="label_autopilot_confluence">75%</span>
+              </div>
+            </div>
+
+            <!-- Field 5: Minimum Risk-to-Reward Ratio -->
+            <div class="settings-field full-width">
+              <div class="field-label-row">
+                <label for="select_autopilot_min_rr" class="settings-label">
+                  Minimum Risk / Reward Ratio
+                  <span class="help-tooltip-trigger" tabindex="0" title="Auto-Pilot strictly rejects any setup where target profit distance is less than 3x the stoploss distance." data-tooltip="Auto-Pilot strictly rejects any setup where target profit distance is less than 3x the stoploss distance.">
+                    <i class="ph ph-question"></i>
+                  </span>
+                </label>
+              </div>
+              <select id="select_autopilot_min_rr" class="settings-select">
+                <option value="2.0">1:2.0 (Minimum Scalp)</option>
+                <option value="2.5">1:2.5 (Momentum Filter)</option>
+                <option value="3.0" selected>1:3.0 (MONDAY Standard)</option>
+                <option value="3.5">1:3.5 (High R Asymmetric)</option>
+              </select>
+            </div>
+
+            <!-- Field 6: Hyper-Sensitive Event Risk Shield -->
+            <div class="settings-field full-width shield-row-minimal">
+              <div class="shield-label-minimal">
+                <label for="switch_autopilot_event_shield" class="settings-label">
+                  Hyper-Sensitive Event Risk Shield
+                  <span class="help-tooltip-trigger" tabindex="0" title="When active: Any high-impact catalyst, regulatory shock, hack, or news spike triggers an immediate entry freeze so we are never trapped in news wicks." data-tooltip="When active: Any high-impact catalyst, regulatory shock, hack, or news spike triggers an immediate entry freeze so we are never trapped in news wicks.">
+                    <i class="ph ph-question"></i>
+                  </span>
+                </label>
+              </div>
+              <label class="shield-toggle-switch" for="switch_autopilot_event_shield" title="Toggle Hyper-Sensitive Event Shield">
+                <input type="checkbox" id="switch_autopilot_event_shield" checked />
+                <span class="shield-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-footer-actions">
+            <button class="btn-secondary" id="btn_reset_autopilot_settings" type="button">
+              <i class="ph ph-arrow-counter-clockwise"></i> Reset Default
+            </button>
+            <button class="btn-primary" id="btn_save_autopilot_settings" type="button">
+              <i class="ph-bold ph-check"></i> Save Standards
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Supabase Cloud Setup Modal (Beginner Friendly) -->
+  <div class="terminal-modal" id="modal_supabase_setup" style="display: none;">
+    <div class="modal-backdrop" id="backdrop_supabase_setup"></div>
+    <div class="modal-card r-explainer-card" style="max-width: 520px;">
+      <div class="modal-header">
+        <h2 style="font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+          <i class="ph ph-database" style="color: #3ecf8e;"></i> Connect Free Supabase Project
+        </h2>
+        <button class="icon-btn" id="close_supabase_modal_btn" title="Close">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+      <div class="modal-body r-explainer-body">
+        <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">
+          Connect your free Supabase project to sync multi-user trades, auth, and journals to the cloud. (Optional — local multi-user isolation works automatically without this!)
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 14px;">
+          <div class="auth-input-group">
+            <label class="auth-label">SUPABASE PROJECT URL</label>
+            <input 
+              type="url" 
+              id="input_supabase_url" 
+              class="auth-input" 
+              placeholder="https://your-project.supabase.co" 
+            />
+          </div>
+
+          <div class="auth-input-group">
+            <label class="auth-label">SUPABASE ANON / PUBLIC KEY</label>
+            <input 
+              type="password" 
+              id="input_supabase_key" 
+              class="auth-input" 
+              placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." 
+            />
+          </div>
+
+          <div id="supabase_status_msg" style="font-size: 0.8rem; display: none;"></div>
+
+          <div style="display: flex; gap: 10px; margin-top: 8px;">
+            <button class="btn-primary" id="btn_save_supabase" type="button" style="flex: 1; justify-content: center;">
+              <i class="ph ph-check"></i> Save & Connect
+            </button>
+            <button class="btn-secondary" id="btn_clear_supabase" type="button" style="padding: 0 14px;">
+              Clear
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast_container"></div>
+
+  <!-- TradingView Lightweight Charts (Standalone Production) -->
+  <script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
+
+  <!-- Supabase Config (Reads from config file or localStorage) -->
+  <script type="module" src="js/config/supabaseConfig.js"></script>
+
+  <!-- App Script Entrypoint -->
+  <script type="module" src="js/app.js"></script>
+
+  <!-- 3D Liquid Volatility Mesh Background (Matching Landing Page Experience) -->
+  <script type="module">
+    import { Hero3DVisualizer } from './js/landing/hero3D.js';
+    function init3D() {
+      try {
+        new Hero3DVisualizer('terminal_canvas_3d');
+      } catch (err) {
+        console.warn('[Terminal] 3D background visualizer initialization:', err);
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init3D);
+    } else {
+      init3D();
+    }
+  </script>
+
+  <!-- Specular Cursor Glow & Procedural Audio Feedback -->
+  <script type="module" src="js/foundation/cursorGlow.js"></script>
+  <script type="module">
+    import { sfx } from './components/sfx.js';
+    window.sfx = sfx;
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('button, .saas-nav-item, .lev-chip, .pct-chip, .quick-chip, .copilot-chip-btn, .market-dropdown-trigger, .watchlist-tray-btn');
+      if (btn) {
+        if (btn.id === 'execute_trade_btn') {
+          sfx.play('orderFilled');
+        } else {
+          sfx.play('click');
+        }
+      }
+    });
+  </script>
+
+  <!-- PWA Offline Service Worker Registration -->
+  <script type="module">
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>

@@ -75,8 +75,17 @@
   transition: opacity 0.2s ease;
 }
 
-.saas-sidebar.collapsed .saas-brand-text {
-  display: none;
+.saas-sidebar.collapsed .saas-brand-group {
+  display: none !important;
+}
+
+.saas-sidebar.collapsed .saas-sidebar-header {
+  justify-content: center !important;
+  padding: 16px 0 !important;
+}
+
+.saas-sidebar.collapsed .saas-sidebar-toggle-btn {
+  margin: 0 auto !important;
 }
 
 .saas-brand-title {
@@ -196,6 +205,16 @@
 
 .saas-sidebar.collapsed .saas-nav-label {
   display: none;
+}
+
+.saas-sidebar.collapsed .saas-nav-item {
+  justify-content: center;
+  padding: 12px 0;
+  margin: 2px 8px;
+}
+
+.saas-sidebar.collapsed .saas-nav-icon {
+  margin: 0;
 }
 
 .saas-nav-badge {
@@ -553,34 +572,42 @@
 .yearbook-matrix-container {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  min-width: 780px;
+  gap: 8px;
+  min-width: 830px;
 }
 
 .yearbook-months-labels {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(53, 12px);
+  gap: 3px;
   font-size: 0.65rem;
   font-weight: 700;
   color: #64748b;
-  padding-left: 28px;
-  justify-content: space-between;
+  margin-left: 28px;
+  height: 14px;
+  line-height: 14px;
+}
+
+.yearbook-months-labels span {
+  white-space: nowrap;
 }
 
 .yearbook-matrix-body {
   display: flex;
   gap: 8px;
+  align-items: flex-start;
 }
 
 .yearbook-weekdays-labels {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  display: grid;
+  grid-template-rows: repeat(7, 12px);
+  gap: 3px;
   font-size: 0.62rem;
   font-weight: 800;
   color: #475569;
   width: 20px;
   text-align: right;
-  padding-right: 4px;
+  line-height: 12px;
 }
 
 .yearbook-cells-grid {
@@ -597,14 +624,44 @@
   border-radius: 2px;
   background: rgba(255, 255, 255, 0.04);
   cursor: pointer;
-  transition: transform 0.1s ease, filter 0.1s ease;
+  transition: transform 0.1s ease, filter 0.1s ease, box-shadow 0.15s ease;
   position: relative;
+  box-sizing: border-box;
 }
 
 .yearbook-cell:hover {
   transform: scale(1.35);
   z-index: 10;
   filter: brightness(1.2);
+}
+
+.yearbook-cell.today {
+  border: 1px solid #38bdf8;
+  box-shadow: 0 0 5px rgba(56, 189, 248, 0.5);
+}
+
+.yearbook-cell.selected {
+  outline: 2px solid #38bdf8;
+  outline-offset: 1px;
+  z-index: 12;
+}
+
+.yearbook-cell.future {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.06);
+  cursor: default;
+}
+
+.yearbook-cell.future:hover {
+  transform: none;
+  filter: none;
+}
+
+.yearbook-cell.spacer {
+  visibility: hidden;
+  pointer-events: none;
+  background: transparent;
+  border: none;
 }
 
 /* Heatmap PnL Intensity Levels */

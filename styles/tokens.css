@@ -1,0 +1,136 @@
+/**
+ * PROJECT MONDAY — DESIGN TOKENS
+ * Liquid-Glass Dark Glassmorphism System
+ * Strict 8px Spacing Grid • Semantic Colors • Fluid Typography
+ */
+
+:root {
+  /* =========================================================================
+     1. COLOR PALETTE: VOID, OBSIDIAN & SEMANTIC ENGINES
+     ========================================================================= */
+  /* Canvas & Base Layers */
+  --bg-void:        #06070a;
+  --bg-obsidian:    #0d0f17;
+  --bg-surface:     #121622;
+  --bg-surface-elevated: #161c2d;
+
+  /* Glassmorphism Formulas (Refraction & Highlights) */
+  --glass-fill:      rgba(18, 22, 34, 0.62);
+  --glass-fill-dense: rgba(13, 15, 23, 0.85);
+  --glass-fill-hi:   rgba(255, 255, 255, 0.06);
+  --glass-fill-ultra:rgba(255, 255, 255, 0.12);
+  --glass-border:    rgba(255, 255, 255, 0.08);
+  --glass-border-hi: rgba(255, 255, 255, 0.18);
+  --glass-border-glow: rgba(255, 255, 255, 0.25);
+  --glass-blur:      blur(20px) saturate(160%);
+  --glass-blur-sm:   blur(12px) saturate(140%);
+
+  /* Semantic System Colors (Strictly Functional) */
+  --profit:          #10b981;   /* Emerald: Long / Profit / Grade A */
+  --profit-glow:     rgba(16, 185, 129, 0.15);
+  --profit-glow-hi:  rgba(16, 185, 129, 0.35);
+  --profit-border:   rgba(16, 185, 129, 0.28);
+
+  --risk:            #f43f5e;   /* Rose: Short / Loss / Liquidation Danger */
+  --risk-glow:       rgba(244, 63, 94, 0.15);
+  --risk-glow-hi:    rgba(244, 63, 94, 0.35);
+  --risk-border:     rgba(244, 63, 94, 0.28);
+
+  --shield:          #f59e0b;   /* Amber: Caution / Event Shield Active */
+  --shield-glow:     rgba(245, 158, 11, 0.15);
+  --shield-glow-hi:  rgba(245, 158, 11, 0.35);
+  --shield-border:   rgba(245, 158, 11, 0.28);
+
+  --cyan:            #06b6d4;   /* Cyan: Telemetry / Live WSS / SMT */
+  --cyan-glow:       rgba(6, 182, 212, 0.15);
+  --cyan-glow-hi:    rgba(6, 182, 212, 0.35);
+  --cyan-border:     rgba(6, 182, 212, 0.28);
+
+  --violet:          #8b5cf6;   /* Violet: Neural Copilot / Audio AI */
+  --violet-glow:     rgba(139, 92, 246, 0.15);
+  --violet-glow-hi:  rgba(139, 92, 246, 0.35);
+  --violet-border:   rgba(139, 92, 246, 0.28);
+
+  /* Typography Colors */
+  --text-hi:         #f4f6fb;   /* Primary Headers & Titles */
+  --text-mid:        #9aa3b8;   /* Secondary Body Text & Subtitles */
+  --text-low:        #5d667b;   /* Captions, Timestamps, Inactive Tickers */
+  --text-dim:        #374151;   /* Disabled & Borders */
+
+  /* =========================================================================
+     2. TYPOGRAPHY SYSTEM
+     ========================================================================= */
+  --font-display:    'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body:       'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono:       'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+  /* Fluid Modular Scale (clamp) */
+  --text-display-hero: clamp(2.75rem, 6.5vw, 5.25rem);
+  --text-display-1:    clamp(2.25rem, 4.5vw, 3.75rem);
+  --text-display-2:    clamp(1.75rem, 3.2vw, 2.75rem);
+  --text-h1:           clamp(1.5rem, 2.4vw, 2.25rem);
+  --text-h2:           clamp(1.25rem, 1.8vw, 1.75rem);
+  --text-h3:           clamp(1.05rem, 1.4vw, 1.35rem);
+  --text-body-lg:      1.125rem;
+  --text-body:         1rem;
+  --text-body-sm:      0.875rem;
+  --text-xs:           0.75rem;
+  --text-micro:        0.6875rem;
+
+  /* Letter Spacing */
+  --tracking-tighter:  -0.04em;
+  --tracking-tight:    -0.025em;
+  --tracking-normal:   0em;
+  --tracking-wide:     0.04em;
+  --tracking-widest:   0.08em;
+
+  /* =========================================================================
+     3. STRICT 8px SPACING GRID
+     ========================================================================= */
+  --space-05: 4px;
+  --space-1:  8px;
+  --space-2:  16px;
+  --space-3:  24px;
+  --space-4:  32px;
+  --space-5:  40px;
+  --space-6:  48px;
+  --space-8:  64px;
+  --space-10: 80px;
+  --space-12: 96px;
+  --space-16: 128px;
+  --space-20: 160px;
+
+  /* =========================================================================
+     4. RADII & CORNERS
+     ========================================================================= */
+  --radius-xs:   6px;
+  --radius-sm:   12px;
+  --radius-md:   20px;
+  --radius-lg:   28px;
+  --radius-full: 9999px;
+
+  /* =========================================================================
+     5. ELEVATION TIERS (3 LEVELS ONLY)
+     ========================================================================= */
+  --elevation-1: 0 4px 20px -2px rgba(0, 0, 0, 0.45),
+                 inset 0 1px 0 var(--glass-fill-hi);
+  --elevation-2: 0 16px 45px -12px rgba(0, 0, 0, 0.65),
+                 inset 0 1px 0 var(--glass-fill-hi);
+  --elevation-3: 0 28px 75px -20px rgba(0, 0, 0, 0.85),
+                 0 0 0 1px var(--glass-border-hi),
+                 inset 0 1px 0 rgba(255, 255, 255, 0.12);
+
+  /* =========================================================================
+     6. MOTION & EASING TOKENS
+     ========================================================================= */
+  --ease-entrance: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring:   cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-smooth:   cubic-bezier(0.4, 0, 0.2, 1);
+
+  --dur-micro:     140ms;
+  --dur-component: 280ms;
+  --dur-section:   700ms;
+  --dur-drift:     24s;
+}
+

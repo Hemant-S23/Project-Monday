@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROJECT MONDAY — Split-Screen Terminal Authentication</title>
+  <meta name="description" content="Sign in, create an account, or launch a zero-risk 1-click guest trading session on Project MONDAY.">
+
+  <!-- Phosphor Icons -->
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="../styles/main.css">
+  <link rel="stylesheet" href="../styles/components.css">
+
+  <style>
+    .auth-page-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4);
+      position: relative;
+      z-index: 10;
+    }
+
+    .auth-split-wrapper {
+      width: 100%;
+      max-width: 1180px;
+      display: grid;
+      grid-template-columns: 1fr;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--glass-border-hi);
+      background: rgba(13, 15, 23, 0.85);
+      backdrop-filter: var(--glass-blur);
+      box-shadow: var(--elevation-3);
+    }
+
+    @media (min-width: 960px) {
+      .auth-split-wrapper {
+        grid-template-columns: 1.15fr 0.85fr;
+      }
+    }
+
+    /* Left Hero Side */
+    .auth-left-hero {
+      padding: var(--space-6);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(6, 182, 212, 0.04) 50%, rgba(139, 92, 246, 0.05) 100%);
+      border-right: 1px solid var(--glass-border);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: var(--space-4);
+    }
+
+    /* Right Auth Card */
+    .auth-right-form {
+      padding: var(--space-6);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .auth-field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: var(--space-3);
+    }
+
+    .auth-field-group label {
+      font-size: var(--text-xs);
+      font-weight: 600;
+      color: var(--text-mid);
+      text-transform: uppercase;
+      letter-spacing: var(--tracking-wide);
+    }
+
+    .auth-input-control {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid var(--glass-border);
+      color: var(--text-hi);
+      font-size: var(--text-body-sm);
+      outline: none;
+      transition: border-color var(--dur-micro) var(--ease-entrance);
+    }
+
+    .auth-input-control:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 12px var(--cyan-glow);
+    }
+
+    .radar-stream-box {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .radar-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Dynamic Background -->
+  <div class="ambient-background-layer">
+    <div class="ambient-orb orb-violet"></div>
+    <div class="ambient-orb orb-cyan"></div>
+    <div class="ambient-orb orb-emerald"></div>
+    <div class="ambient-grid"></div>
+    <div class="ambient-noise"></div>
+  </div>
+
+  <!-- Main Split-Screen Container -->
+  <div class="auth-page-container">
+    <div class="auth-split-wrapper">
+      
+      <!-- =====================================================================
+           LEFT HERO SIDE: FINANCIAL INTELLIGENCE & TELEMETRY STREAM
+           ===================================================================== -->
+      <div class="auth-left-hero">
+        
+        <div>
+          <!-- Brand Badge -->
+          <div class="glass-pill" style="margin-bottom: var(--space-3); color: var(--cyan); border-color: var(--cyan-border);">
+            <div class="ai-pulse-dot" style="background: var(--cyan); box-shadow: 0 0 8px var(--cyan);"></div>
+            <span class="text-micro font-display">MONDAY NEURAL ENGINE v2.5</span>
+          </div>
+
+          <h1 class="text-h1" style="font-size: clamp(1.75rem, 3vw, 2.5rem); margin-bottom: 12px; line-height: 1.15;">
+            The dual-market terminal that <br>
+            <span class="text-gradient-institutional">thinks before you execute.</span>
+          </h1>
+
+          <p class="text-body-sm text-mid" style="max-width: 520px; line-height: 1.6;">
+            Institutional liquidity sweeps, autonomous 1:3 asymmetric risk firewalls, and an active Hinglish audio copilot engineered to protect your capital from emotional tilt.
+          </p>
+        </div>
+
+        <!-- Neural Market Telemetry Radar Cockpit -->
+        <div class="radar-stream-box">
+          <div class="flex items-center justify-between" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 8px;">
+            <div class="flex items-center gap-2">
+              <span class="ai-pulse-dot" style="background: var(--profit);"></span>
+              <span class="text-micro text-profit">LIVE TELEMETRY STREAM</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="code-badge text-profit">🇮🇳 NIFTY 25,120</span>
+              <span class="code-badge text-cyan">⚡ BTC $68,432</span>
+            </div>
+          </div>
+
+          <!-- Row 1: Order Flow -->
+          <div class="radar-row">
+            <div style="width: 34px; height: 34px; border-radius: var(--radius-xs); background: rgba(16, 185, 129, 0.15); display: flex; align-items: center; justify-content: center; color: var(--profit);">
+              <i class="ph-bold ph-chart-polar"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-hi);">Institutional Liquidity Sweep</span>
+                <span class="code-badge text-profit">FVG + SMT CONFIRMED</span>
+              </div>
+              <div class="text-xs text-mid">Smart money accumulation zone triggered across 15M/1H</div>
+            </div>
+          </div>
+
+          <!-- Row 2: Risk Armor -->
+          <div class="radar-row">
+            <div style="width: 34px; height: 34px; border-radius: var(--radius-xs); background: rgba(245, 158, 11, 0.15); display: flex; align-items: center; justify-content: center; color: var(--shield);">
+              <i class="ph-bold ph-shield-check"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-hi);">Quantitative Risk Firewall</span>
+                <span class="code-badge text-shield">1.0% HARD STOP</span>
+              </div>
+              <div class="text-xs text-mid">Strict 1:3.2 asymmetric R-multiple &bull; Zero emotional tilt</div>
+            </div>
+          </div>
+
+          <!-- Row 3: Audio Voice Sentinel -->
+          <div class="radar-row">
+            <div style="width: 34px; height: 34px; border-radius: var(--radius-xs); background: rgba(139, 92, 246, 0.15); display: flex; align-items: center; justify-content: center; color: var(--violet);">
+              <i class="ph-bold ph-waveform"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-hi);">Neural Audio Copilot (Hinglish)</span>
+                <span class="code-badge text-violet">ACTIVE HUD</span>
+              </div>
+              <div class="text-xs text-violet" style="font-style: italic;">"Bhai, breakout trap confirm ho gaya. Stoploss strictly lock rakho."</div>
+            </div>
+          </div>
+
+          <!-- Confluence Meter -->
+          <div style="border-top: 1px solid var(--glass-border); padding-top: 8px;">
+            <div class="flex justify-between text-micro text-mid" style="margin-bottom: 4px;">
+              <span>NEURAL CONFLUENCE SCORE</span>
+              <span class="text-profit" style="font-weight: 700;">96.4% [GRADE A+]</span>
+            </div>
+            <div style="width: 100%; height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: var(--radius-full); overflow: hidden;">
+              <div style="width: 96.4%; height: 100%; background: linear-gradient(90deg, var(--profit), var(--cyan)); box-shadow: 0 0 10px var(--profit);"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer Philosophy Quote -->
+        <div class="text-xs text-low" style="border-top: 1px solid var(--glass-border); padding-top: 10px;">
+          "Amateurs gamble on random predictions. Professionals calculate asymmetric probabilities. MONDAY bridges the gap."
+        </div>
+
+      </div>
+
+      <!-- =====================================================================
+           RIGHT AUTH CARD: LOGIN / SIGNUP / 1-CLICK GUEST
+           ===================================================================== -->
+      <div class="auth-right-form">
+        
+        <div style="margin-bottom: var(--space-4);">
+          <h2 class="text-h2" id="auth_title">Welcome Back</h2>
+          <p class="text-body-sm text-mid" id="auth_sub">
+            Sign in or create an account to synchronize your trading statements.
+          </p>
+        </div>
+
+        <!-- Segmented Tab Switcher -->
+        <div class="segmented-control" style="width: 100%; margin-bottom: var(--space-4);">
+          <button type="button" class="segment-btn active" id="tab_auth_signin" style="flex: 1; text-align: center;">Sign In</button>
+          <button type="button" class="segment-btn" id="tab_auth_signup" style="flex: 1; text-align: center;">Create Account</button>
+        </div>
+
+        <!-- Form -->
+        <form id="auth_form" onsubmit="event.preventDefault(); window.location.href='../terminal.html';">
+          
+          <!-- Full Name (Only for Signup) -->
+          <div class="auth-field-group" id="group_name" style="display: none;">
+            <label for="auth_name">Full Name</label>
+            <input type="text" id="auth_name" class="auth-input-control" placeholder="Trader Name">
+          </div>
+
+          <!-- Email -->
+          <div class="auth-field-group">
+            <label for="auth_email">Email Address</label>
+            <input type="email" id="auth_email" class="auth-input-control" placeholder="name@domain.com" required>
+          </div>
+
+          <!-- Password -->
+          <div class="auth-field-group">
+            <div class="flex justify-between items-center">
+              <label for="auth_password">Password</label>
+              <a href="#" class="text-xs text-cyan" id="auth_forgot_link">Forgot password?</a>
+            </div>
+            <div style="position: relative;">
+              <input type="password" id="auth_password" class="auth-input-control" placeholder="••••••••" required>
+              <button type="button" id="auth_eye_toggle" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--text-mid); font-size: 1.1rem;">
+                <i class="ph ph-eye" id="eye_icon"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn-primary" id="auth_submit_btn" style="width: 100%; padding: 13px; margin-top: 6px;">
+            <span id="auth_submit_text">Sign In with Email</span> <i class="ph-bold ph-arrow-right"></i>
+          </button>
+        </form>
+
+        <!-- Divider -->
+        <div style="display: flex; align-items: center; gap: 12px; margin: var(--space-3) 0;">
+          <div style="flex: 1; height: 1px; background: var(--glass-border);"></div>
+          <span class="text-micro text-low">OR</span>
+          <div style="flex: 1; height: 1px; background: var(--glass-border);"></div>
+        </div>
+
+        <!-- Social & Instant Guest Buttons -->
+        <div class="flex flex-col gap-2">
+          
+          <!-- Google OAuth -->
+          <button type="button" class="btn-secondary" id="btn_auth_google" style="width: 100%; justify-content: center;" onclick="window.location.href='../terminal.html';">
+            <svg viewBox="0 0 24 24" width="18" height="18" style="margin-right: 6px;">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            Continue with Google
+          </button>
+
+          <!-- 1-Click Guest Session -->
+          <a href="../terminal.html" class="glass-card" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px; border-radius: var(--radius-full); color: var(--cyan); border-color: var(--cyan-border); font-size: var(--text-body-sm); font-weight: 600; text-align: center; text-decoration: none;">
+            <i class="ph-bold ph-user"></i> Continue as Guest ($2,000 Paper Balance)
+          </a>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="../js/foundation/cursorGlow.js"></script>
+  <script type="module" src="../js/foundation/smoothScroll.js"></script>
+
+  <script type="module">
+    import { sfx } from '../components/sfx.js';
+
+    const tabSignIn = document.getElementById('tab_auth_signin');
+    const tabSignUp = document.getElementById('tab_auth_signup');
+    const groupName = document.getElementById('group_name');
+    const title = document.getElementById('auth_title');
+    const sub = document.getElementById('auth_sub');
+    const submitText = document.getElementById('auth_submit_text');
+    const forgotLink = document.getElementById('auth_forgot_link');
+
+    tabSignIn.addEventListener('click', () => {
+      tabSignIn.classList.add('active');
+      tabSignUp.classList.remove('active');
+      groupName.style.display = 'none';
+      title.textContent = 'Welcome Back';
+      sub.textContent = 'Sign in or create an account to synchronize your trading statements.';
+      submitText.textContent = 'Sign In with Email';
+      forgotLink.style.display = 'block';
+      sfx.playClick();
+    });
+
+    tabSignUp.addEventListener('click', () => {
+      tabSignUp.classList.add('active');
+      tabSignIn.classList.remove('active');
+      groupName.style.display = 'flex';
+      title.textContent = 'Create Pro Account';
+      sub.textContent = 'Unlock 24/7 daemon execution and live cloud synchronization.';
+      submitText.textContent = 'Create Account';
+      forgotLink.style.display = 'none';
+      sfx.playClick();
+    });
+
+    // Eye Password Toggle
+    const eyeBtn = document.getElementById('auth_eye_toggle');
+    const pwdInput = document.getElementById('auth_password');
+    const eyeIcon = document.getElementById('eye_icon');
+
+    eyeBtn.addEventListener('click', () => {
+      const isPwd = pwdInput.type === 'password';
+      pwdInput.type = isPwd ? 'text' : 'password';
+      eyeIcon.className = isPwd ? 'ph ph-eye-slash' : 'ph ph-eye';
+      sfx.playClick();
+    });
+  </script>
+</body>
+</html>
+

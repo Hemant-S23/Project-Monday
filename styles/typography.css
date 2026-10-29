@@ -1,0 +1,124 @@
+/**
+ * PROJECT MONDAY — TYPOGRAPHY SYSTEM
+ * Space Grotesk (Display) • Inter (UI/Body) • JetBrains Mono (Prices & Quant Telemetry)
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Headings with Confident Tight Tracking */
+h1, h2, h3, h4, .text-display {
+  font-family: var(--font-display);
+  color: var(--text-hi);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: var(--tracking-tighter);
+}
+
+.text-display-hero {
+  font-size: var(--text-display-hero);
+  letter-spacing: -0.045em;
+  line-height: 1.04;
+}
+
+.text-display-1 {
+  font-size: var(--text-display-1);
+}
+
+.text-display-2 {
+  font-size: var(--text-display-2);
+}
+
+.text-h1 {
+  font-size: var(--text-h1);
+  letter-spacing: var(--tracking-tight);
+}
+
+.text-h2 {
+  font-size: var(--text-h2);
+  letter-spacing: var(--tracking-tight);
+}
+
+.text-h3 {
+  font-size: var(--text-h3);
+  letter-spacing: var(--tracking-normal);
+}
+
+/* Body & Metadata */
+p, .text-body {
+  font-family: var(--font-body);
+  color: var(--text-mid);
+  font-size: var(--text-body);
+  line-height: 1.6;
+}
+
+.text-body-lg {
+  font-size: var(--text-body-lg);
+  line-height: 1.5;
+}
+
+.text-body-sm {
+  font-size: var(--text-body-sm);
+  line-height: 1.5;
+}
+
+.text-xs {
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+}
+
+.text-micro {
+  font-size: var(--text-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+  font-weight: 600;
+}
+
+/* Financial & Algorithmic Tickers (Tabular Numbers) */
+.num-ticker, .price-display, .r-stat {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* Text Colors & Semantics */
+.text-hi     { color: var(--text-hi); }
+.text-mid    { color: var(--text-mid); }
+.text-low    { color: var(--text-low); }
+.text-profit { color: var(--profit); }
+.text-risk   { color: var(--risk); }
+.text-shield { color: var(--shield); }
+.text-cyan   { color: var(--cyan); }
+.text-violet { color: var(--violet); }
+
+/* Luminous Gradients */
+.text-gradient-institutional {
+  background: linear-gradient(135deg, var(--profit) 0%, var(--cyan) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-neural {
+  background: linear-gradient(135deg, #ffffff 15%, var(--cyan) 65%, var(--violet) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-muted {
+  background: linear-gradient(180deg, #ffffff 0%, var(--text-mid) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+

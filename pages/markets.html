@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROJECT MONDAY — Dual-Market Universe (Web3 & India)</title>
+  <meta name="description" content="Explore high-liquidity crypto assets alongside 150+ Indian Equities, Sector Baskets, and landmark Mega-IPOs.">
+
+  <!-- Phosphor Icons -->
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="../styles/main.css">
+  <link rel="stylesheet" href="../styles/components.css">
+
+  <style>
+    .market-card {
+      padding: var(--space-3) var(--space-4);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all var(--dur-micro) var(--ease-entrance);
+      cursor: pointer;
+    }
+
+    .market-card:hover {
+      border-color: var(--glass-border-hi);
+      background: var(--glass-fill-ultra);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Dynamic Background -->
+  <div class="ambient-background-layer">
+    <div class="ambient-orb orb-violet"></div>
+    <div class="ambient-orb orb-cyan"></div>
+    <div class="ambient-orb orb-emerald"></div>
+    <div class="ambient-grid"></div>
+    <div class="ambient-noise"></div>
+  </div>
+
+  <!-- Floating Navbar -->
+  <header class="nav-floating">
+    <a href="../index.html" class="nav-brand">
+      <div class="ai-pulse-dot"></div>
+      <span class="font-display">MONDAY</span>
+      <span class="code-badge" style="margin-left: 4px;">MARKETS</span>
+    </a>
+
+    <nav class="nav-links" style="display: none; @media(min-width: 820px){ display: flex; }">
+      <a href="../index.html" class="nav-link">Home</a>
+      <a href="engines.html" class="nav-link">Engines</a>
+      <a href="markets.html" class="nav-link active">Markets</a>
+      <a href="pricing.html" class="nav-link">Pricing</a>
+      <a href="learn.html" class="nav-link">Learn</a>
+      <a href="about.html" class="nav-link">About</a>
+    </nav>
+
+    <div class="flex items-center gap-2">
+      <a href="auth.html" class="btn-ghost" style="font-size: 0.85rem;">Sign In</a>
+      <a href="../terminal.html" class="btn-primary">
+        Launch Terminal <i class="ph-bold ph-arrow-up-right"></i>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container" style="padding-top: 130px; padding-bottom: 120px;">
+    
+    <!-- Hero Header -->
+    <section class="section-header" style="text-align: left; max-width: 860px; margin-bottom: var(--space-8);">
+      <div class="section-tag glass-pill" style="color: var(--profit); border-color: var(--profit-border);">
+        <i class="ph-bold ph-globe-hemisphere-east"></i> DUAL-MARKET TELEMETRY
+      </div>
+      <h1 class="text-display-hero">
+        Global Web3 & <span class="text-gradient-institutional">Indian Equities Universe</span>
+      </h1>
+      <p class="text-body-lg text-mid" style="margin-top: var(--space-2);">
+        High-speed real-time ticker stream connecting native Coinbase perpetuals with 150+ NSE benchmark indices, defense titans, and blockbuster mega-IPOs.
+      </p>
+    </section>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="glass-panel" style="padding: var(--space-3); margin-bottom: var(--space-6); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3);">
+      
+      <!-- Market Switcher Segment -->
+      <div class="segmented-control">
+        <button type="button" class="segment-btn active" id="tab_market_all">All Instruments</button>
+        <button type="button" class="segment-btn" id="tab_market_crypto">Crypto Universe</button>
+        <button type="button" class="segment-btn" id="tab_market_india">Indian Equities & F&O</button>
+        <button type="button" class="segment-btn" id="tab_market_ipo">Mega IPOs</button>
+      </div>
+
+      <!-- Real-Time Ticker Search Input -->
+      <div style="position: relative; min-width: 280px; flex: 1; max-width: 420px;">
+        <i class="ph ph-magnifying-glass" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--cyan);"></i>
+        <input type="text" id="market_search_input" class="glass-input" placeholder="Search ticker (e.g. BTC, HYUNDAI, SWIGGY)..." style="width: 100%; padding: 10px 14px 10px 38px; border-radius: var(--radius-full); background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); color: var(--text-hi); outline: none;">
+      </div>
+    </div>
+
+    <!-- Instruments Grid Container -->
+    <div class="bento-grid" id="instruments_grid">
+      
+      <!-- Crypto: BTC -->
+      <div class="glass-card market-card bento-col-6" data-category="crypto" data-symbol="BTC">
+        <div class="flex items-center gap-3">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(245, 158, 11, 0.15); border: 1px solid var(--shield-border); display: flex; align-items: center; justify-content: center; color: var(--shield); font-size: 1.25rem;">
+            <i class="ph-bold ph-currency-btc"></i>
+          </div>
+          <div>
+            <div style="font-weight: 700; font-size: 1rem; color: var(--text-hi);">BTC/USD Perpetual</div>
+            <div class="text-xs text-mid">Coinbase Native Stream &bull; Up to 200x</div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div class="num-ticker text-h3 text-hi">$68,432.50</div>
+          <div class="text-xs text-profit">+4.18% 24h</div>
+        </div>
+      </div>
+
+      <!-- Crypto: ETH -->
+      <div class="glass-card market-card bento-col-6" data-category="crypto" data-symbol="ETH">
+        <div class="flex items-center gap-3">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(139, 92, 246, 0.15); border: 1px solid var(--violet-border); display: flex; align-items: center; justify-content: center; color: var(--violet); font-size: 1.25rem;">
+            <i class="ph-bold ph-currency-eth"></i>
+          </div>
+          <div>
+            <div style="font-weight: 700; font-size: 1rem; color: var(--text-hi);">ETH/USD Perpetual</div>
+            <div class="text-xs text-mid">Coinbase Native Stream &bull; Up to 200x</div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div class="num-ticker text-h3 text-hi">$3,540.20</div>
+          <div class="text-xs text-profit">+2.95% 24h</div>
+        </div>
+      </div>
+
+      <!-- Crypto: SOL -->
+      <div class="glass-card market-card bento-col-6" data-category="crypto" data-symbol="SOL">
+        <div class="flex items-center gap-3">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(6, 182, 212, 0.15); border: 1px solid var(--cyan-border); display: flex; align-items: center; justify-content: center; color: var(--cyan); font-size: 1.25rem;">
+            <i class="ph-bold ph-lightning"></i>
+          </div>
+          <div>
+            <div style="font-weight: 700; font-size: 1rem; color: var(--text-hi);">SOL/USD Perpetual</div>
+            <div class="text-xs text-mid">High-Speed L1 &bull; Up to 75x</div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div class="num-ticker text-h3 text-hi">$182.40</div>
+          <div class="text-xs text-profit">+6.12% 24h</div>
+        </div>
+      </div>
+
+      <!-- India: NIFTY 50 -->
+      <div class="glass-card market-card bento-col-6" data-category="india" data-symbol="NIFTY">
+        <div class="flex items-center gap-3">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(16, 185, 129, 0.15); border: 1px solid var(--profit-border); display: flex; align-items: center; justify-content: center; color: var(--profit); font-size: 1.25rem;">
+            <i class="ph-bold ph-chart-line-up"></i>
+          </div>
+          <div>
+            <div style="font-weight: 700; font-size: 1rem; color: var(--text-hi);">NIFTY 50 Index</div>
+            <div class="text-xs text-mid">NSE F&O Continuous &bull; Benchmark</div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div class="num-ticker text-h3 text-hi">₹25,120.40</div>
+          <div class="text-xs text-profit">+0.72% 24h</div>
+        </div>
+      </div>
+
+      <!-- India Mega IPO: Hyundai Motor India -->
+      <div class="glass-card market-card bento-col-6" data-category="ipo" data-symbol="HYUNDAI">
+        <div class="flex items-center gap-3">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(255, 255, 255, 0.08); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; color: var(--cyan); font-size: 1.25rem;">
+            <i class="ph-bold ph-car"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span style="font-weight: 700; font-size: 1rem; color: var(--text-hi);">Hyundai Motor India</span>
+              <span class="code-badge">MEGA IPO</span>
+            </div>
+            <div class="text-xs text-mid">NSE: HYUNDAI &bull; Automobiles & EV</div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div class="num-ticker text-h3 text-hi">₹1,865.40</div>
+          <div class="text-xs text-profit">+2.45% 24h</div>
+        </div>
+      </div>
+
+      <!-- India Mega IPO: Swiggy Ltd -->
+      <div class="glass-card market-card bento-col-6" data-category="ipo" data-symbol="SWIGGY">
+        <div class="flex items-center gap-3">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(245, 158, 11, 0.15); border: 1px solid var(--shield-border); display: flex; align-items: center; justify-content: center; color: var(--shield); font-size: 1.25rem;">
+            <i class="ph-bold ph-bag"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span style="font-weight: 700; font-size: 1rem; color: var(--text-hi);">Swiggy Ltd</span>
+              <span class="code-badge">MEGA IPO</span>
+            </div>
+            <div class="text-xs text-mid">NSE: SWIGGY &bull; Quick Commerce & Food</div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div class="num-ticker text-h3 text-hi">₹422.80</div>
+          <div class="text-xs text-profit">+4.60% 24h</div>
+        </div>
+      </div>
+
+      <!-- India Mega IPO: Waaree Energies -->
+      <div class="glass-card market-card bento-col-6" data-category="ipo" data-symbol="WAAREE">
+        <div class="flex items-center gap-3">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(16, 185, 129, 0.15); border: 1px solid var(--profit-border); display: flex; align-items: center; justify-content: center; color: var(--profit); font-size: 1.25rem;">
+            <i class="ph-bold ph-sun"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span style="font-weight: 700; font-size: 1rem; color: var(--text-hi);">Waaree Energies Ltd</span>
+              <span class="code-badge">MEGA IPO</span>
+            </div>
+            <div class="text-xs text-mid">NSE: WAAREE &bull; Solar Energy Giant</div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div class="num-ticker text-h3 text-hi">₹2,840.00</div>
+          <div class="text-xs text-profit">+5.80% 24h</div>
+        </div>
+      </div>
+
+      <!-- India Mega IPO: Bajaj Housing Finance -->
+      <div class="glass-card market-card bento-col-6" data-category="ipo" data-symbol="BAJAJHFL">
+        <div class="flex items-center gap-3">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(139, 92, 246, 0.15); border: 1px solid var(--violet-border); display: flex; align-items: center; justify-content: center; color: var(--violet); font-size: 1.25rem;">
+            <i class="ph-bold ph-house-line"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span style="font-weight: 700; font-size: 1rem; color: var(--text-hi);">Bajaj Housing Finance</span>
+              <span class="code-badge">BLOCKBUSTER</span>
+            </div>
+            <div class="text-xs text-mid">NSE: BAJAJHFL &bull; Housing Finance Leader</div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div class="num-ticker text-h3 text-hi">₹138.50</div>
+          <div class="text-xs text-profit">+3.10% 24h</div>
+        </div>
+      </div>
+
+      <!-- India Sector: HAL (Defense) -->
+      <div class="glass-card market-card bento-col-6" data-category="india" data-symbol="HAL">
+        <div class="flex items-center gap-3">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(6, 182, 212, 0.15); border: 1px solid var(--cyan-border); display: flex; align-items: center; justify-content: center; color: var(--cyan); font-size: 1.25rem;">
+            <i class="ph-bold ph-airplane-tilt"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span style="font-weight: 700; font-size: 1rem; color: var(--text-hi);">Hindustan Aeronautics (HAL)</span>
+              <span class="code-badge text-cyan">DEFENSE</span>
+            </div>
+            <div class="text-xs text-mid">NSE: HAL &bull; Tejas Fighter Jet Titan</div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div class="num-ticker text-h3 text-hi">₹4,480.00</div>
+          <div class="text-xs text-profit">+3.10% 24h</div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Legal Footer -->
+  <footer style="background: rgba(10, 12, 19, 0.85); border-top: 1px solid var(--glass-border); padding: var(--space-8) 0;">
+    <div class="container text-center">
+      <p class="text-xs text-low">
+        <b>MANDATORY RISK DISCLOSURE:</b> All market feeds and simulated tickers operate within an educational analytics environment and do not constitute financial advice. Project MONDAY is an independent analytics platform.
+      </p>
+      <div class="text-micro text-dim" style="margin-top: 12px;">
+        &copy; 2026 Project MONDAY. Engineered with Liquid-Glass Precision.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script type="module" src="../js/foundation/cursorGlow.js"></script>
+  <script type="module" src="../js/foundation/smoothScroll.js"></script>
+
+  <script type="module">
+    import { sfx } from '../components/sfx.js';
+
+    // Filter Switcher
+    const cards = Array.from(document.querySelectorAll('.market-card'));
+    const searchInput = document.getElementById('market_search_input');
+
+    function applyFilter(category = 'all', query = '') {
+      const q = query.trim().toLowerCase();
+      cards.forEach(card => {
+        const cat = card.getAttribute('data-category');
+        const sym = card.getAttribute('data-symbol').toLowerCase();
+        const text = card.textContent.toLowerCase();
+
+        const matchCat = (category === 'all' || cat === category);
+        const matchQuery = (q === '' || sym.includes(q) || text.includes(q));
+
+        if (matchCat && matchQuery) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    let currentCategory = 'all';
+
+    document.getElementById('tab_market_all').addEventListener('click', (e) => {
+      setActiveTab(e.target);
+      currentCategory = 'all';
+      applyFilter('all', searchInput.value);
+    });
+
+    document.getElementById('tab_market_crypto').addEventListener('click', (e) => {
+      setActiveTab(e.target);
+      currentCategory = 'crypto';
+      applyFilter('crypto', searchInput.value);
+    });
+
+    document.getElementById('tab_market_india').addEventListener('click', (e) => {
+      setActiveTab(e.target);
+      currentCategory = 'india';
+      applyFilter('india', searchInput.value);
+    });
+
+    document.getElementById('tab_market_ipo').addEventListener('click', (e) => {
+      setActiveTab(e.target);
+      currentCategory = 'ipo';
+      applyFilter('ipo', searchInput.value);
+    });
+
+    function setActiveTab(target) {
+      document.querySelectorAll('.segment-btn').forEach(b => b.classList.remove('active'));
+      target.classList.add('active');
+      sfx.playClick();
+    }
+
+    searchInput.addEventListener('input', (e) => {
+      applyFilter(currentCategory, e.target.value);
+    });
+
+    cards.forEach(card => {
+      card.addEventListener('click', () => {
+        sfx.playClick();
+        window.location.href = '../terminal.html';
+      });
+    });
+  </script>
+</body>
+</html>
+

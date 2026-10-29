@@ -5,6 +5,9 @@
   "main": "monday-daemon.js",
   "type": "module",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "start": "node monday-daemon.js",
     "daemon": "node monday-daemon.js",
     "test": "node scratch/test_clean_shield.js"
@@ -17,5 +20,11 @@
     "supabase"
   ],
   "author": "Hemant-S23",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "vite": "^8.3.5"
+  },
+  "dependencies": {
+    "three": "^0.186.1"
+  }
 }

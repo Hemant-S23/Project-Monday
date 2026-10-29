@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROJECT MONDAY — Quant Academy & Mathematical Knowledge Base</title>
+  <meta name="description" content="Master R-multiples, liquidation mathematics, ICT/SMC liquidity sweeps, and Indian derivative taxation.">
+
+  <!-- Phosphor Icons -->
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="../styles/main.css">
+  <link rel="stylesheet" href="../styles/components.css">
+
+  <style>
+    .learn-card {
+      padding: var(--space-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      cursor: pointer;
+      transition: all var(--dur-micro) var(--ease-entrance);
+    }
+
+    .learn-card:hover {
+      border-color: var(--glass-border-hi);
+      transform: translateY(-3px);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Dynamic Background -->
+  <div class="ambient-background-layer">
+    <div class="ambient-orb orb-violet"></div>
+    <div class="ambient-orb orb-cyan"></div>
+    <div class="ambient-orb orb-emerald"></div>
+    <div class="ambient-grid"></div>
+    <div class="ambient-noise"></div>
+  </div>
+
+  <!-- Floating Navbar -->
+  <header class="nav-floating">
+    <a href="../index.html" class="nav-brand">
+      <div class="ai-pulse-dot"></div>
+      <span class="font-display">MONDAY</span>
+      <span class="code-badge" style="margin-left: 4px;">LEARN</span>
+    </a>
+
+    <nav class="nav-links" style="display: none; @media(min-width: 820px){ display: flex; }">
+      <a href="../index.html" class="nav-link">Home</a>
+      <a href="engines.html" class="nav-link">Engines</a>
+      <a href="markets.html" class="nav-link">Markets</a>
+      <a href="pricing.html" class="nav-link">Pricing</a>
+      <a href="learn.html" class="nav-link active">Learn</a>
+      <a href="about.html" class="nav-link">About</a>
+    </nav>
+
+    <div class="flex items-center gap-2">
+      <a href="auth.html" class="btn-ghost" style="font-size: 0.85rem;">Sign In</a>
+      <a href="../terminal.html" class="btn-primary">
+        Launch Terminal <i class="ph-bold ph-arrow-up-right"></i>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container" style="padding-top: 130px; padding-bottom: 120px;">
+    
+    <!-- Hero Header -->
+    <section class="section-header" style="text-align: left; max-width: 860px; margin-bottom: var(--space-8);">
+      <div class="section-tag glass-pill" style="color: var(--cyan); border-color: var(--cyan-border);">
+        <i class="ph-bold ph-graduation-cap"></i> QUANTITATIVE ACADEMY
+      </div>
+      <h1 class="text-display-hero">
+        Master the Mathematical <br>
+        <span class="text-gradient-institutional">Architecture of Trading</span>
+      </h1>
+      <p class="text-body-lg text-mid" style="margin-top: var(--space-2);">
+        Throw away retail vanity metrics. Understand expectancy, liquidation mechanics, institutional liquidity sweeps, and capital preservation.
+      </p>
+    </section>
+
+    <!-- Filter Capsules -->
+    <div class="glass-panel" style="padding: var(--space-3); margin-bottom: var(--space-6); display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;">
+      <button type="button" class="segment-btn active" data-filter="all">All Modules</button>
+      <button type="button" class="segment-btn" data-filter="r-multiple">R-Multiple Math</button>
+      <button type="button" class="segment-btn" data-filter="liquidation">Liquidation Armor</button>
+      <button type="button" class="segment-btn" data-filter="smc">Smart Money Concepts</button>
+      <button type="button" class="segment-btn" data-filter="tax">Indian GST & Compliance</button>
+    </div>
+
+    <!-- Learning Cards Grid -->
+    <div class="bento-grid" id="learn_cards_grid">
+      
+      <!-- Module 1: R-Multiple -->
+      <article class="glass-card learn-card bento-col-6" data-category="r-multiple">
+        <div class="flex items-center justify-between">
+          <span class="code-badge text-profit">MATHEMATICAL EDGE</span>
+          <span class="text-micro text-low">6 MIN READ</span>
+        </div>
+        <h3 class="text-h2">What is an R-Multiple? Why Win Rate is a Vanity Metric</h3>
+        <p class="text-body-sm text-mid">
+          Amateurs obsess over 80% win rates while losing money due to terrible negative risk/reward ratios. In professional quantitative finance, 1R represents 1 standard unit of risk (1% of account). Learn how a 40% win rate with 1:3.2 R:R generates explosive equity growth.
+        </p>
+        <div class="num-ticker text-xs text-profit" style="background: rgba(16, 185, 129, 0.08); padding: 8px 12px; border-radius: var(--radius-xs); border: 1px solid var(--profit-border);">
+          Expectancy = (Win% &times; 3.2R) &minus; (Loss% &times; 1.0R) = +0.68R / trade
+        </div>
+      </article>
+
+      <!-- Module 2: Liquidation Math -->
+      <article class="glass-card learn-card bento-col-6" data-category="liquidation">
+        <div class="flex items-center justify-between">
+          <span class="code-badge text-risk">DERIVATIVES ARMOR</span>
+          <span class="text-micro text-low">8 MIN READ</span>
+        </div>
+        <h3 class="text-h2">Demystifying Liquidation: The MMR Mathematical Formula</h3>
+        <p class="text-body-sm text-mid">
+          Most crypto traders get liquidated because they don't understand Maintenance Margin Rate (MMR). Learn the exact formula Tier-1 exchanges like Delta use to trigger margin calls, and how MONDAY's firewall mathematically rejects unsafe orders.
+        </p>
+        <div class="num-ticker text-xs text-risk" style="background: rgba(244, 63, 94, 0.08); padding: 8px 12px; border-radius: var(--radius-xs); border: 1px solid var(--risk-border);">
+          P_liq = Entry &times; (1 &minus; 1/Lev + MMR)
+        </div>
+      </article>
+
+      <!-- Module 3: SMT Divergence -->
+      <article class="glass-card learn-card bento-col-6" data-category="smc">
+        <div class="flex items-center justify-between">
+          <span class="code-badge text-cyan">SMART MONEY CONCEPTS</span>
+          <span class="text-micro text-low">10 MIN READ</span>
+        </div>
+        <h3 class="text-h2">How to Spot Institutional Liquidity Sweeps with SMT Divergence</h3>
+        <p class="text-body-sm text-mid">
+          When Bitcoin sweeps a key low while Ethereum fails to make a lower low, smart money is accumulating. Discover how MONDAY correlates correlated benchmarks in real time to catch reversal displacement wicks before retail enters.
+        </p>
+        <div class="num-ticker text-xs text-cyan" style="background: rgba(6, 182, 212, 0.08); padding: 8px 12px; border-radius: var(--radius-xs); border: 1px solid var(--cyan-border);">
+          Correlation Break = Divergence Detected &rarr; Institutional Flow Confirmed
+        </div>
+      </article>
+
+      <!-- Module 4: GST & Tax -->
+      <article class="glass-card learn-card bento-col-6" data-category="tax">
+        <div class="flex items-center justify-between">
+          <span class="code-badge text-shield">FINANCIAL COMPLIANCE</span>
+          <span class="text-micro text-low">5 MIN READ</span>
+        </div>
+        <h3 class="text-h2">Delta Exchange India Brokerage & 18% GST Bifurcation Explained</h3>
+        <p class="text-body-sm text-mid">
+          Trading futures and perpetuals in India requires compliant accounting. Understand the 0.05% Taker and 0.02% Maker fee structures and how MONDAY automatically segregates 18% GST on brokerage into your downloadable passbook statement.
+        </p>
+        <div class="num-ticker text-xs text-shield" style="background: rgba(245, 158, 11, 0.08); padding: 8px 12px; border-radius: var(--radius-xs); border: 1px solid var(--shield-border);">
+          Net Ledger = Gross PnL &minus; Brokerage &minus; (Brokerage &times; 18% GST)
+        </div>
+      </article>
+
+    </div>
+
+  </main>
+
+  <!-- Legal Footer -->
+  <footer style="background: rgba(10, 12, 19, 0.85); border-top: 1px solid var(--glass-border); padding: var(--space-8) 0;">
+    <div class="container text-center">
+      <p class="text-xs text-low">
+        <b>MANDATORY RISK DISCLOSURE:</b> Educational materials and quant modules are intended for analytical skill development and simulated testing. Trading derivatives involves substantial risk of capital loss.
+      </p>
+      <div class="text-micro text-dim" style="margin-top: 12px;">
+        &copy; 2026 Project MONDAY. Engineered with Liquid-Glass Precision.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script type="module" src="../js/foundation/cursorGlow.js"></script>
+  <script type="module" src="../js/foundation/smoothScroll.js"></script>
+
+  <script type="module">
+    import { sfx } from '../components/sfx.js';
+
+    const filterBtns = document.querySelectorAll('[data-filter]');
+    const cards = document.querySelectorAll('.learn-card');
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        sfx.playClick();
+
+        const filter = btn.getAttribute('data-filter');
+        cards.forEach(card => {
+          const cat = card.getAttribute('data-category');
+          if (filter === 'all' || cat === filter) {
+            card.style.display = 'flex';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
+
+    cards.forEach(card => {
+      card.addEventListener('click', () => {
+        sfx.playClick();
+        window.location.href = '../terminal.html';
+      });
+    });
+  </script>
+</body>
+</html>
+

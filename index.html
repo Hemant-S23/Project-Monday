@@ -3,2278 +3,1509 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MONDAY — Market-Oriented Neural Decision Assistant for You</title>
-  <meta name="description" content="Meet MONDAY (Market-Oriented Neural Decision Assistant for You) — a real-time, multi-market AI trading companion combining live data, charts, historical context, and natural Hinglish/English voice interaction.">
-  
-  <!-- High-Speed DNS Pre-connect for Zero-Lag Boot -->
-  <link rel="preconnect" href="https://api.exchange.coinbase.com" crossorigin>
-  <link rel="preconnect" href="https://s3.tradingview.com" crossorigin>
-  <link rel="preconnect" href="https://unpkg.com" crossorigin>
-  
+  <title>PROJECT MONDAY — Autonomous Neural Trading Terminal & Co-Pilot</title>
+  <meta name="description" content="Stop gambling on predictions. Trade with institutional confluence. Project MONDAY combines live execution, 8-step ICT/SMC confluence, 1:3.2 asymmetric risk firewalls, and an active Hinglish audio copilot.">
+
+  <!-- PWA & Mobile Meta -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#06070a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- High-Speed DNS Pre-connect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
   <!-- Phosphor Icons -->
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  
-  <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/main.css?v=5.3">
-  <link rel="stylesheet" href="css/components.css?v=5.2">
-  <link rel="stylesheet" href="css/auth.css?v=4.7">
-  <link rel="stylesheet" href="css/multi-chart.css?v=6.1">
-  <link rel="stylesheet" href="css/saas-layout.css?v=1.0">
 
-  <!-- Supabase JS Client (Non-blocking defer for instant HTML paint) -->
-  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Master Stylesheets -->
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/components.css">
+
+  <style>
+    /* Landing Hero 3D Canvas Layer */
+    .hero-3d-canvas-wrap {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 10;
+      min-height: 94vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-top: 130px;
+      padding-bottom: 60px;
+    }
+
+    /* Floating Orbiting Glass Telemetry Chips */
+    .hero-orbit-chip {
+      position: absolute;
+      z-index: 12;
+      animation: floatParallax 6s ease-in-out infinite alternate;
+      display: none;
+    }
+
+    @media (min-width: 1024px) {
+      .hero-orbit-chip { display: flex; }
+      .chip-pos-1 { top: 22%; right: 8%; animation-delay: 0s; }
+      .chip-pos-2 { bottom: 25%; right: 14%; animation-delay: 1.5s; }
+      .chip-pos-3 { top: 32%; left: 4%; animation-delay: 2.2s; }
+    }
+
+    @keyframes floatParallax {
+      0% { transform: translateY(0px) rotate(0deg); }
+      100% { transform: translateY(-14px) rotate(1.5deg); }
+    }
+
+    /* Problem -> Solution Storytelling Cards */
+    .problem-card {
+      padding: var(--space-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      border-radius: var(--radius-md);
+      transition: all var(--dur-component) var(--ease-entrance);
+    }
+
+    .problem-card:hover {
+      border-color: var(--glass-border-hi);
+      transform: translateY(-4px);
+    }
+
+    /* Marquee Ticker Track */
+    .marquee-wrapper {
+      width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      position: relative;
+      padding: 16px 0;
+      background: rgba(13, 15, 23, 0.6);
+      backdrop-filter: var(--glass-blur);
+      border-top: 1px solid var(--glass-border);
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .marquee-track {
+      display: inline-flex;
+      gap: var(--space-6);
+      animation: marqueeScroll 36s linear infinite;
+    }
+
+    @keyframes marqueeScroll {
+      0% { transform: translateX(0%); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* Comparison Table Styling */
+    .comparison-table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--glass-border);
+      background: var(--glass-fill);
+      backdrop-filter: var(--glass-blur);
+    }
+
+    .comp-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .comp-table th, .comp-table td {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--glass-border);
+      font-size: var(--text-body-sm);
+    }
+
+    .comp-table th {
+      font-family: var(--font-display);
+      font-size: var(--text-h3);
+      color: var(--text-mid);
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    .comp-table th.col-monday, .comp-table td.col-monday {
+      background: rgba(16, 185, 129, 0.05);
+      border-left: 1px solid var(--profit-border);
+      border-right: 1px solid var(--profit-border);
+      color: var(--text-hi);
+      font-weight: 600;
+    }
+
+    /* Checklist in Sandbox */
+    .step-check-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid transparent;
+      transition: all 0.3s ease;
+      font-size: var(--text-body-sm);
+      color: var(--text-low);
+    }
+
+    .step-check-item.active {
+      color: var(--text-hi);
+      background: var(--glass-fill-ultra);
+      border-color: var(--glass-border-hi);
+    }
+
+    .step-check-item.confirmed {
+      border-color: var(--profit-border);
+      background: rgba(16, 185, 129, 0.08);
+      color: var(--text-hi);
+    }
+  </style>
 </head>
-<body data-mobile-page="chart">
+<body>
+
+  <!-- Ambient Dynamic Background Layer -->
+  <div class="ambient-background-layer">
+    <div class="ambient-orb orb-violet"></div>
+    <div class="ambient-orb orb-cyan"></div>
+    <div class="ambient-orb orb-emerald"></div>
+    <div class="ambient-grid"></div>
+    <div class="ambient-noise"></div>
+  </div>
 
   <!-- =========================================================================
-       TWO-WAY SPLIT AUTH & LOGIN VIEW (Financial Intelligence & Multi-User)
+       S1: FLOATING GLASS NAVBAR
        ========================================================================= -->
-  <div class="auth-view-overlay" id="auth_view_overlay">
-    <div class="auth-split-container">
-      
-      <!-- LEFT SIDE: Trading Intelligence & Philosophy Hero -->
-      <div class="auth-hero-panel">
-        <div class="auth-brand-pill">
-          <div class="auth-brand-dot"></div>
-          <i class="ph ph-cpu"></i>
-          <span>MONDAY NEURAL ENGINE v2.5</span>
+  <header class="nav-floating">
+    <div class="nav-brand">
+      <div class="ai-pulse-dot"></div>
+      <span class="font-display">MONDAY</span>
+      <span class="code-badge" style="margin-left: 4px;">v2.5</span>
+    </div>
+
+    <!-- Center Nav Links -->
+    <nav class="nav-links" style="display: none; @media(min-width: 820px){ display: flex; }">
+      <a href="pages/engines.html" class="nav-link">Engines</a>
+      <a href="pages/markets.html" class="nav-link">Markets</a>
+      <a href="pages/pricing.html" class="nav-link">Pricing</a>
+      <a href="pages/learn.html" class="nav-link">Learn</a>
+      <a href="pages/about.html" class="nav-link">About</a>
+    </nav>
+
+    <!-- Right Actions -->
+    <div class="flex items-center gap-2">
+      <a href="pages/auth.html" class="btn-ghost" style="font-size: 0.85rem;">Sign In</a>
+      <button type="button" class="cmd-k-chip" id="nav_btn_cmdk" title="Press Ctrl+K to search">
+        <i class="ph-bold ph-command"></i> Ctrl+K
+      </button>
+      <a href="terminal.html" class="btn-primary" id="nav_btn_terminal">
+        Launch Terminal <i class="ph-bold ph-arrow-up-right"></i>
+      </a>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       S1: HERO VIEWPORT & 3D TERRAIN
+       ========================================================================= -->
+  <section class="section" style="padding-top: 0; min-height: 100vh; position: relative;">
+    <!-- Three.js Interactive 3D Mesh Canvas -->
+    <div class="hero-3d-canvas-wrap" id="hero_canvas_3d"></div>
+
+    <!-- Orbiting Floating Glass Telemetry Chips -->
+    <div class="hero-orbit-chip chip-pos-1 glass-card glass-profit-border" style="padding: 10px 18px;">
+      <div class="flex items-center gap-2">
+        <i class="ph-bold ph-shield-check text-profit" style="font-size: 1.25rem;"></i>
+        <div>
+          <div class="text-micro text-profit">CONFLUENCE LOCKED</div>
+          <div class="num-ticker text-hi" style="font-weight: 700;">96.4% Grade A+</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-orbit-chip chip-pos-2 glass-card glass-cyan-border" style="padding: 10px 18px;">
+      <div class="flex items-center gap-2">
+        <i class="ph-bold ph-chart-polar text-cyan" style="font-size: 1.25rem;"></i>
+        <div>
+          <div class="text-micro text-cyan">ASYMMETRIC TARGET</div>
+          <div class="num-ticker text-hi" style="font-weight: 700;">+3.20R ($69,966)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-orbit-chip chip-pos-3 glass-card glass-shield-border" style="padding: 10px 18px;">
+      <div class="flex items-center gap-2">
+        <i class="ph-bold ph-warning text-shield" style="font-size: 1.25rem;"></i>
+        <div>
+          <div class="text-micro text-shield">EVENT RISK SHIELD</div>
+          <div class="text-xs text-hi" style="font-weight: 600;">1% Hard Stop Armed</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hero Content Container -->
+    <div class="container hero-content">
+      <div style="max-width: 860px;">
+        
+        <!-- Live Telemetry Pill -->
+        <div class="glass-pill" style="margin-bottom: var(--space-3); border-color: var(--cyan-border); color: var(--cyan);">
+          <span class="ai-pulse-dot" style="background: var(--cyan); box-shadow: 0 0 8px var(--cyan);"></span>
+          <span class="text-micro">DUAL-MARKET TELEMETRY • NATIVE COINBASE WSS + NSE F&O</span>
         </div>
 
-        <h1 class="auth-hero-title">
-          The dual-market terminal that <span class="auth-gradient-text">thinks before you execute.</span>
+        <!-- Headline -->
+        <h1 class="text-display-hero" style="margin-bottom: var(--space-3);">
+          Stop gambling on predictions. <br>
+          Trade with <span class="text-gradient-institutional">institutional confluence.</span>
         </h1>
 
-        <p class="auth-hero-desc">
-          Institutional liquidity sweeps, autonomous 1:3 asymmetric risk firewalls, and an active Hinglish audio copilot engineered to protect your capital from emotional tilt.
+        <!-- Sub-headline -->
+        <p class="text-body-lg" style="margin-bottom: var(--space-6); max-width: 680px; color: var(--text-mid);">
+          The dual-market trading workstation that thinks before you execute. Institutional liquidity sweeps, automated 1:3 asymmetric risk firewalls, and an active Hinglish audio copilot engineered to protect your capital from emotional tilt.
         </p>
 
-        <!-- Neural Market Confluence Radar Cockpit -->
-        <div class="auth-radar-card">
-          <div class="radar-card-header">
-            <div class="radar-live-status">
-              <span class="live-pulse-dot"></span>
-              <span class="radar-live-title">LIVE TELEMETRY STREAM</span>
-            </div>
-            <div class="radar-market-tickers">
-              <span class="ticker-chip nse">🇮🇳 NIFTY 24,912 <i class="ph-bold ph-trend-up"></i></span>
-              <span class="ticker-chip crypto">⚡ BTC $68,430 <i class="ph-bold ph-trend-up"></i></span>
-            </div>
-          </div>
-
-          <div class="radar-streams">
-            <!-- Row 1: Order Flow & Smart Money -->
-            <div class="radar-stream-row">
-              <div class="radar-icon-box flow"><i class="ph-bold ph-chart-polar"></i></div>
-              <div class="radar-stream-body">
-                <div class="radar-stream-head">
-                  <span class="radar-stream-name">Institutional Liquidity Sweep</span>
-                  <span class="radar-tag tag-bullish">FVG + SMT CONFIRMED</span>
-                </div>
-                <div class="radar-stream-sub">Smart money accumulation zone triggered across 15M/1H</div>
-              </div>
-            </div>
-
-            <!-- Row 2: Mathematical Risk Armor -->
-            <div class="radar-stream-row">
-              <div class="radar-icon-box shield"><i class="ph-bold ph-shield-check"></i></div>
-              <div class="radar-stream-body">
-                <div class="radar-stream-head">
-                  <span class="radar-stream-name">Quantitative Risk Firewall</span>
-                  <span class="radar-tag tag-shield">1.0% HARD STOP</span>
-                </div>
-                <div class="radar-stream-sub">Strict 1:3.2 asymmetric R-multiple • Zero emotional tilt allowed</div>
-              </div>
-            </div>
-
-            <!-- Row 3: Bilingual Voice Sentinel -->
-            <div class="radar-stream-row">
-              <div class="radar-icon-box voice"><i class="ph-bold ph-waveform"></i></div>
-              <div class="radar-stream-body">
-                <div class="radar-stream-head">
-                  <span class="radar-stream-name">Neural Audio Copilot (Hinglish)</span>
-                  <span class="radar-tag tag-voice">ACTIVE HUD</span>
-                </div>
-                <div class="radar-stream-quote">"Bhai, breakout trap confirm ho gaya. Stoploss strictly 24,840 pe lock rakho."</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Real-Time Confluence Probability Meter -->
-          <div class="radar-confluence-meter">
-            <div class="meter-labels">
-              <span class="meter-title">NEURAL CONFLUENCE SCORE</span>
-              <span class="meter-val">96.4% <span class="meter-grade">[GRADE A+ SETUP]</span></span>
-            </div>
-            <div class="radar-progress-track">
-              <div class="radar-progress-fill" style="width: 96.4%;"></div>
-            </div>
-          </div>
+        <!-- CTAs -->
+        <div class="flex items-center gap-3" style="flex-wrap: wrap; margin-bottom: var(--space-8);">
+          <a href="#sandbox" class="btn-primary" style="padding: 14px 28px; font-size: 1rem;">
+            <i class="ph-bold ph-play"></i> Try the Live Sandbox
+          </a>
+          <button type="button" class="btn-secondary" id="hero_btn_hear_voice" style="padding: 14px 26px; font-size: 1rem;">
+            <i class="ph-bold ph-speaker-high" style="color: var(--violet);"></i> Hear MONDAY Speak
+          </button>
         </div>
 
-        <!-- Metric Stat Boxes -->
-        <div class="auth-stats-row">
-          <div class="auth-stat-box">
-            <div class="auth-stat-icon fire"><i class="ph-bold ph-lightning"></i></div>
-            <div class="auth-stat-info">
-              <span class="auth-stat-val">+4.18R Asymmetry</span>
-              <span class="auth-stat-sub">Strict Mathematical Edge</span>
-            </div>
-          </div>
-          <div class="auth-stat-box">
-            <div class="auth-stat-icon lightning"><i class="ph-bold ph-globe-hemisphere-east"></i></div>
-            <div class="auth-stat-info">
-              <span class="auth-stat-val">NSE & Crypto Dual-Engine</span>
-              <span class="auth-stat-sub">150+ Stocks, IPOs & Web3 Feeds</span>
-            </div>
-          </div>
+        <!-- Trust Strip -->
+        <div class="flex items-center gap-3" style="flex-wrap: wrap;">
+          <span class="glass-pill text-micro text-profit" style="border-color: var(--profit-border);">
+            <i class="ph-bold ph-shield-check"></i> Strict 1% Risk Rule
+          </span>
+          <span class="glass-pill text-micro text-risk" style="border-color: var(--risk-border);">
+            <i class="ph-bold ph-prohibit"></i> Liquidation Firewall
+          </span>
+          <span class="glass-pill text-micro text-cyan" style="border-color: var(--cyan-border);">
+            <i class="ph-bold ph-lightning"></i> 24/7 Sub-ms Daemon
+          </span>
+          <span class="glass-pill text-micro text-violet" style="border-color: var(--violet-border);">
+            <i class="ph-bold ph-waveform"></i> Hinglish Voice AI
+          </span>
         </div>
 
-        <!-- Trading Philosophy Quote -->
-        <div class="auth-quote">
-          "Amateurs gamble on random predictions. Professionals calculate asymmetric probabilities. MONDAY bridges the gap."
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       S10: REAL-TIME MARKETS MARQUEE STRIP
+       ========================================================================= -->
+  <div class="marquee-wrapper">
+    <div class="marquee-track">
+      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> BTC $68,432.50 (+4.18%)</span>
+      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> ETH $3,540.20 (+2.95%)</span>
+      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> SOL $182.40 (+6.12%)</span>
+      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> NIFTY 25,120.40 (+0.72%)</span>
+      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> HYUNDAI ₹1,865.40 (+2.45%)</span>
+      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> SWIGGY ₹422.80 (+4.60%)</span>
+      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> WAAREE ₹2,840.00 (+5.80%)</span>
+      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> HAL ₹4,480.00 (+3.10%)</span>
+      <!-- Duplicate Track for Seamless Infinite Loop -->
+      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> BTC $68,432.50 (+4.18%)</span>
+      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> ETH $3,540.20 (+2.95%)</span>
+      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> SOL $182.40 (+6.12%)</span>
+      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> NIFTY 25,120.40 (+0.72%)</span>
+      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> HYUNDAI ₹1,865.40 (+2.45%)</span>
+      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> SWIGGY ₹422.80 (+4.60%)</span>
+      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> WAAREE ₹2,840.00 (+5.80%)</span>
+      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> HAL ₹4,480.00 (+3.10%)</span>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       S2: MINIMALIST PROBLEM -> SOLUTION STORYTELLING
+       ========================================================================= -->
+  <section class="section" id="philosophy">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag glass-pill" style="color: var(--risk); border-color: var(--risk-border);">
+          <i class="ph-bold ph-warning-circle"></i> WHY 95% BLOW ACCOUNTS
         </div>
+        <h2 class="text-display-1">
+          Amateurs gamble on predictions.<br>
+          <span class="text-gradient-institutional">Professionals calculate asymmetric probabilities.</span>
+        </h2>
       </div>
 
-      <!-- RIGHT SIDE: Modern Auth Card -->
-      <div class="auth-card-panel">
-        <div class="auth-card">
-          <div class="auth-card-header">
-            <h2 class="auth-card-title" id="auth_card_title">Welcome Back</h2>
-            <p class="auth-card-subtitle" id="auth_card_subtitle">
-              Sign in or create your account to sync your trades
+      <div class="bento-grid">
+        <!-- Card 1: Tilt -->
+        <div class="glass-card problem-card bento-col-3">
+          <div style="font-size: 1.5rem; color: var(--risk);"><i class="ph-bold ph-flame"></i></div>
+          <div class="text-micro text-risk">PAIN 01: EMOTIONAL TILT</div>
+          <h3 class="text-h3">Revenge Trading After Loss</h3>
+          <p class="text-body-sm text-mid">
+            Doubling position size to recover a drawdown leads to account obliteration.
+          </p>
+          <div style="margin-top: auto; padding-top: var(--space-2); border-top: 1px solid var(--glass-border);" class="text-xs text-profit">
+            <i class="ph-bold ph-check"></i> <b>MONDAY Answer:</b> Hard 1% Capital Clamp + Audio Calm Sentinel.
+          </div>
+        </div>
+
+        <!-- Card 2: Traps -->
+        <div class="glass-card problem-card bento-col-3">
+          <div style="font-size: 1.5rem; color: var(--shield);"><i class="ph-bold ph-git-commit"></i></div>
+          <div class="text-micro text-shield">PAIN 02: LIQUIDITY SWEEPS</div>
+          <h3 class="text-h3">Retail Trapped at Resistance</h3>
+          <p class="text-body-sm text-mid">
+            Institutions hunt retail stop-losses before reversing the true trend.
+          </p>
+          <div style="margin-top: auto; padding-top: var(--space-2); border-top: 1px solid var(--glass-border);" class="text-xs text-profit">
+            <i class="ph-bold ph-check"></i> <b>MONDAY Answer:</b> SMT Divergence & Fair Value Gap confirmations.
+          </div>
+        </div>
+
+        <!-- Card 3: R:R -->
+        <div class="glass-card problem-card bento-col-3">
+          <div style="font-size: 1.5rem; color: var(--cyan);"><i class="ph-bold ph-chart-polar"></i></div>
+          <div class="text-micro text-cyan">PAIN 03: NEGATIVE ASYMMETRY</div>
+          <h3 class="text-h3">Risking $30 to Win $10</h3>
+          <p class="text-body-sm text-mid">
+            Gambling on poor risk-reward requires impossible 80%+ win rates to survive.
+          </p>
+          <div style="margin-top: auto; padding-top: var(--space-2); border-top: 1px solid var(--glass-border);" class="text-xs text-profit">
+            <i class="ph-bold ph-check"></i> <b>MONDAY Answer:</b> Strict 1:3.2 Asymmetry profitable at 35% win rate.
+          </div>
+        </div>
+
+        <!-- Card 4: Over-Leverage -->
+        <div class="glass-card problem-card bento-col-3">
+          <div style="font-size: 1.5rem; color: var(--violet);"><i class="ph-bold ph-lightning"></i></div>
+          <div class="text-micro text-violet">PAIN 04: OVER-LEVERAGE</div>
+          <h3 class="text-h3">Liquidation Catastrophes</h3>
+          <p class="text-body-sm text-mid">
+            Brokers liquidate positions before retail traders even realize the margin call.
+          </p>
+          <div style="margin-top: auto; padding-top: var(--space-2); border-top: 1px solid var(--glass-border);" class="text-xs text-profit">
+            <i class="ph-bold ph-check"></i> <b>MONDAY Answer:</b> Mathematical Liquidation Firewall rejects unsafe orders.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       S3: LIVE CONFLUENCE SANDBOX WIDGET (THE "WOW" MOMENT)
+       ========================================================================= -->
+  <section class="section" id="sandbox">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag glass-pill" style="color: var(--profit); border-color: var(--profit-border);">
+          <i class="ph-bold ph-sparkle"></i> ZERO LOGIN SANDBOX
+        </div>
+        <h2 class="text-display-1">
+          Watch MONDAY calculate <span class="text-gradient-institutional">Grade A+ Confluence</span>
+        </h2>
+        <p class="text-body text-mid">
+          Select an asset below to trigger the 8-step confluence scanner. Listen to the real-time trade briefing.
+        </p>
+      </div>
+
+      <!-- Live Sandbox Master Bento Card -->
+      <div class="glass-panel" style="padding: var(--space-4);">
+        <!-- Top Toolbar -->
+        <div class="flex items-center justify-between" style="border-bottom: 1px solid var(--glass-border); padding-bottom: var(--space-3); flex-wrap: wrap; gap: var(--space-2);">
+          
+          <!-- Asset Capsules -->
+          <div class="segmented-control">
+            <button type="button" class="segment-btn active" data-sandbox-asset="BTC">BTC/USD</button>
+            <button type="button" class="segment-btn" data-sandbox-asset="ETH">ETH/USD</button>
+            <button type="button" class="segment-btn" data-sandbox-asset="SOL">SOL/USD</button>
+            <button type="button" class="segment-btn" data-sandbox-asset="NIFTY">NIFTY 50</button>
+          </div>
+
+          <!-- Live State Pill -->
+          <div class="glass-pill text-profit text-micro" id="sandbox_state_pill">
+            <span class="ai-pulse-dot" style="background: var(--profit); box-shadow: 0 0 8px var(--profit);"></span>
+            SETUP CONFIRMED (GRADE A+)
+          </div>
+
+          <!-- Controls -->
+          <div class="flex items-center gap-2">
+            <button type="button" class="btn-secondary" id="sandbox_btn_replay">
+              <i class="ph-bold ph-arrow-counter-clockwise"></i> Replay Scan
+            </button>
+            <button type="button" class="btn-primary" id="sandbox_btn_voice">
+              <i class="ph-bold ph-speaker-high"></i> Hear AI Brief
+            </button>
+          </div>
+        </div>
+
+        <!-- Sandbox Body Grid -->
+        <div class="bento-grid" style="margin-top: var(--space-4);">
+          
+          <!-- Left: 8-Step Confluence Checklist -->
+          <div class="bento-col-7 flex flex-col gap-2">
+            <div class="text-micro text-low" style="margin-bottom: 4px;">INSTITUTIONAL 8-STEP CONFLUENCE PROTOCOL:</div>
+
+            <div class="step-check-item confirmed active" id="step_htf">
+              <i class="step-check-icon ph-fill ph-check-circle text-profit"></i>
+              <span style="flex: 1;">1. 1H Triple-EMA Directional Lock (EMA 12 > 26 > 50)</span>
+              <span class="code-badge">+20 pts</span>
+            </div>
+
+            <div class="step-check-item confirmed active" id="step_pullback">
+              <i class="step-check-icon ph-fill ph-check-circle text-profit"></i>
+              <span style="flex: 1;">2. 5M Discount Pullback Zone (Fib 0.618 - 0.786)</span>
+              <span class="code-badge">+20 pts</span>
+            </div>
+
+            <div class="step-check-item confirmed active" id="step_smt">
+              <i class="step-check-icon ph-fill ph-check-circle text-profit"></i>
+              <span style="flex: 1;">3. SMT Divergence (BTC vs ETH Correlated Accumulation)</span>
+              <span class="code-badge">+10 pts</span>
+            </div>
+
+            <div class="step-check-item confirmed active" id="step_wick">
+              <i class="step-check-icon ph-fill ph-check-circle text-profit"></i>
+              <span style="flex: 1;">4. Lower Rejection Displacement Candle Close</span>
+              <span class="code-badge">+20 pts</span>
+            </div>
+
+            <div class="step-check-item confirmed active" id="step_rr">
+              <i class="step-check-icon ph-fill ph-check-circle text-profit"></i>
+              <span style="flex: 1;">5. Strict 1:3.2 Asymmetric Risk:Reward Formulation</span>
+              <span class="code-badge">+15 pts</span>
+            </div>
+
+            <div class="step-check-item confirmed active" id="step_rsi">
+              <i class="step-check-icon ph-fill ph-check-circle text-profit"></i>
+              <span style="flex: 1;">6. 14-Period Wilder RSI Multi-Timeframe Alignment</span>
+              <span class="code-badge">+10 pts</span>
+            </div>
+
+            <div class="step-check-item confirmed active" id="step_vol">
+              <i class="step-check-icon ph-fill ph-check-circle text-profit"></i>
+              <span style="flex: 1;">7. Whale Volumetric Inflow (1.8x 20-VMA Surge)</span>
+              <span class="code-badge">+10 pts</span>
+            </div>
+
+            <div class="step-check-item confirmed active" id="step_shield">
+              <i class="step-check-icon ph-fill ph-check-circle text-profit"></i>
+              <span style="flex: 1;">8. Event Risk Shield Verified: Zero Shock Catalysts</span>
+              <span class="code-badge">+5 pts</span>
+            </div>
+          </div>
+
+          <!-- Right: Circular Confluence Gauge & Trade Slip Blueprint -->
+          <div class="bento-col-5 flex flex-col items-center justify-between" style="background: rgba(0, 0, 0, 0.35); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--glass-border);">
+            
+            <div style="text-align: center;">
+              <div class="text-micro text-mid" id="sandbox_asset_name">BTC/USD Perpetual</div>
+              <div class="num-ticker text-h1 text-hi" id="sandbox_asset_price">$68,432.50</div>
+            </div>
+
+            <!-- SVG Confluence Gauge -->
+            <div class="confluence-gauge-wrap" id="sandbox_gauge_wrap" style="margin: var(--space-2) 0;">
+              <svg class="gauge-svg" viewBox="0 0 140 140">
+                <circle class="gauge-track" cx="70" cy="70" r="56"></circle>
+                <circle class="gauge-progress" cx="70" cy="70" r="56" style="stroke-dasharray: 351.85; stroke-dashoffset: 12;"></circle>
+              </svg>
+              <div class="gauge-inner-val">
+                <div class="gauge-score text-profit">96.4%</div>
+                <div class="gauge-grade">GRADE A+</div>
+              </div>
+            </div>
+
+            <!-- Mathematical Blueprint Card -->
+            <div style="width: 100%; background: var(--glass-fill); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border-hi);">
+              <div class="flex justify-between items-center text-xs" style="margin-bottom: 6px;">
+                <span class="text-mid">Calculated Entry:</span>
+                <span class="num-ticker text-hi" id="sandbox_calc_entry">$68,430.00</span>
+              </div>
+              <div class="flex justify-between items-center text-xs" style="margin-bottom: 6px;">
+                <span class="text-risk">Hard Stop Loss (-1.0R):</span>
+                <span class="num-ticker text-risk" id="sandbox_calc_sl">$67,950.00</span>
+              </div>
+              <div class="flex justify-between items-center text-xs" style="margin-bottom: 6px;">
+                <span class="text-profit">Target (+3.20R):</span>
+                <span class="num-ticker text-profit" id="sandbox_calc_tp">$69,966.00</span>
+              </div>
+              <div class="flex justify-between items-center text-micro text-low" style="border-top: 1px solid var(--glass-border); padding-top: 6px; margin-top: 6px;">
+                <span>MAX 1% RISK: $20.00</span>
+                <span class="text-cyan">DELTA INDIA COMPLIANT</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       S4: THE 8 ENGINES BENTO GRID
+       ========================================================================= -->
+  <section class="section" id="engines">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag glass-pill" style="color: var(--cyan); border-color: var(--cyan-border);">
+          <i class="ph-bold ph-cpu"></i> CORE NEURAL ARCHITECTURE
+        </div>
+        <h2 class="text-display-1">
+          The 8 Proprietary Engines of <span class="text-gradient-institutional">Project MONDAY</span>
+        </h2>
+        <p class="text-body text-mid">
+          Click any engine tile below to open its mathematical formulation and deep dive drawer.
+        </p>
+      </div>
+
+      <div class="bento-grid">
+        <!-- Engine 1: Strategy Engine (Large Tile) -->
+        <div class="glass-card bento-col-8 component-card-wrap glass-card-hover-lift" data-engine-drawer="strategy">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div class="mega-item-icon"><i class="ph-bold ph-chart-polar"></i></div>
+              <h3 class="text-h2">1. Strategy & 8-Step Confluence Engine</h3>
+            </div>
+            <span class="code-badge">ICT/SMC QUANT</span>
+          </div>
+          <p class="text-body text-mid">
+            Triple-EMA directional gate (12/26/50) enforces zero counter-trend trading. Evaluates 5M discount pullbacks (Fib 0.618–0.786), SMT divergence (BTC vs ETH), and requires &ge;75% confluence score for Grade A confirmation.
+          </p>
+          <div class="flex items-center gap-3 text-xs text-cyan" style="margin-top: auto;">
+            <span><i class="ph-bold ph-shield-check"></i> Hard 1H Trend Lock</span>
+            <span><i class="ph-bold ph-chart-line-up"></i> 1:3.2 Asymmetry</span>
+            <span style="margin-left: auto; text-decoration: underline;">Open Blueprint &rarr;</span>
+          </div>
+        </div>
+
+        <!-- Engine 2: Liquidation Firewall -->
+        <div class="glass-card bento-col-4 component-card-wrap glass-card-hover-lift" data-engine-drawer="firewall">
+          <div class="flex items-center gap-2">
+            <div class="mega-item-icon" style="color: var(--risk);"><i class="ph-bold ph-prohibit"></i></div>
+            <h3 class="text-h3">2. Liquidation Firewall</h3>
+          </div>
+          <p class="text-body-sm text-mid">
+            Calculates exact maintenance margin rate (MMR). Automatically rejects orders whose stop loss exceeds liquidation price.
+          </p>
+          <div class="text-micro text-risk" style="margin-top: auto;">
+            P_liq = Entry &times; (1 &minus; 1/Lev + MMR)
+          </div>
+        </div>
+
+        <!-- Engine 3: Event Risk Shield -->
+        <div class="glass-card bento-col-4 component-card-wrap glass-card-hover-lift" data-engine-drawer="shield">
+          <div class="flex items-center gap-2">
+            <div class="mega-item-icon" style="color: var(--shield);"><i class="ph-bold ph-warning"></i></div>
+            <h3 class="text-h3">3. Event Risk Shield</h3>
+          </div>
+          <p class="text-body-sm text-mid">
+            Macro sentinel tracking FOMC, US CPI, Non-Farm Payrolls, token unlocks, and RBI MPC. Automatically suspends AutoPilot &plusmn;15 min around shocks.
+          </p>
+          <div class="text-micro text-shield" style="margin-top: auto;">
+            Hyper-Sensitive Circuit Breaker Active
+          </div>
+        </div>
+
+        <!-- Engine 4: Historical Regime -->
+        <div class="glass-card bento-col-4 component-card-wrap glass-card-hover-lift" data-engine-drawer="regime">
+          <div class="flex items-center gap-2">
+            <div class="mega-item-icon" style="color: var(--cyan);"><i class="ph-bold ph-git-commit"></i></div>
+            <h3 class="text-h3">4. Historical Regime Engine</h3>
+          </div>
+          <p class="text-body-sm text-mid">
+            Dynamic 20-period ATR and range expansion ratio classifies market into Supportive Trending, Mean-Reverting, or Choppy.
+          </p>
+          <div class="text-micro text-cyan" style="margin-top: auto;">
+            Regime Pattern Matching
+          </div>
+        </div>
+
+        <!-- Engine 5: Paper Trader & Passbook -->
+        <div class="glass-card bento-col-4 component-card-wrap glass-card-hover-lift" data-engine-drawer="passbook">
+          <div class="flex items-center gap-2">
+            <div class="mega-item-icon" style="color: var(--profit);"><i class="ph-bold ph-book-open"></i></div>
+            <h3 class="text-h3">5. Passbook & Tax Ledger</h3>
+          </div>
+          <p class="text-body-sm text-mid">
+            Strict 1R unit tracking ($20 risk), 365-day PnL heatmap matrix, and Delta Exchange India compliant 18% GST auto-bifurcation.
+          </p>
+          <div class="text-micro text-profit" style="margin-top: auto;">
+            Delta India Compliant (18% GST)
+          </div>
+        </div>
+
+        <!-- Engine 6: AI Copilot -->
+        <div class="glass-card bento-col-4 component-card-wrap glass-card-hover-lift" data-engine-drawer="copilot">
+          <div class="flex items-center gap-2">
+            <div class="mega-item-icon" style="color: var(--violet);"><i class="ph-bold ph-waveform"></i></div>
+            <h3 class="text-h3">6. Hinglish AI Copilot</h3>
+          </div>
+          <p class="text-body-sm text-mid">
+            Empathetic, razor-sharp voice trading partner with natural Hinglish audio synthesis and anti-FOMO psychological shield.
+          </p>
+          <div class="text-micro text-violet" style="margin-top: auto;">
+            Web Speech STT/TTS Dual Accent
+          </div>
+        </div>
+
+        <!-- Engine 7: 24/7 Daemon -->
+        <div class="glass-card bento-col-4 component-card-wrap glass-card-hover-lift" data-engine-drawer="daemon">
+          <div class="flex items-center gap-2">
+            <div class="mega-item-icon" style="color: var(--cyan);"><i class="ph-bold ph-lightning"></i></div>
+            <h3 class="text-h3">7. 24/7 Autonomous Daemon</h3>
+          </div>
+          <p class="text-body-sm text-mid">
+            Headless Node.js process streaming Coinbase native WebSockets. Sub-millisecond TP/SL triggers, Supabase cloud sync, 60s heartbeats.
+          </p>
+          <div class="text-micro text-cyan" style="margin-top: auto;">
+            wss://ws-feed.exchange.coinbase.com
+          </div>
+        </div>
+
+        <!-- Engine 8: Dual Universe -->
+        <div class="glass-card bento-col-4 component-card-wrap glass-card-hover-lift" data-engine-drawer="markets">
+          <div class="flex items-center gap-2">
+            <div class="mega-item-icon" style="color: var(--profit);"><i class="ph-bold ph-globe-hemisphere-east"></i></div>
+            <h3 class="text-h3">8. Dual-Market Universe</h3>
+          </div>
+          <p class="text-body-sm text-mid">
+            Web3 cryptos (BTC, ETH, SOL, SUI, DOGE) alongside 150+ Indian Equities, Sector Baskets, and Mega IPOs (Hyundai, Swiggy, Waaree).
+          </p>
+          <div class="text-micro text-profit" style="margin-top: auto;">
+            Universal NSE Ticker Search
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       S5: INTERACTIVE R-MULTIPLE & ASYMMETRIC EXPECTANCY CALCULATOR
+       ========================================================================= -->
+  <section class="section" id="calculator">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag glass-pill" style="color: var(--profit); border-color: var(--profit-border);">
+          <i class="ph-bold ph-calculator"></i> THE MATHEMATICAL EDGE
+        </div>
+        <h2 class="text-display-1">
+          Interactive <span class="text-gradient-institutional">R-Multiple & Expectancy Simulator</span>
+        </h2>
+        <p class="text-body text-mid">
+          Adjust the sliders below to simulate a 100-trade sequence. See how a strict 1:3.2 Risk-Reward ratio builds wealth even at a conservative 40% win rate.
+        </p>
+      </div>
+
+      <div class="glass-panel" style="padding: var(--space-4);">
+        <div class="bento-grid">
+          
+          <!-- Sliders Left Panel -->
+          <div class="bento-col-5 flex flex-col gap-4">
+            
+            <!-- Slider 1: Account Size -->
+            <div class="slider-group">
+              <div class="slider-header">
+                <span class="text-body-sm">Account Balance (USD)</span>
+                <span class="slider-val-bubble" id="calc_val_balance">$2,000</span>
+              </div>
+              <input type="range" class="custom-range" id="calc_account_size" min="500" max="50000" step="500" value="2000">
+            </div>
+
+            <!-- Slider 2: Risk % per Trade -->
+            <div class="slider-group">
+              <div class="slider-header">
+                <span class="text-body-sm">Risk Per Trade (Strict 1% Rule)</span>
+                <span class="slider-val-bubble" id="calc_val_risk">1.0%</span>
+              </div>
+              <input type="range" class="custom-range" id="calc_risk_pct" min="0.5" max="3.0" step="0.5" value="1.0">
+            </div>
+
+            <!-- Slider 3: Win Rate % -->
+            <div class="slider-group">
+              <div class="slider-header">
+                <span class="text-body-sm">Win Rate (%)</span>
+                <span class="slider-val-bubble" id="calc_val_winrate">40%</span>
+              </div>
+              <input type="range" class="custom-range" id="calc_win_rate" min="30" max="65" step="5" value="40">
+            </div>
+
+            <!-- Slider 4: Risk:Reward Ratio -->
+            <div class="slider-group">
+              <div class="slider-header">
+                <span class="text-body-sm">Asymmetric Risk:Reward Ratio</span>
+                <span class="slider-val-bubble" id="calc_val_rr">1:3.2</span>
+              </div>
+              <input type="range" class="custom-range" id="calc_rr_ratio" min="1.5" max="5.0" step="0.1" value="3.2">
+            </div>
+
+            <button type="button" class="btn-secondary" id="calc_btn_reseed" style="margin-top: var(--space-2);">
+              <i class="ph-bold ph-arrows-clockwise"></i> Reseed 100 Trades Simulation
+            </button>
+          </div>
+
+          <!-- Dynamic SVG Equity Curve & Metrics Right Panel -->
+          <div class="bento-col-7 flex flex-col justify-between" style="background: rgba(0, 0, 0, 0.4); padding: var(--space-3); border-radius: var(--radius-md); border: 1px solid var(--glass-border);">
+            
+            <!-- Quick Stat Strip -->
+            <div class="flex items-center justify-between" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; flex-wrap: wrap; gap: 10px;">
+              <div>
+                <span class="text-micro text-low">ENDING EQUITY (100 TRADES)</span>
+                <div class="num-ticker text-h2 text-profit" id="calc_out_ending">$2,960</div>
+              </div>
+              <div>
+                <span class="text-micro text-low">NET PROFIT</span>
+                <div class="num-ticker text-profit" id="calc_out_profit">+$960.00</div>
+              </div>
+              <div>
+                <span class="text-micro text-low">TOTAL R GENERATED</span>
+                <div class="num-ticker text-cyan" id="calc_out_total_r">+48.0R</div>
+              </div>
+              <div>
+                <span class="text-micro text-low">EXPECTANCY</span>
+                <div class="num-ticker text-hi" id="calc_out_expectancy">+0.68R / trade</div>
+              </div>
+              <div>
+                <span class="text-micro text-low">MAX DRAWDOWN</span>
+                <div class="num-ticker text-risk" id="calc_out_maxdd">-4.2%</div>
+              </div>
+            </div>
+
+            <!-- Live SVG Equity Curve Sparkline -->
+            <div style="width: 100%; height: 180px; position: relative; margin: 12px 0;">
+              <svg id="calc_equity_svg" viewBox="0 0 640 180" style="width: 100%; height: 100%; overflow: visible;">
+                <defs>
+                  <linearGradient id="equityGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="var(--profit)" stop-opacity="0.35"/>
+                    <stop offset="100%" stop-color="var(--profit)" stop-opacity="0.0"/>
+                  </linearGradient>
+                </defs>
+                <path class="equity-area" fill="url(#equityGrad)" d=""></path>
+                <path class="equity-line" fill="none" stroke="var(--profit)" stroke-width="2.5" stroke-linecap="round" d=""></path>
+              </svg>
+            </div>
+
+            <div class="text-micro text-low text-center">
+              100-TRADE SEQUENCE MONTE CARLO PROJECTION • MATHEMATICAL PROOF OF R-MULTIPLE ASYMMETRY
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       S6: MEET MONDAY (CONVERSATIONAL AI COPILOT)
+       ========================================================================= -->
+  <section class="section" id="copilot">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag glass-pill" style="color: var(--violet); border-color: var(--violet-border);">
+          <i class="ph-bold ph-waveform"></i> BILINGUAL NEURAL SENTINEL
+        </div>
+        <h2 class="text-display-1">
+          Meet MONDAY. <br>
+          The AI companion that <span class="text-gradient-neural">protects your psychology.</span>
+        </h2>
+        <p class="text-body text-mid">
+          Not a rigid robotic script. MONDAY talks like a razor-sharp, empathetic institutional trading partner in fluent Hinglish and English.
+        </p>
+      </div>
+
+      <div class="bento-grid">
+        
+        <!-- Left: Interactive Animated Orb & Audio Waveform HUD -->
+        <div class="glass-card bento-col-5 flex flex-col items-center justify-center component-card-wrap" style="text-align: center; min-height: 380px;">
+          
+          <!-- Pulsing Orb -->
+          <div style="position: relative; width: 140px; height: 140px; margin-bottom: var(--space-4);">
+            <div style="position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle, var(--violet) 0%, transparent 70%); filter: blur(20px); opacity: 0.8; animation: pulseRipple 3s infinite;"></div>
+            <div style="position: absolute; inset: 20px; border-radius: 50%; background: linear-gradient(135deg, var(--violet) 0%, var(--cyan) 100%); box-shadow: 0 0 35px var(--violet-glow-hi); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 2.5rem;">
+              <i class="ph-bold ph-sparkle"></i>
+            </div>
+          </div>
+
+          <h3 class="text-h2">MONDAY AI</h3>
+          <span class="text-micro text-violet" id="copilot_scenario_tag">EXECUTION BLUEPRINT</span>
+
+          <!-- Dynamic Waveform Bars -->
+          <div class="waveform-bars" style="margin: var(--space-3) 0;">
+            <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+            <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+            <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+          </div>
+
+          <button type="button" class="btn-primary" id="copilot_btn_voice_play">
+            <i class="ph-bold ph-play"></i> Hear MONDAY Speak
+          </button>
+        </div>
+
+        <!-- Right: Transcript & Scenario Switcher -->
+        <div class="glass-card bento-col-7 component-card-wrap">
+          
+          <!-- Scenario Tabs -->
+          <div class="flex items-center justify-between" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <div class="segmented-control">
+              <button type="button" class="segment-btn active" id="copilot_tab_setup">Scenario 1: Trade Confirmation</button>
+              <button type="button" class="segment-btn" id="copilot_tab_tilt">Scenario 2: Anti-Revenge Shield</button>
+            </div>
+            <span class="code-badge text-violet">Web Speech API</span>
+          </div>
+
+          <!-- Chat Transcript Container -->
+          <div class="flex flex-col gap-3" style="margin-top: var(--space-2); flex: 1;">
+            
+            <!-- User Message Bubble -->
+            <div class="flex items-start gap-2" style="max-width: 80%;">
+              <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--glass-fill-ultra); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--text-mid);">
+                <i class="ph-bold ph-user"></i>
+              </div>
+              <div style="background: rgba(255, 255, 255, 0.05); padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); font-size: var(--text-body-sm);" id="copilot_msg_user">
+                Bhai, BTC me buy karun kya abhi? Setup ready hai?
+              </div>
+            </div>
+
+            <!-- MONDAY AI Response Bubble -->
+            <div class="flex items-start gap-2" style="max-width: 90%; align-self: flex-start;">
+              <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--violet); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #fff; box-shadow: 0 0 10px var(--violet-glow);">
+                <i class="ph-bold ph-sparkle"></i>
+              </div>
+              <div style="background: rgba(139, 92, 246, 0.08); padding: 14px 18px; border-radius: var(--radius-sm); border: 1px solid var(--violet-border); font-size: var(--text-body-sm); line-height: 1.6;" id="copilot_msg_monday">
+                🟢 <b>Haan bhai, setup Grade A+ confirm ho chuka hai!</b><br><br>
+                • <b>1H Bias:</b> Bullish Triple-EMA stack locked.<br>
+                • <b>Entry Blueprint:</b> $68,430.00 | <b>Stop Loss:</b> $67,950.00<br>
+                • <b>Target:</b> $69,966.00 with strict <b>1:3.2 Asymmetric R:R</b>.<br><br>
+                Risk strictly 1% ($20.00) calculated hai. Execution panel se initiate kar sakte ho!
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       S7: LIQUIDATION FIREWALL DEMO
+       ========================================================================= -->
+  <section class="section" id="firewall">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag glass-pill" style="color: var(--risk); border-color: var(--risk-border);">
+          <i class="ph-bold ph-prohibit"></i> QUANTITATIVE RISK ARMOR
+        </div>
+        <h2 class="text-display-1">
+          The Derivatives <span class="text-gradient-institutional">Liquidation Firewall</span>
+        </h2>
+        <p class="text-body text-mid">
+          Never suffer another exchange margin call. Test how MONDAY mathematically blocks any order whose stop loss falls beyond liquidation.
+        </p>
+      </div>
+
+      <div class="glass-panel" style="padding: var(--space-4);">
+        <div class="bento-grid">
+          
+          <!-- Controls Left -->
+          <div class="bento-col-6 flex flex-col gap-4">
+            
+            <div class="flex items-center justify-between">
+              <span class="text-body-sm">Asset Class Specification:</span>
+              <select id="fw_select_asset" class="glass-pill" style="background: var(--bg-obsidian); border-color: var(--glass-border-hi); color: var(--text-hi);">
+                <option value="BTC">BTC/USD (Up to 200x • 0.40% MMR)</option>
+                <option value="SOL">SOL/USD (Up to 75x • 1.00% MMR)</option>
+                <option value="ALT">Alts/DeFi (Up to 25x • 2.00% MMR)</option>
+                <option value="NSE">NSE Equities (Up to 5x MIS • 20% MMR)</option>
+              </select>
+            </div>
+
+            <!-- Slider Leverage -->
+            <div class="slider-group">
+              <div class="slider-header">
+                <span class="text-body-sm">Perpetual Leverage</span>
+                <span class="slider-val-bubble" id="fw_val_lev">50x</span>
+              </div>
+              <input type="range" class="custom-range" id="fw_slider_lev" min="1" max="200" value="50">
+            </div>
+
+            <!-- Slider SL Distance -->
+            <div class="slider-group">
+              <div class="slider-header">
+                <span class="text-body-sm">Planned Stop Loss Distance (%)</span>
+                <span class="slider-val-bubble" id="fw_val_sl">1.2%</span>
+              </div>
+              <input type="range" class="custom-range" id="fw_slider_sl" min="0.5" max="5.0" step="0.1" value="1.2">
+            </div>
+
+            <!-- Dynamic Status Banner -->
+            <div class="glass-card glass-profit-border" id="fw_status_banner" style="padding: 14px;">
+              <div class="flex items-center gap-2 text-profit" style="font-weight: 600;">
+                <i class="ph-bold ph-shield-check" style="font-size: 1.25rem;"></i>
+                <span>FIREWALL ARMORED: STOP LOSS SAFELY PRECEDES LIQUIDATION</span>
+              </div>
+              <p class="text-xs text-mid" style="margin-top: 4px;">
+                Safety buffer active before exchange margin call can trigger.
+              </p>
+            </div>
+
+          </div>
+
+          <!-- Price Ladder Visualizer Right -->
+          <div class="bento-col-6 flex items-center justify-center" style="background: rgba(0, 0, 0, 0.35); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--glass-border);">
+            
+            <div class="flex items-center gap-6">
+              <!-- Vertical Ladder Gauge -->
+              <div class="ladder-bar-container">
+                <div class="ladder-point" style="top: 20%; background: var(--cyan); box-shadow: 0 0 10px var(--cyan);" id="ladder_point_entry"></div>
+                <div class="ladder-point" style="top: 50%; background: var(--profit); box-shadow: 0 0 10px var(--profit);" id="ladder_point_sl"></div>
+                <div class="ladder-point" style="top: 85%; background: var(--risk); box-shadow: 0 0 10px var(--risk);" id="ladder_point_liq"></div>
+
+                <!-- Labels -->
+                <div class="ladder-level" style="top: 15%;">
+                  <span class="code-badge text-cyan">ENTRY</span>
+                  <span class="num-ticker">$68,000.00</span>
+                </div>
+                <div class="ladder-level" style="top: 45%;">
+                  <span class="code-badge text-profit">STOP LOSS</span>
+                  <span class="num-ticker" id="fw_out_sl">$67,184.00</span>
+                </div>
+                <div class="ladder-level" style="top: 80%;">
+                  <span class="code-badge text-risk">LIQUIDATION</span>
+                  <span class="num-ticker" id="fw_out_liq">$66,912.00</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       S8: 365-DAY PNL HEATMAP MATRIX
+       ========================================================================= -->
+  <section class="section" id="passbook">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag glass-pill" style="color: var(--profit); border-color: var(--profit-border);">
+          <i class="ph-bold ph-calendar-blank"></i> TRANSPARENT LEDGER
+        </div>
+        <h2 class="text-display-1">
+          365-Day PnL <span class="text-gradient-institutional">Contribution Matrix</span>
+        </h2>
+        <p class="text-body text-mid">
+          Every execution logged with Delta Exchange India compliant 18% GST auto-bifurcation. Click any square to view the day's statement.
+        </p>
+      </div>
+
+      <div class="glass-panel" style="padding: var(--space-4);">
+        <!-- Stat Row -->
+        <div class="flex items-center justify-between" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 12px; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+          <div class="flex items-center gap-3">
+            <span class="text-body-sm text-mid">365d Net Ledger:</span>
+            <span class="num-ticker text-profit text-h3" style="font-weight: 700;">+84.20R (+$1,684.00)</span>
+          </div>
+          <div class="flex items-center gap-3 text-xs text-low">
+            <span>Win Days: <b class="text-profit">64.2%</b></span>
+            <span>Max DD: <b class="text-risk">-3.8%</b></span>
+            <span>Best Day: <b class="text-profit">+4.80R</b></span>
+          </div>
+        </div>
+
+        <!-- 52x7 Heatmap Grid -->
+        <div style="overflow-x: auto; padding-bottom: 8px;">
+          <div class="heatmap-mini-grid" id="landing_heatmap_grid" style="grid-template-columns: repeat(52, 1fr); min-width: 680px;">
+            <!-- Dynamically populated 364 cells -->
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center text-micro text-low" style="margin-top: 14px; border-top: 1px solid var(--glass-border); padding-top: 10px;">
+          <span>Click any block to inspect automated trade journal slips</span>
+          <div class="flex items-center gap-1">
+            <span>Loss (-1.0R)</span>
+            <span style="width: 10px; height: 10px; background: #f43f5e; border-radius: 2px;"></span>
+            <span style="width: 10px; height: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 2px;"></span>
+            <span style="width: 10px; height: 10px; background: #10b981; border-radius: 2px;"></span>
+            <span>Profit (+3.2R)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       S9: INSTITUTIONAL COMPARISON TABLE
+       ========================================================================= -->
+  <section class="section" id="comparison">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag glass-pill" style="color: var(--cyan); border-color: var(--cyan-border);">
+          <i class="ph-bold ph-scales"></i> COMPETITIVE MOAT
+        </div>
+        <h2 class="text-display-1">
+          Why MONDAY Outclasses <span class="text-gradient-institutional">Legacy Platforms</span>
+        </h2>
+      </div>
+
+      <div class="comparison-table-wrap">
+        <table class="comp-table">
+          <thead>
+            <tr>
+              <th>Feature Comparison</th>
+              <th class="col-monday">PROJECT MONDAY</th>
+              <th>TradingView</th>
+              <th>Bloomberg Terminal</th>
+              <th>Delta Exchange / Zerodha</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>Core Focus</b></td>
+              <td class="col-monday text-profit">Active Autonomous Workstation</td>
+              <td>Passive Charting Tools</td>
+              <td>Enterprise News Data</td>
+              <td>Dumb Execution Broker</td>
+            </tr>
+            <tr>
+              <td><b>Risk Armor</b></td>
+              <td class="col-monday text-profit">Hard 1% Risk & Liquidation Firewall</td>
+              <td>None</td>
+              <td>None</td>
+              <td>Basic SL/TP with Slippage</td>
+            </tr>
+            <tr>
+              <td><b>AI Trading Partner</b></td>
+              <td class="col-monday text-violet">Bilingual Voice AI (Hinglish/Eng)</td>
+              <td>None</td>
+              <td>None</td>
+              <td>None</td>
+            </tr>
+            <tr>
+              <td><b>24/7 Autopilot</b></td>
+              <td class="col-monday text-cyan">Native Sub-ms Coinbase WSS Daemon</td>
+              <td>Requires Webhook/Pinescript</td>
+              <td>Expensive Custom API</td>
+              <td>Basic GTT Orders</td>
+            </tr>
+            <tr>
+              <td><b>Tax & Passbook</b></td>
+              <td class="col-monday text-profit">18% GST Auto-Split + 365d Heatmap</td>
+              <td>None</td>
+              <td>Manual Export</td>
+              <td>Standard Ledger PDF</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       S11: PRICING PREVIEW & INTERACTIVE FAQ ACCORDION
+       ========================================================================= -->
+  <section class="section" id="pricing">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag glass-pill" style="color: var(--profit); border-color: var(--profit-border);">
+          <i class="ph-bold ph-ticket"></i> TRANSPARENT PRICING
+        </div>
+        <h2 class="text-display-1">
+          Institutional Asymmetry for <span class="text-gradient-institutional">Every Serious Trader</span>
+        </h2>
+      </div>
+
+      <!-- Pricing Cards Bento -->
+      <div class="bento-grid" style="margin-bottom: var(--space-12);">
+        
+        <!-- Tier 1: Paper -->
+        <div class="glass-card bento-col-4 component-card-wrap">
+          <span class="code-badge">TIER 1</span>
+          <h3 class="text-h2">Free Paper Trader</h3>
+          <p class="text-body-sm text-mid">Master the 8-step confluence protocol with zero capital risk.</p>
+          <div class="num-ticker text-display-1 text-hi" style="margin: 12px 0;">$0</div>
+          <ul class="flex flex-col gap-2 text-body-sm text-mid" style="margin-bottom: var(--space-4);">
+            <li><i class="ph-bold ph-check text-profit"></i> $2,000 Virtual Paper Account</li>
+            <li><i class="ph-bold ph-check text-profit"></i> 8-Step Confluence Scanner</li>
+            <li><i class="ph-bold ph-check text-profit"></i> Web Speech Hinglish AI Copilot</li>
+            <li><i class="ph-bold ph-check text-profit"></i> 365-Day PnL Passbook</li>
+          </ul>
+          <a href="terminal.html" class="btn-secondary" style="margin-top: auto; text-align: center;">Start Paper Trading</a>
+        </div>
+
+        <!-- Tier 2: Pro (Glow Accent) -->
+        <div class="glass-card bento-col-4 component-card-wrap glass-profit-border" style="position: relative;">
+          <span class="code-badge text-profit">MOST POPULAR</span>
+          <h3 class="text-h2 text-profit">Delta Pro Trader</h3>
+          <p class="text-body-sm text-mid">Full autonomous execution and live exchange connectivity.</p>
+          <div class="num-ticker text-display-1 text-profit" style="margin: 12px 0;">$49 <span class="text-xs text-mid">/mo</span></div>
+          <ul class="flex flex-col gap-2 text-body-sm text-mid" style="margin-bottom: var(--space-4);">
+            <li><i class="ph-bold ph-check text-profit"></i> 24/7 Background Daemon Execution</li>
+            <li><i class="ph-bold ph-check text-profit"></i> Native Coinbase WSS + NSE Feeds</li>
+            <li><i class="ph-bold ph-check text-profit"></i> Liquidation Firewall Protection</li>
+            <li><i class="ph-bold ph-check text-profit"></i> Event Risk Shield Auto-Pauses</li>
+            <li><i class="ph-bold ph-check text-profit"></i> 18% GST Auto-Tax Bifurcation</li>
+          </ul>
+          <a href="terminal.html" class="btn-primary" style="margin-top: auto; text-align: center;">Upgrade to Pro</a>
+        </div>
+
+        <!-- Tier 3: Institutional -->
+        <div class="glass-card bento-col-4 component-card-wrap">
+          <span class="code-badge text-cyan">ENTERPRISE</span>
+          <h3 class="text-h2">Hedge Fund Desk</h3>
+          <p class="text-body-sm text-mid">Multi-seat deployment, custom API feeds, and priority execution.</p>
+          <div class="num-ticker text-display-1 text-hi" style="margin: 12px 0;">$199 <span class="text-xs text-mid">/mo</span></div>
+          <ul class="flex flex-col gap-2 text-body-sm text-mid" style="margin-bottom: var(--space-4);">
+            <li><i class="ph-bold ph-check text-profit"></i> Uncapped Multi-Trade Universe</li>
+            <li><i class="ph-bold ph-check text-profit"></i> Dedicated Sub-millisecond Node</li>
+            <li><i class="ph-bold ph-check text-profit"></i> Multi-Chart Grid (2x2 Sync)</li>
+            <li><i class="ph-bold ph-check text-profit"></i> Prop Firm Challenge Evaluation Mode</li>
+          </ul>
+          <a href="terminal.html" class="btn-secondary" style="margin-top: auto; text-align: center;">Contact Institutional</a>
+        </div>
+
+      </div>
+
+      <!-- FAQ Accordion -->
+      <div class="container-narrow">
+        <h3 class="text-h2 text-center" style="margin-bottom: var(--space-4);">Frequently Answered Questions</h3>
+        
+        <div class="accordion-item open">
+          <button type="button" class="accordion-trigger">
+            <span>Is real broker capital required to try MONDAY?</span>
+            <i class="ph-bold ph-caret-down accordion-chevron"></i>
+          </button>
+          <div class="accordion-content">
+            <p class="text-body-sm text-mid">
+              No. MONDAY includes an institutional virtual paper trading desk pre-funded with $2,000. You can test confluence, listen to the voice copilot, and build an audited ledger with zero financial risk.
             </p>
           </div>
+        </div>
 
-          <!-- Segmented Tab Switcher -->
-          <div class="auth-segmented-control" role="tablist">
-            <button class="auth-segment-btn active" id="auth_tab_signin" type="button">Sign In</button>
-            <button class="auth-segment-btn" id="auth_tab_signup" type="button">Create Account</button>
-          </div>
-
-          <!-- Alert Box -->
-          <div class="auth-alert-box" id="auth_alert_box" style="display: none;"></div>
-
-          <!-- Auth Form -->
-          <form class="auth-form" id="auth_form">
-            <!-- Full Name (Only visible for Signup) -->
-            <div class="auth-input-group" id="auth_group_name" style="display: none;">
-              <label for="auth_input_name" class="auth-label">FULL NAME</label>
-              <input 
-                type="text" 
-                id="auth_input_name" 
-                class="auth-input" 
-                placeholder="Trader Name" 
-                autocomplete="name"
-              />
-            </div>
-
-            <div class="auth-input-group">
-              <label for="auth_input_email" class="auth-label">EMAIL ADDRESS</label>
-              <input 
-                type="email" 
-                id="auth_input_email" 
-                class="auth-input" 
-                placeholder="name@example.com" 
-                required 
-                autocomplete="email"
-              />
-            </div>
-
-            <div class="auth-input-group">
-              <div class="auth-label-row">
-                <label for="auth_input_password" class="auth-label">PASSWORD</label>
-                <a href="#" class="auth-forgot-link" id="auth_forgot_link">Forgot password?</a>
-              </div>
-              <div class="auth-password-wrapper">
-                <input 
-                  type="password" 
-                  id="auth_input_password" 
-                  class="auth-input" 
-                  placeholder="••••••••" 
-                  required 
-                  autocomplete="current-password"
-                />
-                <button type="button" class="auth-pwd-toggle" id="auth_pwd_toggle" title="Show/Hide password">
-                  <i class="ph ph-eye" id="auth_pwd_eye"></i>
-                </button>
-              </div>
-            </div>
-
-            <button type="submit" class="auth-btn-primary" id="auth_submit_btn">
-              <span id="auth_submit_text">Sign In with Email</span>
-              <i class="ph ph-arrow-right"></i>
-            </button>
-          </form>
-
-          <div class="auth-divider">
-            <span>OR</span>
-          </div>
-
-          <!-- Social & Guest Buttons -->
-          <div class="auth-social-group">
-            <button class="auth-btn-social" id="auth_google_btn" type="button">
-              <svg class="google-icon" viewBox="0 0 24 24" width="18" height="18">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-              </svg>
-              <span>Continue with Google</span>
-            </button>
-
-            <button class="auth-btn-guest" id="auth_guest_btn" type="button" title="Start instant trading session">
-              <i class="ph ph-user"></i>
-              <span>Continue as Guest</span>
-            </button>
+        <div class="accordion-item">
+          <button type="button" class="accordion-trigger">
+            <span>How does MONDAY comply with Delta Exchange India and GST regulations?</span>
+            <i class="ph-bold ph-caret-down accordion-chevron"></i>
+          </button>
+          <div class="accordion-content">
+            <p class="text-body-sm text-mid">
+              MONDAY automatically models Delta Exchange India’s derivative fee tier (0.05% taker, 0.02% maker) and auto-bifurcates 18% GST on all brokerages directly into your audited passbook ledger.
+            </p>
           </div>
         </div>
 
-        <!-- Floating Corner Badge (Matching sample QR badge) -->
-        <div class="auth-corner-badge">
-          <div class="badge-qr-box">
-            <i class="ph ph-qr-code"></i>
-          </div>
-          <div class="badge-text-box">
-            <span class="badge-title">PROJECT MONDAY</span>
-            <span class="badge-sub">Web Terminal v2.5 • Dual Market</span>
+        <div class="accordion-item">
+          <button type="button" class="accordion-trigger">
+            <span>Can the 24/7 background daemon run when my laptop is closed?</span>
+            <i class="ph-bold ph-caret-down accordion-chevron"></i>
+          </button>
+          <div class="accordion-content">
+            <p class="text-body-sm text-mid">
+              Yes. The MONDAY Daemon runs as a standalone headless Node.js process connected directly to Coinbase WebSockets, executing sub-millisecond TP/SL orders independent of browser state.
+            </p>
           </div>
         </div>
       </div>
 
     </div>
-  </div>
-
-  <!-- Slide-In Mobile Drawer (Android Native APK Drawer) -->
-  <div class="mobile-drawer-backdrop" id="mobile_drawer_backdrop"></div>
-  <aside class="mobile-drawer" id="mobile_drawer" aria-label="Navigation Drawer">
-    <div class="drawer-header">
-      <div class="drawer-user-info">
-        <div class="drawer-avatar"><span id="drawer_avatar_initials">GT</span></div>
-        <div class="drawer-user-meta">
-          <span class="drawer-user-name" id="drawer_user_name">Guest Trader</span>
-          <span class="drawer-badge"><i class="ph-fill ph-shield-check"></i> Pro Paper Account</span>
-        </div>
-      </div>
-      <button class="drawer-close-btn" id="drawer_close_btn" type="button" aria-label="Close Drawer"><i class="ph ph-x"></i></button>
-    </div>
-
-    <div class="drawer-balance-card">
-      <div class="d-bal-lbl">Total Paper Equity</div>
-      <div class="d-bal-val" id="drawer_total_equity">$2,000.00</div>
-      <div class="d-bal-sub">
-        <span>Available: <strong id="drawer_avail_cash">$2,000.00</strong></span>
-        <span>Margin: <strong id="drawer_used_margin">$0.00</strong></span>
-      </div>
-    </div>
-
-    <!-- Quick Market Switch Segment -->
-    <div class="drawer-section-title">Trading Market</div>
-    <div class="drawer-market-selector">
-      <button class="d-market-btn active" data-market="Crypto" id="d_market_crypto" type="button">
-        <i class="ph ph-currency-btc"></i> <span>Crypto (Binance)</span>
-      </button>
-      <button class="d-market-btn" data-market="India" id="d_market_india" type="button">
-        <i class="ph ph-buildings"></i> <span>India (NSE/BSE)</span>
-      </button>
-    </div>
-
-    <!-- Market Intelligence Hub (Pattern Scan & Macro Radar for Mobile) -->
-    <div class="drawer-section-title d-flex-between">
-      <span>Market Intelligence</span>
-      <span class="d-live-pulse-badge"><span class="live-dot pulse-cyan"></span> LIVE SYNC</span>
-    </div>
-
-    <div class="drawer-radar-hub" id="drawer_radar_hub">
-      <div class="drawer-radar-nav">
-        <button class="d-radar-tab-btn active" id="d_tab_pattern" data-deck-view="hist" type="button">
-          <i class="ph ph-git-commit"></i> Pattern Scan
-        </button>
-        <button class="d-radar-tab-btn" id="d_tab_macro" data-deck-view="news" type="button">
-          <i class="ph ph-broadcast"></i> Macro Radar
-        </button>
-      </div>
-
-      <!-- Pattern Scan Drawer Card -->
-      <div class="d-radar-view active" id="drawer_historical_pattern_card">
-        <div class="d-pattern-header">
-          <div class="d-pattern-title" id="d_pattern_title"><i class="ph ph-git-commit"></i> Regime Pattern Matching</div>
-          <div class="d-pattern-badge" id="d_pattern_badge">Supportive</div>
-        </div>
-        <div class="d-pattern-stats-grid">
-          <div class="d-p-stat"><span class="k">Sample:</span> <span class="v" id="d_stat_sample">84 setups</span></div>
-          <div class="d-p-stat"><span class="k">Win Rate:</span> <span class="v text-bullish" id="d_stat_winrate">64.3%</span></div>
-          <div class="d-p-stat"><span class="k">Avg RR:</span> <span class="v" id="d_stat_rr">1:2.65</span></div>
-          <div class="d-p-stat"><span class="k">Regime:</span> <span class="v text-bullish" id="d_stat_regime">Supportive</span></div>
-        </div>
-        <div class="d-pattern-desc" id="d_pattern_desc">
-          Evaluating similar discount pullback behavior following Asian liquidity sweeps.
-        </div>
-      </div>
-
-      <!-- Macro Radar News Drawer List -->
-      <div class="d-radar-view" id="drawer_news_radar_list">
-        <div class="d-macro-empty"><span class="live-dot pulse-green"></span> Live Macro Feed syncing...</div>
-      </div>
-    </div>
-
-    <div class="drawer-section-title">Navigation & Tools</div>
-    <div class="drawer-menu-list">
-      <button class="drawer-menu-item" id="d_open_search" type="button">
-        <i class="ph ph-magnifying-glass item-ico cyan"></i>
-        <span>Search Asset / Watchlist</span>
-        <i class="ph ph-arrow-right arr-ico"></i>
-      </button>
-
-      <button class="drawer-menu-item" id="d_open_passbook" type="button">
-        <i class="ph ph-receipt item-ico emerald"></i>
-        <span>Financial Passbook & History</span>
-        <span class="d-chip">18% GST</span>
-        <i class="ph ph-arrow-right arr-ico"></i>
-      </button>
-
-      <button class="drawer-menu-item" id="d_open_journal" type="button">
-        <i class="ph ph-notebook item-ico purple"></i>
-        <span>Trade Journal & Analytics</span>
-        <i class="ph ph-arrow-right arr-ico"></i>
-      </button>
-
-      <button class="drawer-menu-item" id="d_toggle_autopilot" type="button">
-        <i class="ph-bold ph-robot item-ico purple"></i>
-        <span>Auto-Pilot Execution</span>
-        <span class="d-toggle-badge" id="d_autopilot_badge">OFF</span>
-      </button>
-
-      <button class="drawer-menu-item" id="d_toggle_voice" type="button">
-        <i class="ph ph-speaker-high item-ico cyan"></i>
-        <span>Hinglish Audio Copilot</span>
-        <span class="d-toggle-badge active" id="d_voice_badge">ON</span>
-      </button>
-
-      <div class="drawer-menu-item d-theme-row">
-        <div class="d-row-left">
-          <i class="ph ph-sun-dim item-ico amber"></i>
-          <span>Theme Mode</span>
-        </div>
-        <button class="d-theme-toggle-btn" id="d_theme_toggle_btn" type="button">
-          <span id="d_theme_mode_text">Dark</span>
-        </button>
-      </div>
-    </div>
-
-    <div class="drawer-footer">
-      <span>MONDAY Neural Engine v2.5 • Capacitor APK Ready</span>
-    </div>
-  </aside>
-
-  <!-- SAAS APP SHELL & NAVIGATION WRAPPER -->
-  <div class="saas-app-container" id="saas_app_container">
-    <!-- Desktop Left Sidebar -->
-    <aside class="saas-sidebar" id="saas_sidebar">
-      <div class="saas-sidebar-header">
-        <div class="saas-brand-group">
-          <div class="saas-brand-icon">
-            <i class="ph ph-sparkle"></i>
-          </div>
-          <div class="saas-brand-text">
-            <div class="saas-brand-title">
-              MONDAY <span class="saas-brand-tag">v2.5</span>
-            </div>
-            <div class="saas-brand-sub">Neural Derivatives Desk</div>
-          </div>
-        </div>
-        <button class="saas-sidebar-toggle-btn" id="saas_sidebar_toggle_btn" type="button" title="Toggle Sidebar">
-          <i class="ph ph-sidebar-simple"></i>
-        </button>
-      </div>
-
-      <nav class="saas-nav-menu">
-        <div class="saas-nav-section-title">Platform</div>
-        <button class="saas-nav-item active" data-page="terminal" type="button">
-          <span class="saas-nav-icon"><i class="ph ph-chart-line-up"></i></span>
-          <span class="saas-nav-label">Terminal</span>
-        </button>
-        <button class="saas-nav-item" data-page="positions" type="button">
-          <span class="saas-nav-icon"><i class="ph ph-briefcase"></i></span>
-          <span class="saas-nav-label">Positions</span>
-          <span class="saas-nav-badge" id="saas_pos_badge">0</span>
-        </button>
-        <button class="saas-nav-item" data-page="passbook" type="button">
-          <span class="saas-nav-icon"><i class="ph ph-book-open"></i></span>
-          <span class="saas-nav-label">Passbook & Yearbook</span>
-        </button>
-        <button class="saas-nav-item" data-page="copilot" type="button">
-          <span class="saas-nav-icon"><i class="ph ph-chats-circle"></i></span>
-          <span class="saas-nav-label">AI Copilot</span>
-        </button>
-
-        <div class="saas-nav-section-title">Control</div>
-        <button class="saas-nav-item" data-page="settings" type="button">
-          <span class="saas-nav-icon"><i class="ph ph-sliders"></i></span>
-          <span class="saas-nav-label">Risk & Engine</span>
-        </button>
-      </nav>
-
-      <div class="saas-sidebar-footer">
-        <div class="saas-footer-equity-card">
-          <div class="saas-footer-equity-lbl">Portfolio Equity</div>
-          <div class="saas-footer-equity-val" id="saas_sidebar_equity">$2,000.00</div>
-        </div>
-        <div class="saas-footer-user-row" id="saas_sidebar_account_btn">
-          <div class="saas-footer-avatar">HS</div>
-          <div class="saas-footer-user-meta">
-            <span class="saas-footer-user-name">Delta Pro Trader</span>
-            <span class="saas-footer-user-sub">Paper Trading Mode</span>
-          </div>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Main Viewport -->
-    <main class="saas-main-viewport" id="saas_main_viewport">
-      <!-- VIEW 1: TRADING TERMINAL -->
-      <div class="saas-page-view active" id="view_terminal">
-        <div class="terminal-wrapper" id="terminal_wrapper">
-    <!-- Top Header & Global Telemetry Strip -->
-    <header class="terminal-header">
-      <!-- Mobile Topbar Left: Hamburger Drawer Toggle -->
-      <button class="mobile-drawer-toggle" id="mobile_drawer_toggle" type="button" aria-label="Open Navigation Menu">
-        <i class="ph ph-list"></i>
-      </button>
-
-      <!-- Mobile Topbar Center: Quick Asset Switcher Pill -->
-      <div class="mobile-asset-pill" id="mobile_asset_pill" title="Tap to switch asset or view watchlist">
-        <span class="m-asset-sym" id="m_asset_sym">BTC</span>
-        <span class="m-asset-price" id="m_asset_price">--</span>
-        <span class="m-asset-chg text-bullish" id="m_asset_chg">--%</span>
-        <i class="ph ph-caret-down m-caret"></i>
-      </div>
-
-      <!-- Left Cluster: Brand & Market Selector -->
-      <div class="header-left-cluster">
-        <div class="header-brand">
-          <div class="brand-icon-halo">
-            <i class="ph ph-sparkle"></i>
-          </div>
-          <div>
-            <h1 class="brand-title">
-              MONDAY
-              <span class="brand-badge">AI COMPANION</span>
-            </h1>
-            <div class="brand-subtitle">Market-Oriented Neural Decision Assistant for You</div>
-          </div>
-        </div>
-
-        <!-- Compact Market Dropdown Selector -->
-        <div class="market-dropdown-wrapper" id="market_dropdown_wrapper">
-          <button class="market-dropdown-trigger" id="market_dropdown_trigger" type="button" aria-haspopup="true" aria-expanded="false" title="Switch Market">
-            <i class="ph ph-currency-btc" id="market_trigger_icon"></i>
-            <span class="market-trigger-label" id="market_trigger_label">Crypto</span>
-            <i class="ph ph-caret-down market-caret" id="market_trigger_caret"></i>
-          </button>
-
-          <!-- Dropdown Popover Menu -->
-          <div class="market-dropdown-menu" id="market_dropdown_menu">
-            <div class="market-menu-header">
-              <span>Switch Trading Market</span>
-            </div>
-            <button class="market-menu-item active" data-market="Crypto" type="button">
-              <div class="market-item-left">
-                <div class="market-icon-box crypto">
-                  <i class="ph ph-currency-btc"></i>
-                </div>
-                <div class="market-item-text">
-                  <span class="market-name">Crypto Market</span>
-                  <span class="market-sub">Binance Live • 700+ Pairs</span>
-                </div>
-              </div>
-              <i class="ph ph-check market-check"></i>
-            </button>
-
-            <button class="market-menu-item" data-market="India" type="button">
-              <div class="market-item-left">
-                <div class="market-icon-box india">
-                  <i class="ph ph-buildings"></i>
-                </div>
-                <div class="market-item-text">
-                  <span class="market-name">India (NSE/BSE)</span>
-                  <span class="market-sub">NIFTY 50, Bank Nifty, Stocks</span>
-                </div>
-              </div>
-              <i class="ph ph-check market-check"></i>
-            </button>
-
-            <button class="market-menu-item phase-lock" data-market="US" type="button" title="Scheduled for Phase 4">
-              <div class="market-item-left">
-                <div class="market-icon-box us">
-                  <i class="ph ph-globe-stand"></i>
-                </div>
-                <div class="market-item-text">
-                  <span class="market-name">US Market</span>
-                  <span class="market-sub">NASDAQ, S&P 500</span>
-                </div>
-              </div>
-              <span class="phase-tag">Phase 4</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Center Cluster: Search, Watchlist Tray & Live Ticker Strip -->
-      <div class="header-ticker-strip">
-        <!-- Search Bar with Floating Auto-Complete Dropdown -->
-        <div class="crypto-search-container" id="crypto_search_container">
-          <div class="crypto-search-box">
-            <i class="ph ph-magnifying-glass search-icon"></i>
-            <input 
-              type="text" 
-              id="crypto_search_input" 
-              class="crypto-search-input" 
-              placeholder="Search stock / crypto..." 
-              autocomplete="off"
-            />
-            <button type="button" class="search-clear-btn" id="search_clear_btn" style="display: none;">
-              <i class="ph ph-x"></i>
-            </button>
-          </div>
-
-          <!-- Floating Search Results Dropdown -->
-          <div class="crypto-search-results" id="crypto_search_results">
-            <!-- Rendered dynamically -->
-          </div>
-        </div>
-
-        <!-- Watchlist Hub: Starred & Quick Asset Hub -->
-        <div class="watchlist-hub" id="watchlist_hub">
-          <!-- Watchlist Dropdown Tray Trigger -->
-          <div class="watchlist-tray-wrapper" id="watchlist_tray_wrapper">
-            <button class="watchlist-tray-btn" id="watchlist_tray_btn" type="button" aria-haspopup="true" aria-expanded="false" title="Your Starred Watchlist Hub">
-              <i class="ph-fill ph-star text-gold"></i>
-              <span class="tray-btn-label">Watchlist</span>
-              <i class="ph ph-caret-down tray-caret" id="watchlist_tray_caret"></i>
-            </button>
-
-            <!-- Floating Watchlist Popover Tray -->
-            <div class="watchlist-tray-popover" id="watchlist_tray_popover">
-              <div class="watchlist-tray-header">
-                <span class="tray-title"><i class="ph-fill ph-star text-gold"></i> Watchlist & Quick Assets</span>
-                <button class="tray-close-btn" id="watchlist_tray_close" type="button"><i class="ph ph-x"></i></button>
-              </div>
-              <div class="watchlist-tray-search-wrap">
-                <i class="ph ph-magnifying-glass tray-search-ico"></i>
-                <input 
-                  type="text" 
-                  id="watchlist_tray_search_input" 
-                  class="watchlist-tray-search-input" 
-                  placeholder="Search asset (BTC, ETH, SOL, NIFTY...)" 
-                  autocomplete="off" 
-                />
-              </div>
-              <div class="watchlist-tray-body" id="watchlist_tray_body">
-                <!-- Dynamically loaded with starred assets + categorized market explorer -->
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="live-ticker-box" id="live_ticker_box">
-          <span class="ticker-price" id="live_ticker_price">--</span>
-          <span class="ticker-change bullish" id="live_ticker_change">--%</span>
-        </div>
-        <script>
-          // Instant Zero-Delay Rehydration: Restores last real live price before first browser paint
-          (function() {
-            try {
-              const cached = localStorage.getItem('monday_last_known_ticker');
-              if (cached) {
-                const data = JSON.parse(cached);
-                if (data && data.price) {
-                  const pEl = document.getElementById('live_ticker_price');
-                  const cEl = document.getElementById('live_ticker_change');
-                  if (pEl) pEl.textContent = data.formattedPrice || ('$' + Number(data.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-                  if (cEl && data.changePercent !== undefined) {
-                    const isPos = Number(data.changePercent) >= 0;
-                    cEl.textContent = (isPos ? '+' : '') + Number(data.changePercent).toFixed(2) + '%';
-                    cEl.className = 'ticker-change ' + (isPos ? 'bullish' : 'bearish');
-                  }
-                }
-              }
-            } catch (e) {}
-          })();
-        </script>
-
-        <div class="feed-badge" id="feed_badge">
-          <span class="feed-pulse"></span>
-          <span id="feed_source_badge">Live Feed</span>
-        </div>
-      </div>
-
-      <!-- Right Cluster: Account Balance & Live Equity HUD -->
-      <div class="header-actions">
-        <div class="account-pill" id="header_account_pill">
-          <div class="account-pill-main">
-            <span class="account-label" id="header_balance_label">Paper Balance:</span>
-            <span class="account-balance" id="header_balance">$2,000.00</span>
-          </div>
-          <div class="account-stat-group">
-            <span class="stat-num" id="header_total_r">+0.00R</span>
-            <span class="stat-pnl-usd" id="header_pnl_usd">(+$0.00)</span>
-            <button class="r-info-btn" id="btn_explain_r" type="button" aria-label="What is R-Multiple?" title="What is R? Click to understand Risk Multiples & Live Equity">
-              <i class="ph ph-question"></i>
-            </button>
-          </div>
-          <!-- Live Floating PnL: updates in realtime when trade is open -->
-          <div class="account-live-chip" id="header_live_chip" style="display: none;" title="Realtime floating PnL updating on live market ticks">
-            <span class="live-dot-pulse"></span>
-            <span class="live-chip-text" id="header_live_text">+$0.00 (+0.00R)</span>
-          </div>
-        </div>
-
-        <!-- Mobile Quick Search Toggle (Clean Un-congested Header) -->
-        <button class="mobile-search-toggle-btn" id="mobile_search_toggle_btn" type="button" aria-label="Search Assets" title="Search Stocks & Crypto">
-          <i class="ph ph-magnifying-glass"></i>
-        </button>
-
-        <!-- Instant Zero-Lag Synchronous HUD Restoration Script -->
-        <script>
-          (function() {
-            try {
-              var userRaw = localStorage.getItem('monday_auth_user');
-              var uid = 'default';
-              if (userRaw) {
-                var u = JSON.parse(userRaw);
-                if (u && u.id) uid = u.id;
-              }
-              var savedBal = localStorage.getItem('ai_copilot_paper_balance_' + uid);
-              var balEl = document.getElementById('header_balance');
-              if (balEl && savedBal && !isNaN(parseFloat(savedBal))) {
-                balEl.textContent = '$' + parseFloat(savedBal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-              }
-              var savedTrades = localStorage.getItem('ai_copilot_paper_trades_' + uid);
-              if (savedTrades) {
-                var trs = JSON.parse(savedTrades);
-                if (Array.isArray(trs)) {
-                  var closed = trs.filter(function(t) { return t.status === 'CLOSED'; });
-                  var netPnl = closed.reduce(function(acc, t) { return acc + (t.pnlUSD || 0); }, 0);
-                  var totalR = closed.reduce(function(acc, t) { return acc + (t.rMultiple || 0); }, 0);
-                  var rEl = document.getElementById('header_total_r');
-                  var pnlEl = document.getElementById('header_pnl_usd');
-                  if (rEl) {
-                    rEl.textContent = (totalR >= 0 ? '+' : '') + totalR.toFixed(2) + 'R';
-                    rEl.className = 'stat-num ' + (totalR >= 0 ? 'bullish' : 'bearish');
-                  }
-                  if (pnlEl) {
-                    pnlEl.textContent = '(' + (netPnl >= 0 ? '+' : '') + '$' + netPnl.toFixed(2) + ')';
-                    pnlEl.className = 'stat-pnl-usd ' + (netPnl >= 0 ? 'bullish' : 'bearish');
-                  }
-                  var openTrades = trs.filter(function(t) { return t.status === 'OPEN'; });
-                  var usedMargin = openTrades.reduce(function(acc, t) { return acc + (t.marginUSD || 0); }, 0);
-                  var curBal = (savedBal && !isNaN(parseFloat(savedBal))) ? parseFloat(savedBal) : 2000;
-                  var availBal = Math.max(0, curBal - usedMargin);
-                  var availEl = document.getElementById('order_avail_balance');
-                  if (availEl) {
-                    availEl.textContent = '$' + availBal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                  }
-                }
-              }
-            } catch (e) {}
-          })();
-        </script>
-
-        <!-- Quick Ledger & Financial Passbook Trigger -->
-        <button class="header-ledger-btn" id="btn_quick_passbook" type="button" title="View Financial Passbook & 18% GST Trade Ledger">
-          <i class="ph-bold ph-receipt"></i>
-          <span>Passbook</span>
-        </button>
-
-        <!-- Autonomous AI Auto-Pilot Switch (Max 2 Concurrent Trades) -->
-        <div class="autopilot-toggle-wrapper" id="autopilot_toggle_wrapper" title="Autonomous AI Execution: MONDAY will automatically enter confirmed Grade A setups with strict 1% risk (Max 2 open trades)">
-          <div class="autopilot-label-group">
-            <span class="autopilot-dot-pulse"></span>
-            <span class="autopilot-text" id="autopilot_label_text">Auto-Pilot</span>
-          </div>
-          <button class="autopilot-switch" id="autopilot_toggle_btn" type="button" role="switch" aria-checked="false" aria-label="Toggle Autonomous AI Trading Mode">
-            <span class="autopilot-switch-thumb"></span>
-          </button>
-        </div>
-
-        <!-- Auto-Pilot Settings Trigger (Execution & Risk Standards) -->
-        <button class="autopilot-settings-btn" id="btn_autopilot_settings" type="button" title="Configure Auto-Pilot Risk & Execution Standards" aria-label="Auto-Pilot Settings" onclick="if(window.openAutopilotSettings) window.openAutopilotSettings(event);">
-          <i class="ph-bold ph-gear-six"></i>
-        </button>
-
-        <!-- Modern Notification Center Hub -->
-        <div class="notif-popover-wrapper" id="notif_popover_wrapper">
-          <button class="notif-bell-btn" id="notif_bell_btn" type="button" aria-haspopup="true" aria-expanded="false" title="Trade Alerts & Notifications">
-            <i class="ph-bold ph-bell"></i>
-            <span class="notif-badge" id="notif_unread_badge" style="display: none;">0</span>
-          </button>
-
-          <!-- Floating Notification Popover Drawer -->
-          <div class="notif-popover-menu" id="notif_popover_menu" role="dialog" aria-label="Trade Notifications">
-            <div class="notif-popover-header">
-              <div class="notif-header-title">
-                <i class="ph-bold ph-bell-simple"></i>
-                <span class="notif-header-text">Alerts</span>
-                <span class="notif-count-pill" id="notif_header_count">0 alerts</span>
-              </div>
-              <div class="notif-header-actions">
-                <button class="notif-action-btn" id="notif_mark_read_btn" type="button" title="Mark all as read" onclick="window.markAllNotificationsRead(event);">
-                  <i class="ph ph-checks"></i> <span>Mark read</span>
-                </button>
-                <button class="notif-action-btn danger" id="notif_clear_btn" type="button" title="Clear all notifications" onclick="window.clearAllNotifications(event);">
-                  <i class="ph ph-trash"></i>
-                </button>
-              </div>
-            </div>
-
-            <script>
-              window.markAllNotificationsRead = function(e) {
-                if (e) {
-                  if (typeof e.stopPropagation === 'function') e.stopPropagation();
-                  if (typeof e.preventDefault === 'function') e.preventDefault();
-                }
-                if (window.notificationManager && typeof window.notificationManager.markAllAsRead === 'function') {
-                  window.notificationManager.markAllAsRead(e);
-                  return;
-                }
-                if (window.__AI_COPILOT_APP__ && window.__AI_COPILOT_APP__.ui && window.__AI_COPILOT_APP__.ui.notificationManager) {
-                  window.__AI_COPILOT_APP__.ui.notificationManager.markAllAsRead(e);
-                  return;
-                }
-                try {
-                  var data = localStorage.getItem('monday_notifications_v1');
-                  if (data) {
-                    var items = JSON.parse(data);
-                    items.forEach(function(n) { n.read = true; });
-                    localStorage.setItem('monday_notifications_v1', JSON.stringify(items));
-                  }
-                  var badge = document.getElementById('notif_unread_badge');
-                  if (badge) badge.style.display = 'none';
-                  var countEl = document.getElementById('notif_header_count');
-                  if (countEl) {
-                    countEl.textContent = '0 unread';
-                    countEl.className = 'notif-count-pill';
-                  }
-                  var list = document.getElementById('notif_list');
-                  if (list) {
-                    list.querySelectorAll('.notif-item').forEach(function(el) {
-                      el.classList.remove('unread');
-                      el.classList.add('read');
-                    });
-                    list.querySelectorAll('.notif-dot').forEach(function(el) {
-                      el.remove();
-                    });
-                  }
-                } catch(err) {
-                  console.warn('markAllNotificationsRead fallback err:', err);
-                }
-              };
-
-              window.clearAllNotifications = function(e) {
-                if (e) {
-                  if (typeof e.stopPropagation === 'function') e.stopPropagation();
-                  if (typeof e.preventDefault === 'function') e.preventDefault();
-                }
-                if (window.notificationManager && typeof window.notificationManager.clearAll === 'function') {
-                  window.notificationManager.clearAll(e);
-                  return;
-                }
-                if (window.__AI_COPILOT_APP__ && window.__AI_COPILOT_APP__.ui && window.__AI_COPILOT_APP__.ui.notificationManager) {
-                  window.__AI_COPILOT_APP__.ui.notificationManager.clearAll(e);
-                  return;
-                }
-                try {
-                  localStorage.setItem('monday_notifications_v1', '[]');
-                  var badge = document.getElementById('notif_unread_badge');
-                  if (badge) badge.style.display = 'none';
-                  var countEl = document.getElementById('notif_header_count');
-                  if (countEl) {
-                    countEl.textContent = '0 alerts';
-                    countEl.className = 'notif-count-pill';
-                  }
-                  var list = document.getElementById('notif_list');
-                  if (list) {
-                    list.innerHTML = '<div class="notif-empty-state"><div class="notif-empty-icon"><i class="ph ph-bell-simple-slash"></i></div><div class="notif-empty-title">All Caught Up</div><div class="notif-empty-desc">No trade or setup notifications yet.</div></div>';
-                  }
-                } catch(err) {
-                  console.warn('clearAllNotifications fallback err:', err);
-                }
-              };
-            </script>
-
-            <!-- Scrollable List of Notifications -->
-            <div class="notif-list" id="notif_list">
-              <!-- Dynamically populated -->
-            </div>
-          </div>
-        </div>
-
-        <!-- Google-Style User Profile & Utilities Popover Hub -->
-        <div class="profile-popover-wrapper" id="profile_popover_wrapper">
-          <button class="profile-avatar-btn" id="profile_avatar_btn" type="button" aria-haspopup="true" aria-expanded="false" title="Account, Portfolio & Settings">
-            <div class="avatar-circle" id="profile_avatar_circle">
-              <span class="avatar-initials" id="profile_avatar_initials">GT</span>
-            </div>
-            <i class="ph ph-caret-down avatar-caret" id="profile_avatar_caret"></i>
-          </button>
-
-          <!-- Floating Profile Dropdown Popover Menu -->
-          <div class="profile-popover-menu" id="profile_popover_menu" role="menu">
-            <!-- User Header Card -->
-            <div class="popover-user-card">
-              <div class="popover-user-avatar">
-                <span class="popover-avatar-initials" id="popover_avatar_initials">GT</span>
-              </div>
-              <div class="popover-user-meta">
-                <span class="popover-user-name" id="user_display_name">Guest Trader</span>
-                <span class="popover-account-badge"><i class="ph-fill ph-shield-check"></i> Pro Paper Account</span>
-              </div>
-            </div>
-
-            <!-- Portfolio & Capital Allocation Snapshot -->
-            <div class="popover-portfolio-card" id="popover_portfolio_card">
-              <div class="popover-card-header">
-                <span class="popover-card-title"><i class="ph ph-briefcase"></i> My Portfolio</span>
-                <span class="popover-equity-tag" id="popover_equity_tag">$2,000.00</span>
-              </div>
-              <div class="popover-portfolio-grid">
-                <div class="portfolio-stat-cell">
-                  <span class="p-stat-lbl">Available Cash</span>
-                  <span class="p-stat-val" id="popover_avail_bal">$2,000.00</span>
-                </div>
-                <div class="portfolio-stat-cell">
-                  <span class="p-stat-lbl">Margin in Trades</span>
-                  <span class="p-stat-val" id="popover_used_margin">$0.00</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Popover Menu Actions -->
-            <div class="popover-menu-section">
-              <!-- Financial Passbook & History Trigger -->
-              <button class="popover-menu-item" id="open_history_btn" type="button">
-                <div class="menu-item-left">
-                  <i class="ph ph-receipt item-icon emerald"></i>
-                  <span>Financial Passbook & History</span>
-                </div>
-                <span class="passbook-chip-badge">18% GST</span>
-                <i class="ph ph-arrow-right item-arrow"></i>
-              </button>
-
-              <!-- Trade Journal Trigger -->
-              <button class="popover-menu-item" id="open_journal_btn" type="button">
-                <div class="menu-item-left">
-                  <i class="ph ph-notebook item-icon purple"></i>
-                  <span>Trade Journal & Analytics</span>
-                </div>
-                <i class="ph ph-arrow-right item-arrow"></i>
-              </button>
-
-              <!-- Autonomous Auto-Pilot Toggle Row in Popover -->
-              <button class="popover-menu-item" id="popover_autopilot_toggle" type="button">
-                <div class="menu-item-left">
-                  <i class="ph-bold ph-robot item-icon purple" id="popover_autopilot_icon"></i>
-                  <span>Auto-Pilot Execution (Max 2)</span>
-                </div>
-                <span class="popover-toggle-badge" id="popover_autopilot_badge">OFF</span>
-              </button>
-
-              <!-- Dark / Light Theme Toggle Row -->
-              <div class="popover-menu-item theme-row">
-                <div class="menu-item-left">
-                  <i class="ph ph-sun-dim item-icon amber" id="popover_theme_icon"></i>
-                  <span>Theme</span>
-                </div>
-                <button class="theme-toggle-btn" id="theme_toggle_btn" type="button" aria-label="Toggle Theme" title="Switch Theme (Dark / Light)">
-                  <div class="theme-toggle-track">
-                    <div class="theme-toggle-thumb">
-                      <i class="ph ph-moon theme-thumb-icon moon-icon"></i>
-                      <i class="ph ph-sun theme-thumb-icon sun-icon"></i>
-                    </div>
-                  </div>
-                  <span class="theme-toggle-text" id="theme_mode_text">Dark</span>
-                </button>
-              </div>
-
-              <!-- Audio Copilot Mute / Unmute Toggle -->
-              <button class="popover-menu-item" id="popover_voice_toggle" type="button">
-                <div class="menu-item-left">
-                  <i class="ph ph-speaker-high item-icon cyan" id="popover_voice_icon"></i>
-                  <span>Hinglish Audio Copilot</span>
-                </div>
-                <span class="popover-toggle-badge active" id="popover_voice_badge">ON</span>
-              </button>
-            </div>
-
-            <div class="popover-footer">
-              <button class="popover-logout-btn" id="header_logout_btn" type="button">
-                <i class="ph ph-sign-out"></i>
-                <span id="popover_logout_text">Sign Out / Switch Account</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <!-- Mobile Native Bottom Navigation Bar (Capacitor Safe-Area Compatible) -->
-    <nav class="mobile-nav-tabs" id="mobile_nav_tabs" aria-label="Mobile Bottom Navigation">
-      <button class="mobile-tab-btn active" data-page="chart" data-target="panel_chart" id="m_tab_chart" type="button">
-        <i class="ph ph-chart-line-up"></i> <span>Chart</span>
-      </button>
-      <button class="mobile-tab-btn" data-page="strategy" data-target="panel_strategy" id="m_tab_strategy" type="button">
-        <i class="ph ph-crosshair"></i> <span>Strategy</span>
-      </button>
-      <button class="mobile-tab-btn" data-page="copilot" data-target="panel_copilot" id="m_tab_copilot" type="button">
-        <i class="ph ph-sparkle"></i> <span>Copilot</span>
-      </button>
-      <button class="mobile-tab-btn" data-page="passbook" id="m_tab_history" type="button">
-        <i class="ph ph-receipt"></i> <span>Passbook</span>
-      </button>
-      <button class="mobile-tab-btn" data-page="journal" id="m_tab_journal" type="button">
-        <i class="ph ph-notebook"></i> <span>Journal</span>
-      </button>
-    </nav>
-
-    <!-- Main Terminal Workspace -->
-    <main class="terminal-body">
-
-      <!-- LEFT COLUMN: Strategy Engine, Telemetry & Order Execution -->
-      <section class="terminal-panel panel-strategy" id="panel_strategy" aria-label="Strategy & Order Panel">
-        <div class="panel-header">
-          <span class="panel-title"><i class="ph ph-crosshair"></i> Strategy Engine</span>
-          <div id="ai_state_badge" class="state-badge state-wait">
-            <i class="ph ph-clock"></i> <span>WAIT</span>
-          </div>
-        </div>
-
-        <div class="panel-content">
-          <!-- Market Summary Telemetry Grid (PRD Section 32) -->
-          <div class="telemetry-grid">
-            <div class="telemetry-card">
-              <span class="meta-lbl">1H Direction</span>
-              <span class="meta-val bullish" id="meta_htf_trend">BULLISH</span>
-            </div>
-            <div class="telemetry-card">
-              <span class="meta-lbl">Trade Bias</span>
-              <span class="meta-val bullish" id="meta_direction">LONG</span>
-            </div>
-            <div class="telemetry-card">
-              <span class="meta-lbl">5M Setup Area</span>
-              <span class="meta-val" id="meta_setup">Pullback In Zone</span>
-            </div>
-            <div class="telemetry-card">
-              <span class="meta-lbl">Confirmation</span>
-              <span class="meta-val" id="meta_confirmation">Pending Reaction</span>
-            </div>
-            <div class="telemetry-card">
-              <span class="meta-lbl">Historical Context</span>
-              <span class="meta-val tag-supportive" id="meta_hist_context">Supportive (64%)</span>
-            </div>
-            <div class="telemetry-card">
-              <span class="meta-lbl">Event Risk</span>
-              <span class="meta-val risk-medium" id="meta_event_risk">Medium Risk</span>
-            </div>
-            <div class="telemetry-card">
-              <span class="meta-lbl">Calculated RR</span>
-              <span class="meta-val text-bullish" id="meta_rr">1:3.20</span>
-            </div>
-            <div class="telemetry-card">
-              <span class="meta-lbl">Risk Rule</span>
-              <span class="meta-val">1.0% Max</span>
-            </div>
-            <div class="telemetry-card" title="Real-time Crypto Fear & Greed Index from Alternative.me">
-              <span class="meta-lbl">Market Sentiment</span>
-              <span class="meta-val text-bullish" id="meta_sentiment_score">Greed (64)</span>
-            </div>
-            <div class="telemetry-card" title="Perpetual Contract Funding Rate (Delta / Binance Futures)">
-              <span class="meta-lbl">Funding / OI</span>
-              <span class="meta-val" id="meta_funding_rate">+0.0100% (Balanced)</span>
-            </div>
-            <div class="telemetry-card" title="14-Period Multi-Timeframe Wilder RSI Momentum">
-              <span class="meta-lbl">RSI Momentum</span>
-              <span class="meta-val text-bullish" id="meta_rsi_momentum">1H: 56.2 | 5M: 52.8</span>
-            </div>
-            <div class="telemetry-card" title="20-VMA Whale Volumetric Anomaly Filter">
-              <span class="meta-lbl">Whale Volume</span>
-              <span class="meta-val" id="meta_whale_volume">Normal (1.1x VMA)</span>
-            </div>
-          </div>
-
-          <!-- Algorithmic Confluence Score Meter (0 - 100%) -->
-          <div class="confluence-meter-card" id="confluence_meter_card">
-            <div class="confluence-header">
-              <span class="confluence-title"><i class="ph-bold ph-lightning"></i> NEURAL CONFLUENCE</span>
-              <span class="confluence-score-val" id="confluence_score_val">0% <span class="confluence-grade" id="confluence_grade_badge">[NO EDGE]</span></span>
-            </div>
-            <div class="confluence-track">
-              <div class="confluence-fill" id="confluence_fill_bar" style="width: 0%;"></div>
-            </div>
-            <div class="confluence-footer">
-              <span class="confluence-sub" id="confluence_sub_text">Min 75% required for Grade A Institutional Execution</span>
-            </div>
-          </div>
-
-          <!-- DELTA EXCHANGE PRO DERIVATIVES ORDER DESK -->
-          <div class="derivatives-order-desk">
-            <!-- Order Direction Segment (Long vs Short) -->
-            <div class="order-dir-segmented" role="tablist">
-              <button class="dir-btn long active" id="btn_order_dir_long" type="button">
-                <i class="ph-bold ph-trend-up"></i> Buy / Long
-              </button>
-              <button class="dir-btn short" id="btn_order_dir_short" type="button">
-                <i class="ph-bold ph-trend-down"></i> Sell / Short
-              </button>
-            </div>
-
-            <!-- Margin Mode & Order Type Bar -->
-            <div class="order-sub-modes">
-              <div class="mode-pill isolated" id="pill_margin_mode" title="Isolated margin locks only assigned trade margin">
-                <i class="ph ph-shield"></i> Isolated Margin
-              </div>
-              <div class="order-type-tabs">
-                <button class="type-tab active" id="tab_order_market" type="button">Market</button>
-                <button class="type-tab" id="tab_order_limit" type="button">Limit</button>
-              </div>
-            </div>
-
-            <!-- Dual-Control Leverage Selector (Slider + Numeric Input) -->
-            <div class="leverage-control-card">
-              <div class="lev-header">
-                <span class="lev-title"><i class="ph ph-sliders"></i> Leverage Selector</span>
-                <span class="lev-max-badge" id="leverage_max_badge">Max 200x</span>
-              </div>
-              <div class="lev-dual-row">
-                <div class="lev-input-wrapper">
-                  <input type="number" id="order_leverage_input" min="1" max="200" value="20" step="1" />
-                  <span class="lev-suffix">x</span>
-                </div>
-                <div class="lev-slider-wrapper">
-                  <input type="range" id="order_leverage_slider" min="1" max="200" value="20" step="1" class="custom-range-slider" />
-                </div>
-              </div>
-              <!-- Quick Preset Leverage Chips -->
-              <div class="lev-chips-row" id="lev_chips_container">
-                <button class="lev-chip" data-lev="5" type="button">5x</button>
-                <button class="lev-chip" data-lev="10" type="button">10x</button>
-                <button class="lev-chip active" data-lev="20" type="button">20x</button>
-                <button class="lev-chip" data-lev="50" type="button">50x</button>
-                <button class="lev-chip" data-lev="100" type="button">100x</button>
-                <button class="lev-chip" data-lev="200" type="button">200x</button>
-              </div>
-            </div>
-
-            <!-- Size / Margin Input & Balance Percentages -->
-            <div class="order-size-card">
-              <div class="size-header">
-                <span class="size-label">Order Size & Margin</span>
-                <span class="avail-balance">Avail: <strong id="order_avail_balance">$2,000.00</strong></span>
-              </div>
-              <div class="size-inputs-grid">
-                <div class="size-input-box">
-                  <span class="size-affix">$</span>
-                  <input type="number" id="order_margin_usdt" value="20" min="1" step="1" placeholder="Margin (USD)" />
-                  <span class="size-unit">USD</span>
-                </div>
-                <div class="size-input-box">
-                  <span class="size-affix"><i class="ph ph-coins"></i></span>
-                  <input type="number" id="order_size_qty" value="0.006" step="0.0001" placeholder="Quantity" />
-                  <span class="size-unit" id="order_qty_unit">BTC</span>
-                </div>
-              </div>
-              <!-- Quick Balance % Chips -->
-              <div class="pct-chips-row">
-                <button class="pct-chip active" data-pct="1" type="button">1% (Safe)</button>
-                <button class="pct-chip" data-pct="5" type="button">5%</button>
-                <button class="pct-chip" data-pct="10" type="button">10%</button>
-                <button class="pct-chip" data-pct="25" type="button">25%</button>
-                <button class="pct-chip" data-pct="50" type="button">50%</button>
-                <button class="pct-chip" data-pct="100" type="button">Max</button>
-              </div>
-            </div>
-
-            <!-- TP / SL Protective Inputs -->
-            <div class="tpsl-inputs-grid">
-              <div class="tpsl-input-box">
-                <div class="tpsl-lbl text-bullish">Take Profit (TP)</div>
-                <input type="number" id="order_tp_input" placeholder="TP Price" step="any" />
-                <span class="tpsl-roe text-bullish" id="order_tp_roe">+0.0% ROE</span>
-              </div>
-              <div class="tpsl-input-box">
-                <div class="tpsl-lbl text-bearish">Stop Loss (SL)</div>
-                <input type="number" id="order_sl_input" placeholder="SL Price" step="any" />
-                <span class="tpsl-roe text-bearish" id="order_sl_roe">-0.0% ROE</span>
-              </div>
-            </div>
-
-            <!-- Real-Time Delta Exchange Order Summary Telemetry -->
-            <div class="derivatives-telemetry-slip">
-              <div class="slip-row">
-                <span class="slip-k">Margin Required:</span>
-                <span class="slip-v" id="slip_cost_margin">$20.00</span>
-              </div>
-              <div class="slip-row">
-                <span class="slip-k">Notional Value:</span>
-                <span class="slip-v highlight" id="slip_notional_val">$400.00</span>
-              </div>
-              <div class="slip-row">
-                <span class="slip-k">Est. Liq Price:</span>
-                <span class="slip-v text-warning" id="slip_liq_price">$61,650.00</span>
-              </div>
-              <div class="slip-row">
-                <span class="slip-k">Risk / Reward:</span>
-                <span class="slip-v text-bullish" id="slip_rr_ratio">1:2.65</span>
-              </div>
-              <div class="slip-row">
-                <span class="slip-k">Delta Fee (Est.):</span>
-                <span class="slip-v text-muted" id="slip_est_fee">$0.40 (0.05%)</span>
-              </div>
-            </div>
-
-            <!-- Counter-Trend / Bias Indicator Pill (Hidden when matched, shows when counter-trend) -->
-            <div class="bias-indicator-pill" id="bias_indicator_pill" style="display: none;">
-              <i class="ph-bold ph-warning-circle"></i>
-              <span id="bias_indicator_text">Counter-Trend • AI Bias is Bullish</span>
-            </div>
-
-            <!-- Sleek Modern Execution Trigger Button -->
-            <button class="btn-exec-trade long" id="execute_trade_btn">
-              <div class="exec-btn-content">
-                <i class="ph-bold ph-lightning" id="exec_btn_icon"></i>
-                <span class="exec-btn-action" id="exec_btn_action">Open Long</span>
-                <span class="exec-btn-status-badge confirmed" id="exec_btn_badge">Confirmed</span>
-              </div>
-            </button>
-          </div>
-
-          <!-- Open Positions Section -->
-          <div class="panel-header" style="margin: 6px -12px 0 -12px; padding: 6px 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-            <span class="panel-title" style="white-space: nowrap;">
-              <i class="ph ph-chart-line-up"></i> Positions (<span id="open_positions_count">0</span>)
-            </span>
-            <button class="btn-close-all-positions hidden" id="btn_close_all_positions" type="button" title="Panic Flatten: Close all open positions immediately at market LTP">
-              <i class="ph-bold ph-lightning"></i>
-              <span>Close All</span>
-            </button>
-          </div>
-
-          <div id="open_positions_list" class="open-positions-container">
-            <div class="empty-state">No open positions. Setup awaiting confirmation.</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- CENTER COLUMN: TradingView Chart & Macro/Historical Context -->
-      <section class="terminal-panel chart-panel panel-chart active-mobile-panel" id="panel_chart" aria-label="Interactive Charting & Context">
-        <div class="chart-toolbar">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="panel-title"><i class="ph ph-chart-bar"></i> TradingView Live Chart</span>
-          </div>
-
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <!-- TradingView Style Multi-Chart Layout Selector (1 to 8 Windows) -->
-            <div class="chart-layout-wrapper" id="chart_layout_wrapper">
-              <button class="chart-layout-btn" id="chart_layout_btn" type="button" aria-haspopup="true" aria-expanded="false" title="Select Chart Layout (1 to 8 Windows)">
-                <i class="ph ph-squares-four layout-icon" id="current_layout_icon"></i>
-                <span class="layout-btn-label" id="current_layout_label">Layout</span>
-                <i class="ph ph-caret-down layout-caret"></i>
-              </button>
-              <div class="chart-layout-popover" id="chart_layout_popover"></div>
-            </div>
-
-            <!-- Timeframe Selector Tray -->
-            <div class="tf-selector-wrapper">
-            <!-- Dropdown Tray Trigger -->
-            <div class="tf-dropdown-container">
-              <button class="tf-tray-trigger-btn" id="tf_tray_trigger" aria-haspopup="true" aria-expanded="false" title="Click to open Timeframe Tray">
-                <i class="ph ph-clock"></i>
-                <span id="current_tf_display">1H (Direction)</span>
-                <i class="ph ph-caret-down tf-caret" id="tf_tray_caret"></i>
-              </button>
-
-              <!-- Scrollable Timeframe Tray Popup -->
-              <div class="tf-tray-menu" id="tf_tray_menu">
-                <div class="tf-tray-header">
-                  <span><i class="ph ph-clock-countdown"></i> Select Timeframe</span>
-                  <button class="tf-tray-close" id="tf_tray_close_btn" type="button"><i class="ph ph-x"></i></button>
-                </div>
-
-                <div class="tf-tray-scroll-area">
-                  <!-- Section: Core Strategy -->
-                  <div class="tf-tray-section-title">Core Strategy Timeframes</div>
-                  <div class="tf-tray-group">
-                    <button class="tf-tray-item strategy-item active" data-tf="1H" data-label="1H (Direction)">
-                      <div class="tf-item-left">
-                        <span class="tf-item-name">1H (Direction)</span>
-                        <span class="tf-item-sub">Higher Timeframe Trend</span>
-                      </div>
-                      <span class="tf-item-badge">Core HTF</span>
-                    </button>
-                    <button class="tf-tray-item strategy-item" data-tf="5M" data-label="5M (Setup/Entry)">
-                      <div class="tf-item-left">
-                        <span class="tf-item-name">5M (Setup/Entry)</span>
-                        <span class="tf-item-sub">Lower Timeframe Reaction</span>
-                      </div>
-                      <span class="tf-item-badge">Core LTF</span>
-                    </button>
-                  </div>
-
-                  <!-- Section: Minutes -->
-                  <div class="tf-tray-section-title">Minutes</div>
-                  <div class="tf-tray-group grid-group">
-                    <button class="tf-tray-item" data-tf="1m" data-label="1m">1 minute</button>
-                    <button class="tf-tray-item" data-tf="3m" data-label="3m">3 minutes</button>
-                    <button class="tf-tray-item" data-tf="5m" data-label="5m">5 minutes</button>
-                    <button class="tf-tray-item" data-tf="15m" data-label="15m">15 minutes</button>
-                    <button class="tf-tray-item" data-tf="30m" data-label="30m">30 minutes</button>
-                    <button class="tf-tray-item" data-tf="45m" data-label="45m">45 minutes</button>
-                  </div>
-
-                  <!-- Section: Hours -->
-                  <div class="tf-tray-section-title">Hours</div>
-                  <div class="tf-tray-group grid-group">
-                    <button class="tf-tray-item" data-tf="1h" data-label="1h">1 hour</button>
-                    <button class="tf-tray-item" data-tf="2h" data-label="2h">2 hours</button>
-                    <button class="tf-tray-item" data-tf="3h" data-label="3h">3 hours</button>
-                    <button class="tf-tray-item" data-tf="4h" data-label="4h">4 hours</button>
-                  </div>
-
-                  <!-- Section: Days & Weeks -->
-                  <div class="tf-tray-section-title">Days & Weeks</div>
-                  <div class="tf-tray-group grid-group">
-                    <button class="tf-tray-item" data-tf="1D" data-label="1D">1 Day</button>
-                    <button class="tf-tray-item" data-tf="1W" data-label="1W">1 Week</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="chart-viewport" id="tv_chart_container">
-          <!-- TradingView Widget & Overlays dynamically injected here -->
-        </div>
-
-        <!-- Lower Context Radar (Historical & Macro News) -->
-        <div class="chart-context-deck" id="chart_context_deck">
-          <div class="context-deck-mobile-nav" id="context_deck_mobile_nav">
-            <button class="deck-m-tab active" data-deck-view="hist" id="deck_tab_hist" type="button">
-              <i class="ph ph-git-commit"></i> <span>Pattern Scan</span>
-            </button>
-            <button class="deck-m-tab" data-deck-view="news" id="deck_tab_news" type="button">
-              <i class="ph ph-broadcast"></i> <span>Macro Radar</span>
-            </button>
-          </div>
-
-          <!-- Historical Intelligence -->
-          <div class="hist-card deck-card active-deck-card" id="historical_pattern_card">
-            <div class="hist-title"><i class="ph ph-git-commit"></i> Regime Pattern Matching</div>
-            <div class="hist-stats-row">
-              <div class="stat-col"><span class="k">Sample:</span> <span class="v">84 setups</span></div>
-              <div class="stat-col"><span class="k">Win Rate:</span> <span class="v text-bullish">64.3%</span></div>
-              <div class="stat-col"><span class="k">Avg RR:</span> <span class="v">1:2.65</span></div>
-            </div>
-            <div class="hist-desc">Evaluating similar discount pullback behavior following Asian liquidity sweeps.</div>
-          </div>
-
-          <!-- Macro & News Radar -->
-          <div class="news-radar-scroll deck-card" id="news_radar_list">
-            <!-- News items injected dynamically -->
-          </div>
-        </div>
-      </section>
-
-      <!-- RIGHT COLUMN: Conversational AI Co-Pilot (Voice + Chat) -->
-      <section class="terminal-panel chat-panel panel-copilot" id="panel_copilot" aria-label="Conversational AI Co-Pilot">
-        <div class="panel-header">
-          <span class="panel-title"><i class="ph ph-sparkle"></i> MONDAY Companion</span>
-          <div class="voice-controls">
-            <button class="icon-btn" id="voice_test_btn" title="Test MONDAY Voice (Indian & English Accents)">
-              <i class="ph ph-waveform"></i>
-            </button>
-            <button class="icon-btn" id="voice_mute_btn" title="Mute MONDAY Voice">
-              <i class="ph ph-speaker-high"></i>
-            </button>
-          </div>
-        </div>
-
-        <!-- Voice Visualizer & Status -->
-        <div class="voice-status-bar" id="voice_activity_radar">
-          <div class="voice-radar-wrapper">
-            <div class="voice-wave" id="voice_wave_eq">
-              <span class="eq-bar bar-1"></span>
-              <span class="eq-bar bar-2"></span>
-              <span class="eq-bar bar-3"></span>
-              <span class="eq-bar bar-4"></span>
-              <span class="eq-bar bar-5"></span>
-            </div>
-            <span class="voice-status-text" id="voice_status_indicator">MONDAY Active • Ready</span>
-          </div>
-          <span style="font-size: 0.7rem; color: var(--text-dim);">Hinglish / English</span>
-        </div>
-
-        <!-- Dynamic Pinned Live Setup Radar Card -->
-        <div class="chat-pinned-radar" id="chat_pinned_radar" style="display: none;">
-          <div class="pinned-radar-header">
-            <div class="pinned-radar-badge">
-              <span class="pinned-dot-pulse"></span>
-              <span id="pinned_radar_state">DEVELOPING SETUP</span>
-            </div>
-            <span class="pinned-radar-asset" id="pinned_radar_asset">BTC/USD LONG</span>
-            <button class="pinned-radar-dismiss" id="pinned_radar_dismiss" type="button" title="Dismiss Pinned Setup">
-              <i class="ph ph-x"></i>
-            </button>
-          </div>
-          <div class="pinned-radar-levels">
-            <div class="pinned-level-cell">
-              <span class="p-lbl">Entry Zone</span>
-              <span class="p-val" id="pinned_radar_entry">$86,200 - $86,500</span>
-            </div>
-            <div class="pinned-level-cell">
-              <span class="p-lbl">Stop Loss</span>
-              <span class="p-val text-bearish" id="pinned_radar_sl">$85,600</span>
-            </div>
-            <div class="pinned-level-cell">
-              <span class="p-lbl">Take Profit (1:3+)</span>
-              <span class="p-val text-bullish" id="pinned_radar_tp">$89,100</span>
-            </div>
-          </div>
-          <div class="pinned-radar-footer">
-            <span class="pinned-proximity" id="pinned_radar_proximity">⏳ Price $180 away from reaction zone</span>
-            <button class="btn-pinned-action" id="btn_pinned_action" type="button">
-              <i class="ph-bold ph-lightning"></i> <span id="btn_pinned_action_text">Load in Desk</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Chat Transcript -->
-        <div class="chat-transcript" id="chat_messages">
-          <!-- Chat bubbles injected dynamically -->
-        </div>
-
-        <!-- Quick Prompt Chips (PRD Section 22) -->
-        <div class="quick-chips-wrapper">
-          <button class="quick-chip" id="chip_what_happening">Abhi market me kya ho raha hai?</button>
-          <button class="quick-chip" id="chip_why_not_enter">Entry kyu nahi le rahe?</button>
-          <button class="quick-chip" id="chip_where_sl">SL aur Target kaha hai?</button>
-          <button class="quick-chip" id="chip_explain_risk">Risk simple language me samjhao</button>
-          <button class="quick-chip" id="chip_smt_diff">BTC aur ETH me kya difference hai?</button>
-          <button class="quick-chip" id="chip_past_event">Pichli baar aisa setup kab bana tha?</button>
-          <button class="quick-chip" id="chip_reject_scenario">Agar reject ho gaya toh kya scenario hai?</button>
-        </div>
-
-        <!-- Chat Input Form -->
-        <form class="chat-input-bar" id="chat_form">
-          <button type="button" class="mic-action-btn" id="voice_mic_btn" title="Speak to AI Co-Pilot">
-            <i class="ph ph-microphone"></i>
-          </button>
-          <input 
-            type="text" 
-            id="chat_input" 
-            class="chat-text-input" 
-            placeholder="Type or speak (e.g. 'Abhi trade kyu nahi le rahe?')..." 
-            autocomplete="off"
-          />
-          <button type="submit" class="chat-send-btn" id="chat_send_btn" title="Send message">
-            <i class="ph ph-paper-plane-right"></i>
-          </button>
-        </form>
-      </section>
-
-    </main>
-  </div>
-      </div> <!-- End #view_terminal -->
-
-      <!-- VIEW 2: DEDICATED POSITIONS & DERIVATIVES DESK -->
-      <div class="saas-page-view" id="view_positions">
-        <div class="positions-page-container">
-          <div class="positions-header-banner">
-            <div class="positions-banner-title-group">
-              <div class="positions-banner-icon">
-                <i class="ph-bold ph-briefcase"></i>
-              </div>
-              <div>
-                <h2 class="positions-banner-title">Institutional Derivatives Desk</h2>
-                <div class="positions-banner-sub">Real-time Margin, Liquidation Proximity & Position Management</div>
-              </div>
-            </div>
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <button class="btn-primary" id="positions_page_new_trade_btn" type="button" style="padding: 8px 16px; font-size: 0.8rem;">
-                <i class="ph ph-plus-circle"></i> Go to Terminal
-              </button>
-              <button class="btn-panic-close hidden" id="positions_page_close_all_btn" type="button">
-                <i class="ph-bold ph-lightning"></i> Close All Positions
-              </button>
-            </div>
-          </div>
-
-          <!-- Quick Stats Metric Strip -->
-          <div class="positions-stats-strip">
-            <div class="pos-stat-card">
-              <span class="lbl">Unrealized PnL</span>
-              <span class="val text-neutral" id="desk_stat_unpnl">$0.00</span>
-            </div>
-            <div class="pos-stat-card">
-              <span class="lbl">Total Active Margin</span>
-              <span class="val" id="desk_stat_margin">$0.00</span>
-            </div>
-            <div class="pos-stat-card">
-              <span class="lbl">Total Notional Exposure</span>
-              <span class="val" id="desk_stat_notional">$0.00</span>
-            </div>
-            <div class="pos-stat-card">
-              <span class="lbl">Open Contracts</span>
-              <span class="val" id="desk_stat_count">0</span>
-            </div>
-          </div>
-
-          <!-- Institutional Detailed Positions Table / Grid -->
-          <div class="positions-grid-card">
-            <div class="positions-grid-header">
-              <span class="positions-grid-title">
-                <i class="ph ph-list-dashes"></i> Active Perpetual Contracts
-              </span>
-              <span class="text-muted" style="font-size: 0.75rem;" id="desk_live_indicator">
-                <span class="live-dot" style="display:inline-block; width:8px; height:8px; background:#10b981; border-radius:50%; margin-right:4px;"></span> Mark Price Live
-              </span>
-            </div>
-            <div class="positions-table-wrapper" id="desk_positions_table_wrapper">
-              <!-- Dynamically rendered by terminalUI.renderPositionsPage() -->
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- VIEW 3: DEDICATED PASSBOOK & 365-DAY YEARBOOK HEATMAP -->
-      <div class="saas-page-view" id="view_passbook">
-        <div class="passbook-page-container">
-          <!-- Page Header Banner -->
-          <div class="positions-header-banner">
-            <div class="positions-banner-title-group">
-              <div class="positions-banner-icon" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); color: #10b981;">
-                <i class="ph-bold ph-receipt"></i>
-              </div>
-              <div>
-                <h2 class="positions-banner-title">Trade Ledger & Financial Passbook</h2>
-                <div class="positions-banner-sub" style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
-                  <span class="compliance-tag" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;">
-                    <i class="ph-fill ph-shield-check"></i> Delta Exchange India Compliant
-                  </span>
-                  <span class="compliance-gst-pill" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;">
-                    18% GST Auto-Bifurcated
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <button class="btn-purge-ledger" id="btn_purge_passbook" type="button" title="Purge Glitch Trades & Restore $2,000 Balance">
-                <i class="ph-bold ph-arrow-counter-clockwise"></i> <span class="purge-btn-text">Reset & Restore $2,000</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- 365-Day GitHub-Style PnL Yearbook Card -->
-          <div class="yearbook-heatmap-card" id="yearbook_heatmap_card">
-            <div class="yearbook-header">
-              <div class="yearbook-title-group">
-                <span class="yearbook-title"><i class="ph ph-calendar-blank"></i> 365-Day PnL Contribution Matrix</span>
-              </div>
-              <div class="yearbook-stats-row">
-                <span class="yearbook-stat-item">365d Net PnL: <b id="yb_stat_total_pnl" class="text-bullish">+$0.00</b></span>
-                <span class="yearbook-stat-item">Win Days: <b id="yb_stat_win_rate">0.0%</b></span>
-                <span class="yearbook-stat-item">Best Day: <b id="yb_stat_best_day" class="text-bullish">+$0.00</b></span>
-                <span class="yearbook-stat-item">Max DD: <b id="yb_stat_max_dd" class="text-bearish">-$0.00</b></span>
-              </div>
-            </div>
-
-            <div class="yearbook-grid-scroll-wrap">
-              <div class="yearbook-matrix-container">
-                <div class="yearbook-months-labels" id="yearbook_months_row">
-                  <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
-                  <span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
-                </div>
-                <div class="yearbook-matrix-body">
-                  <div class="yearbook-weekdays-labels">
-                    <span>Mon</span><span>Wed</span><span>Fri</span>
-                  </div>
-                  <div class="yearbook-cells-grid" id="yearbook_cells_grid">
-                    <!-- Dynamically populated 52x7 cells -->
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="yearbook-footer">
-              <span class="text-muted"><i class="ph ph-info"></i> Click any square to filter ledger statements for that specific day.</span>
-              <div class="yearbook-legend">
-                <span>Loss</span>
-                <div class="yearbook-legend-cell" style="background: #f43f5e;"></div>
-                <div class="yearbook-legend-cell" style="background: rgba(244, 63, 94, 0.70);"></div>
-                <div class="yearbook-legend-cell" style="background: rgba(244, 63, 94, 0.40);"></div>
-                <div class="yearbook-legend-cell" style="background: rgba(255, 255, 255, 0.04);"></div>
-                <div class="yearbook-legend-cell" style="background: rgba(16, 185, 129, 0.35);"></div>
-                <div class="yearbook-legend-cell" style="background: rgba(16, 185, 129, 0.60);"></div>
-                <div class="yearbook-legend-cell" style="background: rgba(16, 185, 129, 0.85);"></div>
-                <div class="yearbook-legend-cell" style="background: #10b981;"></div>
-                <span>Profit</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Monthly Statement & Tax Summary Card -->
-          <div class="passbook-monthly-card">
-            <div class="passbook-filter-bar">
-              <div class="passbook-select-group">
-                <label for="passbook_period_picker_btn"><i class="ph ph-calendar"></i> Statement Period:</label>
-                <div class="passbook-picker-container" id="passbook_picker_container">
-                  <button type="button" id="passbook_period_picker_btn" class="passbook-period-trigger" aria-haspopup="true" aria-expanded="false" title="Click to open calendar and select any month or date">
-                    <i class="ph-bold ph-calendar-blank trigger-cal-icon"></i>
-                    <span id="passbook_period_label">This Month (October 2026)</span>
-                    <i class="ph-bold ph-caret-down trigger-arrow"></i>
-                  </button>
-                  
-                  <!-- Sleek Minimalist Calendar & Month Picker Popover -->
-                  <div id="passbook_calendar_popover" class="passbook-calendar-popover hidden" role="dialog" aria-modal="true">
-                    <!-- 1-Click Quick Presets -->
-                    <div class="cal-quick-presets">
-                      <button type="button" class="cal-preset-btn" data-period="TODAY">Today</button>
-                      <button type="button" class="cal-preset-btn active" data-period="THIS_MONTH">This Month</button>
-                      <button type="button" class="cal-preset-btn" data-period="ALL">All-Time</button>
-                    </div>
-
-                    <div class="cal-divider"></div>
-
-                    <!-- Month & Year Navigation Header -->
-                    <div class="cal-header-bar">
-                      <button type="button" class="cal-nav-btn" id="cal_prev_month_btn" title="Previous Month">
-                        <i class="ph-bold ph-caret-left"></i>
-                      </button>
-                      <div class="cal-selectors-group">
-                        <select id="cal_month_select" class="cal-select cal-select-month" aria-label="Select Month">
-                          <option value="0">January</option>
-                          <option value="1">February</option>
-                          <option value="2">March</option>
-                          <option value="3">April</option>
-                          <option value="4">May</option>
-                          <option value="5">June</option>
-                          <option value="6">July</option>
-                          <option value="7">August</option>
-                          <option value="8">September</option>
-                          <option value="9">October</option>
-                          <option value="10">November</option>
-                          <option value="11">December</option>
-                        </select>
-                        <select id="cal_year_select" class="cal-select cal-select-year" aria-label="Select Year">
-                          <option value="2024">2024</option>
-                          <option value="2025">2025</option>
-                          <option value="2026">2026</option>
-                          <option value="2027">2027</option>
-                          <option value="2028">2028</option>
-                        </select>
-                      </div>
-                      <button type="button" class="cal-nav-btn" id="cal_next_month_btn" title="Next Month">
-                        <i class="ph-bold ph-caret-right"></i>
-                      </button>
-                    </div>
-
-                    <!-- Action: View Entire Month -->
-                    <button type="button" id="btn_cal_select_month" class="cal-full-month-btn">
-                      <i class="ph-bold ph-calendar-check"></i>
-                      <span>Apply Full Month: <b id="cal_selected_month_label">October 2026</b></span>
-                    </button>
-
-                    <div class="cal-divider"></div>
-
-                    <!-- Day Calendar Grid for Specific Date Selection -->
-                    <div class="cal-month-grid-wrapper">
-                      <div class="cal-weekdays-row">
-                        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
-                      </div>
-                      <div class="cal-days-grid" id="cal_days_grid">
-                        <!-- Dynamically rendered day buttons with trade dots -->
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Hidden select for programmatic / legacy access -->
-                  <select id="passbook_month_filter" style="display:none;">
-                    <option value="THIS_MONTH">This Month</option>
-                  </select>
-                </div>
-              </div>
-              <div class="passbook-type-filters">
-                <button class="passbook-filter-chip active" data-filter="ALL" type="button" id="passbook_filter_all">All (0)</button>
-                <button class="passbook-filter-chip" data-filter="PROFIT" type="button" id="passbook_filter_profit">🟢 Profit</button>
-                <button class="passbook-filter-chip" data-filter="LOSS" type="button" id="passbook_filter_loss">🔴 Loss</button>
-              </div>
-            </div>
-
-            <!-- 4-Pillar Financial Audit Grid -->
-            <div class="passbook-audit-grid">
-              <div class="audit-stat-box">
-                <span class="audit-lbl">Gross Realized PnL</span>
-                <span class="audit-val text-bullish" id="passbook_gross_pnl">$0.00</span>
-                <span class="audit-sub">Pure price difference</span>
-              </div>
-              <div class="audit-stat-box">
-                <span class="audit-lbl">Delta Brokerage</span>
-                <span class="audit-val text-muted" id="passbook_brokerage_total">$0.00</span>
-                <span class="audit-sub">0.05% Taker / 0.02% Maker</span>
-              </div>
-              <div class="audit-stat-box">
-                <span class="audit-lbl">18% GST on Fees</span>
-                <span class="audit-val text-warning" id="passbook_gst_total">$0.00</span>
-                <span class="audit-sub">Govt tax on brokerage</span>
-              </div>
-              <div class="audit-stat-box highlight-net">
-                <span class="audit-lbl">Net Settled to Wallet</span>
-                <span class="audit-val text-bullish" id="passbook_net_settled">$0.00</span>
-                <span class="audit-sub">Final pocket credited/debited</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Today's Performance Summary Ribbon -->
-          <div class="passbook-daily-ribbon" id="passbook_daily_ribbon">
-            <div class="daily-ribbon-left">
-              <div class="daily-ribbon-badge" id="daily_ribbon_badge">
-                <i class="ph-bold ph-calendar-check"></i>
-                <span id="daily_date_label">Today</span>
-              </div>
-              <span class="daily-ribbon-stat" id="daily_trades_count">0 Trades</span>
-              <span class="daily-ribbon-sep">•</span>
-              <span class="daily-ribbon-winrate" id="daily_win_rate">0.0% Win</span>
-              <span class="daily-ribbon-breakdown" id="daily_win_loss_split">(0W / 0L)</span>
-            </div>
-            <div class="daily-ribbon-right">
-              <span class="daily-net-label" id="daily_net_label">Today's Net:</span>
-              <span class="daily-net-val text-bullish" id="daily_net_pnl">+$0.00 (+0.0R)</span>
-              <span class="daily-charges-pill" id="daily_charges_pill" title="Delta Brokerage + GST today">-$0.00 Fees</span>
-            </div>
-          </div>
-
-          <!-- Ledger Statement Header -->
-          <div class="passbook-feed-heading">
-            <span><i class="ph ph-list-dashes"></i> Transaction Ledger & Receipts</span>
-            <span class="feed-count-tag" id="passbook_feed_count">0 Settlements</span>
-          </div>
-
-          <!-- Chronological Transaction Feed -->
-          <div class="passbook-transactions-feed" id="passbook_transactions_feed">
-            <!-- Dynamically populated transaction cards with expandable tax receipts -->
-          </div>
-        </div>
-      </div>
-
-      <!-- VIEW 4: DEDICATED COPILOT PAGE -->
-      <div class="saas-page-view" id="view_copilot">
-        <div class="copilot-page-container">
-          <div class="copilot-page-header">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <div class="brand-icon-halo" style="width: 40px; height: 40px; border-radius: 10px; background: rgba(14, 165, 233, 0.2); border: 1px solid rgba(56, 189, 248, 0.4); display: flex; align-items: center; justify-content: center; color: #38bdf8; font-size: 1.3rem;">
-                <i class="ph ph-sparkle"></i>
-              </div>
-              <div>
-                <h2 style="font-size: 1.1rem; font-weight: 800; margin: 0; color: #ffffff;">MONDAY Neural Copilot</h2>
-                <div style="font-size: 0.75rem; color: #94a3b8;">Autonomous Market Intelligence & Strategy Companion</div>
-              </div>
-            </div>
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <span class="copilot-status-badge" style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.72rem; color: #10b981; font-weight: 700;">
-                <span class="live-dot" style="display:inline-block; width:6px; height:6px; background:#10b981; border-radius:50%;"></span> AI Sentinel Active
-              </span>
-              <button class="icon-btn" id="copilot_page_clear_btn" title="Clear Chat History" style="border-radius: 8px;">
-                <i class="ph ph-trash"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="copilot-chat-workspace">
-            <!-- Full page message stream -->
-            <div class="copilot-page-messages" id="copilot_page_messages_feed">
-              <div class="chat-message assistant">
-                <div class="chat-msg-header">
-                  <span class="chat-msg-role"><i class="ph ph-sparkle"></i> MONDAY Copilot</span>
-                  <span class="chat-msg-time">Online</span>
-                </div>
-                <div class="chat-msg-body">
-                  Namaste! Main MONDAY hoon — aapka personal AI trading companion. Live chart, orderflow, Delta Exchange leverage rules, aur risk management ke bare mein kuch bhi puchiye!
-                </div>
-              </div>
-            </div>
-
-            <!-- Quick Prompt Suggestion Chips -->
-            <div style="padding: 10px 16px; display: flex; gap: 8px; overflow-x: auto; border-top: 1px solid rgba(255, 255, 255, 0.05); background: rgba(0,0,0,0.2);">
-              <button type="button" class="copilot-chip-btn" data-query="Explain current market regime and bias">📊 Current Bias?</button>
-              <button type="button" class="copilot-chip-btn" data-query="Are there any high probability setups right now?">⚡ High Prob Setups?</button>
-              <button type="button" class="copilot-chip-btn" data-query="Audit my open positions and liquidation distance">🛡️ Audit Open Risk</button>
-              <button type="button" class="copilot-chip-btn" data-query="What is Delta Exchange funding rate trend?">📈 Funding Rate</button>
-            </div>
-
-            <!-- Chat Input Strip -->
-            <form class="chat-input-row" id="copilot_page_chat_form" style="padding: 12px 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); background: rgba(11, 17, 33, 0.8);">
-              <button type="button" class="chat-mic-btn" id="copilot_page_mic_btn" title="Speak to MONDAY">
-                <i class="ph ph-microphone"></i>
-              </button>
-              <input 
-                type="text" 
-                id="copilot_page_input" 
-                class="chat-text-input" 
-                placeholder="Type or speak (e.g. 'Abhi BTC ka support kahan hai?')..." 
-                autocomplete="off"
-              />
-              <button type="submit" class="chat-send-btn" id="copilot_page_send_btn" title="Send message">
-                <i class="ph ph-paper-plane-right"></i>
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <!-- VIEW 5: DEDICATED SETTINGS & RISK CONTROLS -->
-      <div class="saas-page-view" id="view_settings">
-        <div class="settings-page-container">
-          <!-- Header -->
-          <div class="positions-header-banner">
-            <div class="positions-banner-title-group">
-              <div class="positions-banner-icon" style="background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.3); color: #818cf8;">
-                <i class="ph-bold ph-sliders"></i>
-              </div>
-              <div>
-                <h2 class="positions-banner-title">Risk Engine & System Settings</h2>
-                <div class="positions-banner-sub">Configure AI Auto-Pilot, Capital Guardrails, Cloud Sync & Voice</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Section 1: Auto-Pilot & Autonomous Trading -->
-          <div class="settings-card">
-            <div class="settings-card-header">
-              <span class="settings-card-title"><i class="ph ph-robot"></i> AI Strategy & Autopilot</span>
-            </div>
-            <div class="settings-field-row">
-              <div class="settings-field-label-group">
-                <span class="settings-field-name">Autonomous Auto-Pilot Execution</span>
-                <span class="settings-field-desc">Allow MONDAY Neural Engine to enter verified confluence setups autonomously.</span>
-              </div>
-              <div class="custom-switch-wrapper">
-                <input type="checkbox" id="settings_autopilot_toggle" class="custom-switch" />
-                <label for="settings_autopilot_toggle" class="custom-switch-label"></label>
-              </div>
-            </div>
-            <div class="settings-field-row">
-              <div class="settings-field-label-group">
-                <span class="settings-field-name">Risk Per Trade (% Wallet Equity)</span>
-                <span class="settings-field-desc">Maximum capital risked on any individual position setup.</span>
-              </div>
-              <select id="settings_risk_per_trade" class="cal-select" style="width: 170px;">
-                <option value="1">1.0% ($20 / trade)</option>
-                <option value="2" selected>2.0% ($40 / trade)</option>
-                <option value="3">3.0% ($60 / trade)</option>
-                <option value="5">5.0% ($100 / trade)</option>
-              </select>
-            </div>
-            <div class="settings-field-row">
-              <div class="settings-field-label-group">
-                <span class="settings-field-name">High-Impact News Risk Shield</span>
-                <span class="settings-field-desc">Auto-freeze new entries 15 minutes before US CPI, FOMC, and High Volatility events.</span>
-              </div>
-              <div class="custom-switch-wrapper">
-                <input type="checkbox" id="settings_news_shield_toggle" class="custom-switch" checked />
-                <label for="settings_news_shield_toggle" class="custom-switch-label"></label>
-              </div>
-            </div>
-          </div>
-
-          <!-- Section 2: Account Capital & Data Management -->
-          <div class="settings-card">
-            <div class="settings-card-header">
-              <span class="settings-card-title"><i class="ph ph-wallet"></i> Capital & Data Synchronization</span>
-            </div>
-            <div class="settings-field-row">
-              <div class="settings-field-label-group">
-                <span class="settings-field-name">Supabase Cloud Database Sync</span>
-                <span class="settings-field-desc">Synchronize trade journal, settings, and performance across all your devices.</span>
-              </div>
-              <button class="btn-secondary" id="settings_open_supabase_btn" type="button" style="padding: 6px 14px; font-size: 0.8rem;">
-                <i class="ph ph-cloud-check"></i> Configure Cloud
-              </button>
-            </div>
-            <div class="settings-field-row">
-              <div class="settings-field-label-group">
-                <span class="settings-field-name">Reset Paper Balance ($2,000 Baseline)</span>
-                <span class="settings-field-desc">Purge all simulated glitch trades and restore initial account equity to $2,000.</span>
-              </div>
-              <button class="btn-purge-ledger" id="settings_reset_balance_btn" type="button" style="padding: 6px 14px; font-size: 0.8rem;">
-                <i class="ph-bold ph-arrow-counter-clockwise"></i> Reset to $2,000
-              </button>
-            </div>
-          </div>
-
-          <!-- Section 3: Audio & Copilot Voice -->
-          <div class="settings-card">
-            <div class="settings-card-header">
-              <span class="settings-card-title"><i class="ph ph-speaker-high"></i> Voice & Audio Telemetry</span>
-            </div>
-            <div class="settings-field-row">
-              <div class="settings-field-label-group">
-                <span class="settings-field-name">Copilot Speech Feedback</span>
-                <span class="settings-field-desc">Spoken audio commentary in natural Hinglish for orders, targets, and market alerts.</span>
-              </div>
-              <div class="custom-switch-wrapper">
-                <input type="checkbox" id="settings_voice_speech_toggle" class="custom-switch" checked />
-                <label for="settings_voice_speech_toggle" class="custom-switch-label"></label>
-              </div>
-            </div>
-            <div class="settings-field-row">
-              <div class="settings-field-label-group">
-                <span class="settings-field-name">Voice Persona Accent</span>
-                <span class="settings-field-desc">Select conversational accent and vocal tone.</span>
-              </div>
-              <select id="settings_voice_accent" class="cal-select" style="width: 190px;">
-                <option value="IN_EN" selected>Indian English (Natural)</option>
-                <option value="US_EN">US English</option>
-                <option value="UK_EN">British English</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </main>
-
-    <!-- Mobile Native Bottom Bar -->
-    <nav class="saas-mobile-bottom-bar" id="saas_mobile_bottom_bar">
-      <button class="saas-mobile-tab-btn active" data-page="terminal" type="button">
-        <i class="ph ph-chart-line-up"></i>
-        <span>Terminal</span>
-      </button>
-      <button class="saas-mobile-tab-btn" data-page="positions" type="button">
-        <i class="ph ph-briefcase"></i>
-        <span>Positions</span>
-      </button>
-      <button class="saas-mobile-tab-btn" data-page="passbook" type="button">
-        <i class="ph ph-book-open"></i>
-        <span>Passbook</span>
-      </button>
-      <button class="saas-mobile-tab-btn" data-page="copilot" type="button">
-        <i class="ph ph-chats-circle"></i>
-        <span>Copilot</span>
-      </button>
-      <button class="saas-mobile-tab-btn" data-page="settings" type="button">
-        <i class="ph ph-sliders"></i>
-        <span>Settings</span>
-      </button>
-    </nav>
-  </div>
-
-  <!-- TRADE JOURNAL & PERFORMANCE ANALYTICS MODAL (PRD Sections 27 & 28) -->
-  <div class="modal-overlay" id="journal_modal">
-    <div class="modal-window journal-modal-window">
-      <div class="modal-header journal-modal-header">
-        <div class="journal-header-left" style="display: flex; align-items: center; gap: 8px;">
-          <button class="mobile-page-back-btn" id="m_back_journal_btn" type="button" aria-label="Back to Chart" title="Back to Chart">
-            <i class="ph-bold ph-arrow-left"></i>
-          </button>
-          <div class="passbook-icon-wrapper" style="background: rgba(192, 132, 252, 0.15); border-color: rgba(192, 132, 252, 0.35); color: #c084fc;">
-            <i class="ph ph-notebook"></i>
-          </div>
-          <div>
-            <h2 class="journal-modal-title" style="font-size: 1.05rem; display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 700;">
-              Trade Journal & Analytics
-            </h2>
-          </div>
-        </div>
-        <div class="journal-header-right" style="display: flex; gap: 8px; align-items: center;">
-          <button class="icon-btn" id="reset_account_btn" title="Reset Paper Account" style="width: auto; padding: 5px 10px; font-size: 0.76rem; border-radius: 6px;">
-            <i class="ph ph-arrow-counter-clockwise"></i> <span class="reset-journal-btn-text">Reset Balance</span>
-          </button>
-          <button class="icon-btn" id="close_journal_btn" title="Close Modal">
-            <i class="ph ph-x"></i>
-          </button>
-        </div>
-      </div>
-
-      <div class="modal-body journal-modal-body">
-        <!-- Analytics Metrics Strip (PRD Section 28) -->
-        <div class="analytics-metrics-strip">
-          <div class="metric-box">
-            <div class="metric-title">Balance</div>
-            <div class="metric-value text-bullish" id="modal_stat_balance">$2,000.00</div>
-          </div>
-          <div class="metric-box">
-            <div class="metric-title">Total Trades</div>
-            <div class="metric-value" id="modal_stat_trades">3 (2W / 1L)</div>
-          </div>
-          <div class="metric-box">
-            <div class="metric-title">Win Rate</div>
-            <div class="metric-value text-bullish" id="modal_stat_winrate">66.7%</div>
-          </div>
-          <div class="metric-box">
-            <div class="metric-title">Total R</div>
-            <div class="metric-value text-bullish" id="modal_stat_total_r">+4.2R</div>
-          </div>
-          <div class="metric-box">
-            <div class="metric-title">Profit Factor</div>
-            <div class="metric-value" id="modal_stat_pf">5.2</div>
-          </div>
-          <div class="metric-box">
-            <div class="metric-title">Max Loss Streak</div>
-            <div class="metric-value" id="modal_stat_streak">1</div>
-          </div>
-          <div class="metric-box">
-            <div class="metric-title">Delta Fees Paid</div>
-            <div class="metric-value text-muted" id="modal_stat_fees">$0.00</div>
-          </div>
-        </div>
-
-        <!-- Full Trade Log Table (PRD Section 27) -->
-        <div style="overflow-x: auto; margin-top: 10px;">
-          <table class="journal-table">
-            <thead>
-              <tr>
-                <th>Trade ID</th>
-                <th>Date</th>
-                <th>Asset</th>
-                <th>Direction</th>
-                <th>Entry</th>
-                <th>Exit</th>
-                <th>RR</th>
-                <th>Outcome</th>
-                <th>Net PnL ($)</th>
-              </tr>
-            </thead>
-            <tbody id="journal_trades_tbody">
-              <!-- Dynamically rendered -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- RESET ACCOUNT & JOURNAL CONFIRMATION MODAL (TOP-LAYER MINIMAL & PLAIN) -->
-  <div class="terminal-modal reset-confirm-modal" id="modal_reset_confirm" style="display: none;">
-    <div class="modal-backdrop" id="backdrop_reset_confirm"></div>
-    <div class="modal-card reset-confirm-card" role="dialog" aria-modal="true" aria-labelledby="reset_confirm_title">
-      <button class="reset-close-btn" id="close_reset_confirm_btn" type="button" title="Close" aria-label="Close dialog">
-        <i class="ph ph-x"></i>
-      </button>
-      <div class="reset-icon-circle">
-        <i class="ph-bold ph-arrow-counter-clockwise"></i>
-      </div>
-      <h3 class="reset-title" id="reset_confirm_title">Reset Paper Account?</h3>
-      <p class="reset-body-text">
-        This will restore your balance to <strong>$2,000.00</strong> and clear all trade history. This action cannot be undone.
+  </section>
+
+  <!-- =========================================================================
+       S12: FINAL CTA & COMPLIANCE FOOTER
+       ========================================================================= -->
+  <section class="section" style="padding-bottom: 0;">
+    <div class="container" style="text-align: center; max-width: 800px; margin-bottom: var(--space-12);">
+      <h2 class="text-display-1" style="margin-bottom: var(--space-3);">
+        Stop gambling on predictions. <br>
+        <span class="text-gradient-institutional">Experience Autonomous Confluence.</span>
+      </h2>
+      <p class="text-body text-mid" style="margin-bottom: var(--space-6);">
+        Join thousands of disciplined quant traders trading with institutional ICT/SMC mathematical asymmetry.
       </p>
-      <div class="reset-confirm-actions">
-        <button class="btn-cancel-reset" id="btn_cancel_reset" type="button">Cancel</button>
-        <button class="btn-confirm-reset" id="btn_confirm_reset" type="button">Reset Account</button>
+      <div class="flex items-center justify-center gap-3">
+        <a href="terminal.html" class="btn-primary" style="padding: 14px 32px; font-size: 1.1rem;">
+          Launch Terminal Now <i class="ph-bold ph-arrow-up-right"></i>
+        </a>
+        <a href="style-guide.html" class="btn-secondary" style="padding: 14px 26px;">
+          View Style Guide
+        </a>
       </div>
     </div>
-  </div>
 
-  <!-- Passbook Modal Container Fallback (Upgraded to Dedicated SaaS Page #view_passbook) -->
-  <div class="modal-overlay hidden" id="passbook_modal" style="display: none;" aria-hidden="true"></div>
-
-  <!-- R-Multiple & Equity Explainer Modal -->
-  <div class="terminal-modal" id="modal_r_explainer" style="display: none;">
-    <div class="modal-backdrop" id="backdrop_r_explainer"></div>
-    <div class="modal-card r-explainer-card">
-      <div class="modal-header">
-        <h2 style="font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
-          <i class="ph ph-shield-check" style="color: #38bdf8;"></i> Trading Concepts: "R-Multiple" & Live Equity
-        </h2>
-        <button class="icon-btn" id="close_r_explainer_btn" title="Close Modal">
-          <i class="ph ph-x"></i>
-        </button>
-      </div>
-      <div class="modal-body r-explainer-body">
-        <div class="explainer-section">
-          <h3><i class="ph ph-chart-line-up"></i> 1. "+4.20R" kya hota hai? (What is R?)</h3>
-          <p>Trading aur Quantitative Risk Management me <strong>"R"</strong> ka matlab hota hai <strong>R-Multiple (Risk Unit)</strong>.</p>
-          <div class="concept-callout">
-            <strong>1R = 1 Trade par maximum predefined risk (1% of $2,000 = $20.00)</strong>
+    <!-- Footer -->
+    <footer style="background: rgba(10, 12, 19, 0.85); border-top: 1px solid var(--glass-border); padding: var(--space-8) 0 var(--space-4) 0;">
+      <div class="container">
+        
+        <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: var(--space-4); margin-bottom: var(--space-4);">
+          <div class="flex items-center gap-2">
+            <div class="ai-pulse-dot"></div>
+            <span class="font-display" style="font-weight: 700; font-size: 1.1rem;">PROJECT MONDAY</span>
+            <span class="text-micro text-low">Market-Oriented Neural Decision Assistant</span>
           </div>
-          <ul>
-            <li>Agar kisi trade par aapka $20 ka Stop Loss hai aur aap <strong>+$50 profit</strong> banate ho, toh wo <strong>+2.5R</strong> hota hai ($50 ÷ $20).</li>
-            <li>Agar trade Stop Loss hit karti hai, toh exactly <strong>-1.0R (-$20)</strong> loss hota hai.</li>
-            <li><strong>+4.20R</strong> ka matlab hai ki past closed trades me aapne apne 1R risk ka <strong>4.2× net profit (+$84.12)</strong> banaya hai!</li>
-          </ul>
-        </div>
 
-        <div class="explainer-section">
-          <h3><i class="ph ph-arrows-left-right"></i> 2. Trade lene par Balance badha/ghata kyu nahi?</h3>
-          <div class="concept-grid">
-            <div class="concept-box">
-              <h4>💵 Cash Balance (Settled)</h4>
-              <p>Yeh amount tabhi settle hota hai jab trade <strong>Close</strong> hoti hai (Take Profit, Stop Loss ya manual close button dabane par).</p>
-            </div>
-            <div class="concept-box">
-              <h4>📈 Net Equity (Live Floating)</h4>
-              <p>Jab trade <strong>Open</strong> hoti hai, toh price ke har tick ke sath aapka <strong>Live PnL aur Net Equity</strong> realtime me up/down move karta hai!</p>
-            </div>
-          </div>
-          <p style="margin-top: 10px; font-size: 0.82rem; color: #94a3b8;">
-            💡 Ab MONDAY terminal ke header me <strong>Active Live Floating PnL</strong> aur <strong>Net Equity</strong> har Binance live tick ke sath realtime me move karega!
-          </p>
-        </div>
-
-        <div class="explainer-footer">
-          <button class="btn-primary" id="btn_got_it_r" type="button" style="width: 100%; justify-content: center;">
-            Samajh aa gaya! (Got It)
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Autonomous AI Auto-Pilot Risk & Execution Standards Modal -->
-  <div class="terminal-modal" id="modal_autopilot_settings" style="display: none;">
-    <div class="modal-backdrop" id="backdrop_autopilot_settings"></div>
-    <div class="modal-card autopilot-settings-card" style="max-width: 500px;">
-      <div class="modal-header">
-        <div class="modal-header-title-box">
-          <div class="autopilot-modal-icon-badge">
-            <i class="ph-bold ph-sliders"></i>
-          </div>
-          <div>
-            <h2 class="autopilot-modal-title">Auto-Pilot Risk & Standards</h2>
-            <div class="autopilot-modal-sub">Execution Rules & Quantitative Risk Control</div>
+          <div class="flex items-center gap-4 text-xs text-mid" style="flex-wrap: wrap;">
+            <a href="terminal.html">Terminal</a>
+            <a href="pages/engines.html">Engines</a>
+            <a href="pages/markets.html">Markets</a>
+            <a href="pages/pricing.html">Pricing</a>
+            <a href="pages/learn.html">Academy</a>
+            <a href="pages/about.html">Philosophy</a>
+            <a href="pages/legal.html">Legal & Risk</a>
+            <a href="components-gallery.html">Components</a>
+            <a href="style-guide.html">Tokens</a>
           </div>
         </div>
-        <button class="icon-btn" id="close_autopilot_settings_btn" type="button" title="Close Settings">
-          <i class="ph ph-x"></i>
-        </button>
-      </div>
 
-      <div class="modal-body autopilot-settings-body">
-        <!-- MONDAY Recommended Preset Minimal Strip -->
-        <div class="preset-banner-minimal">
-          <div class="preset-info-minimal">
-            <i class="ph-bold ph-lightning"></i>
-            <span><strong>Monday Preset:</strong> $20 Margin • 20x Leverage • Max 2 Trades • 75% Edge</span>
-          </div>
-          <button class="preset-apply-btn-minimal" id="btn_apply_recommended_preset" type="button" title="Apply Monday's recommended risk configuration">
-            Apply Preset
-          </button>
-        </div>
-
-        <!-- Custom Settings Form -->
-        <form class="autopilot-settings-form" id="form_autopilot_settings" onsubmit="return false;">
-          <div class="settings-form-grid">
-            <!-- Field 1: Margin Per Trade -->
-            <div class="settings-field">
-              <div class="field-label-row">
-                <label for="input_autopilot_margin" class="settings-label">
-                  Fixed Margin Per Trade
-                  <span class="help-tooltip-trigger" tabindex="0" title="Flat amount locked from wallet per setup. At $20 on $2,000 equity, your downside risk is strictly 1.0%." data-tooltip="Flat amount locked from wallet per setup. At $20 on $2,000 equity, your downside risk is strictly 1.0%.">
-                    <i class="ph ph-question"></i>
-                  </span>
-                </label>
-              </div>
-              <div class="input-with-affix">
-                <span class="input-affix">$</span>
-                <input 
-                  type="number" 
-                  id="input_autopilot_margin" 
-                  class="settings-input" 
-                  min="5" 
-                  max="500" 
-                  step="5" 
-                  value="20" 
-                  required
-                />
-              </div>
-            </div>
-
-            <!-- Field 2: Leverage -->
-            <div class="settings-field">
-              <div class="field-label-row">
-                <label for="select_autopilot_leverage" class="settings-label">
-                  Execution Leverage
-                  <span class="help-tooltip-trigger" tabindex="0" title="Multiplies purchasing power with strict isolated stop loss. Automatically derated to 5x on NSE/BSE." data-tooltip="Multiplies purchasing power with strict isolated stop loss. Automatically derated to 5x on NSE/BSE.">
-                    <i class="ph ph-question"></i>
-                  </span>
-                </label>
-              </div>
-              <select id="select_autopilot_leverage" class="settings-select">
-                <option value="5">5x (Ultra-Conservative)</option>
-                <option value="10">10x (Conservative)</option>
-                <option value="15">15x (Balanced)</option>
-                <option value="20" selected>20x (MONDAY Standard)</option>
-                <option value="25">25x (Aggressive Beta)</option>
-              </select>
-            </div>
-
-            <!-- Field 3: Max Concurrent Trades -->
-            <div class="settings-field">
-              <div class="field-label-row">
-                <label for="select_autopilot_maxtrades" class="settings-label">
-                  Max Concurrent Trades
-                  <span class="help-tooltip-trigger" tabindex="0" title="Auto-Pilot throttles and refuses new entries if this limit is reached until an open trade hits TP or SL." data-tooltip="Auto-Pilot throttles and refuses new entries if this limit is reached until an open trade hits TP or SL.">
-                    <i class="ph ph-question"></i>
-                  </span>
-                </label>
-              </div>
-              <select id="select_autopilot_maxtrades" class="settings-select">
-                <option value="2" selected>2 Trades (Conservative)</option>
-                <option value="5">5 Trades (Moderate)</option>
-                <option value="10">10 Trades (Active Basket)</option>
-                <option value="30">30 Trades (Multi-Asset Diversified)</option>
-                <option value="50">50 Trades (Portfolio Scale)</option>
-                <option value="70">70 Trades (High-Capacity Swarm)</option>
-                <option value="100">100 Trades (Institutional Max)</option>
-              </select>
-            </div>
-
-            <!-- Field 4: Minimum Confluence Score -->
-            <div class="settings-field">
-              <div class="field-label-row">
-                <label for="input_autopilot_confluence" class="settings-label">
-                  Min Confluence Threshold
-                  <span class="help-tooltip-trigger" tabindex="0" title="Requires multi-factor institutional alignment (HTF Trend + SMT + VMA + RSI + Liquidity Sweep) before entry." data-tooltip="Requires multi-factor institutional alignment (HTF Trend + SMT + VMA + RSI + Liquidity Sweep) before entry.">
-                    <i class="ph ph-question"></i>
-                  </span>
-                </label>
-                <span class="field-badge" id="badge_confluence_val">≥ 75% Grade A</span>
-              </div>
-              <div class="slider-row">
-                <input 
-                  type="range" 
-                  id="input_autopilot_confluence" 
-                  class="settings-range" 
-                  min="50" 
-                  max="90" 
-                  step="5" 
-                  value="75"
-                />
-                <span class="slider-val-tag" id="label_autopilot_confluence">75%</span>
-              </div>
-            </div>
-
-            <!-- Field 5: Minimum Risk-to-Reward Ratio -->
-            <div class="settings-field full-width">
-              <div class="field-label-row">
-                <label for="select_autopilot_min_rr" class="settings-label">
-                  Minimum Risk / Reward Ratio
-                  <span class="help-tooltip-trigger" tabindex="0" title="Auto-Pilot strictly rejects any setup where target profit distance is less than 3x the stoploss distance." data-tooltip="Auto-Pilot strictly rejects any setup where target profit distance is less than 3x the stoploss distance.">
-                    <i class="ph ph-question"></i>
-                  </span>
-                </label>
-              </div>
-              <select id="select_autopilot_min_rr" class="settings-select">
-                <option value="2.0">1:2.0 (Minimum Scalp)</option>
-                <option value="2.5">1:2.5 (Momentum Filter)</option>
-                <option value="3.0" selected>1:3.0 (MONDAY Standard)</option>
-                <option value="3.5">1:3.5 (High R Asymmetric)</option>
-              </select>
-            </div>
-
-            <!-- Field 6: Hyper-Sensitive Event Risk Shield -->
-            <div class="settings-field full-width shield-row-minimal">
-              <div class="shield-label-minimal">
-                <label for="switch_autopilot_event_shield" class="settings-label">
-                  Hyper-Sensitive Event Risk Shield
-                  <span class="help-tooltip-trigger" tabindex="0" title="When active: Any high-impact catalyst, regulatory shock, hack, or news spike triggers an immediate entry freeze so we are never trapped in news wicks." data-tooltip="When active: Any high-impact catalyst, regulatory shock, hack, or news spike triggers an immediate entry freeze so we are never trapped in news wicks.">
-                    <i class="ph ph-question"></i>
-                  </span>
-                </label>
-              </div>
-              <label class="shield-toggle-switch" for="switch_autopilot_event_shield" title="Toggle Hyper-Sensitive Event Shield">
-                <input type="checkbox" id="switch_autopilot_event_shield" checked />
-                <span class="shield-slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <div class="settings-footer-actions">
-            <button class="btn-secondary" id="btn_reset_autopilot_settings" type="button">
-              <i class="ph ph-arrow-counter-clockwise"></i> Reset Default
-            </button>
-            <button class="btn-primary" id="btn_save_autopilot_settings" type="button">
-              <i class="ph-bold ph-check"></i> Save Standards
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Supabase Cloud Setup Modal (Beginner Friendly) -->
-  <div class="terminal-modal" id="modal_supabase_setup" style="display: none;">
-    <div class="modal-backdrop" id="backdrop_supabase_setup"></div>
-    <div class="modal-card r-explainer-card" style="max-width: 520px;">
-      <div class="modal-header">
-        <h2 style="font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
-          <i class="ph ph-database" style="color: #3ecf8e;"></i> Connect Free Supabase Project
-        </h2>
-        <button class="icon-btn" id="close_supabase_modal_btn" title="Close">
-          <i class="ph ph-x"></i>
-        </button>
-      </div>
-      <div class="modal-body r-explainer-body">
-        <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">
-          Connect your free Supabase project to sync multi-user trades, auth, and journals to the cloud. (Optional — local multi-user isolation works automatically without this!)
+        <!-- Mandatory Risk Disclosure & Compliance Notice -->
+        <p class="text-xs text-low" style="line-height: 1.7; max-width: 960px; margin: 0 auto; text-align: center;">
+          <b>MANDATORY RISK DISCLOSURE:</b> Project MONDAY operates as an analytical decision-support and simulated paper-trading environment. Trading in cryptocurrency derivatives, futures, and leveraged equities involves substantial risk of financial loss and is not suitable for all investors. Mathematical confluence and R-multiple formulations do not guarantee profits. Project MONDAY is not affiliated with, endorsed by, or partnered with Delta Exchange, Zerodha, Coinbase, SEBI, or Bloomberg; platform names are referenced solely for contextual feature comparison.
         </p>
 
-        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 14px;">
-          <div class="auth-input-group">
-            <label class="auth-label">SUPABASE PROJECT URL</label>
-            <input 
-              type="url" 
-              id="input_supabase_url" 
-              class="auth-input" 
-              placeholder="https://your-project.supabase.co" 
-            />
-          </div>
-
-          <div class="auth-input-group">
-            <label class="auth-label">SUPABASE ANON / PUBLIC KEY</label>
-            <input 
-              type="password" 
-              id="input_supabase_key" 
-              class="auth-input" 
-              placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." 
-            />
-          </div>
-
-          <div id="supabase_status_msg" style="font-size: 0.8rem; display: none;"></div>
-
-          <div style="display: flex; gap: 10px; margin-top: 8px;">
-            <button class="btn-primary" id="btn_save_supabase" type="button" style="flex: 1; justify-content: center;">
-              <i class="ph ph-check"></i> Save & Connect
-            </button>
-            <button class="btn-secondary" id="btn_clear_supabase" type="button" style="padding: 0 14px;">
-              Clear
-            </button>
-          </div>
+        <div class="text-micro text-center text-dim" style="margin-top: var(--space-3);">
+          &copy; 2026 Project MONDAY. Engineered with Liquid-Glass Precision.
         </div>
+      </div>
+    </footer>
+  </section>
+
+  <!-- =========================================================================
+       DRAWER CONTAINER FOR ENGINE DEEP DIVES
+       ========================================================================= -->
+  <div class="drawer-backdrop" id="engine_deepdive_drawer">
+    <div class="drawer-panel" id="engine_drawer_content">
+      <!-- Dynamically populated on tile click -->
+    </div>
+  </div>
+
+  <!-- Command Palette Modal -->
+  <div class="modal-backdrop" id="landing_cmd_modal">
+    <div class="modal-dialog cmd-palette-dialog">
+      <div class="cmd-palette-input-wrap">
+        <i class="ph ph-magnifying-glass" style="font-size: 1.25rem; color: var(--cyan);"></i>
+        <input type="text" class="cmd-palette-input" placeholder="Type an asset, engine or feature..." id="landing_cmd_input">
+        <span class="code-badge">ESC to close</span>
+      </div>
+      <div class="cmd-palette-results">
+        <a href="terminal.html" class="cmd-item">
+          <div class="flex items-center gap-2">
+            <i class="ph-bold ph-terminal-window text-profit"></i>
+            <span>Launch Main Trading Terminal</span>
+          </div>
+          <span class="code-badge">OPEN</span>
+        </a>
+        <a href="#sandbox" class="cmd-item">
+          <div class="flex items-center gap-2">
+            <i class="ph-bold ph-sparkle text-cyan"></i>
+            <span>Interactive 8-Step Confluence Sandbox</span>
+          </div>
+          <span class="text-micro text-cyan">WIDGET</span>
+        </a>
+        <a href="#calculator" class="cmd-item">
+          <div class="flex items-center gap-2">
+            <i class="ph-bold ph-calculator text-profit"></i>
+            <span>100-Trade R-Multiple Expectancy Calculator</span>
+          </div>
+          <span class="text-micro text-profit">MATH</span>
+        </a>
+        <a href="#firewall" class="cmd-item">
+          <div class="flex items-center gap-2">
+            <i class="ph-bold ph-prohibit text-risk"></i>
+            <span>Liquidation Firewall Ladder Demo</span>
+          </div>
+          <span class="text-micro text-risk">ARMOR</span>
+        </a>
       </div>
     </div>
   </div>
 
-  <!-- Toast Notification Container -->
-  <div class="toast-container" id="toast_container"></div>
+  <!-- Foundation & Component Scripts -->
+  <script type="module" src="js/foundation/cursorGlow.js"></script>
+  <script type="module" src="js/foundation/smoothScroll.js"></script>
 
-  <!-- TradingView Lightweight Charts (Local with CDN fallback for zero-dependency reliability) -->
-  <script src="js/vendor/lightweight-charts.js"></script>
-  <script>
-    if (!window.LightweightCharts) {
-      console.warn('[LightweightCharts] Local script not found, falling back to CDN...');
-      const fallbackScript = document.createElement('script');
-      fallbackScript.src = 'https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js';
-      document.head.appendChild(fallbackScript);
+  <!-- Master Landing Page Script Orchestrator -->
+  <script type="module">
+    import { Hero3DVisualizer } from './js/landing/hero3D.js';
+    import { SandboxController } from './js/landing/sandbox.js';
+    import { ExpectancyCalculator } from './js/landing/calculator.js';
+    import { FirewallDemoController } from './js/landing/firewallDemo.js';
+    import { CopilotDemoController } from './js/landing/copilotDemo.js';
+    import { DataVizEngine } from './components/dataViz.js';
+    import { overlays } from './components/overlays.js';
+    import { sfx } from './components/sfx.js';
+
+    // 1. Initialize Three.js 3D Liquidity Terrain
+    new Hero3DVisualizer('hero_canvas_3d');
+
+    // 2. Initialize Live Confluence Sandbox
+    new SandboxController();
+
+    // 3. Initialize R-Multiple Calculator
+    new ExpectancyCalculator();
+
+    // 4. Initialize Liquidation Firewall Demo
+    new FirewallDemoController();
+
+    // 5. Initialize AI Copilot Conversational Demo
+    new CopilotDemoController();
+
+    // 6. Populate 365-Day PnL Heatmap
+    const landingHeatmap = document.getElementById('landing_heatmap_grid');
+    DataVizEngine.render365Heatmap(landingHeatmap, ({ day, pnlR }) => {
+      sfx.playClick();
+      overlays.showToast({
+        title: `Day ${day} Journal Slip`,
+        message: `Ledger PnL: ${pnlR >= 0 ? '+' : ''}${pnlR}R (${pnlR >= 0 ? 'Profit' : 'Loss'})`,
+        type: pnlR >= 0 ? 'profit' : 'risk'
+      });
+    });
+
+    // 7. Hero Voice Trigger
+    document.getElementById('hero_btn_hear_voice').addEventListener('click', () => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const text = "Namaste! Main MONDAY hoon. Real-time market scanner active hai. Amateurs predictions par gamble karte hain, hum calculated confluence par execute karte hain!";
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'hi-IN';
+        utterance.rate = 1.05;
+        window.speechSynthesis.speak(utterance);
+        sfx.playClick();
+      }
+    });
+
+    // 8. Command Palette (Ctrl+K)
+    document.getElementById('nav_btn_cmdk').addEventListener('click', () => {
+      overlays.openModal('landing_cmd_modal');
+    });
+
+    // 9. Engine Drawer Deep Dive Handler
+    const drawerBackdrop = document.getElementById('engine_deepdive_drawer');
+    const drawerContent = document.getElementById('engine_drawer_content');
+
+    const engineDetails = {
+      strategy: {
+        title: 'Strategy & Confluence Engine',
+        icon: 'ph-chart-polar',
+        color: 'var(--cyan)',
+        formula: 'Confluence = &Sigma;(HTF + Pullback + SMT + Wick + RR + RSI + Vol + Shield)',
+        desc: 'Enforces hard 1H triple-EMA directional lock (EMA 12 > 26 > 50). Pullbacks into 5M 0.618–0.786 Fibonacci reaction zones are validated against correlated SMT divergence before issuing Grade A execution blueprints.'
+      },
+      firewall: {
+        title: 'Liquidation Firewall',
+        icon: 'ph-prohibit',
+        color: 'var(--risk)',
+        formula: 'P_liq = Entry &times; (1 &minus; 1/Lev + MMR)',
+        desc: 'Protects user capital from margin calls by strictly evaluating maintenance margin rate (MMR). Orders whose stop loss falls beyond liquidation price are rejected instantly at code level.'
+      },
+      shield: {
+        title: 'Event Risk Shield',
+        icon: 'ph-warning',
+        color: 'var(--shield)',
+        formula: 'Auto-Pause: T &minus; 15m &rarr; T + 15m (High Impact Shock)',
+        desc: 'Scans macroeconomic feeds (US CPI, FOMC, NFP, RBI MPC, Token Unlocks). Freezes autonomous daemon during extreme volatility windows to avoid slippage.'
+      },
+      regime: {
+        title: 'Historical Regime Engine',
+        icon: 'ph-git-commit',
+        color: 'var(--cyan)',
+        formula: 'Regime = f(ATR_20, Range Expansion, Historical Expectancy)',
+        desc: 'Analyzes dynamic candle range expansion and 20-period ATR to classify market into Supportive Trending, Breakout Expansion, or Choppy.'
+      },
+      passbook: {
+        title: 'Passbook & Tax Ledger',
+        icon: 'ph-book-open',
+        color: 'var(--profit)',
+        formula: 'Net = Realized PnL &minus; Brokerage &minus; (Brokerage &times; 18% GST)',
+        desc: 'Tracks virtual and live execution with strict 1R unit accounting. Delta Exchange India compliant statement auto-bifurcates 18% GST on all brokerages.'
+      },
+      copilot: {
+        title: 'AI Copilot (MONDAY)',
+        icon: 'ph-waveform',
+        color: 'var(--violet)',
+        formula: 'Bilingual Web Speech STT/TTS + Anti-Tilt Safeguard',
+        desc: 'Empathetic conversational companion. Detects emotional tilt and revenge trading habits, enforcing calm discipline while delivering real-time audio trade blueprints.'
+      },
+      daemon: {
+        title: '24/7 Autonomous Daemon',
+        icon: 'ph-lightning',
+        color: 'var(--cyan)',
+        formula: 'Native Coinbase WSS Sub-millisecond Execution',
+        desc: 'Headless background daemon subscribed to native WebSocket ticker channels. Closes positions the exact millisecond price crosses stop loss or target.'
+      },
+      markets: {
+        title: 'Dual-Market Universe',
+        icon: 'ph-globe-hemisphere-east',
+        color: 'var(--profit)',
+        formula: 'Web3 Crypto + 150+ NSE Equities & IPO Baskets',
+        desc: 'Seamless coverage for high-liquidity cryptos (BTC, ETH, SOL) alongside Indian benchmarks (NIFTY, BANK NIFTY) and landmark IPOs (Hyundai, Swiggy, Waaree).'
+      }
+    };
+
+    document.querySelectorAll('[data-engine-drawer]').forEach(card => {
+      card.addEventListener('click', () => {
+        const key = card.getAttribute('data-engine-drawer');
+        const d = engineDetails[key];
+        if (!d) return;
+
+        drawerContent.innerHTML = `
+          <div class="flex justify-between items-center" style="margin-bottom: var(--space-4); border-bottom: 1px solid var(--glass-border); padding-bottom: 12px;">
+            <div class="flex items-center gap-2">
+              <i class="ph-bold ${d.icon}" style="color: ${d.color}; font-size: 1.5rem;"></i>
+              <h3 class="text-h3">${d.title}</h3>
+            </div>
+            <button type="button" class="btn-ghost" id="drawer_close_btn"><i class="ph-bold ph-x"></i></button>
+          </div>
+
+          <div class="flex flex-col gap-4">
+            <div style="background: rgba(0, 0, 0, 0.45); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border);">
+              <div class="text-micro" style="color: ${d.color};">MATHEMATICAL FORMULATION</div>
+              <div class="num-ticker text-hi" style="font-size: 1rem; margin-top: 6px;">${d.formula}</div>
+            </div>
+
+            <p class="text-body-sm text-mid" style="line-height: 1.7;">${d.desc}</p>
+
+            <a href="terminal.html" class="btn-primary" style="margin-top: var(--space-4); text-align: center;">
+              Launch Engine in Terminal <i class="ph-bold ph-arrow-up-right"></i>
+            </a>
+          </div>
+        `;
+
+        drawerBackdrop.classList.add('open');
+        sfx.playClick();
+
+        document.getElementById('drawer_close_btn').addEventListener('click', () => {
+          drawerBackdrop.classList.remove('open');
+        });
+      });
+    });
+
+    drawerBackdrop.addEventListener('click', (e) => {
+      if (e.target === drawerBackdrop) drawerBackdrop.classList.remove('open');
+    });
+
+    // 10. Accordion Toggles
+    document.querySelectorAll('.accordion-trigger').forEach(trigger => {
+      trigger.addEventListener('click', () => {
+        const item = trigger.closest('.accordion-item');
+        const isOpen = item.classList.contains('open');
+        document.querySelectorAll('.accordion-item').forEach(i => i.classList.remove('open'));
+        if (!isOpen) item.classList.add('open');
+        sfx.playClick();
+      });
+    });
+    // 11. Register PWA Offline Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
     }
   </script>
-
-  <!-- Supabase Config (Reads from config file or localStorage) -->
-  <script src="js/config/supabaseConfig.js"></script>
-
-  <!-- App Script Entrypoint -->
-  <script type="module" src="js/app.js?v=7.3"></script>
 </body>
 </html>

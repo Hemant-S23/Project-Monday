@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROJECT MONDAY — Transparent Pricing & Institutional Tiers</title>
+  <meta name="description"
+    content="Transparent, predictable pricing for quants, prop firm candidates, and hedge desks. Master 1:3.2 asymmetric execution today.">
+
+  <!-- Phosphor Icons -->
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="../styles/main.css">
+  <link rel="stylesheet" href="../styles/components.css">
+</head>
+
+<body>
+
+  <!-- Ambient Background -->
+  <div class="ambient-background-layer">
+    <div class="ambient-orb orb-violet"></div>
+    <div class="ambient-orb orb-cyan"></div>
+    <div class="ambient-orb orb-emerald"></div>
+    <div class="ambient-grid"></div>
+    <div class="ambient-noise"></div>
+  </div>
+
+  <!-- Floating Navbar -->
+  <header class="nav-floating">
+    <a href="../index.html" class="nav-brand">
+      <div class="ai-pulse-dot"></div>
+      <span class="font-display">MONDAY</span>
+      <span class="code-badge" style="margin-left: 4px;">PRICING</span>
+    </a>
+
+    <nav class="nav-links" style="display: none; @media(min-width: 820px){ display: flex; }">
+      <a href="../index.html" class="nav-link">Home</a>
+      <a href="engines.html" class="nav-link">Engines</a>
+      <a href="markets.html" class="nav-link">Markets</a>
+      <a href="pricing.html" class="nav-link active">Pricing</a>
+      <a href="learn.html" class="nav-link">Learn</a>
+      <a href="about.html" class="nav-link">About</a>
+    </nav>
+
+    <div class="flex items-center gap-2">
+      <a href="auth.html" class="btn-ghost" style="font-size: 0.85rem;">Sign In</a>
+      <a href="../terminal.html" class="btn-primary">
+        Launch Terminal <i class="ph-bold ph-arrow-up-right"></i>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container" style="padding-top: 130px; padding-bottom: 120px;">
+
+    <!-- Hero Header -->
+    <section class="section-header" style="text-align: center; max-width: 800px; margin-bottom: var(--space-8);">
+      <div class="section-tag glass-pill" style="color: var(--profit); border-color: var(--profit-border);">
+        <i class="ph-bold ph-ticket"></i> INSTITUTIONAL EDGE
+      </div>
+      <h1 class="text-display-hero">
+        Predictable Pricing for <br>
+        <span class="text-gradient-institutional">Serious Quant Traders</span>
+      </h1>
+      <p class="text-body-lg text-mid" style="margin-top: var(--space-2);">
+        Zero hidden commissions. Complete access to 1:3.2 asymmetric risk armor, the 24/7 autonomous daemon, and
+        bilingual audio copilot.
+      </p>
+
+      <!-- Monthly / Annual Toggle Capsule -->
+      <div style="display: flex; justify-content: center; margin-top: var(--space-6);">
+        <div class="segmented-control">
+          <button type="button" class="segment-btn active" id="btn_billing_monthly">Monthly Billing</button>
+          <button type="button" class="segment-btn" id="btn_billing_yearly">
+            Annual Billing <span class="code-badge text-profit" style="margin-left: 4px;">SAVE 20%</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing 3-Tier Bento Grid -->
+    <div class="bento-grid" style="margin-bottom: var(--space-12);">
+
+      <!-- Tier 1: Free Paper Trader -->
+      <div class="glass-card bento-col-4 component-card-wrap">
+        <span class="code-badge">TIER 1</span>
+        <h3 class="text-h2">Free Paper Trader</h3>
+        <p class="text-body-sm text-mid">Master the 8-step confluence protocol with zero financial capital risk.</p>
+        <div class="num-ticker text-display-1 text-hi" style="margin: 12px 0;">$0</div>
+
+        <ul class="flex flex-col gap-2 text-body-sm text-mid" style="margin-bottom: var(--space-4);">
+          <li><i class="ph-bold ph-check text-profit"></i> $2,000 Virtual Paper Account</li>
+          <li><i class="ph-bold ph-check text-profit"></i> 8-Step Confluence Scanner</li>
+          <li><i class="ph-bold ph-check text-profit"></i> Web Speech Hinglish AI Copilot</li>
+          <li><i class="ph-bold ph-check text-profit"></i> 365-Day PnL Passbook & Heatmap</li>
+          <li><i class="ph-bold ph-check text-profit"></i> Community Discord Access</li>
+        </ul>
+        <a href="../terminal.html" class="btn-secondary" style="margin-top: auto; text-align: center;">Start Paper
+          Trading</a>
+      </div>
+
+      <!-- Tier 2: Delta Pro (Highlighted) -->
+      <div class="glass-card bento-col-4 component-card-wrap glass-profit-border" style="position: relative;">
+        <span class="code-badge text-profit">MOST POPULAR</span>
+        <h3 class="text-h2 text-profit">Delta Pro Trader</h3>
+        <p class="text-body-sm text-mid">Full autonomous execution and live exchange connectivity.</p>
+        <div class="num-ticker text-display-1 text-profit" id="price_pro" style="margin: 12px 0;">$49 <span
+            class="text-xs text-mid">/mo</span></div>
+
+        <ul class="flex flex-col gap-2 text-body-sm text-mid" style="margin-bottom: var(--space-4);">
+          <li><i class="ph-bold ph-check text-profit"></i> <b>Everything in Paper Trader</b></li>
+          <li><i class="ph-bold ph-check text-profit"></i> 24/7 Background Daemon Execution</li>
+          <li><i class="ph-bold ph-check text-profit"></i> Native Coinbase WSS + NSE Feeds</li>
+          <li><i class="ph-bold ph-check text-profit"></i> Liquidation Firewall Protection</li>
+          <li><i class="ph-bold ph-check text-profit"></i> Event Risk Shield Auto-Pauses</li>
+          <li><i class="ph-bold ph-check text-profit"></i> Delta India 18% GST Auto-Bifurcation</li>
+          <li><i class="ph-bold ph-check text-profit"></i> Real-Time Supabase Cloud Sync</li>
+        </ul>
+        <a href="auth.html" class="btn-primary" style="margin-top: auto; text-align: center;">Start Pro Trial</a>
+      </div>
+
+      <!-- Tier 3: Hedge Desk -->
+      <div class="glass-card bento-col-4 component-card-wrap">
+        <span class="code-badge text-cyan">ENTERPRISE</span>
+        <h3 class="text-h2">Hedge Fund Desk</h3>
+        <p class="text-body-sm text-mid">Multi-seat deployment, custom API feeds, and priority execution.</p>
+        <div class="num-ticker text-display-1 text-hi" id="price_inst" style="margin: 12px 0;">$199 <span
+            class="text-xs text-mid">/mo</span></div>
+
+        <ul class="flex flex-col gap-2 text-body-sm text-mid" style="margin-bottom: var(--space-4);">
+          <li><i class="ph-bold ph-check text-profit"></i> <b>Everything in Delta Pro</b></li>
+          <li><i class="ph-bold ph-check text-profit"></i> Uncapped Multi-Trade Universe</li>
+          <li><i class="ph-bold ph-check text-profit"></i> Dedicated Sub-millisecond Node</li>
+          <li><i class="ph-bold ph-check text-profit"></i> Multi-Chart Grid (2x2 Sync)</li>
+          <li><i class="ph-bold ph-check text-profit"></i> Prop Firm Challenge Evaluation Mode</li>
+          <li><i class="ph-bold ph-check text-profit"></i> Priority 24/7 Slack/Discord Support</li>
+        </ul>
+        <a href="auth.html" class="btn-secondary" style="margin-top: auto; text-align: center;">Contact
+          Institutional</a>
+      </div>
+
+    </div>
+
+    <!-- Deep Feature Comparison Table -->
+    <div class="glass-panel" style="padding: var(--space-4); margin-bottom: var(--space-12);">
+      <h3 class="text-h2" style="margin-bottom: var(--space-4);">Comprehensive Feature Matrix</h3>
+      <div style="overflow-x: auto;">
+        <table class="spec-table" style="min-width: 680px;">
+          <thead>
+            <tr>
+              <th>Capability</th>
+              <th>Free Paper</th>
+              <th style="color: var(--profit);">Delta Pro</th>
+              <th style="color: var(--cyan);">Hedge Desk</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Virtual Paper Balance</td>
+              <td>$2,000</td>
+              <td>Configurable</td>
+              <td>Uncapped</td>
+            </tr>
+            <tr>
+              <td>8-Step Confluence Scanner</td>
+              <td><i class="ph-bold ph-check text-profit"></i> Included</td>
+              <td><i class="ph-bold ph-check text-profit"></i> Included</td>
+              <td><i class="ph-bold ph-check text-profit"></i> Included</td>
+            </tr>
+            <tr>
+              <td>24/7 Headless Daemon</td>
+              <td>Manual Only</td>
+              <td><i class="ph-bold ph-check text-profit"></i> Sub-ms Native WSS</td>
+              <td><i class="ph-bold ph-check text-profit"></i> Dedicated Sub-ms Node</td>
+            </tr>
+            <tr>
+              <td>Liquidation Firewall</td>
+              <td>Basic Simulation</td>
+              <td><i class="ph-bold ph-check text-profit"></i> Hard Code Lock</td>
+              <td><i class="ph-bold ph-check text-profit"></i> Hard Code Lock</td>
+            </tr>
+            <tr>
+              <td>Event Risk Shield</td>
+              <td>Alerts Only</td>
+              <td><i class="ph-bold ph-check text-profit"></i> Auto-Pause &plusmn;15m</td>
+              <td><i class="ph-bold ph-check text-profit"></i> Custom Volatility Gates</td>
+            </tr>
+            <tr>
+              <td>Audio Copilot (Hinglish)</td>
+              <td>Web Speech</td>
+              <td><i class="ph-bold ph-check text-profit"></i> Full Audio HUD</td>
+              <td><i class="ph-bold ph-check text-profit"></i> Custom Neural Voice</td>
+            </tr>
+            <tr>
+              <td>Delta India 18% GST Ledger</td>
+              <td><i class="ph-bold ph-check text-profit"></i> Included</td>
+              <td><i class="ph-bold ph-check text-profit"></i> Exportable Statement</td>
+              <td><i class="ph-bold ph-check text-profit"></i> Automated Audit Reports</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Legal Footer -->
+  <footer
+    style="background: rgba(10, 12, 19, 0.85); border-top: 1px solid var(--glass-border); padding: var(--space-8) 0;">
+    <div class="container text-center">
+      <p class="text-xs text-low">
+        <b>MANDATORY RISK DISCLOSURE:</b> Subscription fees provide access to algorithmic analytics, software decision
+        tools, and simulated paper execution. MONDAY does not guarantee returns or hold customer capital.
+      </p>
+      <div class="text-micro text-dim" style="margin-top: 12px;">
+        &copy; 2026 Project MONDAY. Engineered with Liquid-Glass Precision.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script type="module" src="../js/foundation/cursorGlow.js"></script>
+  <script type="module" src="../js/foundation/smoothScroll.js"></script>
+
+  <script type="module">
+    import { sfx } from '../components/sfx.js';
+
+    const btnMonthly = document.getElementById('btn_billing_monthly');
+    const btnYearly = document.getElementById('btn_billing_yearly');
+    const pricePro = document.getElementById('price_pro');
+    const priceInst = document.getElementById('price_inst');
+
+    btnMonthly.addEventListener('click', () => {
+      btnMonthly.classList.add('active');
+      btnYearly.classList.remove('active');
+      pricePro.innerHTML = '$49 <span class="text-xs text-mid">/mo</span>';
+      priceInst.innerHTML = '$199 <span class="text-xs text-mid">/mo</span>';
+      sfx.playClick();
+    });
+
+    btnYearly.addEventListener('click', () => {
+      btnYearly.classList.add('active');
+      btnMonthly.classList.remove('active');
+      pricePro.innerHTML = '$39 <span class="text-xs text-mid">/mo (billed annually)</span>';
+      priceInst.innerHTML = '$159 <span class="text-xs text-mid">/mo (billed annually)</span>';
+      sfx.playClick();
+    });
+  </script>
+</body>
+
+</html>

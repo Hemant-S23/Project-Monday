@@ -3928,43 +3928,18 @@ export class TerminalUI {
 
   renderYearbookHeatmap(allTrades = []) {
     const gridContainer = document.getElementById('yearbook_cells_grid');
-    const monthsContainer = document.getElementById('yearbook_months_row');
+    const monthsRow = document.getElementById('yearbook_months_row');
     if (!gridContainer) return;
 
     const list = allTrades || this._lastLedgerTrades || this._lastTrades || [];
-    const targetYear = 2026;
-
-    // 1. Render Month Headers strictly aligned to their starting week columns
-    if (monthsContainer) {
-      const monthPositions = [
-        { name: 'Jan', col: 0 },
-        { name: 'Feb', col: 5 },
-        { name: 'Mar', col: 9 },
-        { name: 'Apr', col: 13 },
-        { name: 'May', col: 17 },
-        { name: 'Jun', col: 22 },
-        { name: 'Jul', col: 26 },
-        { name: 'Aug', col: 30 },
-        { name: 'Sep', col: 35 },
-        { name: 'Oct', col: 39 },
-        { name: 'Nov', col: 44 },
-        { name: 'Dec', col: 48 }
-      ];
-
-      monthsContainer.innerHTML = monthPositions.map(m => 
-        `<span style="grid-column-start: ${m.col + 1};">${m.name}</span>`
-      ).join('');
-    }
-
-    // 2. Map trades for targetYear by YYYY-MM-DD
+    
+    // Map trades by YYYY-MM-DD
     const dailyMap = new Map();
     list.forEach(t => {
       const raw = t.closedAt || t.exitTime || t.time || t.timestamp;
       if (!raw) return;
       const d = new Date(raw);
       if (isNaN(d.getTime())) return;
-      if (d.getFullYear() !== targetYear) return;
-
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       if (!dailyMap.has(key)) {
         dailyMap.set(key, { trades: [], netPnl: 0, count: 0 });
@@ -3975,13 +3950,16 @@ export class TerminalUI {
       entry.netPnl += Number(t.netSettledPnl !== undefined ? t.netSettledPnl : (t.pnlUSD || 0));
     });
 
-    // 3. Construct 53-week x 7-day Matrix (371 slots)
-    // Jan 1, 2026 is Thursday (dayOfWeek = 4, where 0=Sun, 1=Mon, ..., 6=Sat)
-    const jan1 = new Date(targetYear, 0, 1);
-    const startDayOfWeek = jan1.getDay(); // 4
-
     const now = new Date();
+    const targetYear = 2026;
     const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const todayTime = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+    // 1st Jan 2026 to 31st Dec 2026
+    const jan1 = new Date(targetYear, 0, 1);
+    // Day of week for Jan 1: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+    // Convert to Mon=0, Tue=1, Wed=2, Thu=3, Fri=4, Sat=5, Sun=6
+    const jan1Day = (jan1.getDay() + 6) % 7; // Thursday = 3
 
     let totalYearPnl = 0;
     let activeDays = 0;
@@ -3990,79 +3968,92 @@ export class TerminalUI {
     let maxDDPnl = 0;
 
     let cellsHtml = '';
+    const monthFirstWeekMap = new Map();
 
-    // Leading spacer slots in Week 0 before Jan 1 (Sun, Mon, Tue, Wed)
-    for (let s = 0; s < startDayOfWeek; s++) {
-      cellsHtml += `<div class="yearbook-cell spacer"></div>`;
-    }
+    // Start from the Monday of week 1
+    const calendarStart = new Date(targetYear, 0, 1);
+    calendarStart.setDate(calendarStart.getDate() - jan1Day);
 
-    // Generate all 365 calendar days of 2026 (Jan 1 to Dec 31)
-    const daysInYear = 365;
-    for (let dayIdx = 0; dayIdx < daysInYear; dayIdx++) {
-      const curDate = new Date(targetYear, 0, 1 + dayIdx);
-      const y = curDate.getFullYear();
-      const m = String(curDate.getMonth() + 1).padStart(2, '0');
-      const d = String(curDate.getDate()).padStart(2, '0');
-      const dateKey = `${y}-${m}-${d}`;
+    for (let w = 0; w < 53; w++) {
+      for (let d = 0; d < 7; d++) {
+        const cellDate = new Date(calendarStart);
+        cellDate.setDate(calendarStart.getDate() + (w * 7) + d);
 
-      const isFuture = curDate > now && dateKey !== todayStr;
-      const isToday = dateKey === todayStr;
-      const dayData = dailyMap.get(dateKey);
+        const y = cellDate.getFullYear();
+        const m = cellDate.getMonth();
+        const mNum = String(m + 1).padStart(2, '0');
+        const dNum = String(cellDate.getDate()).padStart(2, '0');
+        const dateKey = `${y}-${mNum}-${dNum}`;
 
-      let levelClass = 'level-0';
-      const formattedDate = curDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      let tooltip = `${formattedDate}: No trades recorded`;
-
-      if (isFuture) {
-        levelClass = 'level-0 future';
-        tooltip = `${formattedDate} (Upcoming)`;
-      } else if (dayData && dayData.count > 0) {
-        activeDays++;
-        const net = +dayData.netPnl.toFixed(2);
-        totalYearPnl += net;
-        if (net > bestDayPnl) bestDayPnl = net;
-        if (net < maxDDPnl) maxDDPnl = net;
-
-        if (net > 0) {
-          winDays++;
-          if (net <= 20) levelClass = 'pnl-win-1';
-          else if (net <= 50) levelClass = 'pnl-win-2';
-          else if (net <= 100) levelClass = 'pnl-win-3';
-          else levelClass = 'pnl-win-4';
-        } else if (net < 0) {
-          if (net >= -20) levelClass = 'pnl-loss-1';
-          else if (net >= -50) levelClass = 'pnl-loss-2';
-          else levelClass = 'pnl-loss-3';
-        } else {
-          levelClass = 'pnl-win-1';
+        // If this date is the 1st of any month in 2026, record the week column
+        if (y === targetYear && cellDate.getDate() === 1 && !monthFirstWeekMap.has(m)) {
+          monthFirstWeekMap.set(m, w);
         }
 
-        tooltip = `${formattedDate}: ${dayData.count} trade${dayData.count === 1 ? '' : 's'} (${net >= 0 ? '+' : ''}$${net.toFixed(2)})`;
+        // Outside 2026 padding cell
+        if (y !== targetYear) {
+          cellsHtml += `<div class="yearbook-cell level-empty" style="opacity: 0.08; pointer-events: none;"></div>`;
+          continue;
+        }
+
+        const isFuture = cellDate.getTime() > todayTime;
+        const isToday = dateKey === todayStr;
+        const dayData = dailyMap.get(dateKey);
+        let levelClass = 'level-0';
+        const formattedDate = cellDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        let tooltip = `${formattedDate}: No trades recorded`;
+
+        if (isFuture) {
+          levelClass = 'level-future';
+          tooltip = `${formattedDate}: Upcoming / Future`;
+        } else if (dayData && dayData.count > 0) {
+          activeDays++;
+          const net = +dayData.netPnl.toFixed(2);
+          totalYearPnl += net;
+          if (net > bestDayPnl) bestDayPnl = net;
+          if (net < maxDDPnl) maxDDPnl = net;
+
+          if (net > 0) {
+            winDays++;
+            if (net <= 20) levelClass = 'pnl-win-1';
+            else if (net <= 50) levelClass = 'pnl-win-2';
+            else if (net <= 100) levelClass = 'pnl-win-3';
+            else levelClass = 'pnl-win-4';
+          } else if (net < 0) {
+            if (net >= -20) levelClass = 'pnl-loss-1';
+            else if (net >= -50) levelClass = 'pnl-loss-2';
+            else levelClass = 'pnl-loss-3';
+          } else {
+            levelClass = 'pnl-win-1';
+          }
+
+          tooltip = `${formattedDate}: ${dayData.count} trade${dayData.count === 1 ? '' : 's'} (${net >= 0 ? '+' : ''}$${net.toFixed(2)})`;
+        }
+
+        const isCurrentSelected = this.passbookCurrentMonth === `DATE:${dateKey}`;
+        const todayStyle = isToday ? 'outline: 2px solid #38bdf8; z-index: 5; box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);' : '';
+        cellsHtml += `<div class="yearbook-cell ${levelClass} ${isCurrentSelected ? 'selected' : ''}" style="${todayStyle}" data-date="${dateKey}" title="${tooltip}"></div>`;
       }
-
-      const isCurrentSelected = this.passbookCurrentMonth === `DATE:${dateKey}`;
-      const classes = [
-        'yearbook-cell',
-        levelClass,
-        isToday ? 'today' : '',
-        isCurrentSelected ? 'selected' : ''
-      ].filter(Boolean).join(' ');
-
-      cellsHtml += `<div class="${classes}" data-date="${dateKey}" data-future="${isFuture ? 'true' : 'false'}" title="${tooltip}"></div>`;
-    }
-
-    // Trailing spacer slots in Week 52 after Dec 31
-    // 53 * 7 = 371 slots. totalSlots = 4 + 365 = 369. trailingSpacers = 371 - 369 = 2.
-    const totalSlots = startDayOfWeek + daysInYear;
-    const trailingSpacers = (53 * 7) - totalSlots;
-    for (let t = 0; t < trailingSpacers; t++) {
-      cellsHtml += `<div class="yearbook-cell spacer"></div>`;
     }
 
     gridContainer.innerHTML = cellsHtml;
 
-    // Attach click events to active past/today cells
-    gridContainer.querySelectorAll('.yearbook-cell:not(.spacer):not(.future)').forEach(cell => {
+    // Render exact aligned month headers matching week columns
+    if (monthsRow) {
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      monthsRow.style.position = 'relative';
+      monthsRow.style.height = '18px';
+      monthsRow.style.paddingLeft = '0';
+      monthsRow.innerHTML = monthNames.map((name, mIdx) => {
+        const weekCol = monthFirstWeekMap.has(mIdx) ? monthFirstWeekMap.get(mIdx) : Math.round(mIdx * 4.41);
+        // Weekday label width 20px + 8px gap = 28px offset
+        const leftPx = 28 + (weekCol * 15);
+        return `<span style="position: absolute; left: ${leftPx}px; font-size: 0.65rem; font-weight: 700; color: #64748b;">${name}</span>`;
+      }).join('');
+    }
+
+    // Attach click events to cells
+    gridContainer.querySelectorAll('.yearbook-cell').forEach(cell => {
       cell.addEventListener('click', (e) => {
         const dKey = e.currentTarget.dataset.date;
         if (dKey) {

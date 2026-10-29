@@ -36,7 +36,36 @@ export class CryptoAdapter extends MarketAdapter {
       'ADA': { price: 0.355, '1H': [], '5M': [], lastUpdate: Date.now() }
     };
 
-    this.allMarkets = [];
+    this.allMarkets = [
+      { baseAsset: 'BTC', symbol: 'BTC/USD', rawSymbol: 'BTC-USD', price: 82963.8, changePercent: 0.15, volume: 5000000000 },
+      { baseAsset: 'ETH', symbol: 'ETH/USD', rawSymbol: 'ETH-USD', price: 3480.2, changePercent: 1.84, volume: 2500000000 },
+      { baseAsset: 'SOL', symbol: 'SOL/USD', rawSymbol: 'SOL-USD', price: 154.8, changePercent: 4.12, volume: 1800000000 },
+      { baseAsset: 'XRP', symbol: 'XRP/USD', rawSymbol: 'XRP-USD', price: 0.58, changePercent: -0.45, volume: 750000000 },
+      { baseAsset: 'DOGE', symbol: 'DOGE/USD', rawSymbol: 'DOGE-USD', price: 0.142, changePercent: 3.25, volume: 600000000 },
+      { baseAsset: 'ADA', symbol: 'ADA/USD', rawSymbol: 'ADA-USD', price: 0.355, changePercent: 1.15, volume: 450000000 },
+      { baseAsset: 'AVAX', symbol: 'AVAX/USD', rawSymbol: 'AVAX-USD', price: 28.5, changePercent: 2.40, volume: 380000000 },
+      { baseAsset: 'SUI', symbol: 'SUI/USD', rawSymbol: 'SUI-USD', price: 2.05, changePercent: 6.80, volume: 300000000 },
+      { baseAsset: 'NEAR', symbol: 'NEAR/USD', rawSymbol: 'NEAR-USD', price: 5.15, changePercent: 5.10, volume: 320000000 },
+      { baseAsset: 'LINK', symbol: 'LINK/USD', rawSymbol: 'LINK-USD', price: 12.18, changePercent: 1.30, volume: 280000000 },
+      { baseAsset: 'PEPE', symbol: 'PEPE/USD', rawSymbol: 'PEPE-USD', price: 0.0000105, changePercent: 8.50, volume: 260000000 },
+      { baseAsset: 'SHIB', symbol: 'SHIB/USD', rawSymbol: 'SHIB-USD', price: 0.0000185, changePercent: 2.10, volume: 210000000 },
+      { baseAsset: 'BNB', symbol: 'BNB/USD', rawSymbol: 'BNB-USD', price: 595.0, changePercent: 0.85, volume: 400000000 },
+      { baseAsset: 'RENDER', symbol: 'RENDER/USD', rawSymbol: 'RENDER-USD', price: 5.65, changePercent: 4.80, volume: 150000000 },
+      { baseAsset: 'INJ', symbol: 'INJ/USD', rawSymbol: 'INJ-USD', price: 21.4, changePercent: 3.90, volume: 120000000 },
+      { baseAsset: 'TIA', symbol: 'TIA/USD', rawSymbol: 'TIA-USD', price: 5.10, changePercent: 2.20, volume: 110000000 },
+      { baseAsset: 'FET', symbol: 'FET/USD', rawSymbol: 'FET-USD', price: 1.38, changePercent: 5.40, volume: 130000000 },
+      { baseAsset: 'ARB', symbol: 'ARB/USD', rawSymbol: 'ARB-USD', price: 0.58, changePercent: -0.80, volume: 95000000 },
+      { baseAsset: 'OP', symbol: 'OP/USD', rawSymbol: 'OP-USD', price: 1.62, changePercent: 1.40, volume: 90000000 },
+      { baseAsset: 'DOT', symbol: 'DOT/USD', rawSymbol: 'DOT-USD', price: 4.25, changePercent: 0.50, volume: 85000000 },
+      { baseAsset: 'LTC', symbol: 'LTC/USD', rawSymbol: 'LTC-USD', price: 71.5, changePercent: 1.10, volume: 140000000 },
+      { baseAsset: 'BCH', symbol: 'BCH/USD', rawSymbol: 'BCH-USD', price: 345.0, changePercent: 2.05, volume: 130000000 },
+      { baseAsset: 'APT', symbol: 'APT/USD', rawSymbol: 'APT-USD', price: 9.85, changePercent: 4.30, volume: 180000000 },
+      { baseAsset: 'UNI', symbol: 'UNI/USD', rawSymbol: 'UNI-USD', price: 7.90, changePercent: -0.20, volume: 75000000 },
+      { baseAsset: 'ICP', symbol: 'ICP/USD', rawSymbol: 'ICP-USD', price: 8.35, changePercent: 1.75, volume: 65000000 },
+      { baseAsset: 'FIL', symbol: 'FIL/USD', rawSymbol: 'FIL-USD', price: 3.65, changePercent: 0.90, volume: 55000000 },
+      { baseAsset: 'AAVE', symbol: 'AAVE/USD', rawSymbol: 'AAVE-USD', price: 158.0, changePercent: 3.40, volume: 110000000 },
+      { baseAsset: 'KAS', symbol: 'KAS/USD', rawSymbol: 'KAS-USD', price: 0.135, changePercent: 2.80, volume: 80000000 }
+    ];
     this.ws = null;
     this.isWsConnected = false;
     this.activeSubscriptions = new Set(['BTC-USD', 'ETH-USD', 'SOL-USD', 'LINK-USD', 'AVAX-USD', 'DOGE-USD', 'NEAR-USD', 'SUI-USD', 'XRP-USD', 'ADA-USD']);
@@ -136,12 +165,12 @@ export class CryptoAdapter extends MarketAdapter {
 
   searchAssets(query) {
     if (!query || !query.trim()) {
-      return this.allMarkets.slice(0, 15);
+      return this.allMarkets.slice(0, 35);
     }
     const q = query.trim().toUpperCase();
     return this.allMarkets
       .filter(m => m.baseAsset.includes(q) || m.symbol.includes(q))
-      .slice(0, 20);
+      .slice(0, 40);
   }
 
   async ensureAssetInitialized(asset) {

@@ -439,7 +439,7 @@
           <span class="saas-nav-icon"><i class="ph ph-sliders"></i></span>
           <span class="saas-nav-label">Risk & Engine</span>
         </button>
-        <a href="index.html" class="saas-nav-item" style="text-decoration: none; margin-top: 4px;">
+        <a href="landing.html" class="saas-nav-item" style="text-decoration: none; margin-top: 4px;">
           <span class="saas-nav-icon"><i class="ph ph-house"></i></span>
           <span class="saas-nav-label">Marketing Home</span>
         </a>
@@ -1033,6 +1033,23 @@
             </div>
           </div>
 
+          <!-- Open Positions Section (Prominently placed above order desk) -->
+          <div class="panel-positions-subcard" id="panel_positions_subcard">
+            <div class="panel-subcard-header">
+              <span class="panel-title" style="white-space: nowrap;">
+                <i class="ph ph-chart-line-up"></i> Active Positions (<span id="open_positions_count">0</span>)
+              </span>
+              <button class="btn-close-all-positions hidden" id="btn_close_all_positions" type="button" title="Panic Flatten: Close all open positions immediately at market LTP">
+                <i class="ph-bold ph-lightning"></i>
+                <span>Close All</span>
+              </button>
+            </div>
+
+            <div id="open_positions_list" class="open-positions-container">
+              <div class="empty-state">No open positions. Setup awaiting confirmation.</div>
+            </div>
+          </div>
+
           <!-- DELTA EXCHANGE PRO DERIVATIVES ORDER DESK -->
           <div class="derivatives-order-desk">
             <!-- Order Direction Segment (Long vs Short) -->
@@ -1163,23 +1180,6 @@
                 <span class="exec-btn-status-badge confirmed" id="exec_btn_badge">Confirmed</span>
               </div>
             </button>
-          </div>
-
-          <!-- Open Positions Section -->
-          <div class="panel-positions-subcard">
-            <div class="panel-subcard-header">
-              <span class="panel-title" style="white-space: nowrap;">
-                <i class="ph ph-chart-line-up"></i> Positions (<span id="open_positions_count">0</span>)
-              </span>
-              <button class="btn-close-all-positions hidden" id="btn_close_all_positions" type="button" title="Panic Flatten: Close all open positions immediately at market LTP">
-                <i class="ph-bold ph-lightning"></i>
-                <span>Close All</span>
-              </button>
-            </div>
-
-            <div id="open_positions_list" class="open-positions-container">
-              <div class="empty-state">No open positions. Setup awaiting confirmation.</div>
-            </div>
           </div>
         </div>
       </section>
@@ -1540,13 +1540,7 @@
                 </div>
                 <div class="yearbook-matrix-body">
                   <div class="yearbook-weekdays-labels">
-                    <span></span>
-                    <span>Mon</span>
-                    <span></span>
-                    <span>Wed</span>
-                    <span></span>
-                    <span>Fri</span>
-                    <span></span>
+                    <span>Mon</span><span>Wed</span><span>Fri</span>
                   </div>
                   <div class="yearbook-cells-grid" id="yearbook_cells_grid">
                     <!-- Dynamically populated 52x7 cells -->

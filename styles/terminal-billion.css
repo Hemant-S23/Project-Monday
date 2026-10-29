@@ -704,6 +704,11 @@ html, body {
   display: none;
 }
 
+.crypto-search-container.open .crypto-search-results {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
 .market-dropdown-menu.active {
   display: block !important;
 }
@@ -865,6 +870,11 @@ html, body {
   max-height: 380px !important;
   overflow-y: auto !important;
   display: none;
+}
+
+.crypto-search-container.open .crypto-search-results {
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 /* Watchlist Trigger */
@@ -1220,6 +1230,11 @@ html, body {
   display: none;
 }
 
+.crypto-search-container.open .crypto-search-results {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
 .notif-popover-menu.active {
   display: block !important;
 }
@@ -1284,6 +1299,11 @@ html, body {
   padding: 10px !important;
   z-index: 600 !important;
   display: none;
+}
+
+.crypto-search-container.open .crypto-search-results {
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 .profile-popover-menu.active {
@@ -2314,6 +2334,11 @@ html, body {
   display: none;
 }
 
+.crypto-search-container.open .crypto-search-results {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
 .chart-layout-popover.active {
   display: block !important;
 }
@@ -2535,13 +2560,28 @@ html, body {
 }
 
 .chart-hud-overlay.top-left {
-  top: 56px !important;
-  left: 16px !important;
+  top: 14px !important;
+  left: 14px !important;
+  max-width: 48% !important;
+  z-index: 25 !important;
 }
 
 .chart-hud-overlay.top-right {
-  top: 56px !important;
-  right: 16px !important;
+  top: 14px !important;
+  right: 14px !important;
+  max-width: 48% !important;
+  z-index: 25 !important;
+}
+
+@media (max-width: 1400px) {
+  .chart-hud-overlay.top-left {
+    top: 14px !important;
+    left: 10px !important;
+  }
+  .chart-hud-overlay.top-right {
+    top: 52px !important;
+    right: 10px !important;
+  }
 }
 
 .chart-hud-overlay.bottom-right {

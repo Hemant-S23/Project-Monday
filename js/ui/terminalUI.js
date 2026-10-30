@@ -254,6 +254,7 @@ export class TerminalUI {
     // Compact Market Dropdown Selector (Crypto / Indian Market)
     const marketDropdownWrapper = document.getElementById('market_dropdown_wrapper');
     const marketDropdownTrigger = document.getElementById('market_dropdown_trigger');
+    const marketDropdownMenu = document.getElementById('market_dropdown_menu');
 
     if (marketDropdownTrigger && marketDropdownWrapper) {
       marketDropdownTrigger.addEventListener('click', (e) => {
@@ -261,9 +262,13 @@ export class TerminalUI {
         // Mutual auto-close other dropdowns
         if (searchContainer) searchContainer.classList.remove('open');
         const wlWrapper = document.getElementById('watchlist_tray_wrapper');
+        const wlMenu = document.getElementById('watchlist_tray_popover');
         if (wlWrapper) wlWrapper.classList.remove('open');
+        if (wlMenu) wlMenu.classList.remove('active');
 
-        marketDropdownWrapper.classList.toggle('open');
+        const isOpen = marketDropdownWrapper.classList.toggle('open');
+        if (marketDropdownMenu) marketDropdownMenu.classList.toggle('active', isOpen);
+        marketDropdownTrigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
       });
     }
 
@@ -271,6 +276,8 @@ export class TerminalUI {
     document.addEventListener('click', (e) => {
       if (marketDropdownWrapper && !marketDropdownWrapper.contains(e.target)) {
         marketDropdownWrapper.classList.remove('open');
+        if (marketDropdownMenu) marketDropdownMenu.classList.remove('active');
+        if (marketDropdownTrigger) marketDropdownTrigger.setAttribute('aria-expanded', 'false');
       }
     });
 
@@ -285,6 +292,8 @@ export class TerminalUI {
         this.currentMarket = market;
         this.updateMarketTriggerUI(market);
         if (marketDropdownWrapper) marketDropdownWrapper.classList.remove('open');
+        if (marketDropdownMenu) marketDropdownMenu.classList.remove('active');
+        if (marketDropdownTrigger) marketDropdownTrigger.setAttribute('aria-expanded', 'false');
         if (this.callbacks.onMarketChange) this.callbacks.onMarketChange(market);
       });
     });
@@ -512,6 +521,7 @@ export class TerminalUI {
     const watchlistTrayWrapper = document.getElementById('watchlist_tray_wrapper');
     const watchlistTrayBtn = document.getElementById('watchlist_tray_btn');
     const watchlistTrayClose = document.getElementById('watchlist_tray_close');
+    const watchlistTrayPopover = document.getElementById('watchlist_tray_popover');
 
     const watchlistSearchInput = document.getElementById('watchlist_tray_search_input');
 
@@ -520,15 +530,23 @@ export class TerminalUI {
         e.stopPropagation();
         // Mutual auto-close other dropdowns
         if (searchContainer) searchContainer.classList.remove('open');
-        if (marketDropdownWrapper) marketDropdownWrapper.classList.remove('open');
+        if (marketDropdownWrapper) {
+          marketDropdownWrapper.classList.remove('open');
+          const mMenu = document.getElementById('market_dropdown_menu');
+          if (mMenu) mMenu.classList.remove('active');
+        }
 
         const isOpen = watchlistTrayWrapper.classList.contains('open');
         if (!isOpen) {
           if (watchlistSearchInput) watchlistSearchInput.value = '';
           this.renderWatchlistTray(this.currentMarket);
           watchlistTrayWrapper.classList.add('open');
+          if (watchlistTrayPopover) watchlistTrayPopover.classList.add('active');
+          watchlistTrayBtn.setAttribute('aria-expanded', 'true');
         } else {
           watchlistTrayWrapper.classList.remove('open');
+          if (watchlistTrayPopover) watchlistTrayPopover.classList.remove('active');
+          watchlistTrayBtn.setAttribute('aria-expanded', 'false');
         }
       });
     }
@@ -554,12 +572,16 @@ export class TerminalUI {
       watchlistTrayClose.addEventListener('click', (e) => {
         e.stopPropagation();
         watchlistTrayWrapper.classList.remove('open');
+        if (watchlistTrayPopover) watchlistTrayPopover.classList.remove('active');
+        if (watchlistTrayBtn) watchlistTrayBtn.setAttribute('aria-expanded', 'false');
       });
     }
 
     document.addEventListener('click', (e) => {
       if (watchlistTrayWrapper && !watchlistTrayWrapper.contains(e.target)) {
         watchlistTrayWrapper.classList.remove('open');
+        if (watchlistTrayPopover) watchlistTrayPopover.classList.remove('active');
+        if (watchlistTrayBtn) watchlistTrayBtn.setAttribute('aria-expanded', 'false');
       }
     });
 
@@ -845,6 +867,7 @@ export class TerminalUI {
     // Google-Style User Profile & Utilities Popover Hub Toggles
     const profilePopoverWrapper = document.getElementById('profile_popover_wrapper');
     const profileAvatarBtn = document.getElementById('profile_avatar_btn');
+    const profilePopoverMenu = document.getElementById('profile_popover_menu');
     const popoverVoiceToggle = document.getElementById('popover_voice_toggle');
     const popoverVoiceBadge = document.getElementById('popover_voice_badge');
     const popoverVoiceIcon = document.getElementById('popover_voice_icon');
@@ -856,13 +879,16 @@ export class TerminalUI {
 
         // Close notification popover if open
         const notifWrapper = document.getElementById('notif_popover_wrapper');
+        const notifMenu = document.getElementById('notif_popover_menu');
         if (notifWrapper) {
           notifWrapper.classList.remove('open');
+          if (notifMenu) notifMenu.classList.remove('active');
           const nBtn = document.getElementById('notif_bell_btn');
           if (nBtn) nBtn.setAttribute('aria-expanded', 'false');
         }
 
         const isOpen = profilePopoverWrapper.classList.toggle('open');
+        if (profilePopoverMenu) profilePopoverMenu.classList.toggle('active', isOpen);
         profileAvatarBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
       });
 
@@ -870,6 +896,7 @@ export class TerminalUI {
       document.addEventListener('click', (e) => {
         if (!profilePopoverWrapper.contains(e.target)) {
           profilePopoverWrapper.classList.remove('open');
+          if (profilePopoverMenu) profilePopoverMenu.classList.remove('active');
           profileAvatarBtn.setAttribute('aria-expanded', 'false');
         }
       });

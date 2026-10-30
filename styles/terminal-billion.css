@@ -632,7 +632,7 @@ html, body {
   gap: 8px 12px !important;
   position: relative !important;
   overflow: visible !important;
-  z-index: 100 !important;
+  z-index: 10000 !important;
   transition: all 0.25s ease !important;
 }
 
@@ -742,19 +742,29 @@ html, body {
   transition: transform 0.2s ease !important;
 }
 
+/* Market Dropdown Selector & Popover Menu */
+.market-dropdown-wrapper {
+  position: relative !important;
+  z-index: 10020 !important;
+}
+
+.market-dropdown-wrapper.open {
+  z-index: 10050 !important;
+}
+
 .market-dropdown-menu {
   position: absolute !important;
   top: calc(100% + 8px) !important;
   left: 0 !important;
   min-width: 270px !important;
-  background: rgba(10, 13, 22, 0.94) !important;
+  background: rgba(10, 13, 22, 0.96) !important;
   backdrop-filter: blur(32px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
   border-radius: 16px !important;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
   padding: 8px !important;
-  z-index: 600 !important;
+  z-index: 10060 !important;
   display: none;
 }
 
@@ -763,8 +773,14 @@ html, body {
   flex-direction: column !important;
 }
 
-.market-dropdown-menu.active {
-  display: block !important;
+.market-dropdown-menu.active,
+.market-dropdown-wrapper.open .market-dropdown-menu {
+  display: flex !important;
+  flex-direction: column !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .market-menu-header {
@@ -931,9 +947,14 @@ html, body {
   flex-direction: column !important;
 }
 
-/* Watchlist Trigger */
+/* Watchlist Trigger & Popover Tray */
 .watchlist-tray-wrapper {
   position: relative !important;
+  z-index: 10020 !important;
+}
+
+.watchlist-tray-wrapper.open {
+  z-index: 10050 !important;
 }
 
 .watchlist-tray-btn {
@@ -963,21 +984,27 @@ html, body {
   left: 0 !important;
   width: 360px !important;
   max-height: 480px !important;
-  background: rgba(10, 13, 22, 0.94) !important;
+  background: rgba(10, 13, 22, 0.96) !important;
   backdrop-filter: blur(32px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
   border-radius: 16px !important;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
   padding: 12px !important;
-  z-index: 600 !important;
+  z-index: 10060 !important;
   overflow: hidden !important;
   display: none;
   flex-direction: column !important;
 }
 
-.watchlist-tray-popover.active {
+.watchlist-tray-popover.active,
+.watchlist-tray-wrapper.open .watchlist-tray-popover {
   display: flex !important;
+  flex-direction: column !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 /* Live Ticker Box */
@@ -1225,6 +1252,11 @@ html, body {
 /* Notification Popover Wrapper */
 .notif-popover-wrapper {
   position: relative !important;
+  z-index: 10020 !important;
+}
+
+.notif-popover-wrapper.open {
+  z-index: 10050 !important;
 }
 
 .notif-bell-btn {
@@ -1273,14 +1305,14 @@ html, body {
   top: calc(100% + 8px) !important;
   right: 0 !important;
   width: 360px !important;
-  background: rgba(10, 13, 22, 0.95) !important;
+  background: rgba(10, 13, 22, 0.96) !important;
   backdrop-filter: blur(32px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
   border-radius: 16px !important;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
   padding: 12px !important;
-  z-index: 600 !important;
+  z-index: 10060 !important;
   display: none;
 }
 
@@ -1293,12 +1325,20 @@ html, body {
 .notif-popover-wrapper.open .notif-popover-menu {
   display: flex !important;
   flex-direction: column !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
   animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 /* User Profile Avatar Popover */
 .profile-popover-wrapper {
   position: relative !important;
+  z-index: 10020 !important;
+}
+
+.profile-popover-wrapper.open {
+  z-index: 10050 !important;
 }
 
 .profile-avatar-btn {
@@ -1347,14 +1387,14 @@ html, body {
   top: calc(100% + 8px) !important;
   right: 0 !important;
   width: 280px !important;
-  background: rgba(10, 13, 22, 0.95) !important;
+  background: rgba(10, 13, 22, 0.96) !important;
   backdrop-filter: blur(32px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
   border-radius: 16px !important;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
   padding: 10px !important;
-  z-index: 600 !important;
+  z-index: 10060 !important;
   display: none;
 }
 
@@ -1363,8 +1403,13 @@ html, body {
   flex-direction: column !important;
 }
 
-.profile-popover-menu.active {
+.profile-popover-menu.active,
+.profile-popover-wrapper.open .profile-popover-menu {
   display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 /* =========================================================================

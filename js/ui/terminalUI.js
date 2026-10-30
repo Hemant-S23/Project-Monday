@@ -1595,9 +1595,11 @@ export class TerminalUI {
       window.dispatchEvent(new Event('resize'));
     }
 
-    // Scroll viewport to top
+    // Scroll viewport & active page view to top
     const viewport = document.getElementById('saas_main_viewport');
-    if (viewport) viewport.scrollTo(0, 0);
+    if (viewport) viewport.scrollTo({ top: 0, behavior: 'instant' });
+    const activePageView = document.querySelector('.saas-page-view.active');
+    if (activePageView) activePageView.scrollTo({ top: 0, behavior: 'instant' });
   }
 
   /**

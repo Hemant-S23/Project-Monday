@@ -552,6 +552,60 @@ html, body {
   overflow: hidden !important;
 }
 
+/* =========================================================================
+   SAAS PAGE VIEWS & SCROLLING ERGONOMICS
+   ========================================================================= */
+.saas-page-view {
+  display: none !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  flex: 1 1 auto !important;
+  box-sizing: border-box !important;
+  animation: pageFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.saas-page-view.active {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Trading Terminal cockpit has fixed internal viewport */
+.saas-page-view#view_terminal.active {
+  overflow: hidden !important;
+  height: 100% !important;
+}
+
+/* Dedicated pages (Passbook, Positions, Settings, Copilot) are fully vertically scrollable */
+.saas-page-view#view_passbook.active,
+.saas-page-view#view_positions.active,
+.saas-page-view#view_settings.active,
+.saas-page-view#view_copilot.active,
+.saas-page-view:not(#view_terminal).active {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important;
+  height: 100% !important;
+}
+
+.saas-page-view::-webkit-scrollbar {
+  width: 7px !important;
+}
+
+.saas-page-view::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.25) !important;
+}
+
+.saas-page-view::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border-radius: 999px !important;
+}
+
+.saas-page-view::-webkit-scrollbar-thumb:hover {
+  background: rgba(6, 182, 212, 0.5) !important;
+}
+
 .terminal-wrapper {
   display: flex !important;
   flex-direction: column !important;
@@ -5662,7 +5716,7 @@ html, body {
   .passbook-page-container,
   .settings-page-container,
   .copilot-page-container {
-    padding: 16px 14px !important;
+    padding: 16px 14px 90px 14px !important;
   }
 
   .positions-stats-strip,

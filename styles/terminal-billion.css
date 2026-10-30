@@ -1482,10 +1482,17 @@ html, body {
   min-height: 0 !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important;
   padding: 14px 14px 36px 14px !important;
   display: flex !important;
   flex-direction: column !important;
   gap: 12px !important;
+}
+
+.panel-strategy .panel-content > * {
+  flex-shrink: 0 !important;
+  min-width: 0 !important;
 }
 
 .panel-chart {
@@ -1697,7 +1704,14 @@ html, body {
   padding: 12px 14px !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 6px 20px rgba(0, 0, 0, 0.25) !important;
   position: relative !important;
-  overflow: hidden !important;
+  z-index: 2 !important;
+  flex-shrink: 0 !important;
+  min-height: 86px !important;
+  overflow: visible !important;
+  margin-top: 4px !important;
+  margin-bottom: 4px !important;
+  clear: both !important;
+  box-sizing: border-box !important;
 }
 
 .confluence-meter-card::before {
@@ -1776,6 +1790,12 @@ html, body {
   display: flex !important;
   flex-direction: column !important;
   gap: 10px !important;
+  flex-shrink: 0 !important;
+  position: relative !important;
+  z-index: 1 !important;
+  margin-top: 8px !important;
+  clear: both !important;
+  box-sizing: border-box !important;
 }
 
 .order-dir-segmented {
@@ -2226,6 +2246,10 @@ html, body {
   border: 1px solid rgba(255, 255, 255, 0.07) !important;
   border-radius: 13px !important;
   overflow: hidden !important;
+  flex-shrink: 0 !important;
+  position: relative !important;
+  z-index: 2 !important;
+  box-sizing: border-box !important;
 }
 
 .panel-subcard-header {

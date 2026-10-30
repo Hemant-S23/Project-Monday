@@ -4309,6 +4309,238 @@ html, body {
   box-shadow: 0 0 12px rgba(56, 189, 248, 0.75) !important;
 }
 
+/* =========================================================================
+   YEARBOOK TWO-COLUMN COCKPIT BENTO & ALPHA RADAR
+   ========================================================================= */
+.yearbook-cockpit-split {
+  display: flex !important;
+  align-items: stretch !important;
+  gap: 22px !important;
+  position: relative !important;
+}
+
+.yearbook-cockpit-split .yearbook-grid-scroll-wrap {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  overflow-x: auto !important;
+}
+
+.yearbook-radar-widget {
+  width: 360px !important;
+  min-width: 340px !important;
+  max-width: 400px !important;
+  flex-shrink: 0 !important;
+  background: rgba(13, 19, 34, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 14px !important;
+  padding: 12px 14px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  position: relative !important;
+}
+
+.yearbook-radar-widget::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 1px !important;
+  background: linear-gradient(90deg, transparent 0%, rgba(6, 182, 212, 0.4) 50%, transparent 100%) !important;
+}
+
+.radar-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding-bottom: 8px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.radar-title {
+  font-family: var(--font-display) !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  color: var(--text-hi) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  letter-spacing: 0.04em !important;
+}
+
+.radar-title i {
+  color: var(--cyan) !important;
+}
+
+.radar-badge {
+  font-family: var(--font-mono) !important;
+  font-size: 0.62rem !important;
+  font-weight: 800 !important;
+  padding: 2px 7px !important;
+  border-radius: 999px !important;
+  background: rgba(16, 185, 129, 0.15) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  color: #10b981 !important;
+}
+
+.radar-body {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  padding: 6px 0 !important;
+}
+
+.radar-donut-wrap {
+  position: relative !important;
+  width: 82px !important;
+  height: 82px !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.radar-donut-svg {
+  transform: rotate(-90deg) !important;
+  filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.3)) !important;
+}
+
+.donut-loss {
+  transition: stroke-dashoffset 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.donut-win {
+  transition: stroke-dashoffset 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.radar-donut-center {
+  position: absolute !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  pointer-events: none !important;
+}
+
+.donut-val {
+  font-family: var(--font-mono) !important;
+  font-size: 0.88rem !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  line-height: 1.1 !important;
+}
+
+.donut-lbl {
+  font-family: var(--font-mono) !important;
+  font-size: 0.52rem !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+}
+
+.radar-metrics-col {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+}
+
+.radar-metric-pod {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-radius: 9px !important;
+  padding: 5px 8px !important;
+}
+
+.pod-lbl-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.pod-lbl {
+  font-family: var(--font-mono) !important;
+  font-size: 0.58rem !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+  letter-spacing: 0.04em !important;
+}
+
+.pod-tag {
+  font-family: var(--font-mono) !important;
+  font-size: 0.52rem !important;
+  font-weight: 800 !important;
+  color: var(--cyan) !important;
+}
+
+.pod-val {
+  font-family: var(--font-mono) !important;
+  font-size: 0.82rem !important;
+  font-weight: 800 !important;
+  color: #f1f5f9 !important;
+  line-height: 1.2 !important;
+  margin-top: 1px !important;
+}
+
+.pod-sub {
+  font-size: 0.68rem !important;
+  font-weight: 600 !important;
+  color: var(--risk) !important;
+}
+
+.radar-sparkline-row {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  padding-top: 6px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.sparkline-info {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.sp-lbl {
+  font-family: var(--font-mono) !important;
+  font-size: 0.56rem !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+  letter-spacing: 0.04em !important;
+}
+
+.sp-val {
+  font-family: var(--font-mono) !important;
+  font-size: 0.76rem !important;
+  font-weight: 800 !important;
+}
+
+.radar-sparkline-container {
+  width: 100% !important;
+  height: 28px !important;
+}
+
+.radar-sparkline-svg {
+  width: 100% !important;
+  height: 100% !important;
+  overflow: visible !important;
+}
+
+@media (max-width: 1200px) {
+  .yearbook-cockpit-split {
+    flex-direction: column !important;
+  }
+  .yearbook-radar-widget {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
 .yearbook-footer {
   display: flex !important;
   align-items: center !important;

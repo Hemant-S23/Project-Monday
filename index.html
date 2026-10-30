@@ -1532,18 +1532,83 @@
               </div>
             </div>
 
-            <div class="yearbook-grid-scroll-wrap">
-              <div class="yearbook-matrix-container">
-                <div class="yearbook-months-labels" id="yearbook_months_row">
-                  <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
-                  <span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
-                </div>
-                <div class="yearbook-matrix-body">
-                  <div class="yearbook-weekdays-labels">
-                    <span>Mon</span><span>Wed</span><span>Fri</span>
+            <div class="yearbook-cockpit-split">
+              <!-- LEFT: 365-Day Contribution Matrix Grid -->
+              <div class="yearbook-grid-scroll-wrap">
+                <div class="yearbook-matrix-container">
+                  <div class="yearbook-months-labels" id="yearbook_months_row">
+                    <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
+                    <span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
                   </div>
-                  <div class="yearbook-cells-grid" id="yearbook_cells_grid">
-                    <!-- Dynamically populated 52x7 cells -->
+                  <div class="yearbook-matrix-body">
+                    <div class="yearbook-weekdays-labels">
+                      <span>Mon</span><span>Wed</span><span>Fri</span>
+                    </div>
+                    <div class="yearbook-cells-grid" id="yearbook_cells_grid">
+                      <!-- Dynamically populated 52x7 cells -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- RIGHT: Institutional Alpha & Risk Radar -->
+              <div class="yearbook-radar-widget" id="yearbook_radar_widget">
+                <div class="radar-header">
+                  <span class="radar-title"><i class="ph-bold ph-shield-check"></i> INSTITUTIONAL ALPHA RADAR</span>
+                  <span class="radar-badge" id="yb_radar_grade">GRADE A+</span>
+                </div>
+
+                <div class="radar-body">
+                  <!-- Circular Gauge Donut -->
+                  <div class="radar-donut-wrap">
+                    <svg class="radar-donut-svg" viewBox="0 0 100 100" width="82" height="82">
+                      <circle class="donut-bg" cx="50" cy="50" r="40" stroke="rgba(255,255,255,0.06)" stroke-width="7" fill="none" />
+                      <circle class="donut-loss" id="yb_donut_loss_arc" cx="50" cy="50" r="40" stroke="#f43f5e" stroke-width="7" fill="none" stroke-dasharray="251.2" stroke-dashoffset="0" stroke-linecap="round" />
+                      <circle class="donut-win" id="yb_donut_win_arc" cx="50" cy="50" r="40" stroke="#10b981" stroke-width="7" fill="none" stroke-dasharray="251.2" stroke-dashoffset="84" stroke-linecap="round" />
+                    </svg>
+                    <div class="radar-donut-center">
+                      <span class="donut-val" id="yb_radar_win_rate">66.7%</span>
+                      <span class="donut-lbl">WIN RATE</span>
+                    </div>
+                  </div>
+
+                  <!-- Performance Metrics Bento Pods -->
+                  <div class="radar-metrics-col">
+                    <div class="radar-metric-pod">
+                      <div class="pod-lbl-row">
+                        <span class="pod-lbl">PROFIT FACTOR</span>
+                        <span class="pod-tag" id="yb_radar_pf_tag">SUPERIOR</span>
+                      </div>
+                      <div class="pod-val text-bullish" id="yb_radar_profit_factor">3.42x</div>
+                    </div>
+
+                    <div class="radar-metric-pod">
+                      <div class="pod-lbl-row">
+                        <span class="pod-lbl">ASYMMETRY (AVG W/L)</span>
+                      </div>
+                      <div class="pod-val" id="yb_radar_expectancy">+$41.65 <span class="pod-sub">/ -$12.35</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Mini Cumulative Equity Sparkline -->
+                <div class="radar-sparkline-row">
+                  <div class="sparkline-info">
+                    <span class="sp-lbl">CUMULATIVE ALPHA TRAJECTORY</span>
+                    <span class="sp-val text-bullish" id="yb_radar_net_gain">+$301.82</span>
+                  </div>
+                  <div class="radar-sparkline-container" id="yb_radar_sparkline_wrap">
+                    <svg class="radar-sparkline-svg" id="yb_radar_sparkline_svg" viewBox="0 0 180 28" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="sparklineGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.4" />
+                          <stop offset="100%" stop-color="#10b981" stop-opacity="0.0" />
+                        </linearGradient>
+                      </defs>
+                      <path id="yb_sparkline_area" d="" fill="url(#sparklineGrad)" />
+                      <path id="yb_sparkline_line" d="" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" />
+                      <circle id="yb_sparkline_dot" cx="0" cy="0" r="3.5" fill="#10b981" stroke="#ffffff" stroke-width="1.5" />
+                    </svg>
                   </div>
                 </div>
               </div>

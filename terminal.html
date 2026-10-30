@@ -1033,23 +1033,6 @@
             </div>
           </div>
 
-          <!-- Open Positions Section (Prominently placed above order desk) -->
-          <div class="panel-positions-subcard" id="panel_positions_subcard">
-            <div class="panel-subcard-header">
-              <span class="panel-title" style="white-space: nowrap;">
-                <i class="ph ph-chart-line-up"></i> Active Positions (<span id="open_positions_count">0</span>)
-              </span>
-              <button class="btn-close-all-positions hidden" id="btn_close_all_positions" type="button" title="Panic Flatten: Close all open positions immediately at market LTP">
-                <i class="ph-bold ph-lightning"></i>
-                <span>Close All</span>
-              </button>
-            </div>
-
-            <div id="open_positions_list" class="open-positions-container">
-              <div class="empty-state">No open positions. Setup awaiting confirmation.</div>
-            </div>
-          </div>
-
           <!-- DELTA EXCHANGE PRO DERIVATIVES ORDER DESK -->
           <div class="derivatives-order-desk">
             <!-- Order Direction Segment (Long vs Short) -->
@@ -1172,14 +1155,33 @@
               <span id="bias_indicator_text">Counter-Trend • AI Bias is Bullish</span>
             </div>
 
-            <!-- Sleek Modern Execution Trigger Button -->
-            <button class="btn-exec-trade long" id="execute_trade_btn">
-              <div class="exec-btn-content">
-                <i class="ph-bold ph-lightning" id="exec_btn_icon"></i>
-                <span class="exec-btn-action" id="exec_btn_action">Open Long</span>
-                <span class="exec-btn-status-badge confirmed" id="exec_btn_badge">Confirmed</span>
-              </div>
-            </button>
+            <!-- Sleek Modern Execution Trigger Button (Floating Sticky Bar) -->
+            <div class="exec-btn-sticky-tray" id="exec_btn_sticky_tray">
+              <button class="btn-exec-trade long" id="execute_trade_btn">
+                <div class="exec-btn-content">
+                  <i class="ph-bold ph-lightning" id="exec_btn_icon"></i>
+                  <span class="exec-btn-action" id="exec_btn_action">Open Long</span>
+                  <span class="exec-btn-status-badge confirmed" id="exec_btn_badge">Confirmed</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Open Positions Section (Below Order Desk) -->
+          <div class="panel-positions-subcard" id="panel_positions_subcard">
+            <div class="panel-subcard-header">
+              <span class="panel-title" style="white-space: nowrap;">
+                <i class="ph ph-chart-line-up"></i> Active Positions (<span id="open_positions_count">0</span>)
+              </span>
+              <button class="btn-close-all-positions hidden" id="btn_close_all_positions" type="button" title="Panic Flatten: Close all open positions immediately at market LTP">
+                <i class="ph-bold ph-lightning"></i>
+                <span>Close All</span>
+              </button>
+            </div>
+
+            <div id="open_positions_list" class="open-positions-container">
+              <div class="empty-state">No open positions. Setup awaiting confirmation.</div>
+            </div>
           </div>
         </div>
       </section>

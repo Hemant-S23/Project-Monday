@@ -1527,6 +1527,29 @@ export class TerminalUI {
       });
     }
 
+    // Auth Overlay Close Button & Backdrop Dismiss
+    const authCloseBtn = document.getElementById('auth_close_btn');
+    const authOverlay = document.getElementById('auth_view_overlay');
+    if (authCloseBtn) {
+      authCloseBtn.addEventListener('click', (e) => {
+        if (e) e.preventDefault();
+        this.hideAuthOverlay();
+      });
+    }
+    if (authOverlay) {
+      authOverlay.addEventListener('click', (e) => {
+        // If clicking directly on the overlay backdrop outside container
+        if (e.target === authOverlay) {
+          this.hideAuthOverlay();
+        }
+      });
+    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && authOverlay && !authOverlay.classList.contains('hidden') && authOverlay.style.display !== 'none') {
+        this.hideAuthOverlay();
+      }
+    });
+
     // Header Logout Button
     if (headerLogoutBtn) {
       headerLogoutBtn.addEventListener('click', () => {

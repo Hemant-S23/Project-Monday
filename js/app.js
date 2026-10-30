@@ -158,15 +158,18 @@ class App {
   async init() {
     console.log('[App] Initializing AI Trading Co-Pilot for Crypto and Indian Markets...');
 
-    // 0. Verify Auth Session & update UI state
-    const currentUser = this.authManager.getUser();
+    // 0. Verify Auth Session & update UI state (Seamless instant-cockpit entry)
+    let currentUser = this.authManager.getUser();
+    if (!currentUser) {
+      // Auto-activate instant Guest Trader (GT) account so user never gets stuck behind an auth wall
+      const guestRes = await this.authManager.loginAsGuest();
+      currentUser = guestRes.user;
+    }
     if (currentUser) {
       this.ui.updateUserProfile(currentUser);
       this.ui.hideAuthOverlay();
       this.paperTrader.setUser(currentUser.id);
       this.riskEngine.setAccountBalance(this.paperTrader.balance);
-    } else {
-      this.ui.showAuthOverlay();
     }
 
     // 0.5 Fast-Path Cloud Hydration: Reconcile with Supabase Cloud BEFORE first UI paint

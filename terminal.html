@@ -32,7 +32,7 @@
   <link rel="stylesheet" href="styles/background.css">
   <link rel="stylesheet" href="css/main.css?v=5.3">
   <link rel="stylesheet" href="css/components.css?v=5.2">
-  <link rel="stylesheet" href="css/auth.css?v=4.7">
+  <link rel="stylesheet" href="css/auth.css?v=4.8">
   <link rel="stylesheet" href="css/multi-chart.css?v=6.1">
   <link rel="stylesheet" href="css/saas-layout.css?v=1.0">
   <!-- Master $1,000 Million FinTech Cockpit Master Stylesheet -->
@@ -56,8 +56,11 @@
   <!-- =========================================================================
        TWO-WAY SPLIT AUTH & LOGIN VIEW (Financial Intelligence & Multi-User)
        ========================================================================= -->
-  <div class="auth-view-overlay" id="auth_view_overlay">
+  <div class="auth-view-overlay hidden" id="auth_view_overlay" style="display: none;">
     <div class="auth-split-container">
+      <button class="auth-close-btn" id="auth_close_btn" type="button" title="Close and return to Terminal" aria-label="Close modal">
+        <i class="ph ph-x"></i>
+      </button>
       
       <!-- LEFT SIDE: Trading Intelligence & Philosophy Hero -->
       <div class="auth-hero-panel">

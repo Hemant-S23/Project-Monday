@@ -58,6 +58,7 @@ export class NotificationManager {
   initDOM() {
     this.wrapperEl = document.getElementById('notif_popover_wrapper');
     this.btnEl = document.getElementById('notif_bell_btn');
+    this.menuEl = document.getElementById('notif_popover_menu');
     this.badgeEl = document.getElementById('notif_unread_badge');
     this.countEl = document.getElementById('notif_header_count');
     this.listEl = document.getElementById('notif_list');
@@ -84,12 +85,18 @@ export class NotificationManager {
 
         const isOpen = this.wrapperEl.classList.toggle('open');
         this.btnEl.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        if (this.menuEl) {
+          this.menuEl.classList.toggle('active', isOpen);
+        }
       });
 
       document.addEventListener('click', (e) => {
         if (this.wrapperEl && !this.wrapperEl.contains(e.target)) {
           this.wrapperEl.classList.remove('open');
           this.btnEl.setAttribute('aria-expanded', 'false');
+          if (this.menuEl) {
+            this.menuEl.classList.remove('active');
+          }
         }
       });
     }

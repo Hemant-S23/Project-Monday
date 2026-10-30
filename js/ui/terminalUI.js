@@ -712,15 +712,42 @@ export class TerminalUI {
 
     // Voice Mute Toggle
     const muteBtn = document.getElementById('voice_mute_btn');
+    const popoverVoiceBadge = document.getElementById('profile_voice_badge');
+    const popoverVoiceIcon = document.getElementById('profile_voice_icon');
+    const savedMutePref = localStorage.getItem('monday_voice_muted');
+    const isInitiallyMuted = savedMutePref !== null ? (savedMutePref === 'true') : true;
+
     if (muteBtn) {
+      muteBtn.classList.toggle('muted', isInitiallyMuted);
+      muteBtn.title = isInitiallyMuted ? 'Unmute AI Voice' : 'Mute AI Voice';
+      muteBtn.innerHTML = isInitiallyMuted ? '<i class="ph ph-speaker-slash"></i>' : '<i class="ph ph-speaker-high"></i>';
       muteBtn.addEventListener('click', () => {
         if (this.callbacks.onToggleMute) {
           const isMuted = this.callbacks.onToggleMute();
           muteBtn.classList.toggle('muted', isMuted);
           muteBtn.title = isMuted ? 'Unmute AI Voice' : 'Mute AI Voice';
           muteBtn.innerHTML = isMuted ? '<i class="ph ph-speaker-slash"></i>' : '<i class="ph ph-speaker-high"></i>';
+          if (popoverVoiceBadge) {
+            popoverVoiceBadge.textContent = isMuted ? 'OFF' : 'ON';
+            popoverVoiceBadge.classList.toggle('active', !isMuted);
+          }
+          if (popoverVoiceIcon) {
+            popoverVoiceIcon.className = isMuted
+              ? 'ph ph-speaker-slash item-icon cyan'
+              : 'ph ph-speaker-high item-icon cyan';
+          }
         }
       });
+    }
+
+    if (popoverVoiceBadge) {
+      popoverVoiceBadge.textContent = isInitiallyMuted ? 'OFF' : 'ON';
+      popoverVoiceBadge.classList.toggle('active', !isInitiallyMuted);
+    }
+    if (popoverVoiceIcon) {
+      popoverVoiceIcon.className = isInitiallyMuted
+        ? 'ph ph-speaker-slash item-icon cyan'
+        : 'ph ph-speaker-high item-icon cyan';
     }
 
     // Voice Audio Test

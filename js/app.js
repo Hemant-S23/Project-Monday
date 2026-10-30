@@ -703,6 +703,31 @@ class App {
       const openPositions = this.paperTrader.openPositions;
       if (openPositions.length >= settings.maxTrades) return;
 
+      // 🛡️ MARKET-WIDE EVENT RISK SHIELD PRE-FLIGHT GATE
+      // If a major shock catalyst (e.g. regulatory shock, macro crash) is active,
+      // pause entire scanner and debounce notification to once every 10 minutes
+      if (settings.eventShieldEnabled) {
+        const globalRisk = this.newsEngine.getOverallEventRisk(this.currentAsset || 'BTC', this.currentMarket);
+        if (globalRisk && globalRisk.isShieldTriggered) {
+          const now = Date.now();
+          const shockTitle = globalRisk.activeEvents?.[0]?.title || globalRisk.summary || 'Breaking Macro / Regulatory Shock';
+          if (!this.lastEventShieldToastTime || (now - this.lastEventShieldToastTime) > 600000) {
+            this.lastEventShieldToastTime = now;
+            this.ui.appendAutonomousDecisionCard({
+              action: 'SKIPPED',
+              asset: this.currentAsset || 'MARKET',
+              direction: 'SHIELD',
+              openCount: openPositions.length,
+              skipReason: '🚨 HYPER-SENSITIVE EVENT RISK SHIELD ACTIVE',
+              skipExplanation: `Breaking shock catalyst detected: "${shockTitle}". Auto-Pilot engaged capital preservation armor. Watchlist scanner paused to protect portfolio.`
+            });
+            this.voiceAssistant.speak('Alert! Breaking shock catalyst detected. Auto-pilot scan paused to protect capital.');
+            this.ui.showToast('🛡️ Event Risk Shield Active', `${shockTitle.slice(0, 55)}... Auto-Pilot paused.`, 'warning');
+          }
+          return;
+        }
+      }
+
       // Watchlist candidate assets for current market (Prioritizing currently viewed asset)
       let baseCandidates;
       if (this.currentMarket === 'India') {
@@ -877,17 +902,26 @@ class App {
     const eventRisk = this.newsEngine.getOverallEventRisk(asset, this.currentMarket);
     const isShieldActive = settings.eventShieldEnabled && eventRisk.isShieldTriggered;
     if (isShieldActive) {
+      const now = Date.now();
       const shockTitle = eventRisk.activeEvents?.[0]?.title || eventRisk.summary || 'Breaking Macro / Regulatory Shock';
-      this.ui.appendAutonomousDecisionCard({
-        action: 'SKIPPED',
-        asset,
-        direction,
-        openCount: currentOpenCount,
-        skipReason: '🚨 HYPER-SENSITIVE EVENT RISK SHIELD ACTIVE',
-        skipExplanation: `Breaking shock catalyst detected: "${shockTitle}". Auto-Pilot engaged capital preservation armor. Entries throttled to prevent volatile news slippage and wick hunts.`
-      });
-      this.voiceAssistant.speak('Alert! Breaking shock catalyst detected. Auto-pilot entry cancelled to protect capital.');
-      this.ui.showToast('🛡️ Event Risk Shield Active', `${shockTitle.slice(0, 55)}... Order cancelled.`, 'warning');
+      
+      // Debounce notifications: only alert user once every 10 minutes
+      if (!this.lastEventShieldToastTime || (now - this.lastEventShieldToastTime) > 600000) {
+        this.lastEventShieldToastTime = now;
+        this.ui.appendAutonomousDecisionCard({
+          action: 'SKIPPED',
+          asset,
+          direction,
+          openCount: currentOpenCount,
+          skipReason: '🚨 HYPER-SENSITIVE EVENT RISK SHIELD ACTIVE',
+          skipExplanation: `Breaking shock catalyst detected: "${shockTitle}". Auto-Pilot engaged capital preservation armor. Entries throttled to prevent volatile news slippage and wick hunts.`
+        });
+        this.voiceAssistant.speak('Alert! Breaking shock catalyst detected. Auto-pilot entry cancelled to protect capital.');
+        this.ui.showToast('🛡️ Event Risk Shield Active', `${shockTitle.slice(0, 55)}... Order cancelled.`, 'warning');
+      }
+
+      // Put this asset on a 5-minute cooldown so it doesn't repeatedly attempt
+      this.setAssetCooldown(asset, direction, 300000);
       return;
     }
 

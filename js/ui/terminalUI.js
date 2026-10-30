@@ -4371,7 +4371,20 @@ export class TerminalUI {
     const container = document.getElementById('toast_container');
     if (!container) return;
 
+    // 1. Deduplicate: Prevent stacking identical duplicate toast messages
+    const key = `${title}::${message}`;
+    const existing = container.querySelectorAll('.toast');
+    for (const t of existing) {
+      if (t.dataset.toastKey === key) return;
+    }
+
+    // 2. Cap maximum concurrent toasts on screen (max 3)
+    if (existing.length >= 3) {
+      existing[0].remove();
+    }
+
     const toast = document.createElement('div');
+    toast.dataset.toastKey = key;
     toast.className = `toast toast-${type} slide-in`;
     toast.innerHTML = `
       <div class="toast-title">${title}</div>

@@ -4223,7 +4223,7 @@ html, body {
   width: 13px !important;
   height: 13px !important;
   border-radius: 3px !important;
-  background: rgba(255, 255, 255, 0.04) !important;
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.04) !important;
   cursor: pointer !important;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease !important;
@@ -4235,6 +4235,78 @@ html, body {
   z-index: 20 !important;
   border-color: #38bdf8 !important;
   box-shadow: 0 0 10px rgba(56, 189, 248, 0.6) !important;
+}
+
+/* 365-Day Heatmap PnL Intensity Levels */
+.yearbook-cell.level-empty {
+  background: transparent !important;
+  cursor: default !important;
+  border-color: transparent !important;
+  pointer-events: none !important;
+}
+
+.yearbook-cell.level-future {
+  background: rgba(255, 255, 255, 0.02) !important;
+  opacity: 0.35 !important;
+  cursor: default !important;
+}
+
+.yearbook-cell.level-future:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+.yearbook-cell.level-0 {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Green Wins (Tier 1 to Tier 4) */
+.yearbook-cell.pnl-win-1 {
+  background: rgba(16, 185, 129, 0.40) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+.yearbook-cell.pnl-win-2 {
+  background: rgba(16, 185, 129, 0.65) !important;
+  border-color: rgba(16, 185, 129, 0.55) !important;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.35) !important;
+}
+
+.yearbook-cell.pnl-win-3 {
+  background: rgba(16, 185, 129, 0.85) !important;
+  border-color: rgba(16, 185, 129, 0.75) !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5) !important;
+}
+
+.yearbook-cell.pnl-win-4 {
+  background: #10b981 !important;
+  border-color: #34d399 !important;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.7) !important;
+}
+
+/* Red Losses (Tier 1 to Tier 3) */
+.yearbook-cell.pnl-loss-1 {
+  background: rgba(244, 63, 94, 0.45) !important;
+  border-color: rgba(244, 63, 94, 0.35) !important;
+}
+
+.yearbook-cell.pnl-loss-2 {
+  background: rgba(244, 63, 94, 0.75) !important;
+  border-color: rgba(244, 63, 94, 0.55) !important;
+  box-shadow: 0 0 6px rgba(244, 63, 94, 0.35) !important;
+}
+
+.yearbook-cell.pnl-loss-3 {
+  background: #f43f5e !important;
+  border-color: #fb7185 !important;
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.5) !important;
+}
+
+.yearbook-cell.selected {
+  outline: 2px solid #38bdf8 !important;
+  z-index: 10 !important;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.75) !important;
 }
 
 .yearbook-footer {

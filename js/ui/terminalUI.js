@@ -4048,8 +4048,8 @@ export class TerminalUI {
       monthsRow.style.paddingLeft = '0';
       monthsRow.innerHTML = monthNames.map((name, mIdx) => {
         const weekCol = monthFirstWeekMap.has(mIdx) ? monthFirstWeekMap.get(mIdx) : Math.round(mIdx * 4.41);
-        // Weekday label width 20px + 8px gap = 28px offset
-        const leftPx = 28 + (weekCol * 15);
+        // Weekday label width 20px + 8px gap = 28px offset. Grid column = 13px cell + 3.5px gap = 16.5px
+        const leftPx = 28 + (weekCol * 16.5);
         return `<span style="position: absolute; left: ${leftPx}px; font-size: 0.65rem; font-weight: 700; color: #64748b;">${name}</span>`;
       }).join('');
     }

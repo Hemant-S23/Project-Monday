@@ -734,8 +734,8 @@ export class TerminalUI {
 
     // Voice Mute Toggle
     const muteBtn = document.getElementById('voice_mute_btn');
-    const popoverVoiceBadge = document.getElementById('profile_voice_badge');
-    const popoverVoiceIcon = document.getElementById('profile_voice_icon');
+    const popoverVoiceBadge = document.getElementById('popover_voice_badge');
+    const popoverVoiceIcon = document.getElementById('popover_voice_icon');
     const savedMutePref = localStorage.getItem('monday_voice_muted');
     const isInitiallyMuted = savedMutePref !== null ? (savedMutePref === 'true') : true;
 
@@ -869,8 +869,6 @@ export class TerminalUI {
     const profileAvatarBtn = document.getElementById('profile_avatar_btn');
     const profilePopoverMenu = document.getElementById('profile_popover_menu');
     const popoverVoiceToggle = document.getElementById('popover_voice_toggle');
-    const popoverVoiceBadge = document.getElementById('popover_voice_badge');
-    const popoverVoiceIcon = document.getElementById('popover_voice_icon');
     const popoverThemeIcon = document.getElementById('popover_theme_icon');
 
     if (profileAvatarBtn && profilePopoverWrapper) {

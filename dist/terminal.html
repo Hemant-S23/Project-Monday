@@ -2850,19 +2850,38 @@
         const savedName = localStorage.getItem('monday_trader_name');
         if (savedName && inputName) inputName.value = savedName;
 
+        const validateTerminalForm = () => {
+          const hasName = (inputName?.value || '').trim().length >= 2;
+          const isAgreed = !!chkAgree?.checked;
+          const canLaunch = hasName && isAgreed;
+          if (btnLaunch) {
+            btnLaunch.disabled = !canLaunch;
+            btnLaunch.classList.toggle('unlocked', canLaunch);
+          }
+          return canLaunch;
+        };
+
         chkAgree?.addEventListener('change', () => {
-          const ok = chkAgree.checked;
-          btnLaunch.disabled = !ok;
-          if (ok) {
-            btnLaunch.classList.add('unlocked');
-            if (window.sfx) window.sfx.play('click');
-          } else {
-            btnLaunch.classList.remove('unlocked');
+          const canLaunch = validateTerminalForm();
+          if (canLaunch && window.sfx) window.sfx.play('click');
+        });
+
+        inputName?.addEventListener('input', () => {
+          validateTerminalForm();
+        });
+
+        inputName?.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && validateTerminalForm()) {
+            e.preventDefault();
+            btnLaunch?.click();
           }
         });
 
+        // Initial validation check
+        validateTerminalForm();
+
         btnLaunch?.addEventListener('click', async () => {
-          if (!chkAgree?.checked) return;
+          if (!validateTerminalForm()) return;
           let traderName = (inputName?.value || '').trim();
           if (!traderName) traderName = 'Guest Trader';
           localStorage.setItem('monday_trader_name', traderName);

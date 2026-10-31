@@ -904,9 +904,21 @@
       inputGuestTraderName.value = savedName;
     }
 
+    const validateGuestForm = () => {
+      const hasName = (inputGuestTraderName?.value || '').trim().length >= 2;
+      const isAgreed = !!chkGuestRiskAgree?.checked;
+      const canLaunch = hasName && isAgreed;
+      if (btnConfirmGuestLaunch) {
+        btnConfirmGuestLaunch.disabled = !canLaunch;
+        btnConfirmGuestLaunch.classList.toggle('unlocked', canLaunch);
+      }
+      return canLaunch;
+    };
+
     function openGuestModal() {
       if (!modalGuestRisk) return;
       modalGuestRisk.style.display = 'flex';
+      validateGuestForm();
       setTimeout(() => {
         if (inputGuestTraderName) inputGuestTraderName.focus();
       }, 50);
@@ -929,16 +941,23 @@
       btnCancelGuestRisk.addEventListener('click', closeGuestModal);
     }
 
-    // Checkbox toggle enables Launch button
-    if (chkGuestRiskAgree && btnConfirmGuestLaunch) {
+    // Both Checkbox and Name Input trigger validation
+    if (chkGuestRiskAgree) {
       chkGuestRiskAgree.addEventListener('change', () => {
-        const canLaunch = chkGuestRiskAgree.checked;
-        btnConfirmGuestLaunch.disabled = !canLaunch;
-        if (canLaunch) {
-          btnConfirmGuestLaunch.classList.add('unlocked');
-          sfx.playSuccess();
-        } else {
-          btnConfirmGuestLaunch.classList.remove('unlocked');
+        const canLaunch = validateGuestForm();
+        if (canLaunch) sfx.playSuccess();
+      });
+    }
+
+    if (inputGuestTraderName) {
+      inputGuestTraderName.addEventListener('input', () => {
+        validateGuestForm();
+      });
+
+      inputGuestTraderName.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && validateGuestForm()) {
+          e.preventDefault();
+          btnConfirmGuestLaunch?.click();
         }
       });
     }
@@ -946,7 +965,7 @@
     // Launch action
     if (btnConfirmGuestLaunch) {
       btnConfirmGuestLaunch.addEventListener('click', async () => {
-        if (!chkGuestRiskAgree.checked) return;
+        if (!validateGuestForm()) return;
 
         let traderName = (inputGuestTraderName?.value || '').trim();
         if (!traderName) traderName = 'Guest Trader';

@@ -1451,6 +1451,9 @@ export class TerminalUI {
 
     const updateThemeUI = (theme) => {
       document.documentElement.setAttribute('data-theme', theme);
+      if (document.body) {
+        document.body.setAttribute('data-theme', theme);
+      }
       if (themeText) {
         themeText.textContent = theme === 'light' ? 'Light' : 'Dark';
       }

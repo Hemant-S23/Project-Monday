@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PROJECT MONDAY — Autonomous Neural Trading Terminal & Co-Pilot</title>
-  <meta name="description" content="Stop gambling on predictions. Trade with institutional confluence. Project MONDAY combines live execution, 8-step ICT/SMC confluence, 1:3.2 asymmetric risk firewalls, and an active Hinglish audio copilot.">
+  <meta name="description" content="Stop gambling on predictions. Trade with institutional confluence. Project MONDAY combines live execution, 8-step ICT/SMC confluence, 1:3.0 asymmetric risk firewalls, and an active Hinglish audio copilot.">
 
   <!-- PWA & Mobile Meta -->
   <link rel="manifest" href="manifest.json">
@@ -73,6 +73,17 @@
     @keyframes floatParallax {
       0% { transform: translateY(0px) rotate(0deg); }
       100% { transform: translateY(-14px) rotate(1.5deg); }
+    }
+
+    .ticker-pulse-up {
+      color: #10b981 !important;
+      text-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+      transition: color 0.2s ease, text-shadow 0.2s ease;
+    }
+    .ticker-pulse-down {
+      color: #ef4444 !important;
+      text-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
+      transition: color 0.2s ease, text-shadow 0.2s ease;
     }
 
     /* Problem -> Solution Storytelling Cards */
@@ -243,7 +254,7 @@
         <i class="ph-bold ph-chart-polar text-cyan" style="font-size: 1.25rem;"></i>
         <div>
           <div class="text-micro text-cyan">ASYMMETRIC TARGET</div>
-          <div class="num-ticker text-hi" style="font-weight: 700;">+3.20R ($69,966)</div>
+          <div class="num-ticker text-hi" id="hero_orbit_target" style="font-weight: 700;">+3.00R ($78,640)</div>
         </div>
       </div>
     </div>
@@ -314,23 +325,23 @@
        ========================================================================= -->
   <div class="marquee-wrapper">
     <div class="marquee-track">
-      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> BTC $68,432.50 (+4.18%)</span>
-      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> ETH $3,540.20 (+2.95%)</span>
-      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> SOL $182.40 (+6.12%)</span>
-      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> NIFTY 25,120.40 (+0.72%)</span>
-      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> HYUNDAI ₹1,865.40 (+2.45%)</span>
-      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> SWIGGY ₹422.80 (+4.60%)</span>
-      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> WAAREE ₹2,840.00 (+5.80%)</span>
-      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> HAL ₹4,480.00 (+3.10%)</span>
+      <span class="num-ticker" data-ticker-asset="BTC"><i class="ph-bold ph-trend-up text-profit"></i> BTC $77,140.00 <span class="text-profit">(+0.85%)</span></span>
+      <span class="num-ticker" data-ticker-asset="ETH"><i class="ph-bold ph-trend-up text-profit"></i> ETH $2,240.00 <span class="text-profit">(+1.20%)</span></span>
+      <span class="num-ticker" data-ticker-asset="SOL"><i class="ph-bold ph-trend-up text-profit"></i> SOL $95.50 <span class="text-profit">(+3.40%)</span></span>
+      <span class="num-ticker" data-ticker-asset="NIFTY"><i class="ph-bold ph-trend-up text-profit"></i> NIFTY 25,120.40 <span class="text-profit">(+0.72%)</span></span>
+      <span class="num-ticker" data-ticker-asset="HYUNDAI"><i class="ph-bold ph-trend-up text-profit"></i> HYUNDAI ₹1,865.40 <span class="text-profit">(+2.45%)</span></span>
+      <span class="num-ticker" data-ticker-asset="SWIGGY"><i class="ph-bold ph-trend-up text-profit"></i> SWIGGY ₹422.80 <span class="text-profit">(+4.60%)</span></span>
+      <span class="num-ticker" data-ticker-asset="WAAREE"><i class="ph-bold ph-trend-up text-profit"></i> WAAREE ₹2,840.00 <span class="text-profit">(+5.80%)</span></span>
+      <span class="num-ticker" data-ticker-asset="HAL"><i class="ph-bold ph-trend-up text-profit"></i> HAL ₹4,480.00 <span class="text-profit">(+3.10%)</span></span>
       <!-- Duplicate Track for Seamless Infinite Loop -->
-      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> BTC $68,432.50 (+4.18%)</span>
-      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> ETH $3,540.20 (+2.95%)</span>
-      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> SOL $182.40 (+6.12%)</span>
-      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> NIFTY 25,120.40 (+0.72%)</span>
-      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> HYUNDAI ₹1,865.40 (+2.45%)</span>
-      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> SWIGGY ₹422.80 (+4.60%)</span>
-      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> WAAREE ₹2,840.00 (+5.80%)</span>
-      <span class="num-ticker"><i class="ph-bold ph-trend-up text-profit"></i> HAL ₹4,480.00 (+3.10%)</span>
+      <span class="num-ticker" data-ticker-asset="BTC"><i class="ph-bold ph-trend-up text-profit"></i> BTC $77,140.00 <span class="text-profit">(+0.85%)</span></span>
+      <span class="num-ticker" data-ticker-asset="ETH"><i class="ph-bold ph-trend-up text-profit"></i> ETH $2,240.00 <span class="text-profit">(+1.20%)</span></span>
+      <span class="num-ticker" data-ticker-asset="SOL"><i class="ph-bold ph-trend-up text-profit"></i> SOL $95.50 <span class="text-profit">(+3.40%)</span></span>
+      <span class="num-ticker" data-ticker-asset="NIFTY"><i class="ph-bold ph-trend-up text-profit"></i> NIFTY 25,120.40 <span class="text-profit">(+0.72%)</span></span>
+      <span class="num-ticker" data-ticker-asset="HYUNDAI"><i class="ph-bold ph-trend-up text-profit"></i> HYUNDAI ₹1,865.40 <span class="text-profit">(+2.45%)</span></span>
+      <span class="num-ticker" data-ticker-asset="SWIGGY"><i class="ph-bold ph-trend-up text-profit"></i> SWIGGY ₹422.80 <span class="text-profit">(+4.60%)</span></span>
+      <span class="num-ticker" data-ticker-asset="WAAREE"><i class="ph-bold ph-trend-up text-profit"></i> WAAREE ₹2,840.00 <span class="text-profit">(+5.80%)</span></span>
+      <span class="num-ticker" data-ticker-asset="HAL"><i class="ph-bold ph-trend-up text-profit"></i> HAL ₹4,480.00 <span class="text-profit">(+3.10%)</span></span>
     </div>
   </div>
 
@@ -385,7 +396,7 @@
             Gambling on poor risk-reward requires impossible 80%+ win rates to survive.
           </p>
           <div style="margin-top: auto; padding-top: var(--space-2); border-top: 1px solid var(--glass-border);" class="text-xs text-profit">
-            <i class="ph-bold ph-check"></i> <b>MONDAY Answer:</b> Strict 1:3.2 Asymmetry profitable at 35% win rate.
+            <i class="ph-bold ph-check"></i> <b>MONDAY Answer:</b> Strict 1:3.0 Asymmetry profitable at 25%+ win rate.
           </div>
         </div>
 
@@ -485,7 +496,7 @@
 
             <div class="step-check-item confirmed active" id="step_rr">
               <i class="step-check-icon ph-fill ph-check-circle text-profit"></i>
-              <span style="flex: 1;">5. Strict 1:3.2 Asymmetric Risk:Reward Formulation</span>
+              <span style="flex: 1;">5. Strict 1:3.0 Asymmetric Risk:Reward Formulation</span>
               <span class="code-badge">+15 pts</span>
             </div>
 
@@ -513,7 +524,7 @@
             
             <div style="text-align: center;">
               <div class="text-micro text-mid" id="sandbox_asset_name">BTC/USD Perpetual</div>
-              <div class="num-ticker text-h1 text-hi" id="sandbox_asset_price">$68,432.50</div>
+              <div class="num-ticker text-h1 text-hi" id="sandbox_asset_price">$77,140.00</div>
             </div>
 
             <!-- SVG Confluence Gauge -->
@@ -532,15 +543,15 @@
             <div style="width: 100%; background: var(--glass-fill); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border-hi);">
               <div class="flex justify-between items-center text-xs" style="margin-bottom: 6px;">
                 <span class="text-mid">Calculated Entry:</span>
-                <span class="num-ticker text-hi" id="sandbox_calc_entry">$68,430.00</span>
+                <span class="num-ticker text-hi" id="sandbox_calc_entry">$77,140.00</span>
               </div>
               <div class="flex justify-between items-center text-xs" style="margin-bottom: 6px;">
                 <span class="text-risk">Hard Stop Loss (-1.0R):</span>
-                <span class="num-ticker text-risk" id="sandbox_calc_sl">$67,950.00</span>
+                <span class="num-ticker text-risk" id="sandbox_calc_sl">$76,640.00</span>
               </div>
               <div class="flex justify-between items-center text-xs" style="margin-bottom: 6px;">
-                <span class="text-profit">Target (+3.20R):</span>
-                <span class="num-ticker text-profit" id="sandbox_calc_tp">$69,966.00</span>
+                <span class="text-profit">Target (+3.00R):</span>
+                <span class="num-ticker text-profit" id="sandbox_calc_tp">$78,640.00</span>
               </div>
               <div class="flex justify-between items-center text-micro text-low" style="border-top: 1px solid var(--glass-border); padding-top: 6px; margin-top: 6px;">
                 <span>MAX 1% RISK: $20.00</span>
@@ -587,7 +598,7 @@
           </p>
           <div class="flex items-center gap-3 text-xs text-cyan" style="margin-top: auto;">
             <span><i class="ph-bold ph-shield-check"></i> Hard 1H Trend Lock</span>
-            <span><i class="ph-bold ph-chart-line-up"></i> 1:3.2 Asymmetry</span>
+            <span><i class="ph-bold ph-chart-line-up"></i> 1:3.0 Asymmetry</span>
             <span style="margin-left: auto; text-decoration: underline;">Open Blueprint &rarr;</span>
           </div>
         </div>
@@ -707,7 +718,7 @@
           Interactive <span class="text-gradient-institutional">R-Multiple & Expectancy Simulator</span>
         </h2>
         <p class="text-body text-mid">
-          Adjust the sliders below to simulate a 100-trade sequence. See how a strict 1:3.2 Risk-Reward ratio builds wealth even at a conservative 40% win rate.
+          Adjust the sliders below to simulate a 100-trade sequence. See how a strict 1:3.0 Risk-Reward ratio builds wealth even at a conservative 40% win rate.
         </p>
       </div>
 
@@ -748,9 +759,9 @@
             <div class="slider-group">
               <div class="slider-header">
                 <span class="text-body-sm">Asymmetric Risk:Reward Ratio</span>
-                <span class="slider-val-bubble" id="calc_val_rr">1:3.2</span>
+                <span class="slider-val-bubble" id="calc_val_rr">1:3.0</span>
               </div>
-              <input type="range" class="custom-range" id="calc_rr_ratio" min="1.5" max="5.0" step="0.1" value="3.2">
+              <input type="range" class="custom-range" id="calc_rr_ratio" min="1.5" max="5.0" step="0.1" value="3.0">
             </div>
 
             <button type="button" class="btn-secondary" id="calc_btn_reseed" style="margin-top: var(--space-2);">
@@ -888,8 +899,8 @@
               <div style="background: rgba(139, 92, 246, 0.08); padding: 14px 18px; border-radius: var(--radius-sm); border: 1px solid var(--violet-border); font-size: var(--text-body-sm); line-height: 1.6;" id="copilot_msg_monday">
                 🟢 <b>Haan bhai, setup Grade A+ confirm ho chuka hai!</b><br><br>
                 • <b>1H Bias:</b> Bullish Triple-EMA stack locked.<br>
-                • <b>Entry Blueprint:</b> $68,430.00 | <b>Stop Loss:</b> $67,950.00<br>
-                • <b>Target:</b> $69,966.00 with strict <b>1:3.2 Asymmetric R:R</b>.<br><br>
+                • <b>Entry Blueprint:</b> $77,140.00 | <b>Stop Loss:</b> $76,640.00<br>
+                • <b>Target:</b> $78,640.00 with strict <b>1:3.0 Asymmetric R:R</b>.<br><br>
                 Risk strictly 1% ($20.00) calculated hai. Execution panel se initiate kar sakte ho!
               </div>
             </div>
@@ -1044,7 +1055,7 @@
             <span style="width: 10px; height: 10px; background: #f43f5e; border-radius: 2px;"></span>
             <span style="width: 10px; height: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 2px;"></span>
             <span style="width: 10px; height: 10px; background: #10b981; border-radius: 2px;"></span>
-            <span>Profit (+3.2R)</span>
+            <span>Profit (+3.0R)</span>
           </div>
         </div>
       </div>
@@ -1346,6 +1357,7 @@
     import { ExpectancyCalculator } from './js/landing/calculator.js';
     import { FirewallDemoController } from './js/landing/firewallDemo.js';
     import { CopilotDemoController } from './js/landing/copilotDemo.js';
+    import { LiveMarketsFeed } from './js/landing/liveMarkets.js';
     import { DataVizEngine } from './components/dataViz.js';
     import { overlays } from './components/overlays.js';
     import { sfx } from './components/sfx.js';
@@ -1354,18 +1366,24 @@
     new Hero3DVisualizer('hero_canvas_3d');
 
     // 2. Initialize Live Confluence Sandbox
-    new SandboxController();
+    const sandbox = new SandboxController();
 
-    // 3. Initialize R-Multiple Calculator
+    // 3. Initialize R-Multiple Calculator (Strict 1:3.0)
     new ExpectancyCalculator();
 
     // 4. Initialize Liquidation Firewall Demo
     new FirewallDemoController();
 
     // 5. Initialize AI Copilot Conversational Demo
-    new CopilotDemoController();
+    const copilot = new CopilotDemoController();
 
-    // 6. Populate 365-Day PnL Heatmap
+    // 6. Connect Real-Time Live Market Feeds (Public WSS + REST)
+    new LiveMarketsFeed({
+      sandboxController: sandbox,
+      copilotController: copilot
+    });
+
+    // 7. Populate 365-Day PnL Heatmap
     const landingHeatmap = document.getElementById('landing_heatmap_grid');
     DataVizEngine.render365Heatmap(landingHeatmap, ({ day, pnlR }) => {
       sfx.playClick();

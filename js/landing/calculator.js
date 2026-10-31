@@ -11,7 +11,7 @@ export class ExpectancyCalculator {
     this.accountSize = 2000;
     this.riskPct = 1.0;
     this.winRate = 0.40;
-    this.rrRatio = 3.2;
+    this.rrRatio = 3.0;
 
     this.init();
   }

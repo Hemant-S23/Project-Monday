@@ -1342,6 +1342,20 @@
           </div>
           <span class="text-micro text-risk">ARMOR</span>
         </a>
+        <a href="#markets" class="cmd-item">
+          <div class="flex items-center gap-2">
+            <i class="ph-bold ph-globe-hemisphere-east text-violet"></i>
+            <span>Dual-Market Telemetry (Crypto + NSE/BSE)</span>
+          </div>
+          <span class="text-micro text-violet">FEEDS</span>
+        </a>
+        <a href="pages/auth.html" class="cmd-item">
+          <div class="flex items-center gap-2">
+            <i class="ph-bold ph-user-circle text-cyan"></i>
+            <span>Trader Sign In / Create Account</span>
+          </div>
+          <span class="text-micro text-cyan">AUTH</span>
+        </a>
       </div>
     </div>
   </div>
@@ -1407,9 +1421,66 @@
       }
     });
 
-    // 8. Command Palette (Ctrl+K)
-    document.getElementById('nav_btn_cmdk').addEventListener('click', () => {
+    // 8. Command Palette (Ctrl+K & Cmd+K)
+    const cmdPaletteBtn = document.getElementById('nav_btn_cmdk');
+    const cmdModal = document.getElementById('landing_cmd_modal');
+    const cmdInput = document.getElementById('landing_cmd_input');
+
+    const openCmdPalette = () => {
       overlays.openModal('landing_cmd_modal');
+      if (cmdInput) {
+        setTimeout(() => {
+          cmdInput.value = '';
+          cmdInput.focus();
+          document.querySelectorAll('.cmd-palette-results .cmd-item').forEach(el => el.style.display = 'flex');
+        }, 60);
+      }
+    };
+
+    if (cmdPaletteBtn) {
+      cmdPaletteBtn.addEventListener('click', openCmdPalette);
+    }
+
+    // Physical Ctrl+K / Cmd+K keydown trigger
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'k' || e.code === 'KeyK')) {
+        e.preventDefault();
+        if (cmdModal && cmdModal.classList.contains('open')) {
+          overlays.closeModal('landing_cmd_modal');
+        } else {
+          openCmdPalette();
+        }
+      }
+    });
+
+    // Live search filtering
+    if (cmdInput) {
+      cmdInput.addEventListener('input', () => {
+        const query = cmdInput.value.toLowerCase().trim();
+        const items = document.querySelectorAll('.cmd-palette-results .cmd-item');
+        items.forEach(item => {
+          const text = item.textContent.toLowerCase();
+          item.style.display = text.includes(query) ? 'flex' : 'none';
+        });
+      });
+
+      cmdInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const visible = Array.from(document.querySelectorAll('.cmd-palette-results .cmd-item')).filter(it => it.style.display !== 'none');
+          if (visible.length > 0) {
+            e.preventDefault();
+            visible[0].click();
+            overlays.closeModal('landing_cmd_modal');
+          }
+        }
+      });
+    }
+
+    // Close palette when any item is clicked
+    document.querySelectorAll('.cmd-palette-results .cmd-item').forEach(item => {
+      item.addEventListener('click', () => {
+        overlays.closeModal('landing_cmd_modal');
+      });
     });
 
     // 9. Engine Drawer Deep Dive Handler

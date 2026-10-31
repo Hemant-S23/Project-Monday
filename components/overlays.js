@@ -132,17 +132,30 @@ export class OverlaysController {
 
   // --- COMMAND PALETTE (Ctrl+K) ---
   initCommandPaletteListener() {
+    // Backdrop click dismiss for all modals
+    window.addEventListener('click', (e) => {
+      if (e.target && e.target.classList && e.target.classList.contains('modal-backdrop')) {
+        this.closeAllModals();
+      }
+    });
+
     window.addEventListener('keydown', (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'k' || e.code === 'KeyK')) {
         e.preventDefault();
-        const cmdPalette = document.getElementById('cmd_palette_modal');
+        const cmdPalette = document.getElementById('landing_cmd_modal') || document.getElementById('cmd_palette_modal');
         if (cmdPalette) {
           if (cmdPalette.classList.contains('open')) {
-            this.closeModal('cmd_palette_modal');
+            this.closeModal(cmdPalette.id);
           } else {
-            this.openModal('cmd_palette_modal');
+            this.openModal(cmdPalette.id);
             const input = cmdPalette.querySelector('.cmd-palette-input');
-            if (input) setTimeout(() => input.focus(), 80);
+            if (input) {
+              setTimeout(() => {
+                input.value = '';
+                input.focus();
+                cmdPalette.querySelectorAll('.cmd-item').forEach(it => it.style.display = 'flex');
+              }, 60);
+            }
           }
         }
       }

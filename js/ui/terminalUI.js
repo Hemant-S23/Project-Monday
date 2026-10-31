@@ -1523,6 +1523,13 @@ export class TerminalUI {
       guestBtn.addEventListener('click', (e) => {
         if (e) e.preventDefault();
         console.log('[TerminalUI] Guest login button clicked.');
+        const riskAccepted = localStorage.getItem('monday_risk_accepted') === 'true';
+        const guestModal = document.getElementById('modal_guest_risk');
+        if (!riskAccepted && guestModal) {
+          this.hideAuthOverlay();
+          guestModal.style.display = 'flex';
+          return;
+        }
         if (this.callbacks.onGuestLogin) {
           this.callbacks.onGuestLogin();
         } else {
@@ -2155,21 +2162,31 @@ export class TerminalUI {
     const avatarIcon = document.getElementById('user_avatar_icon');
 
     if (user) {
-      const displayName = user.name || (user.email ? user.email.split('@')[0] : 'Guest Trader');
+      const savedTraderName = localStorage.getItem('monday_trader_name');
+      const displayName = (user.name && user.name !== 'Guest Trader')
+        ? user.name
+        : (savedTraderName || (user.email ? user.email.split('@')[0] : 'Guest Trader'));
       if (nameEl) nameEl.textContent = displayName;
 
       let initials = 'GT';
-      if (user.isGuest) {
+      const cleanName = displayName.trim();
+      const parts = cleanName.split(/\s+/);
+      if (cleanName && cleanName !== 'Guest Trader') {
+        if (parts.length >= 2) {
+          initials = (parts[0][0] + parts[1][0]).toUpperCase();
+        } else if (cleanName.length >= 2) {
+          initials = cleanName.slice(0, 2).toUpperCase();
+        } else {
+          initials = cleanName.toUpperCase();
+        }
+      } else {
         initials = 'GT';
+      }
+
+      if (user.isGuest) {
         if (badgeEl) badgeEl.innerHTML = '<i class="ph-fill ph-shield-check"></i> Pro Paper Account';
         if (logoutText) logoutText.textContent = 'Sign Out / Switch Account';
       } else {
-        const parts = displayName.trim().split(/\s+/);
-        if (parts.length >= 2) {
-          initials = (parts[0][0] + parts[1][0]).toUpperCase();
-        } else {
-          initials = displayName.slice(0, 2).toUpperCase();
-        }
         if (badgeEl) badgeEl.innerHTML = '<i class="ph-fill ph-shield-check"></i> Verified Account';
         if (logoutText) logoutText.textContent = 'Sign Out';
       }
@@ -2180,6 +2197,12 @@ export class TerminalUI {
       const dInit = document.getElementById('drawer_avatar_initials');
       if (dName) dName.textContent = displayName;
       if (dInit) dInit.textContent = initials;
+
+      // Update sidebar dock avatar & name
+      const saasAvatar = document.querySelector('.saas-footer-avatar');
+      const saasUserName = document.querySelector('.saas-footer-user-name');
+      if (saasAvatar) saasAvatar.textContent = initials;
+      if (saasUserName) saasUserName.textContent = displayName !== 'Guest Trader' ? displayName : 'Delta Pro Trader';
 
       if (avatarIcon) {
         avatarIcon.className = user.isGuest ? 'ph ph-user' : 'ph ph-check-circle';

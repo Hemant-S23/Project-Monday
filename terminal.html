@@ -49,6 +49,116 @@
     }
   }
   </script>
+
+  <style>
+    /* Guest Onboarding & Risk Disclosure Gatekeeper Modal */
+    .guest-risk-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(4, 5, 10, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4, 16px);
+      animation: modalFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .guest-risk-modal {
+      width: 100%;
+      max-width: 540px;
+      background: linear-gradient(135deg, rgba(16, 20, 32, 0.96) 0%, rgba(8, 10, 18, 0.98) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-lg, 16px);
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8), 0 0 24px rgba(6, 182, 212, 0.15);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .guest-risk-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .risk-badge-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: #f59e0b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+    .guest-risk-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .risk-disclosure-scrollbox {
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 175px;
+      overflow-y: auto;
+    }
+    .risk-legal-text {
+      font-size: 0.76rem;
+      color: #94a3b8;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .risk-legal-text strong {
+      color: #f1f5f9;
+    }
+    .risk-agree-checkbox-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      transition: border-color 0.15s ease;
+      user-select: none;
+    }
+    .risk-agree-checkbox-label:hover {
+      border-color: rgba(6, 182, 212, 0.4);
+    }
+    .risk-checkbox {
+      margin-top: 3px;
+      accent-color: #06b6d4;
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+    .guest-risk-footer {
+      padding: 12px 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.2);
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.97); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
 </head>
 <body data-mobile-page="chart">
 
@@ -283,6 +393,64 @@
     </div>
   </div>
 
+  <!-- =========================================================================
+       GUEST ONBOARDING & LEGAL RISK DISCLOSURE MODAL (Terminal Gatekeeper)
+       ========================================================================= -->
+  <div id="modal_guest_risk" class="guest-risk-overlay" style="display: none;">
+    <div class="guest-risk-modal glass-card">
+      <div class="guest-risk-header">
+        <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 10px;">
+          <div class="risk-badge-icon">
+            <i class="ph-bold ph-shield-warning"></i>
+          </div>
+          <div>
+            <h3 style="font-size: 1.15rem; margin: 0; color: #f1f5f9; font-weight: 700;">Trader Setup & Regulatory Risk Disclosure</h3>
+            <p style="font-size: 0.78rem; margin: 0; color: #94a3b8;">Establish your trader identity before entering Project MONDAY Workstation</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="guest-risk-body">
+        <!-- Trader Name Input -->
+        <div style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 6px;">
+          <label for="input_guest_trader_name" style="font-size: 0.75rem; font-weight: 600; color: #06b6d4; text-transform: uppercase; letter-spacing: 0.5px;">Trader Name / Alias *</label>
+          <div style="position: relative;">
+            <i class="ph ph-user" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 1.1rem; color: #64748b;"></i>
+            <input type="text" id="input_guest_trader_name" placeholder="e.g. Hemant / DeltaTrader" style="width: 100%; box-sizing: border-box; padding: 12px 16px 12px 42px; border-radius: 8px; background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.12); color: #fff; font-size: 0.9rem; outline: none;" maxlength="32" autocomplete="name">
+          </div>
+          <span style="font-size: 0.7rem; color: #64748b;">Used by MONDAY AI Copilot to personalize voice greetings and workstation logs.</span>
+        </div>
+
+        <!-- Statutory Regulatory & Risk Warning -->
+        <div class="risk-disclosure-scrollbox">
+          <div style="display: flex; align-items: center; gap: 6px; color: #f59e0b; font-weight: 700; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.5px;">
+            <i class="ph-bold ph-warning-octagon"></i> Statutory Risk Warning & Regulatory Disclaimer
+          </div>
+          <div class="risk-legal-text">
+            <p><strong>1. Extreme Capital & Derivatives Risk:</strong> Trading cryptocurrencies, equities, indices, and derivatives (F&O) involves substantial risk of loss and is not suitable for all investors. Market volatility can cause rapid financial liquidation. You may lose all or more than your committed capital.</p>
+            <p><strong>2. Non-Advisory Quantitative Tool:</strong> Project MONDAY and its algorithmic decision modules are strictly educational, computational modeling, and paper-trading simulation interfaces. Project MONDAY does <strong>NOT</strong> provide SEBI (India), SEC, or any financial advisory services.</p>
+            <p><strong>3. Assumption of Responsibility:</strong> All algorithmic triggers, order executions, and leverage multipliers are executed at your sole discretion. You accept 100% personal liability for all paper and live execution outcomes.</p>
+          </div>
+        </div>
+
+        <!-- Mandatory Agreement Checkbox -->
+        <label class="risk-agree-checkbox-label" for="chk_guest_risk_agree">
+          <input type="checkbox" id="chk_guest_risk_agree" class="risk-checkbox">
+          <span style="font-size: 0.78rem; color: #cbd5e1; line-height: 1.45;">
+            I confirm that I am at least 18 years of age, acknowledge the severe financial risks of market trading, and agree to the <strong style="color: #fff;">Terms of Service</strong> & <strong style="color: #fff;">Regulatory Risk Disclosures</strong>.
+          </span>
+        </label>
+      </div>
+
+      <div class="guest-risk-footer">
+        <a href="index.html" class="btn-ghost" style="padding: 10px 18px; font-size: 0.85rem; color: #94a3b8; text-decoration: none; border-radius: 8px;">Return to Home</a>
+        <button type="button" class="btn-primary" id="btn_confirm_guest_launch" disabled style="padding: 10px 24px; font-size: 0.9rem; opacity: 0.5; cursor: not-allowed; background: linear-gradient(135deg, #06b6d4, #3b82f6); color: #fff; border: none; border-radius: 8px; font-weight: 600;">
+          Agree & Launch Workstation <i class="ph-bold ph-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Slide-In Mobile Drawer (Android Native APK Drawer) -->
   <div class="mobile-drawer-backdrop" id="mobile_drawer_backdrop"></div>
   <aside class="mobile-drawer" id="mobile_drawer" aria-label="Navigation Drawer">
@@ -442,9 +610,9 @@
             <span class="saas-nav-icon"><i class="ph ph-sliders"></i></span>
             <span class="saas-nav-label">Risk & Engine</span>
           </button>
-          <a href="landing.html" class="saas-nav-item" style="text-decoration: none; margin-top: 4px;">
+          <a href="index.html" class="saas-nav-item" style="text-decoration: none; margin-top: 4px;" title="Go to Home Overview">
             <span class="saas-nav-icon"><i class="ph ph-house"></i></span>
-            <span class="saas-nav-label">Marketing Home</span>
+            <span class="saas-nav-label">Home</span>
           </a>
         </nav>
 
@@ -2347,6 +2515,51 @@
 
   <!-- App Script Entrypoint -->
   <script type="module" src="js/app.js"></script>
+
+  <!-- Terminal Gatekeeper: Mandatory Onboarding & Risk Disclosure -->
+  <script type="module">
+    function initTerminalRiskGate() {
+      const riskAccepted = localStorage.getItem('monday_risk_accepted') === 'true';
+      const guestModal = document.getElementById('modal_guest_risk');
+      const inputName = document.getElementById('input_guest_trader_name');
+      const chkAgree = document.getElementById('chk_guest_risk_agree');
+      const btnLaunch = document.getElementById('btn_confirm_guest_launch');
+
+      if (!riskAccepted && guestModal) {
+        guestModal.style.display = 'flex';
+        const savedName = localStorage.getItem('monday_trader_name');
+        if (savedName && inputName) inputName.value = savedName;
+
+        chkAgree?.addEventListener('change', () => {
+          const ok = chkAgree.checked;
+          btnLaunch.disabled = !ok;
+          btnLaunch.style.opacity = ok ? '1' : '0.5';
+          btnLaunch.style.cursor = ok ? 'pointer' : 'not-allowed';
+        });
+
+        btnLaunch?.addEventListener('click', async () => {
+          if (!chkAgree?.checked) return;
+          let traderName = (inputName?.value || '').trim();
+          if (!traderName) traderName = 'Guest Trader';
+          localStorage.setItem('monday_trader_name', traderName);
+          localStorage.setItem('monday_risk_accepted', 'true');
+          guestModal.style.display = 'none';
+
+          const app = window.__AI_COPILOT_APP__ || window.mondayApp;
+          if (app && app.authManager) {
+            const res = await app.authManager.loginAsGuest(traderName);
+            app.handleAuthSuccess(res.user);
+          }
+        });
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initTerminalRiskGate);
+    } else {
+      initTerminalRiskGate();
+    }
+  </script>
 
   <!-- 3D Liquid Volatility Mesh Background (Matching Landing Page Experience) -->
   <script type="module">

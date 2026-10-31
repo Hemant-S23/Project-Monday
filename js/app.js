@@ -111,7 +111,8 @@ class App {
         }
       },
       onGuestLogin: async () => {
-        const res = await this.authManager.loginAsGuest();
+        const savedName = localStorage.getItem('monday_trader_name');
+        const res = await this.authManager.loginAsGuest(savedName);
         this.handleAuthSuccess(res.user);
       },
       onSignOut: () => {
@@ -291,12 +292,22 @@ class App {
 
     // 5. Initial greeting from MONDAY
     setTimeout(() => {
-      const initialGreeting = `Namaste! Main hoon **MONDAY** (**M**arket-**O**riented **N**eural **D**ecision **A**ssistant for **Y**ou). 🧠✨\n\n` +
+      const user = this.authManager && this.authManager.getUser ? this.authManager.getUser() : null;
+      const savedTraderName = localStorage.getItem('monday_trader_name');
+      const rawName = (user?.name && user.name !== 'Guest Trader') ? user.name : (savedTraderName || '');
+      const firstName = rawName.trim().split(/\s+/)[0] || '';
+      const salutation = firstName ? `Namaste ${firstName} bhai!` : `Namaste!`;
+
+      const initialGreeting = `${salutation} Main hoon **MONDAY** (**M**arket-**O**riented **N**eural **D**ecision **A**ssistant for **Y**ou). 🧠✨\n\n` +
         `Main continuously market observe kar rahi hoon — ab **Crypto** ke sath-sath **Full Indian Market (NSE/BSE)** bhi fully active hai! ` +
         `1H aur 5M structure analyze kar rahi hoon aur strict 1% risk calculate kar rahi hoon.\n\n` +
         `Tum mujhse text ya voice ke through freely koi bhi market scenario discuss kar sakte ho!`;
       this.ui.appendChatMessage('copilot', initialGreeting);
-      this.voiceAssistant.speak('Namaste! Main hoon Monday. Crypto aur Indian Market dono active hain. Market analysis ready hai.');
+
+      const voiceGreeting = firstName
+        ? `Namaste ${firstName} bhai! Main hoon Monday. Crypto aur Indian Market dono active hain. Market analysis ready hai.`
+        : `Namaste! Main hoon Monday. Crypto aur Indian Market dono active hain. Market analysis ready hai.`;
+      this.voiceAssistant.speak(voiceGreeting);
     }, 1200);
 
     // 6. Setup interval for continuous position updates, evaluation & Supabase sync
@@ -1497,4 +1508,5 @@ document.addEventListener('DOMContentLoaded', () => {
   const app = new App();
   app.init().catch(err => console.error('[App] Init failed:', err));
   window.__AI_COPILOT_APP__ = app;
+  window.mondayApp = app;
 });

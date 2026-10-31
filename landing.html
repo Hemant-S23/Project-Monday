@@ -1527,7 +1527,21 @@
         sfx.playClick();
       });
     });
-    // 11. Register PWA Offline Service Worker
+
+    // 11. Smart Gatekeeper for Workstation CTAs
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest('a[href*="terminal.html"]');
+      if (link) {
+        const riskAccepted = localStorage.getItem('monday_risk_accepted') === 'true';
+        const hasSession = localStorage.getItem('monday_active_session_v1') || localStorage.getItem('monday_guest_uuid');
+        if (!riskAccepted || !hasSession) {
+          e.preventDefault();
+          window.location.href = 'pages/auth.html';
+        }
+      }
+    });
+
+    // 12. Register PWA Offline Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').catch(() => {});

@@ -2888,10 +2888,16 @@
           localStorage.setItem('monday_risk_accepted', 'true');
           guestModal.style.display = 'none';
 
-          const app = window.__AI_COPILOT_APP__ || window.mondayApp;
-          if (app && app.authManager) {
-            const res = await app.authManager.loginAsGuest(traderName);
-            app.handleAuthSuccess(res.user);
+          try {
+            const app = window.__AI_COPILOT_APP__ || window.mondayApp;
+            if (app && app.authManager) {
+              const res = await app.authManager.loginAsGuest(traderName);
+              if (res && res.user) {
+                app.handleAuthSuccess(res.user);
+              }
+            }
+          } catch (e) {
+            console.warn('[Terminal] Gatekeeper session init:', e);
           }
         });
       }

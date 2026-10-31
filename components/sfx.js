@@ -120,6 +120,26 @@ export class SoundEffectsController {
     osc.start(now);
     osc.stop(now + 0.35);
   }
+
+  /**
+   * Harmonious Affirmative Chime (Success / Unlock)
+   */
+  playSuccess() {
+    this.playOrderExecuted();
+  }
+
+  /**
+   * Generic SFX Router
+   */
+  play(name = 'click') {
+    if (name === 'orderFilled' || name === 'success') {
+      this.playOrderExecuted();
+    } else if (name === 'alert' || name === 'shield') {
+      this.playShieldAlert();
+    } else {
+      this.playClick();
+    }
+  }
 }
 
 export const sfx = new SoundEffectsController();

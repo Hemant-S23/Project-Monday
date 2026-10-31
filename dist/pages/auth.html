@@ -945,7 +945,9 @@
     if (chkGuestRiskAgree) {
       chkGuestRiskAgree.addEventListener('change', () => {
         const canLaunch = validateGuestForm();
-        if (canLaunch) sfx.playSuccess();
+        if (canLaunch) {
+          try { sfx?.playSuccess?.(); } catch (e) {}
+        }
       });
     }
 
@@ -974,17 +976,18 @@
         localStorage.setItem('monday_risk_accepted', 'true');
 
         btnConfirmGuestLaunch.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i> Initializing Workstation...';
-        sfx.playSuccess();
+        try { sfx?.playSuccess?.(); } catch (e) {}
 
         try {
-          await authManager.loginAsGuest(traderName);
+          if (authManager && typeof authManager.loginAsGuest === 'function') {
+            await authManager.loginAsGuest(traderName);
+          }
         } catch (e) {
           console.warn('[Auth] Guest login warning:', e);
         }
 
-        setTimeout(() => {
-          window.location.href = '../terminal.html';
-        }, 300);
+        // Guaranteed instant redirect
+        window.location.href = '../terminal.html';
       });
     }
 

@@ -40,6 +40,15 @@
 
   <!-- Supabase JS Client (Non-blocking defer for instant HTML paint) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Three.js Native ESM Importmap for Zero-Lag 3D Terrain -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+    }
+  }
+  </script>
 </head>
 <body data-mobile-page="chart">
 

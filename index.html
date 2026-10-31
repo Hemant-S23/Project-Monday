@@ -344,6 +344,338 @@
       opacity: 1;
       transform: translateX(3px);
     }
+
+    /* =========================================================================
+       AI COPILOT LUXURY CONVERSATIONAL COCKPIT
+       ========================================================================= */
+    .copilot-luxury-cockpit {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 22px;
+      width: 100%;
+      margin-top: 28px;
+    }
+
+    @media (min-width: 980px) {
+      .copilot-luxury-cockpit {
+        grid-template-columns: 360px 1fr;
+        gap: 24px;
+        align-items: stretch;
+      }
+    }
+
+    .copilot-voice-card {
+      position: relative;
+      background: linear-gradient(165deg, rgba(20, 24, 38, 0.45) 0%, rgba(9, 13, 22, 0.72) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 20px;
+      padding: 32px 26px 26px 26px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .copilot-voice-card::before {
+      content: '';
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.16) 0%, transparent 70%);
+      filter: blur(35px);
+      pointer-events: none;
+    }
+
+    .copilot-telemetry-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: rgba(255, 255, 255, 0.45);
+      background: rgba(255, 255, 255, 0.03);
+      padding: 4px 12px;
+      border-radius: 100px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .copilot-orb-stage {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 22px 0 16px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .copilot-orb-glow {
+      position: absolute;
+      inset: -10px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.55) 0%, rgba(6, 182, 212, 0.25) 50%, transparent 75%);
+      filter: blur(20px);
+      animation: orbBreathe 4s ease-in-out infinite alternate;
+    }
+
+    .copilot-orb-core {
+      position: relative;
+      width: 82px;
+      height: 82px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 50%, #06b6d4 100%);
+      box-shadow: 0 0 28px rgba(139, 92, 246, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 2rem;
+      animation: orbFloat 4.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes orbBreathe {
+      0% { transform: scale(0.92); opacity: 0.6; }
+      100% { transform: scale(1.1); opacity: 0.95; }
+    }
+
+    @keyframes orbFloat {
+      0% { transform: translateY(0px) rotate(0deg); }
+      100% { transform: translateY(-6px) rotate(3deg); }
+    }
+
+    .copilot-identity-title {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #f8fafc;
+      letter-spacing: -0.01em;
+      margin: 0;
+    }
+
+    .copilot-scenario-pill {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      padding: 4px 12px;
+      border-radius: 100px;
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      background: rgba(139, 92, 246, 0.08);
+      color: var(--violet);
+      margin-top: 6px;
+      display: inline-block;
+      transition: all 0.3s ease;
+    }
+
+    .copilot-waveform-hud {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      height: 32px;
+      margin: 18px 0 22px 0;
+    }
+
+    .copilot-wave-bar {
+      width: 3.5px;
+      height: 8px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #8b5cf6 0%, #06b6d4 100%);
+      animation: wavePulseHud 1.3s ease-in-out infinite alternate;
+    }
+
+    @keyframes wavePulseHud {
+      0% { height: 6px; opacity: 0.35; }
+      100% { height: 26px; opacity: 1; box-shadow: 0 0 8px rgba(139, 92, 246, 0.7); }
+    }
+
+    .copilot-wave-bar:nth-child(2) { animation-delay: 0.12s; }
+    .copilot-wave-bar:nth-child(3) { animation-delay: 0.24s; }
+    .copilot-wave-bar:nth-child(4) { animation-delay: 0.36s; }
+    .copilot-wave-bar:nth-child(5) { animation-delay: 0.18s; }
+    .copilot-wave-bar:nth-child(6) { animation-delay: 0.42s; }
+    .copilot-wave-bar:nth-child(7) { animation-delay: 0.1s; }
+    .copilot-wave-bar:nth-child(8) { animation-delay: 0.3s; }
+    .copilot-wave-bar:nth-child(9) { animation-delay: 0.22s; }
+
+    .copilot-waveform-hud.speaking .copilot-wave-bar,
+    .waveform-bars.speaking .wave-bar {
+      animation-duration: 0.45s;
+      background: linear-gradient(180deg, #a78bfa 0%, #22d3ee 100%);
+      box-shadow: 0 0 14px rgba(167, 139, 250, 0.9);
+    }
+
+    .copilot-listen-btn {
+      width: 100%;
+      padding: 13px 20px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #7c3aed 0%, #6366f1 50%, #06b6d4 100%);
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 0.92rem;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 18px rgba(124, 58, 237, 0.35);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .copilot-listen-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 26px rgba(124, 58, 237, 0.55);
+      filter: brightness(1.1);
+    }
+
+    .copilot-listen-btn:active {
+      transform: translateY(0);
+    }
+
+    .copilot-chat-card {
+      position: relative;
+      background: linear-gradient(165deg, rgba(20, 24, 38, 0.45) 0%, rgba(9, 13, 22, 0.72) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 20px;
+      padding: 24px 28px 22px 28px;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .copilot-chat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .copilot-segment-group {
+      display: inline-flex;
+      background: rgba(0, 0, 0, 0.45);
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      gap: 4px;
+    }
+
+    .copilot-tab-btn {
+      padding: 7px 16px;
+      font-size: 0.825rem;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.55);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .copilot-tab-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .copilot-tab-btn.active {
+      color: #ffffff;
+      background: rgba(139, 92, 246, 0.2);
+      border-color: rgba(139, 92, 246, 0.4);
+      box-shadow: 0 2px 10px rgba(139, 92, 246, 0.2);
+      font-weight: 600;
+    }
+
+    .copilot-tech-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: rgba(139, 92, 246, 0.9);
+      background: rgba(139, 92, 246, 0.08);
+      border: 1px solid rgba(139, 92, 246, 0.25);
+      padding: 5px 12px;
+      border-radius: 8px;
+    }
+
+    .copilot-chat-body {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex-grow: 1;
+    }
+
+    .copilot-msg-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .copilot-msg-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.9rem;
+    }
+
+    .copilot-msg-bubble-user {
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 14px;
+      padding: 13px 18px;
+      color: #e2e8f0;
+      font-size: 0.885rem;
+      line-height: 1.5;
+      max-width: 85%;
+    }
+
+    .copilot-msg-bubble-ai {
+      background: linear-gradient(155deg, rgba(139, 92, 246, 0.08) 0%, rgba(6, 182, 212, 0.04) 100%);
+      border: 1px solid rgba(139, 92, 246, 0.22);
+      border-radius: 16px;
+      padding: 18px 22px;
+      color: #f1f5f9;
+      font-size: 0.9rem;
+      line-height: 1.68;
+      max-width: 95%;
+      box-shadow: 0 4px 20px -4px rgba(139, 92, 246, 0.12);
+    }
+
+    .copilot-console-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 14px;
+      margin-top: 18px;
+      font-size: 0.72rem;
+      color: rgba(255, 255, 255, 0.4);
+      font-family: var(--font-mono);
+      letter-spacing: 0.02em;
+    }
   </style>
 </head>
 <body>
@@ -1028,82 +1360,98 @@
   </section>
 
   <!-- =========================================================================
-       S6: MEET MONDAY (CONVERSATIONAL AI COPILOT)
+       S6: MEET MONDAY (CONVERSATIONAL AI COPILOT) - LUXURY SPATIAL COCKPIT
        ========================================================================= -->
   <section class="section" id="copilot">
     <div class="container">
-      <div class="section-header">
-        <div class="section-tag glass-pill" style="color: var(--violet); border-color: var(--violet-border);">
+      <div class="section-header" style="text-align: center; max-width: 780px; margin: 0 auto var(--space-8);">
+        <div class="section-tag glass-pill" style="color: var(--violet); border-color: var(--violet-border); display: inline-flex; margin-bottom: 12px;">
           <i class="ph-bold ph-waveform"></i> BILINGUAL NEURAL SENTINEL
         </div>
-        <h2 class="text-display-1">
+        <h2 class="text-display-1" style="letter-spacing: -0.02em;">
           Meet MONDAY. <br>
           The AI companion that <span class="text-gradient-neural">protects your psychology.</span>
         </h2>
-        <p class="text-body text-mid">
+        <p class="text-body text-mid" style="margin-top: 10px; font-size: 0.95rem;">
           Not a rigid robotic script. MONDAY talks like a razor-sharp, empathetic institutional trading partner in fluent Hinglish and English.
         </p>
       </div>
 
-      <div class="bento-grid">
+      <div class="copilot-luxury-cockpit">
         
         <!-- Left: Interactive Animated Orb & Audio Waveform HUD -->
-        <div class="glass-card bento-col-5 flex flex-col items-center justify-center component-card-wrap" style="text-align: center; min-height: 380px;">
-          
-          <!-- Pulsing Orb -->
-          <div style="position: relative; width: 140px; height: 140px; margin-bottom: var(--space-4);">
-            <div style="position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle, var(--violet) 0%, transparent 70%); filter: blur(20px); opacity: 0.8; animation: pulseRipple 3s infinite;"></div>
-            <div style="position: absolute; inset: 20px; border-radius: 50%; background: linear-gradient(135deg, var(--violet) 0%, var(--cyan) 100%); box-shadow: 0 0 35px var(--violet-glow-hi); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 2.5rem;">
+        <div class="copilot-voice-card">
+          <div class="copilot-telemetry-badge">
+            <span class="ai-pulse-dot" style="background: var(--violet); box-shadow: 0 0 8px var(--violet);"></span>
+            VOICE TELEMETRY ACTIVE
+          </div>
+
+          <!-- Pulsing Concentric Neural Orb -->
+          <div class="copilot-orb-stage">
+            <div class="copilot-orb-glow"></div>
+            <div class="copilot-orb-core">
               <i class="ph-bold ph-sparkle"></i>
             </div>
           </div>
 
-          <h3 class="text-h2">MONDAY AI</h3>
-          <span class="text-micro text-violet" id="copilot_scenario_tag">EXECUTION BLUEPRINT</span>
+          <h3 class="copilot-identity-title">MONDAY AI</h3>
+          <span class="copilot-scenario-pill" id="copilot_scenario_tag">EXECUTION BLUEPRINT</span>
 
-          <!-- Dynamic Waveform Bars -->
-          <div class="waveform-bars" style="margin: var(--space-3) 0;">
-            <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-            <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-            <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+          <!-- Dynamic Waveform Frequency Bars -->
+          <div class="copilot-waveform-hud waveform-bars">
+            <div class="copilot-wave-bar wave-bar"></div>
+            <div class="copilot-wave-bar wave-bar"></div>
+            <div class="copilot-wave-bar wave-bar"></div>
+            <div class="copilot-wave-bar wave-bar"></div>
+            <div class="copilot-wave-bar wave-bar"></div>
+            <div class="copilot-wave-bar wave-bar"></div>
+            <div class="copilot-wave-bar wave-bar"></div>
+            <div class="copilot-wave-bar wave-bar"></div>
+            <div class="copilot-wave-bar wave-bar"></div>
           </div>
 
-          <button type="button" class="btn-primary" id="copilot_btn_voice_play">
-            <i class="ph-bold ph-play"></i> Hear MONDAY Speak
+          <button type="button" class="copilot-listen-btn btn-primary" id="copilot_btn_voice_play">
+            <i class="ph-bold ph-speaker-high" style="font-size: 1.15rem;"></i> Hear MONDAY Speak
           </button>
         </div>
 
-        <!-- Right: Transcript & Scenario Switcher -->
-        <div class="glass-card bento-col-7 component-card-wrap">
+        <!-- Right: Intelligent Dialogue Console -->
+        <div class="copilot-chat-card">
           
-          <!-- Scenario Tabs -->
-          <div class="flex items-center justify-between" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-            <div class="segmented-control">
-              <button type="button" class="segment-btn active" id="copilot_tab_setup">Scenario 1: Trade Confirmation</button>
-              <button type="button" class="segment-btn" id="copilot_tab_tilt">Scenario 2: Anti-Revenge Shield</button>
+          <!-- Scenario Tabs & API Badge -->
+          <div class="copilot-chat-header">
+            <div class="copilot-segment-group segmented-control">
+              <button type="button" class="copilot-tab-btn segment-btn active" id="copilot_tab_setup">
+                <i class="ph-bold ph-chart-line-up"></i> Scenario 1: Trade Confirmation
+              </button>
+              <button type="button" class="copilot-tab-btn segment-btn" id="copilot_tab_tilt">
+                <i class="ph-bold ph-shield-warning"></i> Scenario 2: Anti-Revenge Shield
+              </button>
             </div>
-            <span class="code-badge text-violet">Web Speech API</span>
+            <div class="copilot-tech-badge code-badge text-violet">
+              <i class="ph-bold ph-waveform"></i> Web Speech API &bull; hi-IN / en-US
+            </div>
           </div>
 
           <!-- Chat Transcript Container -->
-          <div class="flex flex-col gap-3" style="margin-top: var(--space-2); flex: 1;">
+          <div class="copilot-chat-body">
             
             <!-- User Message Bubble -->
-            <div class="flex items-start gap-2" style="max-width: 80%;">
-              <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--glass-fill-ultra); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--text-mid);">
+            <div class="copilot-msg-row" style="max-width: 84%;">
+              <div class="copilot-msg-avatar" style="background: rgba(255, 255, 255, 0.05); color: var(--text-mid); border: 1px solid rgba(255, 255, 255, 0.08);">
                 <i class="ph-bold ph-user"></i>
               </div>
-              <div style="background: rgba(255, 255, 255, 0.05); padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); font-size: var(--text-body-sm);" id="copilot_msg_user">
+              <div class="copilot-msg-bubble-user" id="copilot_msg_user">
                 Bhai, BTC me buy karun kya abhi? Setup ready hai?
               </div>
             </div>
 
             <!-- MONDAY AI Response Bubble -->
-            <div class="flex items-start gap-2" style="max-width: 90%; align-self: flex-start;">
-              <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--violet); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #fff; box-shadow: 0 0 10px var(--violet-glow);">
+            <div class="copilot-msg-row" style="max-width: 98%;">
+              <div class="copilot-msg-avatar" style="background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: #fff; box-shadow: 0 0 14px rgba(139, 92, 246, 0.5);">
                 <i class="ph-bold ph-sparkle"></i>
               </div>
-              <div style="background: rgba(139, 92, 246, 0.08); padding: 14px 18px; border-radius: var(--radius-sm); border: 1px solid var(--violet-border); font-size: var(--text-body-sm); line-height: 1.6;" id="copilot_msg_monday">
+              <div class="copilot-msg-bubble-ai" id="copilot_msg_monday">
                 🟢 <b>Haan bhai, setup Grade A+ confirm ho chuka hai!</b><br><br>
                 • <b>1H Bias:</b> Bullish Triple-EMA stack locked.<br>
                 • <b>Entry Blueprint:</b> $77,140.00 | <b>Stop Loss:</b> $76,640.00<br>
@@ -1112,6 +1460,15 @@
               </div>
             </div>
 
+          </div>
+
+          <!-- Console Footer Bar -->
+          <div class="copilot-console-footer">
+            <span style="display: flex; align-items: center; gap: 6px;">
+              <i class="ph-bold ph-shield-check" style="color: var(--profit); font-size: 0.95rem;"></i>
+              Zero-Latency Anti-Tilt Behavioral Interception
+            </span>
+            <span>Adaptive Dual-Dialect Synthesizer</span>
           </div>
 
         </div>

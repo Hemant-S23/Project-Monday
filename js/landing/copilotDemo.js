@@ -98,8 +98,8 @@ export class CopilotDemoController {
     const sc = this.scenarios[this.currentScenario];
     if (!sc) return;
 
-    const userMsgEl = document.getElementById('copilot_user_msg');
-    const mondayMsgEl = document.getElementById('copilot_monday_msg');
+    const userMsgEl = document.getElementById('copilot_msg_user') || document.getElementById('copilot_user_msg');
+    const mondayMsgEl = document.getElementById('copilot_msg_monday') || document.getElementById('copilot_monday_msg');
     const tagEl = document.getElementById('copilot_scenario_tag');
 
     if (userMsgEl) userMsgEl.textContent = sc.userMsg;
@@ -128,6 +128,17 @@ export class CopilotDemoController {
       utterance.lang = this.currentLang;
       utterance.rate = 1.05;
       utterance.pitch = 1.0;
+
+      const waveHud = document.querySelector('.copilot-waveform-hud') || document.querySelector('.waveform-bars');
+      if (waveHud) waveHud.classList.add('speaking');
+
+      utterance.onend = () => {
+        if (waveHud) waveHud.classList.remove('speaking');
+      };
+      utterance.onerror = () => {
+        if (waveHud) waveHud.classList.remove('speaking');
+      };
+
       window.speechSynthesis.speak(utterance);
       sfx.playClick();
     }

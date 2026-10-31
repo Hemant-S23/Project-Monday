@@ -87,17 +87,17 @@
 
       <!-- Tier 1: Free Paper Trader -->
       <div class="glass-card bento-col-4 component-card-wrap">
-        <span class="code-badge">TIER 1</span>
+        <span class="code-badge">TIER 01 &bull; SIMULATED</span>
         <h3 class="text-h2">Free Paper Trader</h3>
         <p class="text-body-sm text-mid">Master the 8-step confluence protocol with zero financial capital risk.</p>
-        <div class="num-ticker text-display-1 text-hi" style="margin: 12px 0;">$0</div>
+        <div class="num-ticker text-display-1 text-hi" style="margin: 12px 0;">₹0</div>
 
         <ul class="flex flex-col gap-2 text-body-sm text-mid" style="margin-bottom: var(--space-4);">
           <li><i class="ph-bold ph-check text-profit"></i> $2,000 Virtual Paper Account</li>
           <li><i class="ph-bold ph-check text-profit"></i> 8-Step Confluence Scanner</li>
           <li><i class="ph-bold ph-check text-profit"></i> Web Speech Hinglish AI Copilot</li>
           <li><i class="ph-bold ph-check text-profit"></i> 365-Day PnL Passbook & Heatmap</li>
-          <li><i class="ph-bold ph-check text-profit"></i> Community Discord Access</li>
+          <li><i class="ph-bold ph-check text-profit"></i> Zero Brokerage & Zero Risk</li>
         </ul>
         <a href="../terminal.html" class="btn-secondary" style="margin-top: auto; text-align: center;">Start Paper
           Trading</a>
@@ -105,10 +105,10 @@
 
       <!-- Tier 2: Delta Pro (Highlighted) -->
       <div class="glass-card bento-col-4 component-card-wrap glass-profit-border" style="position: relative;">
-        <span class="code-badge text-profit">MOST POPULAR</span>
+        <span class="code-badge text-profit">MOST POPULAR • EARLY ACCESS</span>
         <h3 class="text-h2 text-profit">Delta Pro Trader</h3>
         <p class="text-body-sm text-mid">Full autonomous execution and live exchange connectivity.</p>
-        <div class="num-ticker text-display-1 text-profit" id="price_pro" style="margin: 12px 0;">$49 <span
+        <div class="num-ticker text-display-1 text-profit" id="price_pro" style="margin: 12px 0;">₹199 <span
             class="text-xs text-mid">/mo</span></div>
 
         <ul class="flex flex-col gap-2 text-body-sm text-mid" style="margin-bottom: var(--space-4);">
@@ -125,10 +125,10 @@
 
       <!-- Tier 3: Hedge Desk -->
       <div class="glass-card bento-col-4 component-card-wrap">
-        <span class="code-badge text-cyan">ENTERPRISE</span>
+        <span class="code-badge text-cyan">TIER 03 &bull; INSTITUTIONAL</span>
         <h3 class="text-h2">Hedge Fund Desk</h3>
         <p class="text-body-sm text-mid">Multi-seat deployment, custom API feeds, and priority execution.</p>
-        <div class="num-ticker text-display-1 text-hi" id="price_inst" style="margin: 12px 0;">$199 <span
+        <div class="num-ticker text-display-1 text-hi" id="price_inst" style="margin: 12px 0;">₹499 <span
             class="text-xs text-mid">/mo</span></div>
 
         <ul class="flex flex-col gap-2 text-body-sm text-mid" style="margin-bottom: var(--space-4);">
@@ -237,16 +237,16 @@
     btnMonthly.addEventListener('click', () => {
       btnMonthly.classList.add('active');
       btnYearly.classList.remove('active');
-      pricePro.innerHTML = '$49 <span class="text-xs text-mid">/mo</span>';
-      priceInst.innerHTML = '$199 <span class="text-xs text-mid">/mo</span>';
+      pricePro.innerHTML = '₹199 <span class="text-xs text-mid">/mo</span>';
+      priceInst.innerHTML = '₹499 <span class="text-xs text-mid">/mo</span>';
       sfx.playClick();
     });
 
     btnYearly.addEventListener('click', () => {
       btnYearly.classList.add('active');
       btnMonthly.classList.remove('active');
-      pricePro.innerHTML = '$39 <span class="text-xs text-mid">/mo (billed annually)</span>';
-      priceInst.innerHTML = '$159 <span class="text-xs text-mid">/mo (billed annually)</span>';
+      pricePro.innerHTML = '₹159 <span class="text-xs text-mid">/mo (billed annually)</span>';
+      priceInst.innerHTML = '₹399 <span class="text-xs text-mid">/mo (billed annually)</span>';
       sfx.playClick();
     });
   </script>

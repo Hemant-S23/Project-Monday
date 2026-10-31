@@ -34,9 +34,9 @@
   <link rel="stylesheet" href="css/components.css?v=5.2">
   <link rel="stylesheet" href="css/auth.css?v=4.8">
   <link rel="stylesheet" href="css/multi-chart.css?v=6.1">
-  <link rel="stylesheet" href="css/saas-layout.css?v=1.0">
+  <link rel="stylesheet" href="css/saas-layout.css?v=1.1">
   <!-- Master $1,000 Million FinTech Cockpit Master Stylesheet -->
-  <link rel="stylesheet" href="styles/terminal-billion.css?v=3.6">
+  <link rel="stylesheet" href="styles/terminal-billion.css?v=3.7">
 
   <!-- Supabase JS Client (Non-blocking defer for instant HTML paint) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -398,70 +398,72 @@
 
   <!-- SAAS APP SHELL & NAVIGATION WRAPPER -->
   <div class="saas-app-container" id="saas_app_container">
-    <!-- Desktop Left Sidebar -->
-    <aside class="saas-sidebar" id="saas_sidebar">
-      <div class="saas-sidebar-header">
-        <div class="saas-brand-group">
-          <div class="saas-brand-icon">
-            <i class="ph ph-sparkle"></i>
-          </div>
-          <div class="saas-brand-text">
-            <div class="saas-brand-title">
-              MONDAY <span class="saas-brand-tag">v2.5</span>
+    <!-- Desktop Left Sidebar Dock & Floating Drawer -->
+    <div class="saas-sidebar-dock collapsed" id="saas_sidebar_dock">
+      <aside class="saas-sidebar collapsed" id="saas_sidebar">
+        <div class="saas-sidebar-header">
+          <div class="saas-brand-group">
+            <div class="saas-brand-icon">
+              <i class="ph ph-sparkle"></i>
             </div>
-            <div class="saas-brand-sub">Neural Derivatives Desk</div>
+            <div class="saas-brand-text">
+              <div class="saas-brand-title">
+                MONDAY <span class="saas-brand-tag">v2.5</span>
+              </div>
+              <div class="saas-brand-sub">Neural Derivatives Desk</div>
+            </div>
+          </div>
+          <button class="saas-sidebar-toggle-btn" id="saas_sidebar_toggle_btn" type="button" title="Toggle Sidebar">
+            <i class="ph ph-sidebar-simple"></i>
+          </button>
+        </div>
+
+        <nav class="saas-nav-menu">
+          <div class="saas-nav-section-title">Platform</div>
+          <button class="saas-nav-item active" data-page="terminal" type="button">
+            <span class="saas-nav-icon"><i class="ph ph-chart-line-up"></i></span>
+            <span class="saas-nav-label">Terminal</span>
+          </button>
+          <button class="saas-nav-item" data-page="positions" type="button">
+            <span class="saas-nav-icon"><i class="ph ph-briefcase"></i></span>
+            <span class="saas-nav-label">Positions</span>
+            <span class="saas-nav-badge" id="saas_pos_badge">0</span>
+          </button>
+          <button class="saas-nav-item" data-page="passbook" type="button">
+            <span class="saas-nav-icon"><i class="ph ph-book-open"></i></span>
+            <span class="saas-nav-label">Passbook & Yearbook</span>
+          </button>
+          <button class="saas-nav-item" data-page="copilot" type="button">
+            <span class="saas-nav-icon"><i class="ph ph-chats-circle"></i></span>
+            <span class="saas-nav-label">AI Copilot</span>
+          </button>
+
+          <div class="saas-nav-section-title">Control</div>
+          <button class="saas-nav-item" data-page="settings" type="button">
+            <span class="saas-nav-icon"><i class="ph ph-sliders"></i></span>
+            <span class="saas-nav-label">Risk & Engine</span>
+          </button>
+          <a href="landing.html" class="saas-nav-item" style="text-decoration: none; margin-top: 4px;">
+            <span class="saas-nav-icon"><i class="ph ph-house"></i></span>
+            <span class="saas-nav-label">Marketing Home</span>
+          </a>
+        </nav>
+
+        <div class="saas-sidebar-footer">
+          <div class="saas-footer-equity-card">
+            <div class="saas-footer-equity-lbl">Portfolio Equity</div>
+            <div class="saas-footer-equity-val" id="saas_sidebar_equity">$2,000.00</div>
+          </div>
+          <div class="saas-footer-user-row" id="saas_sidebar_account_btn">
+            <div class="saas-footer-avatar">HS</div>
+            <div class="saas-footer-user-meta">
+              <span class="saas-footer-user-name">Delta Pro Trader</span>
+              <span class="saas-footer-user-sub">Paper Trading Mode</span>
+            </div>
           </div>
         </div>
-        <button class="saas-sidebar-toggle-btn" id="saas_sidebar_toggle_btn" type="button" title="Toggle Sidebar">
-          <i class="ph ph-sidebar-simple"></i>
-        </button>
-      </div>
-
-      <nav class="saas-nav-menu">
-        <div class="saas-nav-section-title">Platform</div>
-        <button class="saas-nav-item active" data-page="terminal" type="button">
-          <span class="saas-nav-icon"><i class="ph ph-chart-line-up"></i></span>
-          <span class="saas-nav-label">Terminal</span>
-        </button>
-        <button class="saas-nav-item" data-page="positions" type="button">
-          <span class="saas-nav-icon"><i class="ph ph-briefcase"></i></span>
-          <span class="saas-nav-label">Positions</span>
-          <span class="saas-nav-badge" id="saas_pos_badge">0</span>
-        </button>
-        <button class="saas-nav-item" data-page="passbook" type="button">
-          <span class="saas-nav-icon"><i class="ph ph-book-open"></i></span>
-          <span class="saas-nav-label">Passbook & Yearbook</span>
-        </button>
-        <button class="saas-nav-item" data-page="copilot" type="button">
-          <span class="saas-nav-icon"><i class="ph ph-chats-circle"></i></span>
-          <span class="saas-nav-label">AI Copilot</span>
-        </button>
-
-        <div class="saas-nav-section-title">Control</div>
-        <button class="saas-nav-item" data-page="settings" type="button">
-          <span class="saas-nav-icon"><i class="ph ph-sliders"></i></span>
-          <span class="saas-nav-label">Risk & Engine</span>
-        </button>
-        <a href="landing.html" class="saas-nav-item" style="text-decoration: none; margin-top: 4px;">
-          <span class="saas-nav-icon"><i class="ph ph-house"></i></span>
-          <span class="saas-nav-label">Marketing Home</span>
-        </a>
-      </nav>
-
-      <div class="saas-sidebar-footer">
-        <div class="saas-footer-equity-card">
-          <div class="saas-footer-equity-lbl">Portfolio Equity</div>
-          <div class="saas-footer-equity-val" id="saas_sidebar_equity">$2,000.00</div>
-        </div>
-        <div class="saas-footer-user-row" id="saas_sidebar_account_btn">
-          <div class="saas-footer-avatar">HS</div>
-          <div class="saas-footer-user-meta">
-            <span class="saas-footer-user-name">Delta Pro Trader</span>
-            <span class="saas-footer-user-sub">Paper Trading Mode</span>
-          </div>
-        </div>
-      </div>
-    </aside>
+      </aside>
+    </div>
 
     <!-- Main Viewport -->
     <main class="saas-main-viewport" id="saas_main_viewport">

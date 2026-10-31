@@ -206,36 +206,59 @@ html, body {
 }
 
 /* =========================================================================
-   3. FLOATING AVIONICS SIDEBAR DOCK & TOP-LEFT COLLAPSE GLITCH FIX
+   3. FLOATING AVIONICS SIDEBAR DOCK & SMART HOVER EXPANSION
    ========================================================================= */
-.saas-sidebar {
+.saas-sidebar-dock {
+  height: 100% !important;
+  position: relative !important;
+  flex-shrink: 0 !important;
   width: 250px !important;
   min-width: 250px !important;
+  transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1), min-width 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  z-index: 10020 !important;
+}
+
+.saas-sidebar-dock.collapsed {
+  width: 68px !important;
+  min-width: 68px !important;
+}
+
+.saas-sidebar {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
   height: 100% !important;
+  width: 250px !important;
   margin: 0 !important;
   border-radius: 20px !important;
-  background: rgba(10, 14, 24, 0.55) !important;
+  background: rgba(10, 14, 24, 0.75) !important;
   backdrop-filter: var(--glass-blur) !important;
   -webkit-backdrop-filter: var(--glass-blur) !important;
   border: 1px solid var(--glass-border) !important;
-  border-top: 1px solid rgba(6, 182, 212, 0.4) !important;
+  border-top: 1px solid rgba(6, 182, 212, 0.45) !important;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 30px rgba(6, 182, 212, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: space-between !important;
-  position: relative !important;
   overflow: hidden !important;
-  z-index: 10 !important;
-  transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1), min-width 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  z-index: 10020 !important;
+  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease, box-shadow 0.25s ease !important;
 }
 
+/* Sidebar Top Brand Header - Exact 56px Match with Terminal Header Ribbon */
 .saas-sidebar-header {
-  padding: 16px 16px 14px 16px !important;
+  height: 56px !important;
+  min-height: 56px !important;
+  max-height: 56px !important;
+  padding: 0 14px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
   position: relative !important;
+  box-sizing: border-box !important;
+  transition: padding 0.2s ease !important;
 }
 
 .saas-brand-group {
@@ -246,17 +269,17 @@ html, body {
 }
 
 .saas-brand-icon {
-  width: 38px !important;
-  height: 38px !important;
-  min-width: 38px !important;
-  border-radius: 12px !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  border-radius: 10px !important;
   background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(139, 92, 246, 0.25)) !important;
   border: 1px solid rgba(6, 182, 212, 0.45) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   color: var(--cyan) !important;
-  font-size: 1.25rem !important;
+  font-size: 1.15rem !important;
   box-shadow: 0 0 20px rgba(6, 182, 212, 0.35) !important;
   position: relative !important;
 }
@@ -310,67 +333,136 @@ html, body {
 }
 
 .saas-sidebar-toggle-btn {
-  background: transparent !important;
-  border: none !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
   color: var(--text-low) !important;
   font-size: 1.15rem !important;
   cursor: pointer !important;
-  padding: 6px !important;
-  border-radius: 8px !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  border-radius: 10px !important;
   transition: all 0.2s ease !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  flex-shrink: 0 !important;
 }
 
 .saas-sidebar-toggle-btn:hover {
-  color: var(--text-hi) !important;
-  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--cyan) !important;
+  background: rgba(6, 182, 212, 0.12) !important;
+  border-color: rgba(6, 182, 212, 0.35) !important;
 }
 
 /* =========================================================================
-   GLITCH FIX: COLLAPSED SIDEBAR RULES (Zero Overlap & Pure Symmetry)
+   COLLAPSED SLIM ICON DOCK (Fixed 68px width)
    ========================================================================= */
-.saas-sidebar.collapsed {
-  width: 76px !important;
-  min-width: 76px !important;
+.saas-sidebar-dock.collapsed .saas-sidebar {
+  width: 68px !important;
 }
 
-.saas-sidebar.collapsed .saas-sidebar-header {
+.saas-sidebar-dock.collapsed:not(:hover):not(.hover-active) .saas-sidebar .saas-sidebar-header {
   justify-content: center !important;
-  padding: 16px 0 !important;
+  padding: 0 !important;
 }
 
-/* Hide brand group cleanly when collapsed to prevent collision */
-.saas-sidebar.collapsed .saas-brand-group {
+.saas-sidebar-dock.collapsed:not(:hover):not(.hover-active) .saas-sidebar .saas-brand-group {
   display: none !important;
 }
 
-.saas-sidebar.collapsed .saas-sidebar-toggle-btn {
+.saas-sidebar-dock.collapsed:not(:hover):not(.hover-active) .saas-sidebar .saas-sidebar-toggle-btn {
   margin: 0 auto !important;
-  width: 40px !important;
-  height: 40px !important;
-  background: rgba(255, 255, 255, 0.04) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
-.saas-sidebar.collapsed .saas-nav-item {
+.saas-sidebar-dock.collapsed:not(:hover):not(.hover-active) .saas-sidebar .saas-nav-item {
   justify-content: center !important;
-  padding: 12px 0 !important;
-  margin: 0 8px !important;
+  padding: 10px 0 !important;
+  margin: 0 6px !important;
 }
 
-.saas-sidebar.collapsed .saas-nav-label,
-.saas-sidebar.collapsed .saas-nav-badge,
-.saas-sidebar.collapsed .saas-nav-section-title,
-.saas-sidebar.collapsed .saas-footer-equity-card,
-.saas-sidebar.collapsed .saas-footer-user-meta {
+.saas-sidebar-dock.collapsed:not(:hover):not(.hover-active) .saas-sidebar .saas-nav-label,
+.saas-sidebar-dock.collapsed:not(:hover):not(.hover-active) .saas-sidebar .saas-nav-badge,
+.saas-sidebar-dock.collapsed:not(:hover):not(.hover-active) .saas-sidebar .saas-nav-section-title,
+.saas-sidebar-dock.collapsed:not(:hover):not(.hover-active) .saas-sidebar .saas-footer-equity-card,
+.saas-sidebar-dock.collapsed:not(:hover):not(.hover-active) .saas-sidebar .saas-footer-user-meta {
   display: none !important;
 }
 
-.saas-sidebar.collapsed .saas-footer-user-row {
+.saas-sidebar-dock.collapsed:not(:hover):not(.hover-active) .saas-sidebar .saas-footer-user-row {
   justify-content: center !important;
   padding: 6px 0 !important;
+}
+
+/* =========================================================================
+   SMART HOVER-TO-OPEN: Floating Avionics Drawer (Zero Layout Shift)
+   ========================================================================= */
+.saas-sidebar-dock.collapsed:hover .saas-sidebar,
+.saas-sidebar-dock.collapsed.hover-active .saas-sidebar {
+  width: 250px !important;
+  background: rgba(10, 14, 26, 0.96) !important;
+  backdrop-filter: blur(40px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(200%) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.92), 0 0 40px rgba(6, 182, 212, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+  z-index: 10050 !important;
+}
+
+.saas-sidebar-dock.collapsed:hover .saas-sidebar .saas-sidebar-header,
+.saas-sidebar-dock.collapsed.hover-active .saas-sidebar .saas-sidebar-header {
+  justify-content: space-between !important;
+  padding: 0 14px !important;
+}
+
+.saas-sidebar-dock.collapsed:hover .saas-sidebar .saas-brand-group,
+.saas-sidebar-dock.collapsed.hover-active .saas-sidebar .saas-brand-group {
+  display: flex !important;
+  animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.saas-sidebar-dock.collapsed:hover .saas-sidebar .saas-nav-item,
+.saas-sidebar-dock.collapsed.hover-active .saas-sidebar .saas-nav-item {
+  justify-content: flex-start !important;
+  padding: 10px 14px !important;
+  margin: 0 8px !important;
+  gap: 12px !important;
+}
+
+.saas-sidebar-dock.collapsed:hover .saas-sidebar .saas-nav-label,
+.saas-sidebar-dock.collapsed.hover-active .saas-sidebar .saas-nav-label {
+  display: inline-block !important;
+  animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.saas-sidebar-dock.collapsed:hover .saas-sidebar .saas-nav-badge,
+.saas-sidebar-dock.collapsed.hover-active .saas-sidebar .saas-nav-badge {
+  display: inline-flex !important;
+}
+
+.saas-sidebar-dock.collapsed:hover .saas-sidebar .saas-nav-section-title,
+.saas-sidebar-dock.collapsed.hover-active .saas-sidebar .saas-nav-section-title {
+  display: block !important;
+  animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.saas-sidebar-dock.collapsed:hover .saas-sidebar .saas-footer-equity-card,
+.saas-sidebar-dock.collapsed.hover-active .saas-sidebar .saas-footer-equity-card {
+  display: block !important;
+  animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.saas-sidebar-dock.collapsed:hover .saas-sidebar .saas-footer-user-meta,
+.saas-sidebar-dock.collapsed.hover-active .saas-sidebar .saas-footer-user-meta {
+  display: flex !important;
+  animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.saas-sidebar-dock.collapsed:hover .saas-sidebar .saas-footer-user-row,
+.saas-sidebar-dock.collapsed.hover-active .saas-sidebar .saas-footer-user-row {
+  justify-content: flex-start !important;
+  padding: 8px 12px !important;
+  gap: 10px !important;
 }
 
 /* Sidebar Nav Items */
@@ -615,10 +707,12 @@ html, body {
 }
 
 .terminal-header {
-  height: auto !important;
+  height: 56px !important;
   min-height: 56px !important;
-  padding: 8px 16px !important;
-  border-radius: 18px !important;
+  max-height: 56px !important;
+  padding: 0 16px !important;
+  border-radius: 20px !important;
+  box-sizing: border-box !important;
   background: rgba(10, 14, 24, 0.65) !important;
   backdrop-filter: var(--glass-blur) !important;
   -webkit-backdrop-filter: var(--glass-blur) !important;
@@ -626,7 +720,6 @@ html, body {
   border-top: 1px solid rgba(6, 182, 212, 0.45) !important;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(6, 182, 212, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
   display: flex !important;
-  flex-wrap: wrap !important;
   align-items: center !important;
   justify-content: space-between !important;
   gap: 8px 12px !important;
@@ -1502,30 +1595,33 @@ html, body {
 }
 
 @media (max-width: 1250px) {
-  .saas-sidebar {
-    width: 76px !important;
-    min-width: 76px !important;
+  .saas-sidebar-dock {
+    width: 68px !important;
+    min-width: 68px !important;
   }
-  .saas-sidebar .saas-sidebar-header {
+  .saas-sidebar-dock .saas-sidebar {
+    width: 68px !important;
+  }
+  .saas-sidebar-dock:not(:hover):not(.hover-active) .saas-sidebar .saas-sidebar-header {
     justify-content: center !important;
-    padding: 16px 0 !important;
+    padding: 0 !important;
   }
-  .saas-sidebar .saas-brand-group {
+  .saas-sidebar-dock:not(:hover):not(.hover-active) .saas-sidebar .saas-brand-group {
     display: none !important;
   }
-  .saas-sidebar .saas-nav-item {
+  .saas-sidebar-dock:not(:hover):not(.hover-active) .saas-sidebar .saas-nav-item {
     justify-content: center !important;
-    padding: 12px 0 !important;
-    margin: 0 8px !important;
+    padding: 10px 0 !important;
+    margin: 0 6px !important;
   }
-  .saas-sidebar .saas-nav-label,
-  .saas-sidebar .saas-nav-badge,
-  .saas-sidebar .saas-nav-section-title,
-  .saas-sidebar .saas-footer-equity-card,
-  .saas-sidebar .saas-footer-user-meta {
+  .saas-sidebar-dock:not(:hover):not(.hover-active) .saas-sidebar .saas-nav-label,
+  .saas-sidebar-dock:not(:hover):not(.hover-active) .saas-sidebar .saas-nav-badge,
+  .saas-sidebar-dock:not(:hover):not(.hover-active) .saas-sidebar .saas-nav-section-title,
+  .saas-sidebar-dock:not(:hover):not(.hover-active) .saas-sidebar .saas-footer-equity-card,
+  .saas-sidebar-dock:not(:hover):not(.hover-active) .saas-sidebar .saas-footer-user-meta {
     display: none !important;
   }
-  .saas-sidebar .saas-footer-user-row {
+  .saas-sidebar-dock:not(:hover):not(.hover-active) .saas-sidebar .saas-footer-user-row {
     justify-content: center !important;
     padding: 6px 0 !important;
   }
@@ -6220,6 +6316,7 @@ html, body {
    13. MOBILE NATIVE BOTTOM NAVIGATION & RESPONSIVE BREAKPOINTS
    ========================================================================= */
 @media (max-width: 900px) {
+  .saas-sidebar-dock,
   .saas-sidebar {
     display: none !important;
   }

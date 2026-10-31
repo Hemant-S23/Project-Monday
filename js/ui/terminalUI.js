@@ -978,13 +978,57 @@ export class TerminalUI {
     if (closePassbookBtn) closePassbookBtn.addEventListener('click', handleClosePassbook);
     if (mBackPassbookBtn) mBackPassbookBtn.addEventListener('click', handleClosePassbook);
 
-    // PROJECT MONDAY SaaS Layout & Navigation Bindings
-    const sidebarToggleBtn = document.getElementById('saas_sidebar_toggle_btn');
+    // PROJECT MONDAY SaaS Layout & Navigation Bindings (Smart Hover-to-Open & Pin Dock)
+    const sidebarDock = document.getElementById('saas_sidebar_dock');
     const sidebarEl = document.getElementById('saas_sidebar');
-    if (sidebarToggleBtn && sidebarEl) {
-      sidebarToggleBtn.addEventListener('click', () => {
-        sidebarEl.classList.toggle('collapsed');
+    const sidebarToggleBtn = document.getElementById('saas_sidebar_toggle_btn');
+
+    if (sidebarDock && sidebarEl) {
+      let hoverTimer = null;
+      let leaveTimer = null;
+
+      // Smart Hover-to-Open with 120ms gentle debounce
+      sidebarDock.addEventListener('mouseenter', () => {
+        clearTimeout(leaveTimer);
+        hoverTimer = setTimeout(() => {
+          if (sidebarDock.classList.contains('collapsed')) {
+            sidebarDock.classList.add('hover-active');
+            sidebarEl.classList.add('hover-active');
+          }
+        }, 120);
       });
+
+      sidebarDock.addEventListener('mouseleave', () => {
+        clearTimeout(hoverTimer);
+        leaveTimer = setTimeout(() => {
+          sidebarDock.classList.remove('hover-active');
+          sidebarEl.classList.remove('hover-active');
+        }, 160);
+      });
+
+      // Pin / Lock Button Toggle
+      if (sidebarToggleBtn) {
+        sidebarToggleBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isCurrentlyCollapsed = sidebarDock.classList.contains('collapsed');
+          const newCollapsed = !isCurrentlyCollapsed;
+          sidebarDock.classList.toggle('collapsed', newCollapsed);
+          sidebarEl.classList.toggle('collapsed', newCollapsed);
+          sidebarDock.classList.remove('hover-active');
+          sidebarEl.classList.remove('hover-active');
+          localStorage.setItem('monday_sidebar_pinned', newCollapsed ? 'false' : 'true');
+          sidebarToggleBtn.title = newCollapsed ? 'Unpinned: Hover to expand (Click to Pin)' : 'Pinned: Always expanded (Click to Unpin)';
+        });
+      }
+
+      // Check saved preference (default to unpinned/collapsed so hover works right away)
+      const savedPin = localStorage.getItem('monday_sidebar_pinned');
+      const shouldBeCollapsed = savedPin !== 'true';
+      sidebarDock.classList.toggle('collapsed', shouldBeCollapsed);
+      sidebarEl.classList.toggle('collapsed', shouldBeCollapsed);
+      if (sidebarToggleBtn) {
+        sidebarToggleBtn.title = shouldBeCollapsed ? 'Unpinned: Hover to expand (Click to Pin)' : 'Pinned: Always expanded (Click to Unpin)';
+      }
     }
 
     document.querySelectorAll('.saas-nav-item, .saas-mobile-tab-btn').forEach(btn => {

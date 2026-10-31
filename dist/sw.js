@@ -3,7 +3,7 @@
  * Cache-first offline shell strategy for ultra-low latency workstation booting.
  */
 
-const CACHE_NAME = 'monday-neural-cache-v3.4';
+const CACHE_NAME = 'monday-neural-cache-v3.5';
 
 const PRECACHE_ASSETS = [
   '/',

@@ -187,6 +187,163 @@
       background: rgba(16, 185, 129, 0.08);
       color: var(--text-hi);
     }
+
+    /* =========================================================================
+       8 ENGINES MINIMALIST LUXURY BENTO
+       ========================================================================= */
+    .engines-luxury-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      width: 100%;
+      margin-top: 24px;
+    }
+
+    @media (min-width: 640px) {
+      .engines-luxury-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+      }
+    }
+
+    @media (min-width: 1040px) {
+      .engines-luxury-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+      }
+    }
+
+    .engine-luxury-card {
+      position: relative;
+      background: linear-gradient(165deg, rgba(17, 24, 39, 0.45) 0%, rgba(8, 12, 20, 0.65) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 24px 22px 18px 22px;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+      overflow: hidden;
+    }
+
+    .engine-luxury-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      background: radial-gradient(circle at 50% 0%, var(--glow-color, rgba(0, 242, 254, 0.15)), transparent 70%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .engine-luxury-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255, 255, 255, 0.16);
+      background: linear-gradient(165deg, rgba(22, 31, 50, 0.55) 0%, rgba(11, 16, 27, 0.78) 100%);
+      box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.65), 0 0 24px -6px var(--glow-color, rgba(0, 242, 254, 0.25));
+    }
+
+    .engine-luxury-card:hover::after {
+      opacity: 1;
+    }
+
+    .engine-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .engine-icon-squircle {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 1.25rem;
+      transition: all 0.3s ease;
+    }
+
+    .engine-luxury-card:hover .engine-icon-squircle {
+      background: rgba(255, 255, 255, 0.07);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: scale(1.04);
+    }
+
+    .engine-num-chip {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: rgba(255, 255, 255, 0.32);
+      background: rgba(255, 255, 255, 0.03);
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .engine-card-title {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #f1f5f9;
+      margin-top: 18px;
+      margin-bottom: 8px;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .engine-card-desc {
+      font-size: 0.835rem;
+      line-height: 1.55;
+      color: rgba(148, 163, 184, 0.85);
+      margin-bottom: 20px;
+      flex-grow: 1;
+    }
+
+    .engine-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 13px;
+      margin-top: auto;
+      font-size: 0.75rem;
+    }
+
+    .engine-metric-tag {
+      font-family: var(--font-mono);
+      color: rgba(255, 255, 255, 0.45);
+      font-size: 0.72rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: 0.02em;
+    }
+
+    .engine-explore-hint {
+      color: var(--cyan);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0.7;
+      transition: all 0.2s ease;
+    }
+
+    .engine-luxury-card:hover .engine-explore-hint {
+      opacity: 1;
+      transform: translateX(3px);
+    }
   </style>
 </head>
 <body>
@@ -567,140 +724,190 @@
   </section>
 
   <!-- =========================================================================
-       S4: THE 8 ENGINES BENTO GRID
+       S4: THE 8 ENGINES BENTO GRID (MINIMALIST LUXURY ARCHITECTURE)
        ========================================================================= -->
   <section class="section" id="engines">
     <div class="container">
-      <div class="section-header">
-        <div class="section-tag glass-pill" style="color: var(--cyan); border-color: var(--cyan-border);">
+      <div class="section-header" style="text-align: center; max-width: 760px; margin: 0 auto var(--space-8);">
+        <div class="section-tag glass-pill" style="color: var(--cyan); border-color: var(--cyan-border); display: inline-flex; margin-bottom: 12px;">
           <i class="ph-bold ph-cpu"></i> CORE NEURAL ARCHITECTURE
         </div>
-        <h2 class="text-display-1">
+        <h2 class="text-display-1" style="letter-spacing: -0.02em;">
           The 8 Proprietary Engines of <span class="text-gradient-institutional">Project MONDAY</span>
         </h2>
-        <p class="text-body text-mid">
-          Click any engine tile below to open its mathematical formulation and deep dive drawer.
+        <p class="text-body text-mid" style="margin-top: 10px; font-size: 0.95rem;">
+          Click any engine tile below to inspect its mathematical formulation and execution blueprint.
         </p>
       </div>
 
-      <div class="bento-grid">
-        <!-- Engine 1: Strategy Engine (Large Tile) -->
-        <div class="glass-card bento-col-8 component-card-wrap glass-card-hover-lift" data-engine-drawer="strategy">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <div class="mega-item-icon"><i class="ph-bold ph-chart-polar"></i></div>
-              <h3 class="text-h2">1. Strategy & 8-Step Confluence Engine</h3>
+      <div class="engines-luxury-grid">
+        <!-- Engine 1: Strategy & Confluence -->
+        <div class="engine-luxury-card" data-engine-drawer="strategy" style="--glow-color: rgba(0, 242, 254, 0.25);">
+          <div class="engine-card-header">
+            <div class="engine-icon-squircle" style="color: var(--cyan);">
+              <i class="ph-bold ph-chart-polar"></i>
             </div>
-            <span class="code-badge">ICT/SMC QUANT</span>
+            <span class="engine-num-chip">01</span>
           </div>
-          <p class="text-body text-mid">
-            Triple-EMA directional gate (12/26/50) enforces zero counter-trend trading. Evaluates 5M discount pullbacks (Fib 0.618–0.786), SMT divergence (BTC vs ETH), and requires &ge;75% confluence score for Grade A confirmation.
+          <h3 class="engine-card-title">Confluence Engine</h3>
+          <p class="engine-card-desc">
+            Enforces 1H trend alignment, 5M Fibonacci discount sweeps, and correlated SMT divergence before entry.
           </p>
-          <div class="flex items-center gap-3 text-xs text-cyan" style="margin-top: auto;">
-            <span><i class="ph-bold ph-shield-check"></i> Hard 1H Trend Lock</span>
-            <span><i class="ph-bold ph-chart-line-up"></i> 1:3.0 Asymmetry</span>
-            <span style="margin-left: auto; text-decoration: underline;">Open Blueprint &rarr;</span>
+          <div class="engine-card-footer">
+            <span class="engine-metric-tag">
+              <span class="ai-pulse-dot" style="background: var(--cyan); width: 6px; height: 6px;"></span>
+              1:3.0 Asymmetry
+            </span>
+            <span class="engine-explore-hint">Blueprint <i class="ph-bold ph-arrow-right"></i></span>
           </div>
         </div>
 
         <!-- Engine 2: Liquidation Firewall -->
-        <div class="glass-card bento-col-4 component-card-wrap glass-card-hover-lift" data-engine-drawer="firewall">
-          <div class="flex items-center gap-2">
-            <div class="mega-item-icon" style="color: var(--risk);"><i class="ph-bold ph-prohibit"></i></div>
-            <h3 class="text-h3">2. Liquidation Firewall</h3>
+        <div class="engine-luxury-card" data-engine-drawer="firewall" style="--glow-color: rgba(239, 68, 68, 0.25);">
+          <div class="engine-card-header">
+            <div class="engine-icon-squircle" style="color: var(--risk);">
+              <i class="ph-bold ph-prohibit"></i>
+            </div>
+            <span class="engine-num-chip">02</span>
           </div>
-          <p class="text-body-sm text-mid">
-            Calculates exact maintenance margin rate (MMR). Automatically rejects orders whose stop loss exceeds liquidation price.
+          <h3 class="engine-card-title">Liquidation Firewall</h3>
+          <p class="engine-card-desc">
+            Pre-flight MMR margin calculus automatically rejecting orders whose stop loss exceeds liquidation price.
           </p>
-          <div class="text-micro text-risk" style="margin-top: auto;">
-            P_liq = Entry &times; (1 &minus; 1/Lev + MMR)
+          <div class="engine-card-footer">
+            <span class="engine-metric-tag">
+              <span class="ai-pulse-dot" style="background: var(--risk); width: 6px; height: 6px;"></span>
+              MMR Auto-Lock
+            </span>
+            <span class="engine-explore-hint">Blueprint <i class="ph-bold ph-arrow-right"></i></span>
           </div>
         </div>
 
         <!-- Engine 3: Event Risk Shield -->
-        <div class="glass-card bento-col-4 component-card-wrap glass-card-hover-lift" data-engine-drawer="shield">
-          <div class="flex items-center gap-2">
-            <div class="mega-item-icon" style="color: var(--shield);"><i class="ph-bold ph-warning"></i></div>
-            <h3 class="text-h3">3. Event Risk Shield</h3>
+        <div class="engine-luxury-card" data-engine-drawer="shield" style="--glow-color: rgba(245, 158, 11, 0.25);">
+          <div class="engine-card-header">
+            <div class="engine-icon-squircle" style="color: var(--shield);">
+              <i class="ph-bold ph-warning"></i>
+            </div>
+            <span class="engine-num-chip">03</span>
           </div>
-          <p class="text-body-sm text-mid">
-            Macro sentinel tracking FOMC, US CPI, Non-Farm Payrolls, token unlocks, and RBI MPC. Automatically suspends AutoPilot &plusmn;15 min around shocks.
+          <h3 class="engine-card-title">Event Risk Shield</h3>
+          <p class="engine-card-desc">
+            Autonomous macro sentinel auto-suspending execution &plusmn;15 min around CPI, FOMC, and sudden shocks.
           </p>
-          <div class="text-micro text-shield" style="margin-top: auto;">
-            Hyper-Sensitive Circuit Breaker Active
+          <div class="engine-card-footer">
+            <span class="engine-metric-tag">
+              <span class="ai-pulse-dot" style="background: var(--shield); width: 6px; height: 6px;"></span>
+              Macro Circuit Breaker
+            </span>
+            <span class="engine-explore-hint">Blueprint <i class="ph-bold ph-arrow-right"></i></span>
           </div>
         </div>
 
         <!-- Engine 4: Historical Regime -->
-        <div class="glass-card bento-col-4 component-card-wrap glass-card-hover-lift" data-engine-drawer="regime">
-          <div class="flex items-center gap-2">
-            <div class="mega-item-icon" style="color: var(--cyan);"><i class="ph-bold ph-git-commit"></i></div>
-            <h3 class="text-h3">4. Historical Regime Engine</h3>
+        <div class="engine-luxury-card" data-engine-drawer="regime" style="--glow-color: rgba(56, 189, 248, 0.25);">
+          <div class="engine-card-header">
+            <div class="engine-icon-squircle" style="color: #38bdf8;">
+              <i class="ph-bold ph-git-commit"></i>
+            </div>
+            <span class="engine-num-chip">04</span>
           </div>
-          <p class="text-body-sm text-mid">
-            Dynamic 20-period ATR and range expansion ratio classifies market into Supportive Trending, Mean-Reverting, or Choppy.
+          <h3 class="engine-card-title">Regime Classifier</h3>
+          <p class="engine-card-desc">
+            Dynamic 20-period ATR and range clustering classifying institutional trends from choppy noise.
           </p>
-          <div class="text-micro text-cyan" style="margin-top: auto;">
-            Regime Pattern Matching
+          <div class="engine-card-footer">
+            <span class="engine-metric-tag">
+              <span class="ai-pulse-dot" style="background: #38bdf8; width: 6px; height: 6px;"></span>
+              ATR Volatility Cluster
+            </span>
+            <span class="engine-explore-hint">Blueprint <i class="ph-bold ph-arrow-right"></i></span>
           </div>
         </div>
 
-        <!-- Engine 5: Paper Trader & Passbook -->
-        <div class="glass-card bento-col-4 component-card-wrap glass-card-hover-lift" data-engine-drawer="passbook">
-          <div class="flex items-center gap-2">
-            <div class="mega-item-icon" style="color: var(--profit);"><i class="ph-bold ph-book-open"></i></div>
-            <h3 class="text-h3">5. Passbook & Tax Ledger</h3>
+        <!-- Engine 5: Passbook & Tax Ledger -->
+        <div class="engine-luxury-card" data-engine-drawer="passbook" style="--glow-color: rgba(16, 185, 129, 0.25);">
+          <div class="engine-card-header">
+            <div class="engine-icon-squircle" style="color: var(--profit);">
+              <i class="ph-bold ph-book-open"></i>
+            </div>
+            <span class="engine-num-chip">05</span>
           </div>
-          <p class="text-body-sm text-mid">
-            Strict 1R unit tracking ($20 risk), 365-day PnL heatmap matrix, and Delta Exchange India compliant 18% GST auto-bifurcation.
+          <h3 class="engine-card-title">Passbook & Tax</h3>
+          <p class="engine-card-desc">
+            Strict 1R unit tracking, 365-day PnL heatmaps, and Delta Exchange India compliant 18% GST bifurcation.
           </p>
-          <div class="text-micro text-profit" style="margin-top: auto;">
-            Delta India Compliant (18% GST)
+          <div class="engine-card-footer">
+            <span class="engine-metric-tag">
+              <span class="ai-pulse-dot" style="background: var(--profit); width: 6px; height: 6px;"></span>
+              18% GST Ledger
+            </span>
+            <span class="engine-explore-hint">Blueprint <i class="ph-bold ph-arrow-right"></i></span>
           </div>
         </div>
 
-        <!-- Engine 6: AI Copilot -->
-        <div class="glass-card bento-col-4 component-card-wrap glass-card-hover-lift" data-engine-drawer="copilot">
-          <div class="flex items-center gap-2">
-            <div class="mega-item-icon" style="color: var(--violet);"><i class="ph-bold ph-waveform"></i></div>
-            <h3 class="text-h3">6. Hinglish AI Copilot</h3>
+        <!-- Engine 6: Hinglish AI Copilot -->
+        <div class="engine-luxury-card" data-engine-drawer="copilot" style="--glow-color: rgba(139, 92, 246, 0.25);">
+          <div class="engine-card-header">
+            <div class="engine-icon-squircle" style="color: var(--violet);">
+              <i class="ph-bold ph-waveform"></i>
+            </div>
+            <span class="engine-num-chip">06</span>
           </div>
-          <p class="text-body-sm text-mid">
-            Empathetic, razor-sharp voice trading partner with natural Hinglish audio synthesis and anti-FOMO psychological shield.
+          <h3 class="engine-card-title">Hinglish Copilot</h3>
+          <p class="engine-card-desc">
+            Empathetic voice partner delivering real-time setup briefs, anti-FOMO safeguards, and tilt interception.
           </p>
-          <div class="text-micro text-violet" style="margin-top: auto;">
-            Web Speech STT/TTS Dual Accent
+          <div class="engine-card-footer">
+            <span class="engine-metric-tag">
+              <span class="ai-pulse-dot" style="background: var(--violet); width: 6px; height: 6px;"></span>
+              Bilingual Voice Guard
+            </span>
+            <span class="engine-explore-hint">Blueprint <i class="ph-bold ph-arrow-right"></i></span>
           </div>
         </div>
 
-        <!-- Engine 7: 24/7 Daemon -->
-        <div class="glass-card bento-col-4 component-card-wrap glass-card-hover-lift" data-engine-drawer="daemon">
-          <div class="flex items-center gap-2">
-            <div class="mega-item-icon" style="color: var(--cyan);"><i class="ph-bold ph-lightning"></i></div>
-            <h3 class="text-h3">7. 24/7 Autonomous Daemon</h3>
+        <!-- Engine 7: 24/7 Cloud Daemon -->
+        <div class="engine-luxury-card" data-engine-drawer="daemon" style="--glow-color: rgba(6, 182, 212, 0.25);">
+          <div class="engine-card-header">
+            <div class="engine-icon-squircle" style="color: #06b6d4;">
+              <i class="ph-bold ph-lightning"></i>
+            </div>
+            <span class="engine-num-chip">07</span>
           </div>
-          <p class="text-body-sm text-mid">
-            Headless Node.js process streaming Coinbase native WebSockets. Sub-millisecond TP/SL triggers, Supabase cloud sync, 60s heartbeats.
+          <h3 class="engine-card-title">24/7 Cloud Daemon</h3>
+          <p class="engine-card-desc">
+            Headless execution process streaming native Coinbase WebSockets with sub-millisecond TP/SL triggers.
           </p>
-          <div class="text-micro text-cyan" style="margin-top: auto;">
-            wss://ws-feed.exchange.coinbase.com
+          <div class="engine-card-footer">
+            <span class="engine-metric-tag">
+              <span class="ai-pulse-dot" style="background: #06b6d4; width: 6px; height: 6px;"></span>
+              Coinbase WSS
+            </span>
+            <span class="engine-explore-hint">Blueprint <i class="ph-bold ph-arrow-right"></i></span>
           </div>
         </div>
 
-        <!-- Engine 8: Dual Universe -->
-        <div class="glass-card bento-col-4 component-card-wrap glass-card-hover-lift" data-engine-drawer="markets">
-          <div class="flex items-center gap-2">
-            <div class="mega-item-icon" style="color: var(--profit);"><i class="ph-bold ph-globe-hemisphere-east"></i></div>
-            <h3 class="text-h3">8. Dual-Market Universe</h3>
+        <!-- Engine 8: Dual-Market Universe -->
+        <div class="engine-luxury-card" data-engine-drawer="markets" style="--glow-color: rgba(52, 211, 153, 0.25);">
+          <div class="engine-card-header">
+            <div class="engine-icon-squircle" style="color: #34d399;">
+              <i class="ph-bold ph-globe-hemisphere-east"></i>
+            </div>
+            <span class="engine-num-chip">08</span>
           </div>
-          <p class="text-body-sm text-mid">
-            Web3 cryptos (BTC, ETH, SOL, SUI, DOGE) alongside 150+ Indian Equities, Sector Baskets, and Mega IPOs (Hyundai, Swiggy, Waaree).
+          <h3 class="engine-card-title">Dual Universe</h3>
+          <p class="engine-card-desc">
+            Real-time unified ingestion spanning Web3 cryptos and 150+ NSE/BSE equities, baskets, and landmark IPOs.
           </p>
-          <div class="text-micro text-profit" style="margin-top: auto;">
-            Universal NSE Ticker Search
+          <div class="engine-card-footer">
+            <span class="engine-metric-tag">
+              <span class="ai-pulse-dot" style="background: #34d399; width: 6px; height: 6px;"></span>
+              NSE + Web3
+            </span>
+            <span class="engine-explore-hint">Blueprint <i class="ph-bold ph-arrow-right"></i></span>
           </div>
         </div>
-
       </div>
     </div>
   </section>

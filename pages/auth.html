@@ -15,7 +15,25 @@
   <link rel="stylesheet" href="../styles/main.css">
   <link rel="stylesheet" href="../styles/components.css">
 
+  <!-- Three.js Native ESM Importmap for Zero-Lag 3D Terrain -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+    }
+  }
+  </script>
+
   <style>
+    .hero-3d-canvas-wrap {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      overflow: hidden;
+      opacity: 0.85;
+    }
+
     .auth-page-container {
       min-height: 100vh;
       display: flex;
@@ -117,6 +135,7 @@
 
   <!-- Ambient Dynamic Background -->
   <div class="ambient-background-layer">
+    <div class="hero-3d-canvas-wrap" id="auth_canvas_3d"></div>
     <div class="ambient-orb orb-violet"></div>
     <div class="ambient-orb orb-cyan"></div>
     <div class="ambient-orb orb-emerald"></div>
@@ -358,6 +377,23 @@
       eyeIcon.className = isPwd ? 'ph ph-eye-slash' : 'ph ph-eye';
       sfx.playClick();
     });
+  </script>
+
+  <!-- 3D Liquid Volatility Mesh Background (Interactive with Cursor) -->
+  <script type="module">
+    import { Hero3DVisualizer } from '../js/landing/hero3D.js';
+    function initAuth3D() {
+      try {
+        new Hero3DVisualizer('auth_canvas_3d');
+      } catch (err) {
+        console.warn('[Auth] 3D background visualizer initialization:', err);
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initAuth3D);
+    } else {
+      initAuth3D();
+    }
   </script>
 </body>
 </html>

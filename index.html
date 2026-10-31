@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -37,8 +37,6 @@
   <link rel="stylesheet" href="css/saas-layout.css?v=1.1">
   <!-- Master $1,000 Million FinTech Cockpit Master Stylesheet -->
   <link rel="stylesheet" href="styles/terminal-billion.css?v=3.7">
-  <!-- Ultra-Premium Ceramic Glassmorphism Light Theme (VisionOS / macOS Glass Standard) -->
-  <link rel="stylesheet" href="styles/theme-ceramic-light.css?v=1.0">
 
   <!-- Supabase JS Client (Non-blocking defer for instant HTML paint) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -390,16 +388,6 @@
         <span>Hinglish Audio Copilot</span>
         <span class="d-toggle-badge active" id="d_voice_badge">ON</span>
       </button>
-
-      <div class="drawer-menu-item d-theme-row">
-        <div class="d-row-left">
-          <i class="ph ph-sun-dim item-ico amber"></i>
-          <span>Theme Mode</span>
-        </div>
-        <button class="d-theme-toggle-btn" id="d_theme_toggle_btn" type="button">
-          <span id="d_theme_mode_text">Dark</span>
-        </button>
-      </div>
     </div>
 
     <div class="drawer-footer">
@@ -912,23 +900,6 @@
                 </div>
                 <span class="popover-toggle-badge" id="popover_autopilot_badge">OFF</span>
               </button>
-
-              <!-- Dark / Light Theme Toggle Row -->
-              <div class="popover-menu-item theme-row">
-                <div class="menu-item-left">
-                  <i class="ph ph-sun-dim item-icon amber" id="popover_theme_icon"></i>
-                  <span>Theme</span>
-                </div>
-                <button class="theme-toggle-btn" id="theme_toggle_btn" type="button" aria-label="Toggle Theme" title="Switch Theme (Dark / Light)">
-                  <div class="theme-toggle-track">
-                    <div class="theme-toggle-thumb">
-                      <i class="ph ph-moon theme-thumb-icon moon-icon"></i>
-                      <i class="ph ph-sun theme-thumb-icon sun-icon"></i>
-                    </div>
-                  </div>
-                  <span class="theme-toggle-text" id="theme_mode_text">Dark</span>
-                </button>
-              </div>
 
               <!-- Audio Copilot Mute / Unmute Toggle -->
               <button class="popover-menu-item" id="popover_voice_toggle" type="button">

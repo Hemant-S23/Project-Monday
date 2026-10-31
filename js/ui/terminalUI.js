@@ -461,16 +461,7 @@ export class TerminalUI {
       });
     }
 
-    const dThemeToggle = document.getElementById('d_theme_toggle_btn');
-    if (dThemeToggle) {
-      dThemeToggle.addEventListener('click', () => {
-        const btn = document.getElementById('theme_toggle_btn');
-        if (btn) btn.click();
-        const themeText = document.getElementById('theme_mode_text');
-        const dText = document.getElementById('d_theme_mode_text');
-        if (themeText && dText) dText.textContent = themeText.textContent;
-      });
-    }
+    // Pure Dark Void Enforcement
 
     // Drawer Market Switcher (Crypto ⇄ India)
     const dMarketCrypto = document.getElementById('d_market_crypto');
@@ -1445,44 +1436,12 @@ export class TerminalUI {
     if (gotItRBtn) gotItRBtn.addEventListener('click', closeRModal);
     if (backdropR) backdropR.addEventListener('click', closeRModal);
 
-    // Dark / Light Mode Toggle
-    const themeBtn = document.getElementById('theme_toggle_btn');
-    const themeText = document.getElementById('theme_mode_text');
-
-    const updateThemeUI = (theme) => {
-      document.documentElement.setAttribute('data-theme', theme);
-      if (document.body) {
-        document.body.setAttribute('data-theme', theme);
-      }
-      if (themeText) {
-        themeText.textContent = theme === 'light' ? 'Light' : 'Dark';
-      }
-      if (themeBtn) {
-        themeBtn.setAttribute('title', theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode');
-      }
-      if (popoverThemeIcon) {
-        popoverThemeIcon.className = theme === 'light'
-          ? 'ph ph-sun item-icon amber'
-          : 'ph ph-sun-dim item-icon amber';
-      }
-    };
-
-    // Apply saved or default theme
-    const savedTheme = localStorage.getItem('monday_theme') || 'dark';
-    updateThemeUI(savedTheme);
-
-    if (themeBtn) {
-      themeBtn.addEventListener('click', () => {
-        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        localStorage.setItem('monday_theme', newTheme);
-        updateThemeUI(newTheme);
-        if (this.callbacks.onThemeChange) {
-          this.callbacks.onThemeChange(newTheme);
-        }
-        this.showToast('Theme Updated', `Switched to ${newTheme.toUpperCase()} mode`, 'info');
-      });
-    }
+    // Strict Pure Dark Cockpit Lock (Zero Light Mode)
+    document.documentElement.setAttribute('data-theme', 'dark');
+    if (document.body) document.body.setAttribute('data-theme', 'dark');
+    try {
+      localStorage.setItem('monday_theme', 'dark');
+    } catch (e) {}
 
     // =========================================================================
     // AUTHENTICATION & LOGIN SCREEN EVENT HANDLERS

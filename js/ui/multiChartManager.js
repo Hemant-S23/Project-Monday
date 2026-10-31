@@ -204,7 +204,7 @@ export class MultiChartManager {
     this.options = options;
     this.adapter = options.adapter || null;
     this.adapters = options.adapters || null;
-    this.currentTheme = localStorage.getItem('monday_theme') || 'dark';
+    this.currentTheme = 'dark';
 
     // Layout State
     this.activeLayoutId = localStorage.getItem('monday_multi_layout') || '1';
@@ -256,25 +256,24 @@ export class MultiChartManager {
     return this.adapter;
   }
 
-  setTheme(theme) {
-    this.currentTheme = theme;
+  setTheme(_theme) {
+    this.currentTheme = 'dark';
     this.subCharts.forEach(sc => {
       if (sc.chart) {
-        const isDark = theme !== 'light';
         sc.chart.applyOptions({
           layout: {
-            background: { type: 'solid', color: isDark ? '#090d16' : '#ffffff' },
-            textColor: isDark ? '#94a3b8' : '#475569'
+            background: { type: 'solid', color: '#090d16' },
+            textColor: '#94a3b8'
           },
           grid: {
-            vertLines: { color: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.05)' },
-            horzLines: { color: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.05)' }
+            vertLines: { color: 'rgba(255, 255, 255, 0.04)' },
+            horzLines: { color: 'rgba(255, 255, 255, 0.04)' }
           },
           timeScale: {
-            borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'
+            borderColor: 'rgba(255, 255, 255, 0.08)'
           },
           rightPriceScale: {
-            borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'
+            borderColor: 'rgba(255, 255, 255, 0.08)'
           }
         });
       }

@@ -20,7 +20,7 @@ export class ChartManager {
     this.currentMarket = 'Crypto';
     this.currentTimeframe = '60'; // 60 = 1H, 5 = 5M
     this.rawTimeframe = '1H';
-    this.currentTheme = localStorage.getItem('monday_theme') || 'dark';
+    this.currentTheme = 'dark';
     this.activeLevels = null;
     this.adapter = null;
 
@@ -100,34 +100,30 @@ export class ChartManager {
     }
   }
 
-  setTheme(theme) {
-    if (this.currentTheme === theme) return;
-    this.currentTheme = theme;
+  setTheme(_theme) {
+    this.currentTheme = 'dark';
 
     if (this.multiChartManager) {
-      this.multiChartManager.setTheme(theme);
+      this.multiChartManager.setTheme('dark');
     }
 
     if (this.currentMarket === 'India' && this.lwChart) {
-      const isDark = theme !== 'light';
       this.lwChart.applyOptions({
         layout: {
-          background: { type: 'solid', color: isDark ? '#090d16' : '#ffffff' },
-          textColor: isDark ? '#94a3b8' : '#475569'
+          background: { type: 'solid', color: '#090d16' },
+          textColor: '#94a3b8'
         },
         grid: {
-          vertLines: { color: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.05)' },
-          horzLines: { color: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.05)' }
+          vertLines: { color: 'rgba(255, 255, 255, 0.04)' },
+          horzLines: { color: 'rgba(255, 255, 255, 0.04)' }
         },
         timeScale: {
-          borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'
+          borderColor: 'rgba(255, 255, 255, 0.08)'
         },
         rightPriceScale: {
-          borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'
+          borderColor: 'rgba(255, 255, 255, 0.08)'
         }
       });
-    } else {
-      this.render();
     }
   }
 

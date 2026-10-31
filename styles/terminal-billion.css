@@ -6477,3 +6477,19 @@ html, body {
     display: none !important;
   }
 }
+
+/* =========================================================================
+   PURE DARK VOID LOCK — ZERO LIGHT MODE OVERRIDES PERMITTED
+   ========================================================================= */
+:root, [data-theme], [data-theme="light"], [data-theme="dark"], body {
+  color-scheme: dark !important;
+}
+
+[data-theme="light"] {
+  --bg-void: #030712 !important;
+  --bg-surface: #060813 !important;
+  --bg-card: rgba(8, 12, 22, 0.95) !important;
+  --text-hi: #f8fafc !important;
+  --text-mid: #94a3b8 !important;
+  --text-low: #64748b !important;
+}

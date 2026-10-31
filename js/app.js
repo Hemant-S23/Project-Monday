@@ -16,6 +16,14 @@ import { AuthManager } from './auth/authManager.js';
  * Main Application Orchestrator
  * Connects Crypto & Indian Market adapters, strategy engines, AI reasoning, voice synthesis, and UI terminal.
  */
+
+// Immediate Hard Dark Cockpit Lock: Purge any legacy light mode flag from client storage
+try {
+  localStorage.setItem('monday_theme', 'dark');
+  document.documentElement.setAttribute('data-theme', 'dark');
+  if (document.body) document.body.setAttribute('data-theme', 'dark');
+} catch (e) {}
+
 class App {
   constructor() {
     this.currentMarket = 'Crypto';

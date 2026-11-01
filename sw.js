@@ -4,7 +4,7 @@
  * Ensures zero stale cache on fresh opens while preserving ultra-fast offline fallback.
  */
 
-const CACHE_NAME = 'monday-neural-cache-v5.8';
+const CACHE_NAME = 'monday-neural-cache-v5.9';
 
 const PRECACHE_ASSETS = [
   '/',

@@ -726,32 +726,7 @@ class App {
       const openPositions = this.paperTrader.openPositions;
       if (openPositions.length >= settings.maxTrades) return;
 
-      // 🛡️ MARKET-WIDE EVENT RISK SHIELD PRE-FLIGHT GATE
-      // If a major shock catalyst (e.g. regulatory shock, macro crash) is active,
-      // pause entire scanner and debounce notification to once every 10 minutes
-      if (settings.eventShieldEnabled) {
-        const globalRisk = this.newsEngine.getOverallEventRisk(this.currentAsset || 'BTC', this.currentMarket);
-        if (globalRisk && globalRisk.isShieldTriggered) {
-          const now = Date.now();
-          const shockTitle = globalRisk.activeEvents?.[0]?.title || globalRisk.summary || 'Breaking Macro / Regulatory Shock';
-          if (!this.lastEventShieldToastTime || (now - this.lastEventShieldToastTime) > 600000) {
-            this.lastEventShieldToastTime = now;
-            this.ui.appendAutonomousDecisionCard({
-              action: 'SKIPPED',
-              asset: this.currentAsset || 'MARKET',
-              direction: 'SHIELD',
-              openCount: openPositions.length,
-              maxTrades: settings.maxTrades,
-              skipReason: '🚨 HYPER-SENSITIVE EVENT RISK SHIELD ACTIVE',
-              skipExplanation: `Breaking shock catalyst detected: "${shockTitle}". Auto-Pilot engaged capital preservation armor. Watchlist scanner paused to protect portfolio.`
-            });
-            this.voiceAssistant.speak('Alert! Breaking shock catalyst detected. Auto-pilot scan paused to protect capital.');
-            this.ui.showToast('🛡️ Event Risk Shield Active', `${shockTitle.slice(0, 55)}... Auto-Pilot paused.`, 'warning');
-          }
-          return;
-        }
-      }
-
+      // 🛡️ MULTI-ASSET SCANNER ARCHITECTURE
       // Watchlist candidate assets for current market (Prioritizing currently viewed asset)
       let baseCandidates;
       if (this.currentMarket === 'India') {
@@ -780,6 +755,16 @@ class App {
 
         // Stop if maxTrades limit reached
         if (this.paperTrader.openPositions.length >= settings.maxTrades) break;
+
+        // 0. Asset-Specific Event Risk Shield Gatekeeper (Capital Preservation Armor)
+        // If THIS individual asset has an active shock catalyst, safely skip it without blocking other coins
+        if (settings.eventShieldEnabled) {
+          const assetRisk = this.newsEngine.getOverallEventRisk(asset, this.currentMarket);
+          if (assetRisk && assetRisk.isShieldTriggered) {
+            console.log(`[Auto-Pilot] Skipping ${asset}: Event Risk Shield active (${assetRisk.summary || 'Shock Catalyst'}).`);
+            continue;
+          }
+        }
 
         // Evaluate candidate asset
         const evalData = await this.evaluateAsset(asset);

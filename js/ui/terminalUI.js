@@ -1285,6 +1285,18 @@ export class TerminalUI {
     const autopilotLabel = document.getElementById('autopilot_label_text');
     const popoverAutopilotToggle = document.getElementById('popover_autopilot_toggle');
     const popoverAutopilotBadge = document.getElementById('popover_autopilot_badge');
+    const popoverAutopilotLabel = document.getElementById('popover_autopilot_label');
+
+    const getPersistedMaxTrades = () => {
+      try {
+        const raw = localStorage.getItem('monday_autopilot_settings');
+        if (raw) {
+          const s = JSON.parse(raw);
+          return Math.max(1, Math.min(100, parseInt(s.maxTrades, 10) || 2));
+        }
+      } catch (e) {}
+      return 2;
+    };
 
     const updateAutoPilotUI = (enabled) => {
       this.autoPilotEnabled = !!enabled;
@@ -1301,6 +1313,10 @@ export class TerminalUI {
         popoverAutopilotBadge.textContent = this.autoPilotEnabled ? 'ON' : 'OFF';
         popoverAutopilotBadge.className = `popover-toggle-badge ${this.autoPilotEnabled ? 'active' : ''}`;
       }
+      const maxT = getPersistedMaxTrades();
+      if (popoverAutopilotLabel) {
+        popoverAutopilotLabel.textContent = `Auto-Pilot Execution (Max ${maxT})`;
+      }
     };
 
     const toggleAutoPilot = () => {
@@ -1312,9 +1328,10 @@ export class TerminalUI {
       if (this.callbacks.onToggleAutoPilot) {
         this.callbacks.onToggleAutoPilot(next);
       }
+      const maxT = getPersistedMaxTrades();
       this.showToast(
         next ? '🤖 Auto-Pilot Activated' : 'Auto-Pilot Deactivated',
-        next ? 'MONDAY will automatically enter confirmed Grade A setups with strict 1% risk (Max 2 trades)' : 'Manual order execution mode restored.',
+        next ? `MONDAY will automatically enter confirmed Grade A setups with strict 1% risk (Max ${maxT} trades)` : 'Manual order execution mode restored.',
         next ? 'success' : 'info'
       );
     };
@@ -1459,6 +1476,7 @@ export class TerminalUI {
         } catch (e) {}
 
         closeAutopilotSettings();
+        updateAutoPilotUI(this.autoPilotEnabled);
         if (this.callbacks.onSaveAutoPilotSettings) {
           this.callbacks.onSaveAutoPilotSettings(newSettings);
         }

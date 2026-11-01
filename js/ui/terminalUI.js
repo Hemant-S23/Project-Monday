@@ -3295,6 +3295,65 @@ export class TerminalUI {
       this.expandedPositionIds = new Set();
     }
 
+    // In-place Telemetry Update (Prevents DOM destruction during live price ticks to eliminate hover flicker)
+    const existingCards = Array.from(container.querySelectorAll('.position-card'));
+    const existingIds = existingCards.map(c => c.dataset.tradeId).filter(Boolean);
+    const newIds = positions.map(p => String(p.id));
+    const isSameStructure = existingIds.length > 0 && existingIds.length === newIds.length && existingIds.every((id, idx) => id === newIds[idx]);
+
+    if (isSameStructure) {
+      positions.forEach(pos => {
+        const card = container.querySelector(`.position-card[data-trade-id="${pos.id}"]`);
+        if (!card) return;
+
+        const unPnl = Number(pos.unrealizedPnlUSD || pos.unrealizedGrossPnlUSD || 0);
+        const isPos = unPnl >= 0;
+        const isLong = (pos.direction || 'LONG').toUpperCase() === 'LONG';
+        const curP = Number(pos.currentPrice || pos.entry || 0);
+        const stopL = Number(pos.stopLoss || 0);
+        const targetP = Number(pos.target || pos.targetPrice || 0);
+        const range = Math.abs(targetP - stopL) || 1;
+        const progress = isLong
+          ? Math.min(100, Math.max(0, ((curP - stopL) / range) * 100))
+          : Math.min(100, Math.max(0, ((stopL - curP) / range) * 100));
+
+        const margin = Number(pos.marginUSD || pos.riskUSD || 20);
+        const roe = pos.roePercent !== undefined ? pos.roePercent : (margin > 0 ? ((unPnl / margin) * 100).toFixed(1) : 0);
+        const unR = pos.unrealizedR !== undefined ? pos.unrealizedR : (pos.riskUSD > 0 ? +(unPnl / pos.riskUSD).toFixed(2) : 0);
+
+        // Update PnL chip
+        const pnlChip = card.querySelector('.pos-pnl-chip');
+        if (pnlChip) {
+          pnlChip.className = `pos-pnl-chip ${isPos ? 'bullish' : 'bearish'}`;
+          pnlChip.textContent = `${isPos ? '+' : ''}$${unPnl.toFixed(2)} (${isPos ? '+' : ''}${roe}%)`;
+        }
+
+        // Update Mark price in summary
+        const markVal = card.querySelector('.strip-prices .strip-val.highlight');
+        if (markVal) markVal.textContent = this.formatPrice(curP);
+
+        // Update progress bar & labels in expanded section
+        const progressFill = card.querySelector('.pos-progress-fill');
+        if (progressFill) {
+          progressFill.className = `pos-progress-fill ${isPos ? 'bullish' : 'bearish'}`;
+          progressFill.style.width = `${progress}%`;
+        }
+        const progressMarker = card.querySelector('.pos-progress-marker');
+        if (progressMarker) progressMarker.style.left = `${progress}%`;
+
+        const roeTag = card.querySelector('.pos-roe-tag');
+        if (roeTag) {
+          roeTag.className = `pos-roe-tag ${isPos ? 'bullish' : 'bearish'}`;
+          roeTag.textContent = `${isPos ? '+' : ''}${unR}R (${isPos ? '+' : ''}${roe}% ROE)`;
+        }
+
+        // Update Mark price in grid
+        const gridMark = card.querySelector('.pos-grid-cell[data-metric="mark"] .val');
+        if (gridMark) gridMark.textContent = this.formatPrice(curP);
+      });
+      return;
+    }
+
     container.innerHTML = positions.map(pos => {
       const unPnl = Number(pos.unrealizedPnlUSD || pos.unrealizedGrossPnlUSD || 0);
       const isPos = unPnl >= 0;
@@ -3361,28 +3420,28 @@ export class TerminalUI {
                 <div class="pos-progress-marker" style="left: ${progress}%;"></div>
               </div>
               <div class="pos-progress-labels">
-                <span>SL ${this.formatPrice(stopL)}</span>
+                <span class="pos-lbl-sl">SL ${this.formatPrice(stopL)}</span>
                 <span class="pos-roe-tag ${isPos ? 'bullish' : 'bearish'}">${isPos ? '+' : ''}${unR}R (${isPos ? '+' : ''}${roe}% ROE)</span>
-                <span>TP ${this.formatPrice(targetP)}</span>
+                <span class="pos-lbl-tp">TP ${this.formatPrice(targetP)}</span>
               </div>
             </div>
 
-            <!-- Deep Metrics Grid -->
+            <!-- Deep Metrics Grid (Symmetrical 2-Column Institutional Matrix) -->
             <div class="pos-grid">
-              <div class="pos-grid-cell"><span class="lbl">Entry</span><span class="val">${this.formatPrice(pos.entry)}</span></div>
-              <div class="pos-grid-cell"><span class="lbl">Mark Price</span><span class="val highlight">${this.formatPrice(pos.currentPrice)}</span></div>
-              <div class="pos-grid-cell"><span class="lbl">Est. Liq Price</span><span class="val text-warning">${liqText}</span></div>
-              <div class="pos-grid-cell"><span class="lbl">Margin / Value</span><span class="val">$${pos.marginUSD || pos.riskUSD} / $${pos.notionalUSD || (pos.entry * pos.positionSize).toFixed(0)}</span></div>
-              <div class="pos-grid-cell"><span class="lbl">Size</span><span class="val">${pos.positionSize} ${pos.asset}</span></div>
-              <div class="pos-grid-cell"><span class="lbl">RR Ratio</span><span class="val">1:${pos.rrRatio}</span></div>
-              <div class="pos-grid-cell"><span class="lbl">Est. Fees + 18% GST</span><span class="val text-muted">-$${Number(pos.feesUSD || 0).toFixed(2)} (on close)</span></div>
-              <div class="pos-grid-cell"><span class="lbl">Strategy</span><span class="val text-muted">${pos.strategy || `${lev}x Iso`}</span></div>
+              <div class="pos-grid-cell" data-metric="entry"><span class="lbl">Entry</span><span class="val">${this.formatPrice(pos.entry)}</span></div>
+              <div class="pos-grid-cell" data-metric="mark"><span class="lbl">Mark Price</span><span class="val highlight">${this.formatPrice(curP)}</span></div>
+              <div class="pos-grid-cell" data-metric="liq"><span class="lbl">Est. Liq Price</span><span class="val text-warning">${liqText}</span></div>
+              <div class="pos-grid-cell" data-metric="size"><span class="lbl">Size</span><span class="val">${pos.positionSize} ${pos.asset}</span></div>
+              <div class="pos-grid-cell" data-metric="margin"><span class="lbl">Margin / Notional</span><span class="val">$${pos.marginUSD || pos.riskUSD} / $${pos.notionalUSD || (pos.entry * pos.positionSize).toFixed(0)}</span></div>
+              <div class="pos-grid-cell" data-metric="rr"><span class="lbl">RR Ratio</span><span class="val">1:${pos.rrRatio}</span></div>
+              <div class="pos-grid-cell" data-metric="fees"><span class="lbl">Est. Fees (GST)</span><span class="val text-muted">-$${Number(pos.feesUSD || 0).toFixed(2)}</span></div>
+              <div class="pos-grid-cell" data-metric="strategy"><span class="lbl">Execution Mode</span><span class="val text-muted">${pos.strategy || `${lev}x Isolated`}</span></div>
             </div>
 
             <div class="pos-footer">
-              <span class="pos-time"><i class="ph ph-clock"></i> Opened: ${new Date(pos.openedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-              <button class="btn-close-pos" data-trade-id="${pos.id}" type="button">
-                <i class="ph ph-x-circle"></i> Close Trade
+              <span class="pos-time"><i class="ph ph-clock"></i> Opened ${new Date(pos.openedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              <button class="btn-close-pos" data-trade-id="${pos.id}" type="button" title="Close Open Trade">
+                <i class="ph-bold ph-x-circle"></i> <span>Close Trade</span>
               </button>
             </div>
           </div>

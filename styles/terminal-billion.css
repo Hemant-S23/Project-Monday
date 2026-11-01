@@ -2641,13 +2641,13 @@ html, body {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
   overflow: hidden !important;
   flex-shrink: 0 !important;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease !important;
 }
 
 .position-card:hover {
-  border-color: rgba(56, 189, 248, 0.35) !important;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4), 0 0 12px rgba(56, 189, 248, 0.1) !important;
-  transform: translateY(-1px) !important;
+  border-color: rgba(56, 189, 248, 0.4) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), 0 0 12px rgba(56, 189, 248, 0.12) !important;
+  transform: none !important;
 }
 
 .pos-strip-summary {
@@ -2834,6 +2834,206 @@ html, body {
   color: #ffffff !important;
   box-shadow: 0 0 10px rgba(239, 68, 68, 0.3) !important;
   transform: scale(1.03) !important;
+}
+
+/* Expanded Position Details Drawer - Ultra-Clean Liquid Glass */
+.pos-strip-details {
+  background: rgba(6, 10, 20, 0.72) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+  gap: 8px !important;
+}
+
+.position-card.expanded .pos-strip-details {
+  max-height: 480px !important;
+  padding: 10px 11px 12px 11px !important;
+}
+
+.pos-progress-wrapper {
+  background: rgba(0, 0, 0, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-radius: 8px !important;
+  padding: 8px 10px !important;
+  gap: 6px !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.pos-progress-track {
+  height: 4px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-radius: 999px !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.pos-progress-fill {
+  height: 100% !important;
+  border-radius: 999px !important;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.pos-progress-fill.bullish {
+  background: linear-gradient(90deg, #06b6d4, #10b981) !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.6) !important;
+}
+
+.pos-progress-fill.bearish {
+  background: linear-gradient(90deg, #f59e0b, #f43f5e) !important;
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.6) !important;
+}
+
+.pos-progress-marker {
+  position: absolute !important;
+  top: 50% !important;
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.95), 0 0 4px #38bdf8 !important;
+  transform: translate(-50%, -50%) !important;
+  transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.pos-progress-labels {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.65rem !important;
+  color: #94a3b8 !important;
+}
+
+.pos-progress-labels .pos-lbl-sl {
+  color: #fda4af !important;
+  font-weight: 700 !important;
+}
+
+.pos-progress-labels .pos-lbl-tp {
+  color: #6ee7b7 !important;
+  font-weight: 700 !important;
+}
+
+.pos-roe-tag {
+  font-family: var(--font-mono) !important;
+  font-size: 0.68rem !important;
+  font-weight: 800 !important;
+  padding: 1px 6px !important;
+  border-radius: 4px !important;
+  letter-spacing: -0.01em !important;
+}
+
+.pos-roe-tag.bullish {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+.pos-roe-tag.bearish {
+  background: rgba(244, 63, 94, 0.15) !important;
+  color: #fb7185 !important;
+  border: 1px solid rgba(244, 63, 94, 0.3) !important;
+}
+
+/* Deep Metrics Grid - Symmetrical 2-Column Institutional Matrix */
+.pos-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 6px !important;
+  background: rgba(0, 0, 0, 0.32) !important;
+  padding: 8px !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.pos-grid-cell {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.04) !important;
+  border-radius: 6px !important;
+  padding: 5px 8px !important;
+  min-width: 0 !important;
+}
+
+.pos-grid-cell .lbl {
+  font-size: 0.60rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #64748b !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.pos-grid-cell .val {
+  font-family: var(--font-mono) !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  color: #f1f5f9 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.pos-grid-cell .val.highlight {
+  color: #38bdf8 !important;
+  font-weight: 800 !important;
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.3) !important;
+}
+
+.pos-grid-cell .val.text-warning {
+  color: #fbbf24 !important;
+  font-weight: 700 !important;
+}
+
+.pos-grid-cell .val.text-muted {
+  color: #94a3b8 !important;
+  font-weight: 600 !important;
+}
+
+/* Footer & Action Button */
+.pos-footer {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding-top: 4px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.04) !important;
+}
+
+.pos-time {
+  font-family: var(--font-mono) !important;
+  font-size: 0.65rem !important;
+  color: #64748b !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.btn-close-pos {
+  background: rgba(239, 68, 68, 0.14) !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+  color: #fca5a5 !important;
+  padding: 4px 10px !important;
+  border-radius: 6px !important;
+  font-family: var(--font-display) !important;
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.btn-close-pos:hover {
+  background: rgba(239, 68, 68, 0.28) !important;
+  border-color: rgba(239, 68, 68, 0.65) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.35) !important;
+  transform: none !important;
 }
 
 /* =========================================================================

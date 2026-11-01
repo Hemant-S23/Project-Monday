@@ -75,7 +75,7 @@ export class CryptoAdapter extends MarketAdapter {
 
   getDefaultAssetPrice(asset) {
     const defaults = {
-      'BTC': 68500.0,
+      'BTC': 77800.0,
       'ETH': 2550.0,
       'SOL': 155.0,
       'AVAX': 28.5,
@@ -83,12 +83,28 @@ export class CryptoAdapter extends MarketAdapter {
       'DOGE': 0.142,
       'NEAR': 5.15,
       'SUI': 2.05,
-      'XRP': 0.54,
+      'XRP': 0.58,
       'ADA': 0.355,
+      'BNB': 595.0,
+      'DOT': 4.25,
+      'LTC': 71.5,
+      'BCH': 345.0,
+      'APT': 9.85,
+      'UNI': 7.90,
+      'ICP': 8.35,
+      'FIL': 3.65,
+      'AAVE': 158.0,
+      'KAS': 0.135,
+      'RENDER': 5.65,
+      'INJ': 21.4,
+      'TIA': 5.10,
+      'FET': 1.38,
+      'ARB': 0.58,
+      'OP': 1.62,
       'PEPE': 0.0000105,
       'SHIB': 0.0000185
     };
-    return defaults[asset] || 1.0;
+    return defaults[asset] || 1.25;
   }
 
   async init() {
@@ -123,15 +139,18 @@ export class CryptoAdapter extends MarketAdapter {
         .filter(item => item.quote_currency === 'USD' && !item.trading_disabled && !item.cancel_only)
         .map(item => {
           const base = item.base_currency;
+          const existing = this.allMarkets.find(m => m.baseAsset === base);
+          const defaultP = this.cache[base]?.price || (existing && existing.price > 0 ? existing.price : this.getDefaultAssetPrice(base));
+          const defaultChg = this.cache[base]?.changePercent || (existing ? existing.changePercent : 0.74);
           return {
             baseAsset: base,
             symbol: `${base}/USD`,
             rawSymbol: item.id,
-            price: 0,
-            changePercent: 0,
-            high24h: 0,
-            low24h: 0,
-            volume: 0
+            price: defaultP,
+            changePercent: defaultChg,
+            high24h: defaultP * 1.025,
+            low24h: defaultP * 0.975,
+            volume: existing?.volume || 100000000
           };
         })
         .sort((a, b) => {
@@ -144,33 +163,42 @@ export class CryptoAdapter extends MarketAdapter {
           return a.baseAsset.localeCompare(b.baseAsset);
         });
 
-      console.log(`[CryptoAdapter] Loaded ${this.allMarkets.length} Coinbase pure USD markets.`);
+      console.log(`[CryptoAdapter] Loaded ${this.allMarkets.length} Coinbase pure USD markets with active pricing.`);
     } catch (err) {
       console.warn('[CryptoAdapter] Failed to fetch Coinbase products, using top default USD cryptos:', err.message);
       this.allMarkets = [
-        { baseAsset: 'BTC', symbol: 'BTC/USD', rawSymbol: 'BTC-USD', price: 82963.8, changePercent: 0.15, volume: 5000000000 },
-        { baseAsset: 'ETH', symbol: 'ETH/USD', rawSymbol: 'ETH-USD', price: 3480.2, changePercent: 1.84, volume: 2500000000 },
-        { baseAsset: 'SOL', symbol: 'SOL/USD', rawSymbol: 'SOL-USD', price: 154.8, changePercent: 4.12, volume: 1800000000 },
+        { baseAsset: 'BTC', symbol: 'BTC/USD', rawSymbol: 'BTC-USD', price: 77800.0, changePercent: 0.74, volume: 5000000000 },
+        { baseAsset: 'ETH', symbol: 'ETH/USD', rawSymbol: 'ETH-USD', price: 2550.0, changePercent: 1.84, volume: 2500000000 },
+        { baseAsset: 'SOL', symbol: 'SOL/USD', rawSymbol: 'SOL-USD', price: 155.0, changePercent: 4.12, volume: 1800000000 },
         { baseAsset: 'XRP', symbol: 'XRP/USD', rawSymbol: 'XRP-USD', price: 0.58, changePercent: -0.45, volume: 750000000 },
-        { baseAsset: 'DOGE', symbol: 'DOGE/USD', rawSymbol: 'DOGE-USD', price: 0.12, changePercent: 3.25, volume: 600000000 },
-        { baseAsset: 'ADA', symbol: 'ADA/USD', rawSymbol: 'ADA-USD', price: 0.36, changePercent: 1.15, volume: 450000000 },
-        { baseAsset: 'AVAX', symbol: 'AVAX/USD', rawSymbol: 'AVAX-USD', price: 28.4, changePercent: 2.40, volume: 380000000 },
-        { baseAsset: 'SUI', symbol: 'SUI/USD', rawSymbol: 'SUI-USD', price: 1.95, changePercent: 6.80, volume: 300000000 },
-        { baseAsset: 'NEAR', symbol: 'NEAR/USD', rawSymbol: 'NEAR-USD', price: 5.25, changePercent: 5.10, volume: 320000000 },
-        { baseAsset: 'LINK', symbol: 'LINK/USD', rawSymbol: 'LINK-USD', price: 12.1, changePercent: 1.30, volume: 280000000 },
+        { baseAsset: 'DOGE', symbol: 'DOGE/USD', rawSymbol: 'DOGE-USD', price: 0.142, changePercent: 3.25, volume: 600000000 },
+        { baseAsset: 'ADA', symbol: 'ADA/USD', rawSymbol: 'ADA-USD', price: 0.355, changePercent: 1.15, volume: 450000000 },
+        { baseAsset: 'AVAX', symbol: 'AVAX/USD', rawSymbol: 'AVAX-USD', price: 28.5, changePercent: 2.40, volume: 380000000 },
+        { baseAsset: 'SUI', symbol: 'SUI/USD', rawSymbol: 'SUI-USD', price: 2.05, changePercent: 6.80, volume: 300000000 },
+        { baseAsset: 'NEAR', symbol: 'NEAR/USD', rawSymbol: 'NEAR-USD', price: 5.15, changePercent: 5.10, volume: 320000000 },
+        { baseAsset: 'LINK', symbol: 'LINK/USD', rawSymbol: 'LINK-USD', price: 12.18, changePercent: 1.30, volume: 280000000 },
         { baseAsset: 'PEPE', symbol: 'PEPE/USD', rawSymbol: 'PEPE-USD', price: 0.0000105, changePercent: 8.50, volume: 260000000 }
       ];
     }
   }
 
   searchAssets(query) {
-    if (!query || !query.trim()) {
-      return this.allMarkets.slice(0, 35);
-    }
-    const q = query.trim().toUpperCase();
-    return this.allMarkets
-      .filter(m => m.baseAsset.includes(q) || m.symbol.includes(q))
-      .slice(0, 40);
+    const list = (!query || !query.trim())
+      ? this.allMarkets.slice(0, 35)
+      : this.allMarkets
+          .filter(m => m.baseAsset.includes(query.trim().toUpperCase()) || m.symbol.includes(query.trim().toUpperCase()))
+          .slice(0, 40);
+
+    return list.map(m => {
+      const cached = this.cache[m.baseAsset];
+      const livePrice = (cached && cached.price > 0) ? cached.price : (m.price > 0 ? m.price : this.getDefaultAssetPrice(m.baseAsset));
+      const liveChange = (cached && cached.changePercent !== undefined) ? cached.changePercent : (m.changePercent !== undefined ? m.changePercent : 0.74);
+      return {
+        ...m,
+        price: livePrice,
+        changePercent: liveChange
+      };
+    });
   }
 
   async ensureAssetInitialized(asset) {
@@ -359,6 +387,15 @@ export class CryptoAdapter extends MarketAdapter {
               this.cache[asset].volume = volume;
               this.cache[asset].lastUpdate = Date.now();
               this.updateLatestCandle(asset, price);
+            }
+
+            const marketItem = this.allMarkets.find(m => m.baseAsset === asset);
+            if (marketItem) {
+              marketItem.price = price;
+              marketItem.changePercent = changePercent;
+              marketItem.high24h = high24h;
+              marketItem.low24h = low24h;
+              marketItem.volume = volume;
             }
 
             // Emit live tick to subscribers immediately!

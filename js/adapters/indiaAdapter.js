@@ -434,34 +434,45 @@ export class IndiaAdapter extends MarketAdapter {
   }
 
   searchAssets(query) {
+    let matches = [];
     if (!query || query.trim() === '') {
-      return this.allMarkets.slice(0, 30);
+      matches = this.allMarkets.slice(0, 30);
+    } else {
+      const q = query.trim().toUpperCase().replace(/^NSE:/, '').replace(/^BSE:/, '');
+
+      matches = this.allMarkets.filter(m =>
+        m.symbol.toUpperCase().includes(q) ||
+        m.name.toUpperCase().includes(q) ||
+        m.sector.toUpperCase().includes(q)
+      );
+
+      // Dynamic fallback: If no exact match and query >= 2 chars, provide on-the-fly option
+      const exact = matches.some(m => m.symbol.toUpperCase() === q);
+      if (!exact && q.length >= 2) {
+        matches.unshift({
+          symbol: q,
+          name: `${q} • Custom NSE Equity (Dynamic)`,
+          exchange: 'NSE',
+          sector: 'Indian Equities',
+          price: 500.0,
+          changePercent: 1.0,
+          high24h: 515.0,
+          low24h: 490.0,
+          volume: 750000
+        });
+      }
     }
-    const q = query.trim().toUpperCase().replace(/^NSE:/, '').replace(/^BSE:/, '');
 
-    const matches = this.allMarkets.filter(m =>
-      m.symbol.toUpperCase().includes(q) ||
-      m.name.toUpperCase().includes(q) ||
-      m.sector.toUpperCase().includes(q)
-    );
-
-    // Dynamic fallback: If no exact match and query >= 2 chars, provide on-the-fly option
-    const exact = matches.some(m => m.symbol.toUpperCase() === q);
-    if (!exact && q.length >= 2) {
-      matches.unshift({
-        symbol: q,
-        name: `${q} • Custom NSE Equity (Dynamic)`,
-        exchange: 'NSE',
-        sector: 'Indian Equities',
-        price: 500.0,
-        changePercent: 1.0,
-        high24h: 515.0,
-        low24h: 490.0,
-        volume: 750000
-      });
-    }
-
-    return matches;
+    return matches.map(m => {
+      const cached = this.cache[m.symbol];
+      const liveP = (cached && cached.price > 0) ? cached.price : m.price;
+      const liveChg = (cached && cached.changePercent !== undefined) ? cached.changePercent : m.changePercent;
+      return {
+        ...m,
+        price: liveP,
+        changePercent: liveChg
+      };
+    });
   }
 
   disconnect() {

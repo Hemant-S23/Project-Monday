@@ -2500,6 +2500,22 @@ export class TerminalUI {
       mChg.className = `m-asset-chg ${isPos ? 'text-bullish' : 'text-bearish'}`;
     }
 
+    // Synchronize open search dropdown item if rendered
+    const targetAsset = asset || this.currentAsset;
+    if (targetAsset && price !== undefined) {
+      const searchItem = document.querySelector(`.search-result-item[data-asset="${targetAsset}"]`);
+      if (searchItem) {
+        const pSpan = searchItem.querySelector('.search-res-price');
+        const cSpan = searchItem.querySelector('.search-res-change');
+        if (pSpan) pSpan.textContent = this.formatPrice(price);
+        if (cSpan && changePercent !== undefined) {
+          const isPos = changePercent >= 0;
+          cSpan.className = `search-res-change ${isPos ? 'bullish' : 'bearish'}`;
+          cSpan.textContent = `${isPos ? '+' : ''}${changePercent.toFixed(2)}%`;
+        }
+      }
+    }
+
     // Persist latest price for instant zero-lag boot on future reloads
     if (price && (!asset || asset === this.currentAsset)) {
       try {

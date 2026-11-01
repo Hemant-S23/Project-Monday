@@ -2974,8 +2974,14 @@ export class TerminalUI {
     }
 
     if (fundingEl && fundingData) {
-      fundingEl.textContent = `${fundingData.rateFormatted} (${fundingData.sentiment === 'BALANCED' ? 'Normal' : fundingData.sentiment})`;
-      fundingEl.className = `meta-val ${fundingData.sentiment === 'OVERHEATED_LONGS' ? 'bearish' : 'neutral'}`;
+      fundingEl.textContent = fundingData.rateFormatted || 'N/A';
+      const titleCountdown = fundingData.nextCountdown ? ` • Next in ${fundingData.nextCountdown}` : '';
+      const titleAnnual = fundingData.annualized ? ` • Annualized: ${fundingData.annualized}` : '';
+      const src = fundingData.source ? `[${fundingData.source}] ` : '';
+      fundingEl.title = `${src}Delta Live Perpetual Funding: ${fundingData.rateFormatted}${titleCountdown}${titleAnnual}`;
+      const isOverheated = fundingData.sentiment === 'OVERHEATED_LONGS';
+      const isShorts = fundingData.sentiment === 'HEAVY_SHORTS';
+      fundingEl.className = `meta-val ${isOverheated ? 'bearish' : isShorts ? 'bullish' : 'neutral'}`;
     }
 
     // News Radar container (Live Realtime Feed)

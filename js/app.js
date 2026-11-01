@@ -1464,6 +1464,13 @@ class App {
     this.ui.setActiveWatchlistAsset(asset);
     this.ui.currentAsset = asset;
     this.ui.refreshDerivativesOrderDesk();
+
+    const fundingEl = document.getElementById('meta_funding_rate');
+    if (fundingEl && this.currentMarket !== 'India') {
+      fundingEl.textContent = 'Syncing Delta...';
+      fundingEl.className = 'meta-val neutral';
+    }
+
     await this.runFullEvaluation();
     this.ui.showToast('Asset Changed', `Active charting and analysis switched to ${asset}.`, 'info');
     this.voiceAssistant.speak(`Switched to ${asset}. Loading analysis.`);

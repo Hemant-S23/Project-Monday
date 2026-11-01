@@ -3609,12 +3609,21 @@ html, body {
   gap: 6px !important;
 }
 
-.intel-col-pattern .hist-disclaimer {
+.intel-col-pattern .hist-disclaimer,
+.hist-disclaimer {
   font-family: var(--font-body) !important;
-  font-size: 0.8rem !important;
-  font-weight: 400 !important;
-  line-height: 1.5 !important;
-  color: #cbd5e1 !important;
+  font-size: 0.82rem !important;
+  font-weight: 500 !important;
+  line-height: 1.55 !important;
+  color: #f1f5f9 !important;
+  background: rgba(15, 23, 42, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-left: 3px solid #38bdf8 !important;
+  border-radius: 10px !important;
+  padding: 10px 14px !important;
+  margin-top: 8px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  display: block !important;
 }
 
 /* --- MACRO RADAR NEWS STREAM POD --- */
@@ -3750,13 +3759,15 @@ html, body {
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4) !important;
 }
 
-.news-desc {
+.news-desc,
+.intel-col-macro .news-desc {
   font-family: var(--font-body) !important;
-  font-size: 0.82rem !important;
+  font-size: 0.86rem !important;
   font-weight: 400 !important;
-  color: #cbd5e1 !important;
+  color: #e2e8f0 !important;
   line-height: 1.55 !important;
-  margin-top: 2px !important;
+  margin-top: 4px !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
 }
 
 /* =========================================================================

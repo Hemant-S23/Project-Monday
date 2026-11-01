@@ -2504,9 +2504,9 @@
 }
 
 .hist-disclaimer {
-  font-size: 0.64rem;
-  color: var(--text-dim);
-  font-style: italic;
+  font-size: 0.76rem;
+  color: #cbd5e1;
+  font-style: normal;
 }
 
 .news-radar-header {

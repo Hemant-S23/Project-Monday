@@ -487,12 +487,45 @@ export class TerminalUI {
       });
     }
 
-    // Context Deck Mobile Segmented Switcher (Pattern Scan ⇄ Macro Radar)
+    // Context Deck Collapsible Drawer (TradingView / Bloomberg Pro Style)
+    const contextDeck = document.getElementById('chart_context_deck');
+    const deckToggleBtn = document.getElementById('deck_toggle_btn');
+    const deckToggleLbl = document.getElementById('deck_toggle_lbl');
+    const deckSummaryTicker = document.getElementById('context_deck_summary_ticker');
+
+    const toggleDeckDrawer = (forceState = null) => {
+      if (!contextDeck) return;
+      const isExpanded = forceState !== null ? forceState : !contextDeck.classList.contains('expanded');
+      contextDeck.classList.toggle('expanded', isExpanded);
+      contextDeck.classList.toggle('collapsed', !isExpanded);
+      if (deckToggleLbl) deckToggleLbl.textContent = isExpanded ? 'Collapse' : 'Expand';
+    };
+
+    if (deckToggleBtn) {
+      deckToggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleDeckDrawer();
+      });
+    }
+
+    if (deckSummaryTicker) {
+      deckSummaryTicker.addEventListener('click', () => {
+        toggleDeckDrawer(true);
+      });
+    }
+
+    // Context Deck Segmented Switcher (Pattern Scan ⇄ Macro Radar)
     document.querySelectorAll('.deck-m-tab').forEach(tab => {
       tab.addEventListener('click', (e) => {
+        e.stopPropagation();
         const deckView = e.currentTarget.dataset.deckView;
         document.querySelectorAll('.deck-m-tab').forEach(t => t.classList.remove('active'));
         e.currentTarget.classList.add('active');
+
+        // Automatically expand the drawer if it was collapsed!
+        if (contextDeck && !contextDeck.classList.contains('expanded')) {
+          toggleDeckDrawer(true);
+        }
 
         const histCard = document.getElementById('historical_pattern_card');
         const newsCard = document.getElementById('news_radar_list');
@@ -2964,6 +2997,11 @@ export class TerminalUI {
     // Historical Pattern Card (Live Quantitative Scanner)
     const histCard = document.getElementById('historical_pattern_card');
     if (histCard && historicalContext) {
+      const summaryText = document.getElementById('deck_summary_text');
+      if (summaryText) {
+        summaryText.textContent = `${historicalContext.patternName} • ${historicalContext.historicalWinRate}% Win Rate (${historicalContext.contextTag})`;
+      }
+
       const liveClock = historicalContext.scannedTimeFormatted || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       histCard.innerHTML = `
         <div class="hist-card-header">

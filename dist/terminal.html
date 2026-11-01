@@ -42,12 +42,12 @@
     }
   }
   </script>
-  <script type="module" crossorigin src="/assets/terminal-Co002qQq.js"></script>
+  <script type="module" crossorigin src="/assets/terminal-Dq5Wo-Pp.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/cursorGlow-BZ6wkXs1.js">
   <link rel="modulepreload" crossorigin href="/assets/hero3D-DWe7XOYa.js">
   <link rel="modulepreload" crossorigin href="/assets/sfx-BD73uRAY.js">
   <link rel="modulepreload" crossorigin href="/assets/authManager-DCW-oTS2.js">
-  <link rel="stylesheet" crossorigin href="/assets/terminal-6oWIjCNA.css">
+  <link rel="stylesheet" crossorigin href="/assets/terminal-DzpzqX9p.css">
   <link rel="stylesheet" crossorigin href="/assets/components--KCpGCq7.css">
 </head>
 <body data-mobile-page="chart">
@@ -1359,31 +1359,48 @@
         </div>
       </div>
 
-        <!-- Lower Context Radar (Historical & Macro News) -->
-        <div class="chart-context-deck" id="chart_context_deck">
-          <div class="context-deck-mobile-nav" id="context_deck_mobile_nav">
-            <button class="deck-m-tab active" data-deck-view="hist" id="deck_tab_hist" type="button">
-              <i class="ph ph-git-commit"></i> <span>Pattern Scan</span>
-            </button>
-            <button class="deck-m-tab" data-deck-view="news" id="deck_tab_news" type="button">
-              <i class="ph ph-broadcast"></i> <span>Macro Radar</span>
-            </button>
-          </div>
-
-          <!-- Historical Intelligence -->
-          <div class="hist-card deck-card active-deck-card" id="historical_pattern_card">
-            <div class="hist-title"><i class="ph ph-git-commit"></i> Regime Pattern Matching</div>
-            <div class="hist-stats-row">
-              <div class="stat-col"><span class="k">Sample:</span> <span class="v">84 setups</span></div>
-              <div class="stat-col"><span class="k">Win Rate:</span> <span class="v text-bullish">64.3%</span></div>
-              <div class="stat-col"><span class="k">Avg RR:</span> <span class="v">1:2.65</span></div>
+        <!-- Lower Context Radar Collapsible Drawer (TradingView & Bloomberg Pro Style) -->
+        <div class="chart-context-deck collapsed" id="chart_context_deck">
+          <div class="context-deck-bar" id="context_deck_bar">
+            <div class="context-deck-mobile-nav" id="context_deck_mobile_nav">
+              <button class="deck-m-tab active" data-deck-view="hist" id="deck_tab_hist" type="button" title="View Quantitative Pattern Scan">
+                <i class="ph ph-git-commit"></i> <span>Pattern Scan</span>
+              </button>
+              <button class="deck-m-tab" data-deck-view="news" id="deck_tab_news" type="button" title="View Real-Time Macro News Radar">
+                <i class="ph ph-broadcast"></i> <span>Macro Radar</span>
+              </button>
             </div>
-            <div class="hist-desc">Evaluating similar discount pullback behavior following Asian liquidity sweeps.</div>
+
+            <div class="context-deck-summary-ticker" id="context_deck_summary_ticker" title="Click to expand details">
+              <span class="live-dot pulse-cyan"></span>
+              <span class="deck-summary-text" id="deck_summary_text">Bullish 20 EMA Continuation • 64.3% Historical Win Rate</span>
+            </div>
+
+            <div class="context-deck-actions">
+              <button class="deck-toggle-btn" id="deck_toggle_btn" type="button" title="Toggle Intelligence Drawer">
+                <span class="deck-toggle-lbl" id="deck_toggle_lbl">Expand</span>
+                <i class="ph-bold ph-caret-up" id="deck_toggle_icon"></i>
+              </button>
+            </div>
           </div>
 
-          <!-- Macro & News Radar -->
-          <div class="news-radar-scroll deck-card" id="news_radar_list">
-            <!-- News items injected dynamically -->
+          <!-- Drawer Content Body (Visible when expanded) -->
+          <div class="context-deck-body" id="context_deck_body">
+            <!-- Historical Intelligence -->
+            <div class="hist-card deck-card active-deck-card" id="historical_pattern_card">
+              <div class="hist-title"><i class="ph ph-git-commit"></i> Regime Pattern Matching</div>
+              <div class="hist-stats-row">
+                <div class="stat-col"><span class="k">Sample:</span> <span class="v">84 setups</span></div>
+                <div class="stat-col"><span class="k">Win Rate:</span> <span class="v text-bullish">64.3%</span></div>
+                <div class="stat-col"><span class="k">Avg RR:</span> <span class="v">1:2.65</span></div>
+              </div>
+              <div class="hist-desc">Evaluating similar discount pullback behavior following Asian liquidity sweeps.</div>
+            </div>
+
+            <!-- Macro & News Radar -->
+            <div class="news-radar-scroll deck-card" id="news_radar_list">
+              <!-- News items injected dynamically -->
+            </div>
           </div>
         </div>
       </section>

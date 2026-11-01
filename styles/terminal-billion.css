@@ -2953,8 +2953,8 @@ html, body {
 
 /* Chart Viewport Canvas */
 .chart-viewport {
-  flex: 1 !important;
-  min-height: 280px !important;
+  flex: 1 1 0% !important;
+  min-height: 180px !important;
   background: #06070a !important;
   position: relative !important;
   overflow: hidden !important;
@@ -3070,20 +3070,36 @@ html, body {
 }
 
 /* =========================================================================
-   LOWER CONTEXT RADAR DECK (HISTORICAL SCAN & MACRO RADAR)
+   LOWER CONTEXT RADAR COLLAPSIBLE DRAWER (TRADINGVIEW & BLOOMBERG PRO STYLE)
    ========================================================================= */
 .chart-context-deck {
-  height: 135px !important;
-  min-height: 135px !important;
-  max-height: 135px !important;
+  flex-shrink: 0 !important;
+  width: 100% !important;
   border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-  background: rgba(9, 12, 20, 0.55) !important;
-  padding: 10px 16px !important;
+  background: rgba(8, 12, 22, 0.94) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
   box-sizing: border-box !important;
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
   position: relative !important;
+  z-index: 15 !important;
+  transition: height 0.28s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease, box-shadow 0.28s ease !important;
+}
+
+.chart-context-deck.collapsed {
+  height: 38px !important;
+  min-height: 38px !important;
+  max-height: 38px !important;
+}
+
+.chart-context-deck.expanded {
+  height: 220px !important;
+  min-height: 220px !important;
+  max-height: 220px !important;
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(6, 182, 212, 0.12) !important;
+  border-top-color: rgba(6, 182, 212, 0.35) !important;
 }
 
 .chart-context-deck::before {
@@ -3093,47 +3109,136 @@ html, body {
   left: 0 !important;
   right: 0 !important;
   height: 1px !important;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%) !important;
+  background: linear-gradient(90deg, transparent 0%, rgba(6, 182, 212, 0.5) 50%, transparent 100%) !important;
+}
+
+/* Avionics Bar (Always visible at top of deck) */
+.context-deck-bar {
+  height: 38px !important;
+  min-height: 38px !important;
+  max-height: 38px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0 12px !important;
+  gap: 12px !important;
+  box-sizing: border-box !important;
+  cursor: pointer !important;
 }
 
 .context-deck-mobile-nav {
   display: flex !important;
   align-items: center !important;
-  gap: 8px !important;
-  margin-bottom: 8px !important;
+  gap: 6px !important;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
 }
 
 .deck-m-tab {
-  padding: 4px 12px !important;
-  border-radius: 7px !important;
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid rgba(255, 255, 255, 0.07) !important;
-  color: var(--text-low) !important;
+  height: 26px !important;
+  padding: 0 10px !important;
+  border-radius: 6px !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: var(--text-mid) !important;
   font-family: var(--font-display) !important;
-  font-size: 0.74rem !important;
-  font-weight: 600 !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
   cursor: pointer !important;
   display: flex !important;
   align-items: center !important;
   gap: 5px !important;
-  transition: all 0.15s ease !important;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  white-space: nowrap !important;
 }
 
 .deck-m-tab:hover {
-  background: rgba(255, 255, 255, 0.07) !important;
-  color: var(--text-hi) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
 }
 
 .deck-m-tab.active {
-  background: rgba(6, 182, 212, 0.15) !important;
-  border-color: rgba(6, 182, 212, 0.45) !important;
-  color: var(--cyan) !important;
-  box-shadow: 0 0 10px rgba(6, 182, 212, 0.2) !important;
+  background: rgba(6, 182, 212, 0.18) !important;
+  border-color: rgba(6, 182, 212, 0.55) !important;
+  color: #38bdf8 !important;
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.25) !important;
+}
+
+/* Live Ticker Summary in Middle */
+.context-deck-summary-ticker {
+  flex: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.73rem !important;
+  color: var(--text-mid) !important;
+  cursor: pointer !important;
+}
+
+.context-deck-summary-ticker:hover {
+  color: var(--text-hi) !important;
+}
+
+.deck-summary-text {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Actions Right (Expand/Collapse Button) */
+.context-deck-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+}
+
+.deck-toggle-btn {
+  height: 26px !important;
+  padding: 0 10px !important;
+  border-radius: 6px !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: var(--text-mid) !important;
+  font-family: var(--font-display) !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  transition: all 0.18s ease !important;
+}
+
+.deck-toggle-btn:hover {
+  background: rgba(6, 182, 212, 0.14) !important;
+  border-color: rgba(6, 182, 212, 0.4) !important;
+  color: #38bdf8 !important;
+}
+
+.chart-context-deck.expanded .deck-toggle-btn #deck_toggle_icon {
+  transform: rotate(180deg) !important;
+}
+
+/* Drawer Content Body */
+.context-deck-body {
+  flex: 1 !important;
+  height: calc(220px - 38px) !important;
+  overflow: hidden !important;
+  padding: 8px 14px 12px !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 .deck-card {
-  display: none;
-  flex: 1 !important;
+  display: none !important;
+  height: 100% !important;
   overflow: hidden !important;
 }
 
@@ -3206,10 +3311,26 @@ html, body {
   font-family: var(--font-body) !important;
   font-size: 0.74rem !important;
   color: var(--text-mid) !important;
-  line-height: 1.35 !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
+  line-height: 1.4 !important;
+  margin: 6px 0 !important;
+}
+
+.hist-footer {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.68rem !important;
+  color: var(--text-low) !important;
+  padding-top: 6px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+.hist-volatility-tag {
+  color: var(--cyan) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
 }
 
 /* Macro & News Radar Stream */

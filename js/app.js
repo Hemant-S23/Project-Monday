@@ -85,6 +85,7 @@ class App {
       onExecuteTrade: (orderPacket) => this.executeCurrentTrade(orderPacket),
       onCloseTrade: (id) => this.closeActiveTrade(id),
       onCloseAllTrades: () => this.closeAllActiveTrades(),
+      onCloseAllPositions: () => this.closeAllActiveTrades(),
       onResetAccount: () => this.resetAccount(),
       onGetFinancialLedger: (month) => this.paperTrader.getFinancialLedger(month),
       onThemeChange: (theme) => this.chartManager.setTheme(theme),

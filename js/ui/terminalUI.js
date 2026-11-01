@@ -1079,9 +1079,19 @@ export class TerminalUI {
 
     const posCloseAllBtn = document.getElementById('positions_page_close_all_btn');
     if (posCloseAllBtn) {
-      posCloseAllBtn.addEventListener('click', () => {
-        if (this.callbacks.onCloseAllPositions) {
-          this.callbacks.onCloseAllPositions();
+      posCloseAllBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const handler = this.callbacks.onCloseAllPositions || this.callbacks.onCloseAllTrades;
+        if (handler) {
+          posCloseAllBtn.disabled = true;
+          posCloseAllBtn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Closing Positions...';
+          handler();
+          setTimeout(() => {
+            if (posCloseAllBtn) {
+              posCloseAllBtn.disabled = false;
+              posCloseAllBtn.innerHTML = '<i class="ph-bold ph-lightning"></i> Close All Positions';
+            }
+          }, 800);
         }
       });
     }
@@ -4480,6 +4490,7 @@ export class TerminalUI {
       const curP = Number(pos.currentPrice || pos.entry || 0);
       const entryP = Number(pos.entry || 0);
       const liqP = Number(pos.liquidationPrice || 0);
+      const notionalVal = pos.notionalUSD || (entryP * (pos.positionSize || 1)).toFixed(2);
       
       let safetyBuffer = 'Safe';
       let safetyClass = 'text-bullish';
@@ -4494,35 +4505,45 @@ export class TerminalUI {
         <tr data-pos-id="${pos.id}">
           <td>
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-weight: 800; color: #ffffff;">${pos.asset}/USDT</span>
-              <span class="pos-direction-pill ${(pos.direction || 'LONG').toLowerCase()}" style="font-size: 0.65rem; padding: 2px 6px;">${pos.direction || 'LONG'}</span>
-              <span class="pos-lev-pill" style="font-size: 0.65rem;">${pos.leverage || 20}x</span>
+              <span class="pos-asset-symbol">${pos.asset}/USD</span>
+              <span class="pos-direction-pill ${(pos.direction || 'LONG').toLowerCase()}">${pos.direction || 'LONG'}</span>
+              <span class="pos-lev-pill">${pos.leverage || 20}x</span>
             </div>
           </td>
           <td>
-            <div style="font-family: var(--font-mono, monospace); font-weight: 700; color: #f1f5f9;">${pos.positionSize || 1} ${pos.asset}</div>
-            <div style="font-size: 0.7rem; color: #64748b;">$${pos.notionalUSD || (entryP * (pos.positionSize || 1)).toFixed(0)}</div>
+            <div class="pos-size-main">${pos.positionSize || 1} ${pos.asset}</div>
+            <div class="pos-notional-sub"><span class="lbl-dim">NOTIONAL:</span> <span class="val-bright">$${notionalVal}</span></div>
           </td>
-          <td style="font-family: var(--font-mono, monospace); font-weight: 700;">${this.formatPrice(entryP)}</td>
-          <td style="font-family: var(--font-mono, monospace); font-weight: 800; color: #38bdf8;">${this.formatPrice(curP)}</td>
-          <td style="font-family: var(--font-mono, monospace); font-weight: 700; color: #f59e0b;">${liqP ? this.formatPrice(liqP) : 'N/A'}</td>
-          <td style="font-family: var(--font-mono, monospace); font-weight: 800;" class="${safetyClass}">${safetyBuffer}</td>
+          <td><span class="pos-cell-mono">${this.formatPrice(entryP)}</span></td>
           <td>
-            <span style="font-family: var(--font-mono, monospace); font-weight: 700;">$${margin.toFixed(2)}</span>
-            <span style="font-size: 0.62rem; color: #64748b; background: rgba(255,255,255,0.06); padding: 1px 4px; border-radius: 3px; margin-left: 4px;">ISO</span>
-          </td>
-          <td>
-            <span style="font-family: var(--font-mono, monospace); font-weight: 900;" class="${isPos ? 'text-bullish' : 'text-bearish'}">
-              ${isPos ? '+' : ''}$${unPnl.toFixed(2)} (${isPos ? '+' : ''}${roe}%)
+            <span class="pos-cell-mono text-cyan">
+              <span class="live-dot-pulse"></span>
+              ${this.formatPrice(curP)}
             </span>
           </td>
-          <td style="font-size: 0.72rem; color: #94a3b8;">
-            <div>SL: <b style="color: #f43f5e;">${pos.stopLoss ? this.formatPrice(pos.stopLoss) : '--'}</b></div>
-            <div>TP: <b style="color: #10b981;">${pos.target ? this.formatPrice(pos.target) : '--'}</b></div>
+          <td><span class="pos-cell-mono text-warning">${liqP ? this.formatPrice(liqP) : 'N/A'}</span></td>
+          <td><span class="pos-safety-chip ${safetyClass}"><i class="ph-bold ph-shield-check"></i> ${safetyBuffer}</span></td>
+          <td>
+            <div class="pos-margin-cell">
+              <span class="pos-cell-mono">$${margin.toFixed(2)}</span>
+              <span class="pos-iso-tag">ISO</span>
+            </div>
           </td>
           <td>
-            <button class="btn-quick-close-pos desk-action-close" data-trade-id="${pos.id}" type="button" style="padding: 5px 12px; font-size: 0.75rem;">
-              <i class="ph ph-x"></i> <span>Close</span>
+            <div class="pos-pnl-cell ${isPos ? 'pnl-green' : 'pnl-red'}">
+              <span class="pnl-usd">${isPos ? '+' : ''}$${unPnl.toFixed(2)}</span>
+              <span class="pnl-roe">${isPos ? '+' : ''}${roe}% ROE</span>
+            </div>
+          </td>
+          <td>
+            <div class="pos-targets-cell">
+              <div><span class="tgt-lbl">SL:</span> <b class="tgt-sl">${pos.stopLoss ? this.formatPrice(pos.stopLoss) : '--'}</b></div>
+              <div><span class="tgt-lbl">TP:</span> <b class="tgt-tp">${pos.target ? this.formatPrice(pos.target) : '--'}</b></div>
+            </div>
+          </td>
+          <td>
+            <button class="btn-desk-close-row desk-action-close" data-trade-id="${pos.id}" type="button" title="Market-close position">
+              <i class="ph-bold ph-x"></i> <span>Close</span>
             </button>
           </td>
         </tr>

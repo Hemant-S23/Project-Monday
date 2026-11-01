@@ -487,56 +487,66 @@ export class TerminalUI {
       });
     }
 
-    // Context Deck Collapsible Drawer (TradingView / Bloomberg Pro Style)
-    const contextDeck = document.getElementById('chart_context_deck');
-    const deckToggleBtn = document.getElementById('deck_toggle_btn');
-    const deckToggleLbl = document.getElementById('deck_toggle_lbl');
-    const deckSummaryTicker = document.getElementById('context_deck_summary_ticker');
+    // Adaptive Market Intelligence Deck (Modal on Desktop ⇄ Native Sheet on Mobile)
+    const intelDeckModal = document.getElementById('modal_intelligence_deck');
+    const intelDeckBackdrop = document.getElementById('backdrop_intelligence_deck');
+    const closeIntelDeckBtn = document.getElementById('close_intelligence_deck_btn');
+    const intelDeckBody = document.getElementById('intel_deck_body');
 
-    const toggleDeckDrawer = (forceState = null) => {
-      if (!contextDeck) return;
-      const isExpanded = forceState !== null ? forceState : !contextDeck.classList.contains('expanded');
-      contextDeck.classList.toggle('expanded', isExpanded);
-      contextDeck.classList.toggle('collapsed', !isExpanded);
-      if (deckToggleLbl) deckToggleLbl.textContent = isExpanded ? 'Collapse' : 'Expand';
+    const openIntelDeck = (initialView = 'split') => {
+      if (!intelDeckModal) return;
+      intelDeckModal.style.display = 'flex';
+      intelDeckModal.classList.add('open');
+
+      if (intelDeckBody) {
+        intelDeckBody.classList.remove('view-split', 'view-pattern', 'view-macro');
+        intelDeckBody.classList.add(`view-${initialView}`);
+      }
+
+      document.querySelectorAll('.intel-switch-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.intelView === initialView);
+      });
     };
 
-    if (deckToggleBtn) {
-      deckToggleBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleDeckDrawer();
-      });
-    }
+    const closeIntelDeck = () => {
+      if (!intelDeckModal) return;
+      intelDeckModal.style.display = 'none';
+      intelDeckModal.classList.remove('open');
+    };
 
-    if (deckSummaryTicker) {
-      deckSummaryTicker.addEventListener('click', () => {
-        toggleDeckDrawer(true);
-      });
-    }
+    window.openIntelligenceDeck = openIntelDeck;
+    window.closeIntelligenceDeck = closeIntelDeck;
 
-    // Context Deck Segmented Switcher (Pattern Scan ⇄ Macro Radar)
-    document.querySelectorAll('.deck-m-tab').forEach(tab => {
+    const btnOpenPattern = document.getElementById('btn_open_pattern_deck');
+    const btnOpenMacro = document.getElementById('btn_open_macro_deck');
+    const btnOpenDeck = document.getElementById('deck_toggle_btn');
+    const tickerSummary = document.getElementById('context_deck_summary_ticker');
+
+    if (btnOpenPattern) btnOpenPattern.addEventListener('click', (e) => { e.stopPropagation(); openIntelDeck('pattern'); });
+    if (btnOpenMacro) btnOpenMacro.addEventListener('click', (e) => { e.stopPropagation(); openIntelDeck('macro'); });
+    if (btnOpenDeck) btnOpenDeck.addEventListener('click', (e) => { e.stopPropagation(); openIntelDeck('split'); });
+    if (tickerSummary) tickerSummary.addEventListener('click', (e) => { e.stopPropagation(); openIntelDeck('split'); });
+
+    if (closeIntelDeckBtn) closeIntelDeckBtn.addEventListener('click', closeIntelDeck);
+    if (intelDeckBackdrop) intelDeckBackdrop.addEventListener('click', closeIntelDeck);
+
+    // Escape key listener for Intelligence Deck
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && intelDeckModal && intelDeckModal.classList.contains('open')) {
+        closeIntelDeck();
+      }
+    });
+
+    // View Switcher inside Deck
+    document.querySelectorAll('.intel-switch-tab').forEach(tab => {
       tab.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const deckView = e.currentTarget.dataset.deckView;
-        document.querySelectorAll('.deck-m-tab').forEach(t => t.classList.remove('active'));
+        const view = e.currentTarget.dataset.intelView || 'split';
+        document.querySelectorAll('.intel-switch-tab').forEach(t => t.classList.remove('active'));
         e.currentTarget.classList.add('active');
 
-        // Automatically expand the drawer if it was collapsed!
-        if (contextDeck && !contextDeck.classList.contains('expanded')) {
-          toggleDeckDrawer(true);
-        }
-
-        const histCard = document.getElementById('historical_pattern_card');
-        const newsCard = document.getElementById('news_radar_list');
-        if (histCard && newsCard) {
-          if (deckView === 'hist') {
-            histCard.classList.add('active-deck-card');
-            newsCard.classList.remove('active-deck-card');
-          } else {
-            newsCard.classList.add('active-deck-card');
-            histCard.classList.remove('active-deck-card');
-          }
+        if (intelDeckBody) {
+          intelDeckBody.classList.remove('view-split', 'view-pattern', 'view-macro');
+          intelDeckBody.classList.add(`view-${view}`);
         }
       });
     });

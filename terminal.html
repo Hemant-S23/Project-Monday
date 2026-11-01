@@ -1765,48 +1765,27 @@
         </div>
       </div>
 
-        <!-- Lower Context Radar Collapsible Drawer (TradingView & Bloomberg Pro Style) -->
-        <div class="chart-context-deck collapsed" id="chart_context_deck">
-          <div class="context-deck-bar" id="context_deck_bar">
-            <div class="context-deck-mobile-nav" id="context_deck_mobile_nav">
-              <button class="deck-m-tab active" data-deck-view="hist" id="deck_tab_hist" type="button" title="View Quantitative Pattern Scan">
-                <i class="ph ph-git-commit"></i> <span>Pattern Scan</span>
-              </button>
-              <button class="deck-m-tab" data-deck-view="news" id="deck_tab_news" type="button" title="View Real-Time Macro News Radar">
-                <i class="ph ph-broadcast"></i> <span>Macro Radar</span>
-              </button>
-            </div>
-
-            <div class="context-deck-summary-ticker" id="context_deck_summary_ticker" title="Click to expand details">
-              <span class="live-dot pulse-cyan"></span>
-              <span class="deck-summary-text" id="deck_summary_text">Bullish 20 EMA Continuation • 64.3% Historical Win Rate</span>
-            </div>
-
-            <div class="context-deck-actions">
-              <button class="deck-toggle-btn" id="deck_toggle_btn" type="button" title="Toggle Intelligence Drawer">
-                <span class="deck-toggle-lbl" id="deck_toggle_lbl">Expand</span>
-                <i class="ph-bold ph-caret-up" id="deck_toggle_icon"></i>
-              </button>
-            </div>
+        <!-- Pinned Slim Avionics Intelligence Ticker Bar (Always sleek 36px, gives 100% full height to chart) -->
+        <div class="chart-intelligence-bar" id="chart_intelligence_bar">
+          <div class="intel-bar-triggers">
+            <button class="intel-pill-btn active" id="btn_open_pattern_deck" type="button" title="View Quantitative Pattern Scan">
+              <i class="ph ph-git-commit"></i> <span>Pattern Scan</span>
+            </button>
+            <button class="intel-pill-btn" id="btn_open_macro_deck" type="button" title="View Real-Time Macro News Radar">
+              <i class="ph ph-broadcast"></i> <span>Macro Radar</span>
+            </button>
           </div>
 
-          <!-- Drawer Content Body (Visible when expanded) -->
-          <div class="context-deck-body" id="context_deck_body">
-            <!-- Historical Intelligence -->
-            <div class="hist-card deck-card active-deck-card" id="historical_pattern_card">
-              <div class="hist-title"><i class="ph ph-git-commit"></i> Regime Pattern Matching</div>
-              <div class="hist-stats-row">
-                <div class="stat-col"><span class="k">Sample:</span> <span class="v">84 setups</span></div>
-                <div class="stat-col"><span class="k">Win Rate:</span> <span class="v text-bullish">64.3%</span></div>
-                <div class="stat-col"><span class="k">Avg RR:</span> <span class="v">1:2.65</span></div>
-              </div>
-              <div class="hist-desc">Evaluating similar discount pullback behavior following Asian liquidity sweeps.</div>
-            </div>
+          <div class="intel-bar-ticker" id="context_deck_summary_ticker" title="Click to open Full Market Intelligence Deck">
+            <span class="live-dot pulse-cyan"></span>
+            <span class="intel-ticker-text" id="deck_summary_text">Bullish 20 EMA Continuation • 64.3% Historical Win Rate</span>
+          </div>
 
-            <!-- Macro & News Radar -->
-            <div class="news-radar-scroll deck-card" id="news_radar_list">
-              <!-- News items injected dynamically -->
-            </div>
+          <div class="intel-bar-actions">
+            <button class="intel-expand-btn" id="deck_toggle_btn" type="button" title="Open Full Intelligence Deck">
+              <span id="deck_toggle_lbl">Open Deck</span>
+              <i class="ph-bold ph-arrows-out-simple"></i>
+            </button>
           </div>
         </div>
       </section>
@@ -2789,6 +2768,82 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       ADAPTIVE MARKET INTELLIGENCE & MACRO RADAR DECK (MODAL / NATIVE SHEET)
+       ========================================================================= -->
+  <div class="terminal-modal intelligence-deck-modal" id="modal_intelligence_deck" style="display: none;">
+    <div class="modal-backdrop" id="backdrop_intelligence_deck"></div>
+    <div class="intel-deck-dialog" role="dialog" aria-modal="true" aria-labelledby="intel_deck_title">
+      <!-- Mobile Native Drag Handle -->
+      <div class="intel-sheet-handle" aria-hidden="true"></div>
+
+      <!-- Deck Header -->
+      <div class="intel-deck-header">
+        <div class="intel-deck-title-wrap">
+          <div class="intel-deck-title" id="intel_deck_title">
+            <i class="ph-bold ph-shield-check" style="color: #06b6d4;"></i>
+            <span>MARKET INTELLIGENCE & MACRO RADAR</span>
+          </div>
+          <span class="intel-deck-status-chip">
+            <span class="live-dot pulse-cyan"></span>
+            <span id="news_radar_clock">Live Sync</span>
+          </span>
+        </div>
+
+        <!-- Segmented Tab Switcher (Pattern Scan | Macro Radar | Split View) -->
+        <div class="intel-deck-view-switcher">
+          <button class="intel-switch-tab" data-intel-view="pattern" id="intel_tab_pattern" type="button">
+            <i class="ph ph-git-commit"></i> <span>Pattern Scan</span>
+          </button>
+          <button class="intel-switch-tab" data-intel-view="macro" id="intel_tab_macro" type="button">
+            <i class="ph ph-broadcast"></i> <span>Macro Radar</span>
+          </button>
+          <button class="intel-switch-tab active" data-intel-view="split" id="intel_tab_split" type="button">
+            <i class="ph ph-columns"></i> <span>Split Cockpit</span>
+          </button>
+        </div>
+
+        <button class="modal-close-btn" id="close_intelligence_deck_btn" type="button" title="Close Intelligence Deck (Esc)">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+
+      <!-- Deck Body -->
+      <div class="intel-deck-body view-split" id="intel_deck_body">
+        <!-- Left: Quantitative Pattern Regime -->
+        <div class="intel-col intel-col-pattern" id="intel_pattern_column">
+          <div class="hist-card" id="historical_pattern_card">
+            <div class="hist-card-header">
+              <div class="hist-title"><i class="ph ph-git-commit"></i> Regime Pattern Matching</div>
+              <div class="hist-live-badge">
+                <span class="live-dot pulse-cyan"></span>
+                <span class="hist-time-text">LIVE SCAN • <span id="hist_live_clock">--:--:--</span></span>
+              </div>
+            </div>
+            <div class="hist-stats-row">
+              <div class="stat-col"><span class="k">Sample:</span> <span class="v">84 setups</span></div>
+              <div class="stat-col"><span class="k">Win Rate:</span> <span class="v text-bullish">64.3%</span></div>
+              <div class="stat-col"><span class="k">Avg RR:</span> <span class="v">1:2.65</span></div>
+              <div class="stat-col"><span class="k">Regime:</span> <span class="v text-bullish">Supportive</span></div>
+            </div>
+            <div class="hist-desc">Evaluating similar discount pullback behavior following Asian liquidity sweeps.</div>
+            <div class="hist-footer">
+              <span class="hist-volatility-tag"><i class="ph ph-chart-line-up"></i> Normal ATR Volatility</span>
+              <span class="hist-disclaimer">ℹ️ Algorithmic historical probability formulation.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Real-time Macro Radar & News Stream -->
+        <div class="intel-col intel-col-macro" id="intel_macro_column">
+          <div class="news-radar-scroll" id="news_radar_list">
+            <!-- News items injected dynamically -->
+          </div>
+        </div>
       </div>
     </div>
   </div>

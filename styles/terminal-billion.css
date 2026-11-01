@@ -3070,73 +3070,48 @@ html, body {
 }
 
 /* =========================================================================
-   LOWER CONTEXT RADAR COLLAPSIBLE DRAWER (TRADINGVIEW & BLOOMBERG PRO STYLE)
+   CHART INTELLIGENCE BAR (SLIM 36px AVIONICS TICKER UNDER CHART)
    ========================================================================= */
-.chart-context-deck {
+.chart-intelligence-bar {
   flex-shrink: 0 !important;
   width: 100% !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  background: rgba(8, 12, 22, 0.92) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-  background: rgba(8, 12, 22, 0.94) !important;
-  backdrop-filter: blur(24px) !important;
-  -webkit-backdrop-filter: blur(24px) !important;
-  box-sizing: border-box !important;
-  display: flex !important;
-  flex-direction: column !important;
-  overflow: hidden !important;
-  position: relative !important;
-  z-index: 15 !important;
-  transition: height 0.28s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease, box-shadow 0.28s ease !important;
-}
-
-.chart-context-deck.collapsed {
-  height: 38px !important;
-  min-height: 38px !important;
-  max-height: 38px !important;
-}
-
-.chart-context-deck.expanded {
-  height: 220px !important;
-  min-height: 220px !important;
-  max-height: 220px !important;
-  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(6, 182, 212, 0.12) !important;
-  border-top-color: rgba(6, 182, 212, 0.35) !important;
-}
-
-.chart-context-deck::before {
-  content: '' !important;
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  height: 1px !important;
-  background: linear-gradient(90deg, transparent 0%, rgba(6, 182, 212, 0.5) 50%, transparent 100%) !important;
-}
-
-/* Avionics Bar (Always visible at top of deck) */
-.context-deck-bar {
-  height: 38px !important;
-  min-height: 38px !important;
-  max-height: 38px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
   padding: 0 12px !important;
   gap: 12px !important;
   box-sizing: border-box !important;
-  cursor: pointer !important;
+  z-index: 15 !important;
+  position: relative !important;
 }
 
-.context-deck-mobile-nav {
+.chart-intelligence-bar::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 1px !important;
+  background: linear-gradient(90deg, transparent 0%, rgba(6, 182, 212, 0.45) 50%, transparent 100%) !important;
+}
+
+.intel-bar-triggers {
   display: flex !important;
   align-items: center !important;
   gap: 6px !important;
-  margin: 0 !important;
   flex-shrink: 0 !important;
 }
 
-.deck-m-tab {
-  height: 26px !important;
-  padding: 0 10px !important;
+.intel-pill-btn {
+  height: 24px !important;
+  padding: 0 9px !important;
   border-radius: 6px !important;
   background: rgba(255, 255, 255, 0.04) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
@@ -3148,25 +3123,23 @@ html, body {
   display: flex !important;
   align-items: center !important;
   gap: 5px !important;
-  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: all 0.16s ease !important;
   white-space: nowrap !important;
 }
 
-.deck-m-tab:hover {
-  background: rgba(255, 255, 255, 0.08) !important;
-  color: #ffffff !important;
-  border-color: rgba(255, 255, 255, 0.16) !important;
-}
-
-.deck-m-tab.active {
-  background: rgba(6, 182, 212, 0.18) !important;
-  border-color: rgba(6, 182, 212, 0.55) !important;
+.intel-pill-btn:hover {
+  background: rgba(6, 182, 212, 0.14) !important;
+  border-color: rgba(6, 182, 212, 0.4) !important;
   color: #38bdf8 !important;
-  box-shadow: 0 0 12px rgba(6, 182, 212, 0.25) !important;
 }
 
-/* Live Ticker Summary in Middle */
-.context-deck-summary-ticker {
+.intel-pill-btn.active {
+  background: rgba(6, 182, 212, 0.18) !important;
+  border-color: rgba(6, 182, 212, 0.5) !important;
+  color: var(--cyan) !important;
+}
+
+.intel-bar-ticker {
   flex: 1 !important;
   display: flex !important;
   align-items: center !important;
@@ -3178,33 +3151,32 @@ html, body {
   font-size: 0.73rem !important;
   color: var(--text-mid) !important;
   cursor: pointer !important;
+  transition: color 0.16s ease !important;
 }
 
-.context-deck-summary-ticker:hover {
+.intel-bar-ticker:hover {
   color: var(--text-hi) !important;
 }
 
-.deck-summary-text {
+.intel-ticker-text {
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
 }
 
-/* Actions Right (Expand/Collapse Button) */
-.context-deck-actions {
+.intel-bar-actions {
   display: flex !important;
   align-items: center !important;
-  gap: 8px !important;
   flex-shrink: 0 !important;
 }
 
-.deck-toggle-btn {
-  height: 26px !important;
+.intel-expand-btn {
+  height: 24px !important;
   padding: 0 10px !important;
   border-radius: 6px !important;
-  background: rgba(255, 255, 255, 0.04) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  color: var(--text-mid) !important;
+  background: rgba(6, 182, 212, 0.12) !important;
+  border: 1px solid rgba(6, 182, 212, 0.3) !important;
+  color: var(--cyan) !important;
   font-family: var(--font-display) !important;
   font-size: 0.72rem !important;
   font-weight: 700 !important;
@@ -3215,36 +3187,268 @@ html, body {
   transition: all 0.18s ease !important;
 }
 
-.deck-toggle-btn:hover {
-  background: rgba(6, 182, 212, 0.14) !important;
-  border-color: rgba(6, 182, 212, 0.4) !important;
-  color: #38bdf8 !important;
+.intel-expand-btn:hover {
+  background: rgba(6, 182, 212, 0.24) !important;
+  border-color: rgba(6, 182, 212, 0.6) !important;
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.3) !important;
+  color: #ffffff !important;
 }
 
-.chart-context-deck.expanded .deck-toggle-btn #deck_toggle_icon {
-  transform: rotate(180deg) !important;
-}
-
-/* Drawer Content Body */
-.context-deck-body {
-  flex: 1 !important;
-  height: calc(220px - 38px) !important;
-  overflow: hidden !important;
-  padding: 8px 14px 12px !important;
-  box-sizing: border-box !important;
+/* =========================================================================
+   ADAPTIVE INTELLIGENCE DECK DIALOG (MODAL / NATIVE SHEET)
+   ========================================================================= */
+.intel-deck-dialog {
+  width: 960px !important;
+  max-width: 94vw !important;
+  height: 580px !important;
+  max-height: 86vh !important;
+  background: rgba(8, 12, 24, 0.95) !important;
+  backdrop-filter: blur(40px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+  border: 1px solid rgba(6, 182, 212, 0.35) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.85), 0 0 40px rgba(6, 182, 212, 0.16) !important;
   display: flex !important;
   flex-direction: column !important;
+  overflow: hidden !important;
+  position: relative !important;
+  z-index: 10000 !important;
+  animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-.deck-card {
+.intel-sheet-handle {
   display: none !important;
+  width: 44px !important;
+  height: 4px !important;
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-radius: 999px !important;
+  margin: 8px auto 0 !important;
+}
+
+.intel-deck-header {
+  height: 56px !important;
+  min-height: 56px !important;
+  padding: 0 20px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  background: rgba(255, 255, 255, 0.015) !important;
+}
+
+.intel-deck-title-wrap {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.intel-deck-title {
+  font-family: var(--font-display) !important;
+  font-size: 0.88rem !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  letter-spacing: 0.03em !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.intel-deck-status-chip {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.68rem !important;
+  color: var(--cyan) !important;
+  background: rgba(6, 182, 212, 0.1) !important;
+  padding: 2px 8px !important;
+  border-radius: 4px !important;
+  border: 1px solid rgba(6, 182, 212, 0.25) !important;
+}
+
+.intel-deck-view-switcher {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  background: rgba(0, 0, 0, 0.35) !important;
+  padding: 3px !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.intel-switch-tab {
+  height: 28px !important;
+  padding: 0 12px !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-mid) !important;
+  font-family: var(--font-display) !important;
+  font-size: 0.74rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  transition: all 0.16s ease !important;
+}
+
+.intel-switch-tab:hover {
+  color: #ffffff !important;
+}
+
+.intel-switch-tab.active {
+  background: rgba(6, 182, 212, 0.22) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(6, 182, 212, 0.45) !important;
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.25) !important;
+}
+
+.intel-deck-body {
+  flex: 1 !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 16px !important;
+  padding: 16px 20px !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.intel-deck-body.view-pattern {
+  grid-template-columns: 1fr !important;
+}
+.intel-deck-body.view-pattern .intel-col-macro {
+  display: none !important;
+}
+
+.intel-deck-body.view-macro {
+  grid-template-columns: 1fr !important;
+}
+.intel-deck-body.view-macro .intel-col-pattern {
+  display: none !important;
+}
+
+.intel-col {
+  display: flex !important;
+  flex-direction: column !important;
   height: 100% !important;
   overflow: hidden !important;
+  min-height: 0 !important;
 }
 
-.deck-card.active-deck-card {
+.intel-col-pattern .hist-card {
+  height: 100% !important;
   display: flex !important;
   flex-direction: column !important;
+  justify-content: space-between !important;
+  background: rgba(16, 21, 34, 0.55) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 14px !important;
+  padding: 18px !important;
+  box-sizing: border-box !important;
+}
+
+.intel-col-pattern .hist-title {
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+}
+
+.intel-col-pattern .hist-stats-row {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 12px !important;
+  margin: 14px 0 !important;
+}
+
+.intel-col-pattern .stat-col {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 10px !important;
+  padding: 10px 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+}
+
+.intel-col-pattern .stat-col .k {
+  font-family: var(--font-mono) !important;
+  font-size: 0.65rem !important;
+  text-transform: uppercase !important;
+  color: var(--text-low) !important;
+}
+
+.intel-col-pattern .stat-col .v {
+  font-family: var(--font-mono) !important;
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+}
+
+.intel-col-pattern .hist-desc {
+  font-size: 0.85rem !important;
+  line-height: 1.55 !important;
+  color: var(--text-mid) !important;
+  background: rgba(6, 182, 212, 0.04) !important;
+  border: 1px solid rgba(6, 182, 212, 0.15) !important;
+  border-radius: 10px !important;
+  padding: 12px 14px !important;
+  margin: 8px 0 !important;
+}
+
+.intel-col-macro .news-radar-scroll {
+  height: 100% !important;
+  overflow-y: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  padding-right: 6px !important;
+}
+
+/* =========================================================================
+   MOBILE RESPONSIVENESS (< 768px): NATIVE SLIDE-UP BOTTOM SHEET
+   ========================================================================= */
+@media (max-width: 768px) {
+  .intelligence-deck-modal {
+    padding: 0 !important;
+    align-items: flex-end !important;
+  }
+
+  .intel-deck-dialog {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 86vh !important;
+    max-height: 86vh !important;
+    border-radius: 24px 24px 0 0 !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-right: none !important;
+  }
+
+  .intel-sheet-handle {
+    display: block !important;
+  }
+
+  .intel-deck-header {
+    height: auto !important;
+    min-height: 52px !important;
+    padding: 10px 14px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .intel-deck-view-switcher button[data-intel-view="split"] {
+    display: none !important;
+  }
+
+  .intel-deck-body {
+    grid-template-columns: 1fr !important;
+    padding: 12px 14px 24px !important;
+    overflow-y: auto !important;
+  }
+
+  .intel-deck-body.view-split {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 /* Historical Regime Scanner Card */

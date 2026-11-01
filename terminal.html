@@ -6,6 +6,11 @@
   <title>MONDAY — Market-Oriented Neural Decision Assistant for You</title>
   <meta name="description" content="Meet MONDAY (Market-Oriented Neural Decision Assistant for You) — a real-time, multi-market AI trading companion combining live data, charts, historical context, and natural Hinglish/English voice interaction.">
   
+  <!-- Anti-Stale Dynamic Cache Directives -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  
   <!-- PWA & Mobile Meta -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#06070a">
@@ -2961,11 +2966,39 @@
     });
   </script>
 
-  <!-- PWA Offline Service Worker Registration -->
+  <!-- PWA Offline Service Worker Registration with Instant Auto-Update -->
   <script type="module">
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
+          // Immediately check for updates from server
+          reg.update().catch(() => {});
+
+          if (reg.waiting) {
+            reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+          }
+
+          reg.addEventListener('updatefound', () => {
+            const installingWorker = reg.installing;
+            if (installingWorker) {
+              installingWorker.addEventListener('statechange', () => {
+                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // A new update arrived in the background!
+                  console.log('[PWA] Fresh build detected. Upgrading cache...');
+                  window.location.reload();
+                }
+              });
+            }
+          });
+        }).catch(() => {});
+
+        let isRefreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!isRefreshing) {
+            isRefreshing = true;
+            window.location.reload();
+          }
+        });
       });
     }
   </script>

@@ -125,6 +125,9 @@ export class NewsContextEngine {
       /\b(war\s+declared|missile\s+strike|sanctions\s+imposed)\b/i
     ];
 
+    // Positive recovery / resolution patterns that negate false alarm acute shocks
+    const benignRecoveryPattern = /\b(replenish|replenished|recover|recovered|reimburse|reimbursed|return|returned|restored|thwarted|claims\s+resolved|withdrawals?\s+targets?|withdrawals?\s+resum|audit\s+passed|funds\s+safe)\b/i;
+
     const shocks = [];
 
     // 1. Fetch Real-time Cointelegraph RSS articles via open JSON gateway
@@ -143,7 +146,7 @@ export class NewsContextEngine {
           this.liveRssArticles = json.items.slice(0, 10).map((item, idx) => {
             const pubTime = item.pubDate ? new Date(item.pubDate).getTime() : (now - (idx + 1) * 12 * 60000);
             const titleLower = ((item.title || '') + ' ' + (item.description || '')).toLowerCase();
-            const isHighImpact = highImpactPattern.test(titleLower);
+            const isHighImpact = !benignRecoveryPattern.test(titleLower) && highImpactPattern.test(titleLower);
 
             return {
               id: `RSS-${idx}-${pubTime}`,
@@ -162,7 +165,8 @@ export class NewsContextEngine {
           // Check if any recent article is an urgent shock
           for (const art of this.liveRssArticles.slice(0, 3)) {
             const titleLower = art.title.toLowerCase();
-            const isAcuteShock = acuteShockPatterns.some(p => p.test(titleLower));
+            const hasRecovery = benignRecoveryPattern.test(titleLower);
+            const isAcuteShock = !hasRecovery && acuteShockPatterns.some(p => p.test(titleLower));
             if (isAcuteShock) {
               shocks.push({
                 ...art,

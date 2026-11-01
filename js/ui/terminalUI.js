@@ -2578,7 +2578,8 @@ export class TerminalUI {
 
     const dirClass = (setup.direction || 'LONG').toLowerCase();
     const currSym = setup.currencySymbol || (this.currentMarket === 'India' ? '₹' : '$');
-    const grade = setup.confluenceGrade || (setup.confluenceScore >= 75 ? 'GRADE A' : 'GRADE B');
+    const rawGrade = setup.confluenceGrade || (setup.confluenceScore >= 75 ? 'GRADE A' : 'GRADE B');
+    const grade = rawGrade.includes('GRADE A+') ? 'GRADE A+' : (rawGrade.includes('GRADE A') ? 'GRADE A' : rawGrade);
     const score = Math.round(setup.confluenceScore || 85);
     const lev = setup.recommendedLeverage || '10x - 20x Isolated';
     const rr = setup.rrRatio || setup.levels?.rrRatio || '3.2';

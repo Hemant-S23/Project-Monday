@@ -942,8 +942,8 @@ class App {
         this.ui.showToast('🛡️ Event Risk Shield Active', `${shockTitle.slice(0, 55)}... Order cancelled.`, 'warning');
       }
 
-      // Put this asset on a 5-minute cooldown so it doesn't repeatedly attempt
-      this.setAssetCooldown(asset, direction, 300000);
+      // Put this asset on a 1-minute cooldown so it doesn't repeatedly spam while shield is active
+      this.setAssetCooldown(asset, direction, 60000);
       return;
     }
 

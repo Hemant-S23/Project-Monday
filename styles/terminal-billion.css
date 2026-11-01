@@ -3787,6 +3787,12 @@ html, body {
 
 /* Institutional Trade Blueprint Card (Rich Card inside Transcript) */
 .trade-blueprint-card {
+  display: flex !important;
+  flex-direction: column !important;
+  flex-shrink: 0 !important;
+  min-height: fit-content !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
   background: rgba(12, 17, 30, 0.92) !important;
   backdrop-filter: blur(32px) !important;
   -webkit-backdrop-filter: blur(32px) !important;
@@ -3796,7 +3802,8 @@ html, body {
   box-shadow: 0 14px 36px rgba(0, 0, 0, 0.6), 0 0 24px rgba(6, 182, 212, 0.16) !important;
   position: relative !important;
   overflow: hidden !important;
-  margin: 4px 0 !important;
+  margin: 6px 0 !important;
+  animation: bubbleFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .trade-blueprint-card::before {

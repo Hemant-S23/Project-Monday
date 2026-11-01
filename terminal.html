@@ -41,7 +41,7 @@
   <link rel="stylesheet" href="css/multi-chart.css?v=6.1">
   <link rel="stylesheet" href="css/saas-layout.css?v=1.1">
   <!-- Master $1,000 Million FinTech Cockpit Master Stylesheet -->
-  <link rel="stylesheet" href="styles/terminal-billion.css?v=4.2">
+  <link rel="stylesheet" href="styles/terminal-billion.css?v=4.3">
 
   <!-- Supabase JS Client (Non-blocking defer for instant HTML paint) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1635,16 +1635,6 @@
               <span id="bias_indicator_text">Counter-Trend • AI Bias is Bullish</span>
             </div>
 
-            <!-- Sleek Modern Execution Trigger Button (Floating Sticky Bar) -->
-            <div class="exec-btn-sticky-tray" id="exec_btn_sticky_tray">
-              <button class="btn-exec-trade long" id="execute_trade_btn">
-                <div class="exec-btn-content">
-                  <i class="ph-bold ph-lightning" id="exec_btn_icon"></i>
-                  <span class="exec-btn-action" id="exec_btn_action">Open Long</span>
-                  <span class="exec-btn-status-badge confirmed" id="exec_btn_badge">Confirmed</span>
-                </div>
-              </button>
-            </div>
           </div>
 
           <!-- Open Positions Section (Below Order Desk) -->
@@ -1663,6 +1653,17 @@
               <div class="empty-state">No open positions. Setup awaiting confirmation.</div>
             </div>
           </div>
+        </div>
+
+        <!-- PERMANENT PINNED ORDER EXECUTION DOCK (Strategy Engine Footer) -->
+        <div class="exec-btn-sticky-tray strategy-pinned-dock" id="exec_btn_sticky_tray">
+          <button class="btn-exec-trade long" id="execute_trade_btn">
+            <div class="exec-btn-content">
+              <i class="ph-bold ph-lightning" id="exec_btn_icon"></i>
+              <span class="exec-btn-action" id="exec_btn_action">Open Long</span>
+              <span class="exec-btn-status-badge confirmed" id="exec_btn_badge">Confirmed</span>
+            </div>
+          </button>
         </div>
       </section>
 

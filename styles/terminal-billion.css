@@ -2465,24 +2465,30 @@ html, body {
   gap: 6px !important;
 }
 
-/* Execution Trigger Tray (Clean In-Flow Placement, Zero-Overlap) */
-.exec-btn-sticky-tray {
+/* Pinned Institutional Order Execution Dock (Permanent Strategy Engine Footer) */
+.exec-btn-sticky-tray,
+.strategy-pinned-dock {
+  flex-shrink: 0 !important;
+  width: 100% !important;
+  padding: 10px 14px 12px 14px !important;
+  box-sizing: border-box !important;
+  background: linear-gradient(180deg, rgba(10, 15, 28, 0.88) 0%, rgba(6, 9, 18, 0.98) 100%) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  z-index: 20 !important;
   position: relative !important;
-  margin-top: 10px !important;
-  padding: 0 !important;
-  background: transparent !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  z-index: 5 !important;
+  margin-top: 0 !important;
 }
 
 /* Powerhouse Execution Trigger Button */
 .btn-exec-trade {
   width: 100% !important;
-  height: 52px !important;
-  border-radius: 14px !important;
+  height: 48px !important;
+  border-radius: 12px !important;
   font-family: var(--font-display) !important;
-  font-size: 1rem !important;
+  font-size: 0.95rem !important;
   font-weight: 800 !important;
   letter-spacing: 0.04em !important;
   border: 1px solid rgba(255, 255, 255, 0.25) !important;

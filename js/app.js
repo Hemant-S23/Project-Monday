@@ -740,6 +740,7 @@ class App {
               asset: this.currentAsset || 'MARKET',
               direction: 'SHIELD',
               openCount: openPositions.length,
+              maxTrades: settings.maxTrades,
               skipReason: '🚨 HYPER-SENSITIVE EVENT RISK SHIELD ACTIVE',
               skipExplanation: `Breaking shock catalyst detected: "${shockTitle}". Auto-Pilot engaged capital preservation armor. Watchlist scanner paused to protect portfolio.`
             });
@@ -935,6 +936,7 @@ class App {
           asset,
           direction,
           openCount: currentOpenCount,
+          maxTrades: settings.maxTrades,
           skipReason: '🚨 HYPER-SENSITIVE EVENT RISK SHIELD ACTIVE',
           skipExplanation: `Breaking shock catalyst detected: "${shockTitle}". Auto-Pilot engaged capital preservation armor. Entries throttled to prevent volatile news slippage and wick hunts.`
         });
@@ -954,6 +956,7 @@ class App {
         asset,
         direction,
         openCount: currentOpenCount,
+        maxTrades: settings.maxTrades,
         skipReason: `Max ${settings.maxTrades} Concurrent Trades Limit Reached`,
         skipExplanation: `Auto-Pilot currently holds ${currentOpenCount} active open positions (${openPositions.map(p => p.asset).join(', ')}). To prevent portfolio over-exposure, new entries are strictly capped until an existing trade hits TP or SL.`
       });
@@ -974,6 +977,7 @@ class App {
         asset,
         direction,
         openCount: currentOpenCount,
+        maxTrades: settings.maxTrades,
         skipReason: `🔒 HTF Trend Gate: ${trendLabel} Market`,
         skipExplanation: `1H higher-timeframe trend is ${htfDirection}. Only ${allowedDirection || 'no'} trades are allowed in this regime. A ${direction} entry would trade AGAINST the institutional trend — blocked to protect capital.`
       });
@@ -988,6 +992,7 @@ class App {
         asset,
         direction,
         openCount: currentOpenCount,
+        maxTrades: settings.maxTrades,
         skipReason: `Duplicate Position on ${asset}`,
         skipExplanation: `An active ${asset} position is already open and running. Pyramiding or duplicate exposure is blocked for safety.`
       });
@@ -1003,6 +1008,7 @@ class App {
         asset,
         direction,
         openCount: currentOpenCount,
+        maxTrades: settings.maxTrades,
         skipReason: `Setup Filtered by Standards (${score}% Conf, 1:${rr} RR)`,
         skipExplanation: `Auto-Pilot execution standards require minimum ${settings.minConfluence}% Confluence and 1:${settings.minRR} RR. Setup filtered out to avoid choppy/low-probability market.`
       });
@@ -1026,6 +1032,7 @@ class App {
           asset,
           direction,
           openCount: currentOpenCount,
+          maxTrades: settings.maxTrades,
           skipReason: '🚨 PRE-FLIGHT PRICE FIREWALL ACTIVE',
           skipExplanation: `Live market price ($${livePrice}) is already at or past setup target ($${target}) or stop loss ($${stopLoss}). Order discarded to protect capital.`
         });
@@ -1039,6 +1046,7 @@ class App {
           asset,
           direction,
           openCount: currentOpenCount,
+          maxTrades: settings.maxTrades,
           skipReason: '🚨 PRE-FLIGHT PRICE FIREWALL ACTIVE',
           skipExplanation: `Live market price ($${livePrice}) is already at or past setup target ($${target}) or stop loss ($${stopLoss}). Order discarded to protect capital.`
         });
@@ -1073,6 +1081,7 @@ class App {
         asset,
         direction,
         openCount: currentOpenCount,
+        maxTrades: settings.maxTrades,
         skipReason: '🎯 PILLAR A: EXACT-MATCH TICK REJECTED',
         skipExplanation: `Live realtime price ($${livePrice}) is not at the exact setup entry ($${rawEntry}). Market has drifted by ${diffFormatted}%. Zero-slippage policy active — order discarded to eliminate loops and bad fills.`
       });
@@ -1148,6 +1157,7 @@ class App {
       riskUSD,
       leverage,
       openCount: this.paperTrader.openPositions.length,
+      maxTrades: settings.maxTrades,
       currencySymbol: currSym,
       rsiInfo: `1H RSI: ${strategyResult.rsi1H || 55} • 5M RSI: ${strategyResult.rsi5M || 50} (${strategyResult.rsiStatus || 'Momentum Aligned'})`,
       volumeInfo: strategyResult.volumeFlow?.desc || 'Normal Baseline Volume (20-VMA Validated)',

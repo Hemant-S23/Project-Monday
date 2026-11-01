@@ -2681,6 +2681,14 @@ export class TerminalUI {
     const tpFormatted = `${currSym}${Number(decision.target || 0).toLocaleString()}`;
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+    const maxTrades = decision.maxTrades || (() => {
+      try {
+        const raw = localStorage.getItem('monday_autopilot_settings');
+        if (raw) return JSON.parse(raw).maxTrades || 2;
+      } catch (e) {}
+      return 2;
+    })();
+
     let actionBannerHtml = '';
     let validationStepsHtml = '';
 
@@ -2691,7 +2699,7 @@ export class TerminalUI {
           <span style="color:#34d399;">FILLED at ${entryFormatted}</span>
         </div>
         <div class="decision-action-sub">
-          Risk Allocation: $${decision.riskUSD || '20.00'} (1% Account Risk) • ${decision.leverage || 20}x Lev • Active Portfolio: ${decision.openCount}/2
+          Risk Allocation: $${decision.riskUSD || '20.00'} (${((1 / maxTrades) * 2).toFixed(1)}% Account Risk) • ${decision.leverage || 20}x Lev • Active Portfolio: ${decision.openCount}/${maxTrades}
         </div>
       `;
 
@@ -2718,7 +2726,7 @@ export class TerminalUI {
         </div>
         <div class="validation-step">
           <span class="step-num">6</span>
-          <div><strong>Portfolio Drawdown Cap:</strong> Current active trades: ${decision.openCount}/2 (Max 2% total drawdown limit strictly respected).</div>
+          <div><strong>Portfolio Drawdown Cap:</strong> Current active trades: ${decision.openCount}/${maxTrades} (Max ${maxTrades} concurrent trades limit strictly respected).</div>
         </div>
       `;
     } else {
@@ -2728,7 +2736,7 @@ export class TerminalUI {
           <span style="color:#fbbf24;">PRESERVED CAPITAL</span>
         </div>
         <div class="decision-action-sub">
-          Reason: ${decision.skipReason || 'Risk parameters not satisfied'} • Active Trades: ${decision.openCount}/2
+          Reason: ${decision.skipReason || 'Risk parameters not satisfied'} • Active Trades: ${decision.openCount}/${maxTrades}
         </div>
       `;
 

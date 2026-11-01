@@ -4287,7 +4287,12 @@ export class TerminalUI {
 
       cell.addEventListener('click', (e) => {
         updateInspector();
-        this.passbookCurrentMonth = `DATE:${dKey}`;
+        if (this.passbookCurrentMonth === `DATE:${dKey}`) {
+          // Toggle off if clicked again -> revert to current month
+          this.passbookCurrentMonth = 'THIS_MONTH';
+        } else {
+          this.passbookCurrentMonth = `DATE:${dKey}`;
+        }
         this.renderFinancialPassbook();
       });
     });

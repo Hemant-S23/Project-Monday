@@ -25,18 +25,31 @@ export class DataVizEngine {
       progressRing.style.strokeDashoffset = `${offset}`;
 
       // Color tiering
-      if (clamped >= 75) {
+      if (grade.includes('BLOCKED') || grade.includes('REJECTED')) {
+        progressRing.style.stroke = 'var(--risk)';
+        progressRing.style.filter = 'drop-shadow(0 0 10px var(--risk))';
+        if (gradeVal) gradeVal.style.color = 'var(--risk)';
+        if (scoreVal) scoreVal.style.color = 'var(--risk)';
+      } else if (grade.includes('CLOSED') || grade.includes('OFF-SESSION')) {
+        progressRing.style.stroke = 'rgba(255, 255, 255, 0.2)';
+        progressRing.style.filter = 'none';
+        if (gradeVal) gradeVal.style.color = '#94a3b8';
+        if (scoreVal) scoreVal.style.color = '#94a3b8';
+      } else if (clamped >= 75) {
         progressRing.style.stroke = 'var(--profit)';
         progressRing.style.filter = 'drop-shadow(0 0 10px var(--profit))';
         if (gradeVal) gradeVal.style.color = 'var(--profit)';
+        if (scoreVal) scoreVal.style.color = 'var(--profit)';
       } else if (clamped >= 50) {
         progressRing.style.stroke = 'var(--shield)';
         progressRing.style.filter = 'drop-shadow(0 0 10px var(--shield))';
         if (gradeVal) gradeVal.style.color = 'var(--shield)';
+        if (scoreVal) scoreVal.style.color = 'var(--shield)';
       } else {
         progressRing.style.stroke = 'var(--text-low)';
         progressRing.style.filter = 'none';
         if (gradeVal) gradeVal.style.color = 'var(--text-mid)';
+        if (scoreVal) scoreVal.style.color = 'var(--text-hi)';
       }
     }
 

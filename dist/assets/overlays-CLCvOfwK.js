@@ -1,0 +1,28 @@
+import{t as e}from"./sfx-BD73uRAY.js";var t=class{static updateConfluenceGauge(e,t,n=`GRADE A`){if(!e)return;let r=e.querySelector(`.gauge-progress`),i=e.querySelector(`.gauge-score`),a=e.querySelector(`.gauge-grade`),o=2*Math.PI*56,s=Math.max(0,Math.min(100,Number(t)||0)),c=o-s/100*o;r&&(r.style.strokeDasharray=`${o}`,r.style.strokeDashoffset=`${c}`,n.includes(`BLOCKED`)||n.includes(`REJECTED`)?(r.style.stroke=`var(--risk)`,r.style.filter=`drop-shadow(0 0 10px var(--risk))`,a&&(a.style.color=`var(--risk)`),i&&(i.style.color=`var(--risk)`)):n.includes(`CLOSED`)||n.includes(`OFF-SESSION`)?(r.style.stroke=`rgba(255, 255, 255, 0.2)`,r.style.filter=`none`,a&&(a.style.color=`#94a3b8`),i&&(i.style.color=`#94a3b8`)):s>=75?(r.style.stroke=`var(--profit)`,r.style.filter=`drop-shadow(0 0 10px var(--profit))`,a&&(a.style.color=`var(--profit)`),i&&(i.style.color=`var(--profit)`)):s>=50?(r.style.stroke=`var(--shield)`,r.style.filter=`drop-shadow(0 0 10px var(--shield))`,a&&(a.style.color=`var(--shield)`),i&&(i.style.color=`var(--shield)`)):(r.style.stroke=`var(--text-low)`,r.style.filter=`none`,a&&(a.style.color=`var(--text-mid)`),i&&(i.style.color=`var(--text-hi)`))),i&&(i.textContent=`${Math.round(s)}%`),a&&(a.textContent=n)}static render365Heatmap(e,t=null){if(e){e.innerHTML=``;for(let n=0;n<364;n++){let r=document.createElement(`div`);r.className=`heatmap-cell`;let i=Math.random(),a=0,o=``;i>.65?(a=+(Math.random()*4.5+.5).toFixed(1),o=a>=3?`win-3`:a>=1.5?`win-2`:`win-1`):i>.45&&(a=-(Math.random()*1.5+.5).toFixed(1),o=a<=-1?`loss-2`:`loss-1`),o&&r.classList.add(o),r.setAttribute(`data-r`,a),r.setAttribute(`title`,`Day ${n+1}: ${a>=0?`+`:``}${a}R`),t&&r.addEventListener(`click`,()=>t({day:n+1,pnlR:a})),e.appendChild(r)}}}static calculateLiquidationLadder({entry:e,leverage:t,direction:n=`LONG`,mmr:r=.005}){let i=Number(e)||68e3,a=Math.max(1,Number(t)||20),o=n.toUpperCase()===`LONG`,s=0,c=0,l=0;return o?(s=+(i*(1-1/a+r)).toFixed(2),c=+(i*.985).toFixed(2),l=+(i+(i-c)*3.2).toFixed(2)):(s=+(i*(1+1/a-r)).toFixed(2),c=+(i*1.015).toFixed(2),l=+(i-(c-i)*3.2).toFixed(2)),{entry:i,liquidation:s,stopLoss:c,target:l,isFirewallSafe:o?c>s:c<s}}},n=new class{constructor(){this.toastContainer=null,this.initCommandPaletteListener(),this.initEscapeListener()}initEscapeListener(){window.addEventListener(`keydown`,e=>{e.key===`Escape`&&(this.closeAllModals(),this.closeAllDrawers())})}openModal(t){let n=document.getElementById(t);n&&(n.classList.add(`open`),n.setAttribute(`aria-hidden`,`false`),e.playClick())}closeModal(e){let t=document.getElementById(e);t&&(t.classList.remove(`open`),t.setAttribute(`aria-hidden`,`true`))}closeAllModals(){document.querySelectorAll(`.modal-backdrop.open`).forEach(e=>e.classList.remove(`open`))}openDrawer(t){let n=document.getElementById(t);n&&(n.classList.add(`open`),e.playClick())}closeDrawer(e){let t=document.getElementById(e);t&&t.classList.remove(`open`)}closeAllDrawers(){document.querySelectorAll(`.drawer-backdrop.open`).forEach(e=>e.classList.remove(`open`))}showToast({title:t,message:n,type:r=`info`,duration:i=3e3}){this.toastContainer||(this.toastContainer=document.createElement(`div`),this.toastContainer.className=`toast-stack-container`,this.toastContainer.style.cssText=`
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 2000;
+        pointer-events: none;
+      `,document.body.appendChild(this.toastContainer));let a=document.createElement(`div`);a.className=`glass-card glass-${r}-border`,a.style.cssText=`
+      padding: 12px 18px;
+      min-width: 280px;
+      max-width: 360px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      pointer-events: auto;
+      transform: translateY(20px);
+      opacity: 0;
+      transition: all 250ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    `;let o=`<i class="ph-bold ph-info" style="color: var(--cyan); font-size: 1.25rem;"></i>`;r===`profit`?(o=`<i class="ph-bold ph-check-circle" style="color: var(--profit); font-size: 1.25rem;"></i>`,e.playOrderExecuted()):r===`risk`?o=`<i class="ph-bold ph-warning-circle" style="color: var(--risk); font-size: 1.25rem;"></i>`:r===`shield`&&(o=`<i class="ph-bold ph-shield-warning" style="color: var(--shield); font-size: 1.25rem;"></i>`,e.playShieldAlert()),a.innerHTML=`
+      ${o}
+      <div style="flex: 1;">
+        ${t?`<div style="font-weight: 600; font-size: 0.85rem; color: var(--text-hi);">${t}</div>`:``}
+        <div style="font-size: 0.8rem; color: var(--text-mid);">${n}</div>
+      </div>
+    `,this.toastContainer.appendChild(a),requestAnimationFrame(()=>{a.style.transform=`translateY(0)`,a.style.opacity=`1`}),setTimeout(()=>{a.style.transform=`translateY(15px)`,a.style.opacity=`0`,setTimeout(()=>a.remove(),250)},i)}initCommandPaletteListener(){window.addEventListener(`click`,e=>{e.target&&e.target.classList&&e.target.classList.contains(`modal-backdrop`)&&this.closeAllModals()}),window.addEventListener(`keydown`,e=>{if((e.ctrlKey||e.metaKey)&&(e.key.toLowerCase()===`k`||e.code===`KeyK`)){e.preventDefault();let t=document.getElementById(`landing_cmd_modal`)||document.getElementById(`cmd_palette_modal`);if(t){if(t.classList.contains(`open`))this.closeModal(t.id);else{this.openModal(t.id);let e=t.querySelector(`.cmd-palette-input`);e&&setTimeout(()=>{e.value=``,e.focus(),t.querySelectorAll(`.cmd-item`).forEach(e=>e.style.display=`flex`)},60)}}}})}};export{t as n,n as t};

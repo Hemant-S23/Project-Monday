@@ -4236,25 +4236,33 @@ html, body {
   100% { transform: translateY(0); opacity: 1; }
 }
 
-.bubble-header {
+.bubble-header,
+.chat-msg-header {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  margin-bottom: 7px !important;
-  gap: 8px !important;
+  margin-bottom: 8px !important;
+  gap: 10px !important;
 }
 
-.bubble-header .sender-name {
+.bubble-header .sender-name,
+.chat-msg-role {
   font-family: var(--font-display) !important;
-  font-size: 0.74rem !important;
+  font-size: 0.76rem !important;
   font-weight: 800 !important;
-  letter-spacing: 0.03em !important;
+  letter-spacing: 0.04em !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
 }
 
-.bubble-header .msg-time {
+.bubble-header .msg-time,
+.chat-msg-time {
   font-family: var(--font-mono) !important;
-  font-size: 0.63rem !important;
-  color: rgba(148, 163, 184, 0.6) !important;
+  font-size: 0.68rem !important;
+  font-weight: 600 !important;
+  color: #94a3b8 !important;
+  letter-spacing: 0.02em !important;
 }
 
 /* Assistant Bubble (MONDAY) */
@@ -4263,29 +4271,35 @@ html, body {
 .copilot-bubble,
 .chat-message.assistant,
 .chat-bubble:not(.user-bubble) {
-  background: rgba(14, 20, 34, 0.82) !important;
-  backdrop-filter: blur(28px) !important;
-  -webkit-backdrop-filter: blur(28px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: linear-gradient(145deg, rgba(16, 23, 41, 0.78) 0%, rgba(10, 15, 28, 0.85) 100%) !important;
+  backdrop-filter: blur(32px) !important;
+  -webkit-backdrop-filter: blur(32px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 16px !important;
   border-top-left-radius: 4px !important;
-  color: #e2e8f0 !important;
+  color: #f1f5f9 !important;
   align-self: flex-start !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  padding: 14px 18px !important;
 }
 
 .monday-bubble .sender-name,
 .assistant-bubble .sender-name,
 .copilot-bubble .sender-name,
-.chat-message.assistant .sender-name {
+.chat-message.assistant .sender-name,
+.chat-msg-role {
   color: #38bdf8 !important;
-  text-shadow: 0 0 10px rgba(56, 189, 248, 0.35) !important;
+  text-shadow: 0 0 12px rgba(56, 189, 248, 0.25) !important;
 }
 
-.bubble-body {
+.bubble-body,
+.chat-msg-body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-  font-size: 0.835rem !important;
-  line-height: 1.62 !important;
-  color: #e2e8f0 !important;
+  font-size: 0.86rem !important;
+  line-height: 1.65 !important;
+  color: #f1f5f9 !important;
+  font-weight: 450 !important;
+  letter-spacing: 0.01em !important;
 }
 
 .bubble-body strong {
@@ -6771,11 +6785,11 @@ html, body {
   padding: 24px 32px !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 18px !important;
-  max-width: 1280px !important;
+  gap: 16px !important;
+  max-width: 1360px !important;
   margin: 0 auto !important;
   width: 100% !important;
-  height: calc(100vh - 48px) !important;
+  height: calc(100vh - 44px) !important;
   box-sizing: border-box !important;
   animation: pageViewFade 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
@@ -6784,23 +6798,103 @@ html, body {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  background: rgba(10, 14, 24, 0.78) !important;
-  backdrop-filter: blur(36px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(36px) saturate(190%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: linear-gradient(145deg, rgba(14, 20, 36, 0.8) 0%, rgba(9, 13, 24, 0.88) 100%) !important;
+  backdrop-filter: blur(40px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 18px !important;
   padding: 16px 24px !important;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
   position: relative !important;
+  overflow: hidden !important;
+}
+
+.copilot-page-header::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 1px !important;
+  background: linear-gradient(90deg, transparent 0%, rgba(56, 189, 248, 0.35) 50%, transparent 100%) !important;
+  pointer-events: none !important;
+}
+
+.brand-icon-halo {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 12px !important;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.18) 0%, rgba(2, 132, 199, 0.08) 100%) !important;
+  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #38bdf8 !important;
+  font-size: 1.35rem !important;
+  box-shadow: 0 0 16px rgba(14, 165, 233, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+
+.copilot-header-title {
+  font-family: var(--font-display) !important;
+  font-size: 1.12rem !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  letter-spacing: 0.02em !important;
+  margin: 0 !important;
+}
+
+.copilot-header-sub {
+  font-family: var(--font-sans) !important;
+  font-size: 0.74rem !important;
+  color: #94a3b8 !important;
+  font-weight: 500 !important;
+  margin-top: 2px !important;
+}
+
+.copilot-status-badge {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  padding: 5px 12px !important;
+  border-radius: 999px !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.72rem !important;
+  color: #34d399 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+}
+
+.copilot-clear-btn {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  background: rgba(239, 68, 68, 0.08) !important;
+  border: 1px solid rgba(239, 68, 68, 0.22) !important;
+  color: #f87171 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.copilot-clear-btn:hover {
+  background: rgba(239, 68, 68, 0.2) !important;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  color: #ffffff !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.3) !important;
 }
 
 .copilot-chat-workspace {
-  background: rgba(10, 14, 24, 0.78) !important;
-  backdrop-filter: blur(36px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(36px) saturate(190%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: linear-gradient(145deg, rgba(13, 19, 34, 0.8) 0%, rgba(8, 12, 22, 0.9) 100%) !important;
+  backdrop-filter: blur(48px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(48px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 20px !important;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
   display: flex !important;
   flex-direction: column !important;
   flex: 1 !important;
@@ -6815,40 +6909,136 @@ html, body {
   left: 0 !important;
   right: 0 !important;
   height: 1px !important;
-  background: linear-gradient(90deg, transparent 0%, rgba(6, 182, 212, 0.5) 50%, transparent 100%) !important;
+  background: linear-gradient(90deg, transparent 0%, rgba(56, 189, 248, 0.4) 50%, transparent 100%) !important;
   pointer-events: none !important;
 }
 
 .copilot-page-messages {
   flex: 1 !important;
-  padding: 24px 28px !important;
+  padding: 26px 30px !important;
   overflow-y: auto !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 16px !important;
+  gap: 18px !important;
   scrollbar-width: thin !important;
-  scrollbar-color: rgba(255, 255, 255, 0.16) transparent !important;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent !important;
+}
+
+.copilot-chips-bar {
+  padding: 10px 22px !important;
+  display: flex !important;
+  gap: 8px !important;
+  overflow-x: auto !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+  background: rgba(7, 10, 18, 0.4) !important;
+  scrollbar-width: none !important;
 }
 
 .copilot-chip-btn {
   padding: 6px 14px !important;
   background: rgba(255, 255, 255, 0.04) !important;
-  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
   border-radius: 999px !important;
-  color: #94a3b8 !important;
-  font-family: 'Inter', system-ui, sans-serif !important;
+  color: #cbd5e1 !important;
+  font-family: var(--font-sans) !important;
   font-size: 0.76rem !important;
+  font-weight: 600 !important;
   white-space: nowrap !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+
+.copilot-chip-btn:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+  border-color: rgba(56, 189, 248, 0.4) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
+  transform: translateY(-1px) !important;
+}
+
+.copilot-input-capsule {
+  padding: 12px 20px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
+  background: rgba(9, 13, 24, 0.72) !important;
+  backdrop-filter: blur(28px) !important;
+  -webkit-backdrop-filter: blur(28px) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.copilot-input-capsule .chat-mic-btn {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 10px !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #94a3b8 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.05rem !important;
   cursor: pointer !important;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-.copilot-chip-btn:hover {
-  background: rgba(6, 182, 212, 0.14) !important;
+.copilot-input-capsule .chat-mic-btn:hover {
   color: #38bdf8 !important;
-  border-color: rgba(6, 182, 212, 0.45) !important;
-  box-shadow: 0 0 14px rgba(6, 182, 212, 0.25) !important;
-  transform: translateY(-1px) !important;
+  background: rgba(56, 189, 248, 0.1) !important;
+  border-color: rgba(56, 189, 248, 0.35) !important;
+}
+
+.copilot-input-capsule .chat-text-input {
+  flex: 1 !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 12px !important;
+  padding: 10px 16px !important;
+  color: #ffffff !important;
+  font-family: var(--font-sans) !important;
+  font-size: 0.88rem !important;
+  outline: none !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+.copilot-input-capsule .chat-text-input:focus {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(56, 189, 248, 0.5) !important;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+.copilot-input-capsule .chat-text-input::placeholder {
+  color: #64748b !important;
+  font-size: 0.84rem !important;
+}
+
+.copilot-input-capsule .chat-send-btn {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 10px !important;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.05rem !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.3) !important;
+}
+
+.copilot-input-capsule .chat-send-btn:hover {
+  transform: translateY(-1px) scale(1.03) !important;
+  box-shadow: 0 6px 18px rgba(14, 165, 233, 0.45) !important;
+}
+
+.copilot-input-capsule .chat-send-btn:active {
+  transform: translateY(0) scale(0.97) !important;
 }
 
 /* =========================================================================

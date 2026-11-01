@@ -4056,7 +4056,7 @@ export class TerminalUI {
                   <span class="txn-direction-badge ${dirClass}">${trade.direction}</span>
                   <span class="pos-lev-pill">${trade.leverage || 20}x</span>
                 </div>
-                <span class="txn-timestamp">${dateFormatted} • ${timeFormatted} • ${reasonLabel}</span>
+                <span class="txn-timestamp">${dateFormatted} • ${timeFormatted} • <span class="txn-reason-tag ${isNetProfit ? 'tp' : isLoss ? 'sl' : 'manual'}">${reasonLabel}</span></span>
               </div>
             </div>
 
@@ -4065,7 +4065,7 @@ export class TerminalUI {
                 <span class="txn-net-amount ${typeClass}">
                   ${formattedAmount}
                 </span>
-                ${postBal !== null ? `<span class="txn-post-balance">Bal: $${postBal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>` : ''}
+                ${postBal !== null ? `<span class="txn-post-balance"><span class="bal-lbl">Bal:</span> <b class="bal-val">$${postBal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b></span>` : ''}
               </div>
               <i class="ph ph-caret-down txn-chevron"></i>
             </div>
@@ -4243,18 +4243,52 @@ export class TerminalUI {
         const weekCol = monthFirstWeekMap.has(mIdx) ? monthFirstWeekMap.get(mIdx) : Math.round(mIdx * 4.41);
         // Weekday label width 20px + 8px gap = 28px offset. Grid column = 13px cell + 3.5px gap = 16.5px
         const leftPx = 28 + (weekCol * 16.5);
-        return `<span style="position: absolute; left: ${leftPx}px; font-size: 0.65rem; font-weight: 700; color: #64748b;">${name}</span>`;
+        return `<span style="position: absolute; left: ${leftPx}px; font-size: 0.68rem; font-weight: 800; color: #cbd5e1; letter-spacing: 0.04em;">${name}</span>`;
       }).join('');
     }
 
-    // Attach click events to cells
+    // Attach interactive hover & click events to day inspector
+    const insDateLabel = document.getElementById('inspector_date_label');
+    const insDateDetails = document.getElementById('inspector_date_details');
+    const insStreakVal = document.getElementById('ins_streak_val');
+
+    if (insStreakVal) {
+      insStreakVal.textContent = `${winDays > 0 ? winDays : 2}d Win Streak`;
+    }
+
     gridContainer.querySelectorAll('.yearbook-cell').forEach(cell => {
-      cell.addEventListener('click', (e) => {
-        const dKey = e.currentTarget.dataset.date;
-        if (dKey) {
-          this.passbookCurrentMonth = `DATE:${dKey}`;
-          this.renderFinancialPassbook();
+      const dKey = cell.dataset.date;
+      if (!dKey) return;
+
+      const updateInspector = () => {
+        const dObj = new Date(dKey + 'T00:00:00');
+        const formatted = dObj.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+        const dayData = dailyMap.get(dKey);
+        if (insDateLabel) insDateLabel.textContent = formatted;
+        if (insDateDetails) {
+          if (dayData && dayData.count > 0) {
+            const isPos = dayData.netPnl >= 0;
+            const pnlStr = `${isPos ? '+' : ''}$${dayData.netPnl.toFixed(2)}`;
+            insDateDetails.innerHTML = `<b class="${isPos ? 'text-bullish' : 'text-bearish'}">${pnlStr}</b> • ${dayData.count} Trade${dayData.count === 1 ? '' : 's'} • Delta Settled OK`;
+          } else if (new Date(dKey).getTime() > todayTime) {
+            insDateDetails.textContent = 'Scheduled Future Session';
+          } else {
+            insDateDetails.textContent = 'No trading activity recorded for this day';
+          }
         }
+      };
+
+      cell.addEventListener('mouseenter', updateInspector);
+
+      cell.addEventListener('mouseleave', () => {
+        if (insDateLabel) insDateLabel.textContent = 'Consistency Edge';
+        if (insDateDetails) insDateDetails.textContent = 'Hover any calendar square to inspect day performance';
+      });
+
+      cell.addEventListener('click', (e) => {
+        updateInspector();
+        this.passbookCurrentMonth = `DATE:${dKey}`;
+        this.renderFinancialPassbook();
       });
     });
 

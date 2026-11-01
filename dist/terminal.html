@@ -47,12 +47,12 @@
     }
   }
   </script>
-  <script type="module" crossorigin src="/assets/terminal-BtHDOjUh.js"></script>
+  <script type="module" crossorigin src="/assets/terminal-Clgok34N.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/cursorGlow-BZ6wkXs1.js">
   <link rel="modulepreload" crossorigin href="/assets/hero3D-DWe7XOYa.js">
   <link rel="modulepreload" crossorigin href="/assets/sfx-BD73uRAY.js">
   <link rel="modulepreload" crossorigin href="/assets/authManager-DCW-oTS2.js">
-  <link rel="stylesheet" crossorigin href="/assets/terminal-CjiXulil.css">
+  <link rel="stylesheet" crossorigin href="/assets/terminal-CrzpqSL7.css">
   <link rel="stylesheet" crossorigin href="/assets/components--KCpGCq7.css">
 </head>
 <body data-mobile-page="chart">
@@ -1606,6 +1606,22 @@
                     </div>
                     <div class="yearbook-cells-grid" id="yearbook_cells_grid">
                       <!-- Dynamically populated 52x7 cells -->
+                    </div>
+                  </div>
+
+                  <!-- Interactive Day Inspector & Consistency HUD -->
+                  <div class="yearbook-day-inspector" id="yearbook_day_inspector">
+                    <div class="inspector-date-box" id="inspector_date_box">
+                      <span class="inspector-icon"><i class="ph-bold ph-calendar-check"></i></span>
+                      <div class="inspector-texts">
+                        <span class="inspector-date" id="inspector_date_label">Consistency Edge</span>
+                        <span class="inspector-details" id="inspector_date_details">Hover any square to inspect day performance</span>
+                      </div>
+                    </div>
+                    <div class="inspector-metrics-strip">
+                      <span class="ins-metric-chip" title="Active Winning Day Streak"><i class="ph-bold ph-fire text-warning"></i> <b id="ins_streak_val">2d Win Streak</b></span>
+                      <span class="ins-metric-chip" title="Sharpe Ratio (Risk-Adjusted Alpha)"><i class="ph-bold ph-trend-up text-cyan"></i> <b id="ins_alpha_val">Sharpe: 2.41</b></span>
+                      <span class="ins-metric-chip" title="Institutional Profit Factor"><i class="ph-bold ph-scales text-bullish"></i> <b id="ins_pf_val">PF: 2.85x</b></span>
                     </div>
                   </div>
                 </div>

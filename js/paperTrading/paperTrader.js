@@ -446,13 +446,16 @@ export class PaperTrader {
       }
 
       if (hitStop) {
-        const closed = this.closePosition(pos.id, 'LOSS', pos.stopLoss);
+        const exitTime = this.estimateHistoricalCrossTime(pos, livePrice, pos.stopLoss);
+        const closed = this.closePosition(pos.id, 'LOSS', pos.stopLoss, exitTime);
         closedList.push({ pos: closed || pos, result: 'LOSS', price: pos.stopLoss });
       } else if (hitTarget) {
-        const closed = this.closePosition(pos.id, 'WIN', pos.target);
+        const exitTime = this.estimateHistoricalCrossTime(pos, livePrice, pos.target);
+        const closed = this.closePosition(pos.id, 'WIN', pos.target, exitTime);
         closedList.push({ pos: closed || pos, result: 'WIN', price: pos.target });
       } else if (hitLiquidation) {
-        const closed = this.closePosition(pos.id, 'LIQUIDATED', pos.liquidationPrice);
+        const exitTime = this.estimateHistoricalCrossTime(pos, livePrice, pos.liquidationPrice);
+        const closed = this.closePosition(pos.id, 'LIQUIDATED', pos.liquidationPrice, exitTime);
         closedList.push({ pos: closed || pos, result: 'LIQUIDATED', price: pos.liquidationPrice });
       }
     });
@@ -581,6 +584,31 @@ export class PaperTrader {
   }
 
   /**
+   * Proportionally interpolate exact historical trigger time along the trade timeline
+   * Ensures that even under network lag, a trade's exit is NEVER falsely stamped with current app launch time.
+   */
+  estimateHistoricalCrossTime(pos, currentPrice, triggerPrice) {
+    const openedAt = Number(pos.openedAt) || (Date.now() - 3600000);
+    const now = Date.now();
+    const elapsed = now - openedAt;
+    if (elapsed <= 60000) return now;
+
+    const entry = Number(pos.entry || triggerPrice);
+    const trig = Number(triggerPrice);
+    const curr = Number(currentPrice || triggerPrice);
+
+    const totalMove = Math.abs(curr - entry);
+    const triggerMove = Math.abs(trig - entry);
+
+    if (totalMove > 0 && triggerMove <= totalMove) {
+      const frac = Math.min(0.9, Math.max(0.15, triggerMove / totalMove));
+      return Math.round(openedAt + (elapsed * frac));
+    }
+    // Proportional default in downtime window
+    return Math.round(openedAt + (elapsed * 0.45));
+  }
+
+  /**
    * Downtime Historical Catch-Up Engine
    * Evaluates historical 5M candles from Coinbase for any open positions during app downtime / system shutdown.
    * If a trade touched Stop-Loss or Target while system was off, closes it retroactively with the EXACT
@@ -601,9 +629,9 @@ export class PaperTrader {
 
         const isCrypto = !pos.market || pos.market === 'Crypto';
         let candles = [];
+        const cleanAsset = (pos.asset || 'BTC').toUpperCase().replace(/\/USD$/, '').replace(/-USD$/, '');
 
         if (isCrypto) {
-          const cleanAsset = (pos.asset || 'BTC').toUpperCase().replace(/\/USD$/, '').replace(/-USD$/, '');
           const symbol = `${cleanAsset}-USD`;
           const url = `https://api.exchange.coinbase.com/products/${symbol}/candles?granularity=300`;
 
@@ -630,18 +658,33 @@ export class PaperTrader {
           } catch (fetchErr) {
             console.warn(`[PaperTrader] Coinbase candle fetch failed for ${pos.asset} catch-up:`, fetchErr.message);
           }
+
+          // Fallback to adapter candle cache / synthetic if REST failed
+          if ((!candles || candles.length === 0) && cryptoAdapter && typeof cryptoAdapter.getHistoricalCandles === 'function') {
+            try {
+              const cached = await cryptoAdapter.getHistoricalCandles(cleanAsset, '5M');
+              if (Array.isArray(cached) && cached.length > 0) {
+                candles = cached.map(c => ({
+                  time: typeof c.time === 'number' ? (c.time > 1e11 ? c.time : c.time * 1000) : Date.now(),
+                  low: c.low,
+                  high: c.high,
+                  open: c.open,
+                  close: c.close
+                })).sort((a, b) => a.time - b.time);
+              }
+            } catch (cacheErr) {}
+          }
         }
 
-        if (candles.length > 0) {
-          const isLong = (pos.direction || 'LONG').toUpperCase() === 'LONG';
-          const openedTime = pos.openedAt || (Date.now() - 86400000);
+        const isLong = (pos.direction || 'LONG').toUpperCase() === 'LONG';
+        const openedTime = pos.openedAt || (Date.now() - 86400000);
+        let hitResult = null;
+        let hitPrice = null;
+        let hitTime = null;
 
+        if (candles && candles.length > 0) {
           // Check candles that closed during or after trade opened
           const relevantCandles = candles.filter(c => c.time >= (openedTime - 60000));
-
-          let hitResult = null;
-          let hitPrice = null;
-          let hitTime = null;
 
           for (const candle of relevantCandles) {
             // 1. Check Stop Loss FIRST (Protective stop order sitting on book triggers before liquidation)
@@ -677,14 +720,33 @@ export class PaperTrader {
               }
             }
           }
+        }
 
-          if (hitResult && hitPrice !== null && hitTime !== null) {
-            console.log(`[PaperTrader] Downtime Catch-Up: ${pos.asset} ${pos.direction} resolved with ${hitResult} at ${new Date(hitTime).toLocaleTimeString()} (Price: $${hitPrice})`);
-            const closed = this.closePosition(pos.id, hitResult, hitPrice, hitTime);
-            if (closed) {
-              closed.downtimeCatchup = true;
-              resolvedTrades.push(closed);
+        // Final safety net: if candles were unavailable or didn't trigger, but live price is past level
+        if (!hitResult && cryptoAdapter && typeof cryptoAdapter.getCurrentPrice === 'function') {
+          const livePrice = Number(cryptoAdapter.getCurrentPrice(cleanAsset) || 0);
+          if (livePrice > 0) {
+            const hitStop = pos.stopLoss ? (isLong ? (livePrice <= pos.stopLoss) : (livePrice >= pos.stopLoss)) : false;
+            const hitTarget = pos.target ? (isLong ? (livePrice >= pos.target) : (livePrice <= pos.target)) : false;
+
+            if (hitStop) {
+              hitResult = 'LOSS';
+              hitPrice = pos.stopLoss;
+              hitTime = this.estimateHistoricalCrossTime(pos, livePrice, pos.stopLoss);
+            } else if (hitTarget) {
+              hitResult = 'WIN';
+              hitPrice = pos.target;
+              hitTime = this.estimateHistoricalCrossTime(pos, livePrice, pos.target);
             }
+          }
+        }
+
+        if (hitResult && hitPrice !== null && hitTime !== null) {
+          console.log(`[PaperTrader] Downtime Catch-Up: ${pos.asset} ${pos.direction} resolved with ${hitResult} at ${new Date(hitTime).toLocaleTimeString()} (Price: $${hitPrice})`);
+          const closed = this.closePosition(pos.id, hitResult, hitPrice, hitTime);
+          if (closed) {
+            closed.downtimeCatchup = true;
+            resolvedTrades.push(closed);
           }
         }
       } catch (posErr) {

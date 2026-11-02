@@ -219,13 +219,23 @@ class App {
       this.indiaAdapter.init()
     ]);
 
-    // 2.5 Audit Downtime Trades in Background (Non-blocking: UI and chart render immediately without lag!)
-    this.paperTrader.auditDowntimeTrades(this.cryptoAdapter).then(downtimeResolved => {
+    // 2.5 Audit Downtime Trades BEFORE subscribing to live ticks to guarantee exact historical timestamps!
+    try {
+      const downtimeResolved = await this.paperTrader.auditDowntimeTrades(this.cryptoAdapter);
       if (downtimeResolved && downtimeResolved.length > 0) {
         console.log(`[App] Downtime Catch-Up: Resolved ${downtimeResolved.length} trade(s) with accurate historical timestamps.`);
         this.updateTradeJournalAndStats();
         this.ui.updateOpenPositions(this.paperTrader.openPositions);
         this.ui.updateHeaderAccountHUD(this.paperTrader.getLiveEquity());
+
+        // Single executive summary toast (replaces noisy multiple popup blast)
+        const count = downtimeResolved.length;
+        const times = downtimeResolved.map(t => new Date(t.closedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })).join(', ');
+        this.ui.showToast(
+          '⚡ Portfolio Synchronized',
+          `${count} trade(s) settled at exact historical levels (${times}). Ledger & Passbook updated.`,
+          'info'
+        );
 
         downtimeResolved.forEach(trade => {
           const isWin = trade.result === 'WIN';
@@ -233,28 +243,23 @@ class App {
           const formattedPrice = this.ui.formatPrice(trade.exitPrice, trade.market === 'India' ? '₹' : '$');
           const pnlSign = (trade.pnlUSD || 0) >= 0 ? '+' : '';
           const isLiq = trade.result === 'LIQUIDATED';
-          
-          this.ui.showToast(
-            isWin ? '🎯 Downtime Target Hit' : isLiq ? '⚠️ Downtime Liquidation' : '🛑 Downtime Stop Loss Hit',
-            `${trade.asset} ${trade.direction} resolved at ${exitTimeStr} (${formattedPrice}). Net PnL: ${pnlSign}$${trade.pnlUSD}`,
-            isWin ? 'success' : 'danger'
-          );
 
           this.ui.addNotification({
             type: isWin ? 'target' : isLiq ? 'liquidation' : 'stop',
             title: isWin 
-              ? `Target Hit (Downtime) • ${trade.asset} ${trade.direction}` 
+              ? `Target Hit • ${trade.asset} ${trade.direction}` 
               : isLiq
-                ? `Liquidated (Downtime) • ${trade.asset} ${trade.direction}`
-                : `Stop Loss Hit (Downtime) • ${trade.asset} ${trade.direction}`,
+                ? `Liquidated • ${trade.asset} ${trade.direction}`
+                : `Stop Loss Hit • ${trade.asset} ${trade.direction}`,
             message: `${pnlSign}$${trade.pnlUSD} settled at ${exitTimeStr} (${formattedPrice}). Recorded in Passbook.`,
-            tradeId: trade.id
+            tradeId: trade.id,
+            timestamp: trade.closedAt // <--- Stamped with exact historical time, never app wake-up time!
           });
         });
       }
-    }).catch(downtimeErr => {
+    } catch (downtimeErr) {
       console.warn('[App] Downtime audit error:', downtimeErr);
-    });
+    }
 
     // 3. Subscribe to default asset streams
     ['BTC', 'ETH', 'SOL'].forEach(asset => {

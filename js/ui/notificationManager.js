@@ -16,10 +16,12 @@ export class NotificationManager {
     this.clearBtn = null;
 
     // Attach to window so inline onclick and external triggers never fail
-    window.notificationManager = this;
-    window.mondayNotifications = this;
-    window.markAllNotificationsRead = (e) => this.markAllAsRead(e);
-    window.clearAllNotifications = (e) => this.clearAll(e);
+    if (typeof window !== 'undefined') {
+      window.notificationManager = this;
+      window.mondayNotifications = this;
+      window.markAllNotificationsRead = (e) => this.markAllAsRead(e);
+      window.clearAllNotifications = (e) => this.clearAll(e);
+    }
   }
 
   loadNotifications() {
@@ -66,10 +68,12 @@ export class NotificationManager {
     this.clearBtn = document.getElementById('notif_clear_btn');
 
     // Attach to window so inline onclick and external triggers never fail
-    window.notificationManager = this;
-    window.mondayNotifications = this;
-    window.markAllNotificationsRead = (e) => this.markAllAsRead(e);
-    window.clearAllNotifications = (e) => this.clearAll(e);
+    if (typeof window !== 'undefined') {
+      window.notificationManager = this;
+      window.mondayNotifications = this;
+      window.markAllNotificationsRead = (e) => this.markAllAsRead(e);
+      window.clearAllNotifications = (e) => this.clearAll(e);
+    }
 
     if (this.btnEl && this.wrapperEl) {
       this.btnEl.addEventListener('click', (e) => {
@@ -126,32 +130,35 @@ export class NotificationManager {
     this.render();
   }
 
-  addNotification({ type = 'info', title, message, tradeId = null }) {
+  addNotification({ type = 'info', title, message, tradeId = null, timestamp = null }) {
+    const notifTime = timestamp !== null ? Number(timestamp) : Date.now();
+
     // Deduplication guard: ignore duplicate identical alert if received within last 45 seconds
     const isDuplicate = this.notifications.some(
-      n => n.title === title && n.message === message && (Date.now() - n.timestamp < 45000)
+      n => n.title === title && n.message === message && Math.abs(notifTime - n.timestamp) < 45000
     );
     if (isDuplicate) return;
 
     const item = {
-      id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      id: `notif_${notifTime}_${Math.random().toString(36).substr(2, 4)}`,
       type,
       title,
       message,
       tradeId,
-      timestamp: Date.now(),
+      timestamp: notifTime,
       read: false
     };
 
     this.notifications.unshift(item);
+    this.notifications.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
     if (this.notifications.length > 60) {
-      this.notifications.pop();
+      this.notifications.length = 60;
     }
     this.save();
     this.render();
 
     // Trigger native browser notification if permitted and tab is in background
-    if ('Notification' in window && Notification.permission === 'granted' && document.hidden) {
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted' && typeof document !== 'undefined' && document.hidden) {
       try {
         new Notification(title, {
           body: message,

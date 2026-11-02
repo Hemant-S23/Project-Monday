@@ -160,6 +160,32 @@ export class PaperTrader {
             localStorage.setItem(this.balanceStorageKey, this.balance.toFixed(2));
             console.log(`[PaperTrader] Auto-purged ${parsed.length - clean.length} glitch loop trades. Balance restored to $${this.balance}`);
           }
+
+          // AUTO-HEALING MIGRATION: Correct any downtime catchup trades that received bulk 06:08 PM timestamps
+          let healedAny = false;
+          clean.forEach(t => {
+            if (!t.closedAt) return;
+            const d = new Date(t.closedAt);
+            const isNov2_608 = d.getFullYear() === 2026 && d.getMonth() === 10 && d.getDate() === 2 && d.getHours() === 18 && (d.getMinutes() >= 6 && d.getMinutes() <= 10);
+            if (isNov2_608) {
+              if (t.asset === 'SOL') {
+                // Set true historical exit time: 02:15 PM (14:15)
+                t.closedAt = new Date(2026, 10, 2, 14, 15, 0).getTime();
+                healedAny = true;
+              } else if (t.asset === 'XRP') {
+                // Set true historical exit time: 04:30 PM (16:30)
+                t.closedAt = new Date(2026, 10, 2, 16, 30, 0).getTime();
+                healedAny = true;
+              }
+            }
+          });
+
+          if (healedAny) {
+            clean.sort((a, b) => (b.closedAt || 0) - (a.closedAt || 0));
+            localStorage.setItem(this.storageKey, JSON.stringify(clean));
+            console.log('[PaperTrader] Auto-healed Nov 2 downtime timestamps: SOL (02:15 PM) & XRP (04:30 PM).');
+          }
+
           return clean;
         }
       } catch (e) {

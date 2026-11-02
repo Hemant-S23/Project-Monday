@@ -1365,7 +1365,7 @@ export class TerminalUI {
       leverage: 20,
       maxTrades: 2,
       minConfluence: 75,
-      minRR: 3.0,
+      minRR: 2.0,
       eventShieldEnabled: true
     };
 

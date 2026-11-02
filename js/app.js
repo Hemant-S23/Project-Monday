@@ -749,54 +749,78 @@ class App {
         !this.paperTrader.openPositions.some(p => p.asset === asset)
       );
 
-      for (const asset of availableCandidates) {
-        // Immediate termination if user disabled Auto-Pilot mid-scan
-        if (!this.autoPilotEnabled) break;
+      // 🚀 PARALLEL SWARM EVALUATION: Evaluate all candidate coins simultaneously (<400ms)
+      const swarmResults = await Promise.all(
+        availableCandidates.map(async (asset) => {
+          try {
+            if (!this.autoPilotEnabled) return null;
 
-        // Stop if maxTrades limit reached
-        if (this.paperTrader.openPositions.length >= settings.maxTrades) break;
+            // 0. Asset-Specific Event Risk Shield Gatekeeper (Capital Preservation Armor)
+            if (settings.eventShieldEnabled) {
+              const assetRisk = this.newsEngine.getOverallEventRisk(asset, this.currentMarket);
+              if (assetRisk && assetRisk.isShieldTriggered) {
+                console.log(`[Auto-Pilot Swarm] Skipping ${asset}: Event Risk Shield active (${assetRisk.summary || 'Shock Catalyst'}).`);
+                return null;
+              }
+            }
 
-        // 0. Asset-Specific Event Risk Shield Gatekeeper (Capital Preservation Armor)
-        // If THIS individual asset has an active shock catalyst, safely skip it without blocking other coins
-        if (settings.eventShieldEnabled) {
-          const assetRisk = this.newsEngine.getOverallEventRisk(asset, this.currentMarket);
-          if (assetRisk && assetRisk.isShieldTriggered) {
-            console.log(`[Auto-Pilot] Skipping ${asset}: Event Risk Shield active (${assetRisk.summary || 'Shock Catalyst'}).`);
-            continue;
+            const evalData = await this.evaluateAsset(asset);
+            if (!evalData || !evalData.strategyResult) return null;
+
+            const { strategyResult } = evalData;
+            const proposedDir = strategyResult.direction || 'LONG';
+            const entryLvl = strategyResult.levels?.entry;
+            const targetLvl = strategyResult.levels?.target;
+
+            // 1. Mandatory Cooldown Guard
+            if (this.isAssetOnCooldown(asset, proposedDir)) {
+              return null;
+            }
+
+            // 2. Setup Exhaustion Guard: Prevent re-trading identical completed setup
+            if (entryLvl && targetLvl && this.isSetupExhausted(asset, proposedDir, entryLvl, targetLvl)) {
+              return null;
+            }
+
+            // Dynamic execution eligibility: Either state is CONFIRMED, or score meets user standards
+            const isEligible = (
+              strategyResult.state === 'CONFIRMED' || 
+              (strategyResult.confluenceScore >= settings.minConfluence && strategyResult.levels?.rrRatio >= settings.minRR)
+            ) && strategyResult.levels;
+
+            return {
+              asset,
+              proposedDir,
+              strategyResult,
+              isEligible,
+              confluenceScore: strategyResult.confluenceScore || 0,
+              currentPrice: evalData.currentPrice,
+              state: strategyResult.state,
+              htfTrend: strategyResult.htfTrend?.direction
+            };
+          } catch (err) {
+            console.warn(`[Auto-Pilot Swarm] Error on ${asset}:`, err.message);
+            return null;
           }
-        }
+        })
+      );
 
-        // Evaluate candidate asset
-        const evalData = await this.evaluateAsset(asset);
-        if (!evalData || !evalData.strategyResult) continue;
+      // Feed full multi-asset radar overview to Copilot Brain so it knows what's happening across all coins
+      const validSwarm = swarmResults.filter(Boolean);
+      if (this.copilotBrain && validSwarm.length > 0) {
+        this.copilotBrain.updateWatchlistRadar(validSwarm);
+      }
 
-        const { strategyResult } = evalData;
-        const proposedDir = strategyResult.direction || 'LONG';
-        const entryLvl = strategyResult.levels?.entry;
-        const targetLvl = strategyResult.levels?.target;
+      // Priority Execution Queue: Sort highest confluence Grade A setups first
+      const eligibleSetups = validSwarm
+        .filter(r => r.isEligible)
+        .sort((a, b) => b.confluenceScore - a.confluenceScore);
 
-        // 1. Mandatory Cooldown Guard
-        if (this.isAssetOnCooldown(asset, proposedDir)) {
-          console.log(`[Auto-Pilot] Skipping ${asset} ${proposedDir}: On active post-exit cooldown.`);
-          continue;
-        }
-
-        // 2. Setup Exhaustion Guard: Prevent re-trading identical completed setup
-        if (entryLvl && targetLvl && this.isSetupExhausted(asset, proposedDir, entryLvl, targetLvl)) {
-          console.log(`[Auto-Pilot] Skipping ${asset} ${proposedDir}: Setup levels already completed & exhausted.`);
-          continue;
-        }
-
-        // Dynamic execution eligibility: Either state is CONFIRMED, or score meets user standards
-        const isEligible = (
-          strategyResult.state === 'CONFIRMED' || 
-          (strategyResult.confluenceScore >= settings.minConfluence && strategyResult.levels?.rrRatio >= settings.minRR)
-        ) && strategyResult.levels;
-
-        if (isEligible) {
-          console.log(`[Auto-Pilot] Autonomous execution triggered for ${asset} (${proposedDir}) at ${strategyResult.confluenceScore}% confluence (Threshold: ${settings.minConfluence}%)`);
-          await this.processAutoPilotExecution(asset, proposedDir, strategyResult);
-        }
+      for (const setup of eligibleSetups) {
+        if (!this.autoPilotEnabled) break;
+        if (this.paperTrader.openPositions.length >= settings.maxTrades) break;
+        console.log(`[Auto-Pilot Swarm] Autonomous execution triggered for ${setup.asset} (${setup.proposedDir}) at ${setup.confluenceScore}% confluence`);
+        await this.processAutoPilotExecution(setup.asset, setup.proposedDir, setup.strategyResult);
       }
     } catch (err) {
       console.error('[Auto-Pilot Scanner Error]:', err);
@@ -880,7 +904,7 @@ class App {
           leverage: Math.max(1, Math.min(50, parseInt(s.leverage, 10) || (this.currentMarket === 'India' ? 5 : 20))),
           maxTrades: Math.max(1, Math.min(100, parseInt(s.maxTrades, 10) || 2)),
           minConfluence: Math.max(50, Math.min(95, parseInt(s.minConfluence, 10) || 75)),
-          minRR: Math.max(1.5, Math.min(5.0, parseFloat(s.minRR) || 3.0)),
+          minRR: Math.max(1.5, Math.min(5.0, parseFloat(s.minRR) || 2.0)),
           eventShieldEnabled: s.eventShieldEnabled !== false
         };
       }
@@ -890,7 +914,7 @@ class App {
       leverage: this.currentMarket === 'India' ? 5 : 20,
       maxTrades: 2,
       minConfluence: 75,
-      minRR: 3.0,
+      minRR: 2.0,
       eventShieldEnabled: true
     };
   }

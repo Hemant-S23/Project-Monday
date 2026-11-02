@@ -3,10 +3,45 @@
  * Natural, empathetic, context-aware reasoning engine in conversational Hinglish & English.
  * Talks like a real, smart female trading partner — not a rigid robotic menu.
  */
+const ASSET_ALIASES = {
+  'ava': 'AVAX',
+  'avax': 'AVAX',
+  'avalanche': 'AVAX',
+  'eth': 'ETH',
+  'ether': 'ETH',
+  'ethereum': 'ETH',
+  'sol': 'SOL',
+  'solana': 'SOL',
+  'doge': 'DOGE',
+  'dogecoin': 'DOGE',
+  'near': 'NEAR',
+  'link': 'LINK',
+  'chainlink': 'LINK',
+  'sui': 'SUI',
+  'xrp': 'XRP',
+  'ripple': 'XRP',
+  'ada': 'ADA',
+  'cardano': 'ADA',
+  'btc': 'BTC',
+  'bitcoin': 'BTC',
+  'nifty': 'NIFTY',
+  'banknifty': 'BANKNIFTY',
+  'reliance': 'RELIANCE',
+  'tatamotors': 'TATAMOTORS',
+  'tata': 'TATAMOTORS',
+  'hdfc': 'HDFCBANK',
+  'zomato': 'ZOMATO'
+};
+
 export class CopilotBrain {
   constructor() {
     this.history = [];
     this.currentContext = null;
+    this.watchlistRadar = [];
+  }
+
+  updateWatchlistRadar(radarList) {
+    this.watchlistRadar = Array.isArray(radarList) ? radarList : [];
   }
 
   formatPrice(p, currencySymbol = null) {
@@ -109,6 +144,28 @@ export class CopilotBrain {
     });
   }
 
+  checkAssetQuery(clean) {
+    const words = clean.split(' ');
+    const matched = words.find(w => ASSET_ALIASES[w]);
+    if (!matched) return null;
+    const target = ASSET_ALIASES[matched];
+    const rData = this.watchlistRadar ? this.watchlistRadar.find(r => r.asset === target) : null;
+    if (rData) {
+      const rPrice = this.formatPrice(rData.currentPrice);
+      const rState = rData.state || 'WAIT';
+      const rTrend = rData.htfTrend || 'UNCLEAR';
+      const rDir = rData.proposedDir || 'LONG';
+      const rConf = rData.confluenceScore || 0;
+
+      return `**${target}/USD Live Radar Report** 🔍\n\n` +
+        `• **Live Price:** ${rPrice}\n` +
+        `• **1H Trend Direction:** **${rTrend}**\n` +
+        `• **Strategy State:** **${rState}** ${rState === 'CONFIRMED' ? `🟢 (${rDir} setup with ${rConf}% Confluence ready!)` : rState === 'DEVELOPING' ? '🟠 (Pullback in reaction zone)' : '🟡 (Awaiting structural breakout)'}\n\n` +
+        `Aap top search bar se ya Watchlist tab se direct **${target}** ka live TradingView chart open kar sakte ho!`;
+    }
+    return `**${target}** live swarm radar par monitor ho raha hai! Tum top search bar se **${target}** select karke direct live chart and order flow open kar sakte ho.`;
+  }
+
   /**
    * Responds intelligently & conversationally like a real human AI companion
    */
@@ -150,6 +207,41 @@ export class CopilotBrain {
         `Hey there! Main bilkul active hoon aur badhiya mood me hoon! 🧠 Tum batao, kya haal chaal? Aaj scalping karni hai ya bas market observe kar rahe ho?`
       ];
       response = greetings[Math.floor(Math.random() * greetings.length)];
+    }
+
+    // 2.5. Multi-Asset Radar / Other Coins Overview ("dusre coins", "other coins", "baki coins", "watchlist", "all coins")
+    else if (this.matchesAny(clean, [
+      'dusre coins', 'dusre coin', 'dusra coin', 'other coins', 'other coin',
+      'baki coins', 'baaki coins', 'baki coin', 'baaki coin', 'all coins',
+      'watchlist', 'aur coins', 'kisi aur coin', 'market overview', 'saare coins', 'sabhi coins'
+    ])) {
+      if (this.watchlistRadar && this.watchlistRadar.length > 0) {
+        const confirmed = this.watchlistRadar.filter(r => r.state === 'CONFIRMED');
+        const developing = this.watchlistRadar.filter(r => r.state === 'DEVELOPING');
+        const waiting = this.watchlistRadar.filter(r => r.state === 'WAIT');
+
+        let msg = `Maine abhi live parallel swarm scan kiya hai sabhi watchlist coins ka! 📊⚡\n\n`;
+        if (confirmed.length > 0) {
+          msg += `🟢 **Active Setups Ready:**\n` +
+            confirmed.map(c => `• **${c.asset}** (${c.proposedDir}): ${this.formatPrice(c.currentPrice)} • ${c.confluenceScore}% Conf (${c.htfTrend || 'Aligned'} 1H)`).join('\n') + '\n\n';
+        }
+        if (developing.length > 0) {
+          msg += `🟠 **Developing Setups (Watching Zone):**\n` +
+            developing.map(d => `• **${d.asset}**: ${this.formatPrice(d.currentPrice)} • Reaction zone pullback`).join('\n') + '\n\n';
+        }
+        if (waiting.length > 0) {
+          msg += `🟡 **WAIT State:** ` + waiting.map(w => w.asset).join(', ') + ` (Awaiting clean structure)\n\n`;
+        }
+        msg += `Kisi specific coin ka detailed setup dekhna ho toh bas ticker bolo (e.g. "Ava", "ETH", "SOL")!`;
+        response = msg;
+      } else {
+        response = `Background me sabhi coins ka simultaneous parallel scan active hai! BTC, ETH, SOL, AVAX, LINK, NEAR, DOGE, SUI track ho rahe hain. Tum batao, kis coin ka live setup dekhna hai?`;
+      }
+    }
+
+    // 2.6. Specific Asset Inquiry / Shortcut ("Ava", "avax", "eth", "sol", "doge", "near", etc.)
+    else if (this.checkAssetQuery(clean)) {
+      response = this.checkAssetQuery(clean);
     }
 
     // 3. Small talk & Casual Banter ("aur batao", "kya chal raha hai", "kya kar rahi ho", "bore ho raha hu", "thak gaya")

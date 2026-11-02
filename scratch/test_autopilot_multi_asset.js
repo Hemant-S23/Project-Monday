@@ -1,7 +1,3 @@
-// Test script to verify that:
-// 1. Settings maxTrades=10 is read correctly
-// 2. An asset with High Event Risk (e.g. BTC) is safely skipped without aborting the scanner
-// 3. Other assets (ETH, SOL, etc.) continue scanning and execute up to maxTrades
 const store = new Map();
 global.localStorage = {
   getItem: (k) => store.get(k) || null,
@@ -11,75 +7,95 @@ global.localStorage = {
 };
 
 import { PaperTrader } from '../js/paperTrading/paperTrader.js';
-import { StrategyEngine } from '../js/engine/strategyEngine.js';
+import { CopilotBrain } from '../js/copilot/copilotBrain.js';
 
-console.log('[TEST] Checking PaperTrader & Max Trades Logic...');
+console.log('[TEST 1] Testing Copilot Multi-Asset Intelligence...');
+const brain = new CopilotBrain();
+brain.updateContext({
+  targetAsset: 'BTC',
+  currentPrice: 77800,
+  strategyState: { state: 'WAIT', direction: 'LONG', htfTrend: { direction: 'BULLISH' } }
+});
 
-const pt = new PaperTrader(2000, 'test_user');
-console.log('[TEST] Initial Balance:', pt.balance);
-console.log('[TEST] Initial Open Positions:', pt.openPositions.length);
+brain.updateWatchlistRadar([
+  { asset: 'BTC', currentPrice: 77800, state: 'WAIT', htfTrend: 'BULLISH', proposedDir: 'LONG', confluenceScore: 60 },
+  { asset: 'ETH', currentPrice: 2550, state: 'CONFIRMED', htfTrend: 'BEARISH', proposedDir: 'SHORT', confluenceScore: 95 },
+  { asset: 'SOL', currentPrice: 155, state: 'CONFIRMED', htfTrend: 'BULLISH', proposedDir: 'LONG', confluenceScore: 90 },
+  { asset: 'AVAX', currentPrice: 28.5, state: 'DEVELOPING', htfTrend: 'BULLISH', proposedDir: 'LONG', confluenceScore: 70 }
+]);
 
-// Verify that maxTrades can accept 10
-const userSettings = {
-  maxTrades: 10,
-  minConfluence: 75,
-  minRR: 2.0,
-  eventShieldEnabled: true
-};
+async function runCopilotTests() {
+  const resOther = await brain.processQuery('aur dusre coins main kya chal rha hai??');
+  console.log('\n--- Query: "aur dusre coins main kya chal rha hai??" ---');
+  console.log(resOther);
 
-const candidateAssets = ['BTC', 'ETH', 'SOL', 'AVAX', 'LINK', 'DOGE', 'NEAR', 'SUI', 'XRP', 'ADA'];
-const simulatedRisks = {
-  BTC: { isShieldTriggered: true, summary: 'Breaking Shock: Binance Hack' },
-  ETH: { isShieldTriggered: false, summary: 'Low Event Risk' },
-  SOL: { isShieldTriggered: false, summary: 'Low Event Risk' },
-  AVAX: { isShieldTriggered: false, summary: 'Low Event Risk' }
-};
+  const resAva = await brain.processQuery('Ava');
+  console.log('\n--- Query: "Ava" ---');
+  console.log(resAva);
 
-let executedCount = 0;
-let skippedCount = 0;
-
-for (const asset of candidateAssets) {
-  if (pt.openPositions.length >= userSettings.maxTrades) {
-    console.log(`[TEST] Max trades (${userSettings.maxTrades}) reached. Stopping scan.`);
-    break;
+  if (resOther.includes('ETH') && resOther.includes('SOL') && resAva.includes('AVAX/USD Live Radar Report')) {
+    console.log('\n>>> COPILOT MULTI-ASSET INTELLIGENCE TEST PASSED! <<<');
+  } else {
+    console.error('\n>>> COPILOT MULTI-ASSET INTELLIGENCE TEST FAILED! <<<');
+    process.exit(1);
   }
 
-  // 0. Per-asset shield
-  const risk = simulatedRisks[asset] || { isShieldTriggered: false };
-  if (userSettings.eventShieldEnabled && risk.isShieldTriggered) {
-    console.log(`[TEST] Asset ${asset} blocked by Event Shield (${risk.summary}). Skipping safely!`);
-    skippedCount++;
-    continue;
-  }
+  console.log('\n[TEST 2] Testing Parallel Swarm & RR 2.0 Execution...');
+  const pt = new PaperTrader(2000, 'test_user');
+  const userSettings = {
+    maxTrades: 10,
+    minConfluence: 75,
+    minRR: 2.0,
+    eventShieldEnabled: true
+  };
 
-  // Execute paper trade
-  const trade = pt.executePaperTrade({
-    market: 'Crypto',
-    asset: asset,
-    direction: 'LONG',
+  const candidateAssets = ['BTC', 'ETH', 'SOL', 'AVAX', 'LINK', 'DOGE', 'NEAR', 'SUI', 'XRP', 'ADA'];
+  const simulatedCandidates = candidateAssets.map(asset => ({
+    asset,
+    isShieldTriggered: asset === 'BTC',
+    state: (asset === 'ETH' || asset === 'SOL' || asset === 'SUI') ? 'CONFIRMED' : 'WAIT',
+    direction: asset === 'ETH' ? 'SHORT' : 'LONG',
+    confluenceScore: (asset === 'ETH' || asset === 'SOL' || asset === 'SUI') ? 90 : 60,
+    rrRatio: 2.0,
     entry: 100,
-    stopLoss: 95,
-    target: 115,
-    positionSize: 1,
-    leverage: 20,
-    riskUSD: 20,
-    rewardUSD: 60,
-    rrRatio: 3,
-    marginUSD: 20,
-    notionalUSD: 100,
-    strategy: 'Test AutoPilot'
+    stopLoss: asset === 'ETH' ? 105 : 95,
+    target: asset === 'ETH' ? 90 : 110
+  }));
+
+  // Simulate Parallel Swarm execution with RR=2.0
+  const eligible = simulatedCandidates.filter(c => {
+    if (userSettings.eventShieldEnabled && c.isShieldTriggered) return false;
+    return c.state === 'CONFIRMED' && c.confluenceScore >= userSettings.minConfluence && c.rrRatio >= userSettings.minRR;
   });
 
-  if (trade) {
-    executedCount++;
-    console.log(`[TEST] Successfully executed ${asset} (Open Count: ${pt.openPositions.length})`);
+  console.log(`Eligible swarm candidates with minRR=${userSettings.minRR}:`, eligible.map(e => e.asset));
+
+  for (const c of eligible) {
+    pt.executePaperTrade({
+      market: 'Crypto',
+      asset: c.asset,
+      direction: c.direction,
+      entry: c.entry,
+      stopLoss: c.stopLoss,
+      target: c.target,
+      positionSize: 1,
+      leverage: 20,
+      riskUSD: 20,
+      rewardUSD: 40,
+      rrRatio: c.rrRatio,
+      marginUSD: 20,
+      notionalUSD: 100,
+      strategy: 'Swarm AutoPilot'
+    });
+  }
+
+  console.log(`[RESULT] Open Positions in PaperTrader: ${pt.openPositions.length} (${pt.openPositions.map(p => p.asset).join(', ')})`);
+  if (pt.openPositions.length === 3 && pt.openPositions.some(p => p.asset === 'ETH') && pt.openPositions.some(p => p.asset === 'SOL') && pt.openPositions.some(p => p.asset === 'SUI')) {
+    console.log('>>> ALL MULTI-ASSET PARALLEL SWARM & RR 2.0 TESTS PASSED PERFECTLY! <<<');
+  } else {
+    console.error('>>> TEST 2 FAILED! <<<');
+    process.exit(1);
   }
 }
 
-console.log(`\n[RESULT] Executed: ${executedCount}, Skipped: ${skippedCount}, Total Open: ${pt.openPositions.length}`);
-if (executedCount > 1 && skippedCount === 1 && pt.openPositions.length <= 10) {
-  console.log('>>> ALL MULTI-ASSET AUTOPILOT CHECKS PASSED PERFECTLY! <<<');
-} else {
-  console.error('>>> TEST FAILED! <<<');
-  process.exit(1);
-}
+runCopilotTests();

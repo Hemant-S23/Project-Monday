@@ -6273,15 +6273,39 @@ html, body {
   box-shadow: 0 18px 44px rgba(0, 0, 0, 0.65), 0 0 20px rgba(6, 182, 212, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
 
-.audit-stat-box.highlight-net {
+.audit-stat-box.highlight-net,
+.audit-stat-box.highlight-net.is-profit {
   background: linear-gradient(145deg, rgba(16, 185, 129, 0.12) 0%, rgba(6, 78, 59, 0.22) 100%) !important;
   border: 1px solid rgba(16, 185, 129, 0.45) !important;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(16, 185, 129, 0.2), inset 0 1px 0 rgba(52, 211, 153, 0.3) !important;
 }
 
-.audit-stat-box.highlight-net:hover {
+.audit-stat-box.highlight-net:hover,
+.audit-stat-box.highlight-net.is-profit:hover {
   border-color: rgba(52, 211, 153, 0.7) !important;
   box-shadow: 0 20px 48px rgba(0, 0, 0, 0.7), 0 0 40px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(52, 211, 153, 0.45) !important;
+}
+
+.audit-stat-box.highlight-net .audit-val,
+.audit-stat-box.highlight-net.is-profit .audit-val {
+  color: #34d399 !important;
+  text-shadow: 0 0 20px rgba(52, 211, 153, 0.4) !important;
+}
+
+.audit-stat-box.highlight-net.is-loss {
+  background: linear-gradient(145deg, rgba(239, 68, 68, 0.12) 0%, rgba(127, 29, 29, 0.24) 100%) !important;
+  border: 1px solid rgba(239, 68, 68, 0.45) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(239, 68, 68, 0.2), inset 0 1px 0 rgba(248, 113, 113, 0.3) !important;
+}
+
+.audit-stat-box.highlight-net.is-loss:hover {
+  border-color: rgba(248, 113, 113, 0.7) !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.7), 0 0 40px rgba(239, 68, 68, 0.35), inset 0 1px 0 rgba(248, 113, 113, 0.45) !important;
+}
+
+.audit-stat-box.highlight-net.is-loss .audit-val {
+  color: #f87171 !important;
+  text-shadow: 0 0 20px rgba(239, 68, 68, 0.45) !important;
 }
 
 .audit-lbl {
@@ -6301,11 +6325,6 @@ html, body {
   margin: 8px 0 4px 0 !important;
   letter-spacing: -0.02em !important;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6) !important;
-}
-
-.audit-stat-box.highlight-net .audit-val {
-  color: #34d399 !important;
-  text-shadow: 0 0 20px rgba(52, 211, 153, 0.4) !important;
 }
 
 .audit-sub {

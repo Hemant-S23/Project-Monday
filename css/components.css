@@ -4816,6 +4816,11 @@
   border-color: rgba(16, 185, 129, 0.25);
 }
 
+.audit-stat-box.highlight-net.is-loss {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
 .audit-lbl {
   font-size: 0.64rem;
   color: #64748b;

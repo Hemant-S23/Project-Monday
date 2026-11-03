@@ -3931,10 +3931,17 @@ export class TerminalUI {
     this.renderYearbookHeatmap(this._lastLedgerTrades);
 
     // 2. Update 4-Pillar Financial Audit Grid
+    const formatSignedCurrency = (val) => {
+      const num = Number(val) || 0;
+      const absFormatted = Math.abs(num).toFixed(2);
+      if (num > 0) return `+$${absFormatted}`;
+      if (num < 0) return `-$${absFormatted}`;
+      return `$0.00`;
+    };
+
     if (grossEl) {
-      const isPos = ledger.totalGrossPnl >= 0;
-      grossEl.textContent = `${isPos ? '+' : ''}$${ledger.totalGrossPnl.toFixed(2)}`;
-      grossEl.className = `audit-val ${isPos ? 'text-bullish' : 'text-bearish'}`;
+      grossEl.textContent = formatSignedCurrency(ledger.totalGrossPnl);
+      grossEl.className = `audit-val ${ledger.totalGrossPnl > 0 ? 'text-bullish' : ledger.totalGrossPnl < 0 ? 'text-bearish' : ''}`;
     }
 
     if (brokerageEl) {
@@ -3946,9 +3953,16 @@ export class TerminalUI {
     }
 
     if (netEl) {
-      const isNetPos = ledger.netSettledPnl >= 0;
-      netEl.textContent = `${isNetPos ? '+' : ''}$${ledger.netSettledPnl.toFixed(2)}`;
-      netEl.className = `audit-val ${isNetPos ? 'text-bullish' : 'text-bearish'}`;
+      const isNetPos = ledger.netSettledPnl > 0;
+      const isNetNeg = ledger.netSettledPnl < 0;
+      netEl.textContent = formatSignedCurrency(ledger.netSettledPnl);
+      netEl.className = `audit-val ${isNetPos ? 'text-bullish' : isNetNeg ? 'text-bearish' : ''}`;
+
+      const netBox = netEl.closest('.audit-stat-box') || document.getElementById('passbook_net_settled_box');
+      if (netBox) {
+        netBox.classList.toggle('is-loss', isNetNeg);
+        netBox.classList.toggle('is-profit', !isNetNeg);
+      }
     }
 
     // 2.5. Populate Today's Performance Summary Ribbon (Minimal & Breathable)

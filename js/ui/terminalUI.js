@@ -983,12 +983,9 @@ export class TerminalUI {
     if (closeJournalBtn) closeJournalBtn.addEventListener('click', handleCloseJournal);
     if (mBackJournalBtn) mBackJournalBtn.addEventListener('click', handleCloseJournal);
 
-    // Financial Passbook & 18% GST Ledger Modal / Mobile Dedicated Page Toggles
+    // Financial Passbook & 18% GST Ledger Page Navigation
     const openHistoryBtn = document.getElementById('open_history_btn');
     const quickPassbookBtn = document.getElementById('btn_quick_passbook');
-    const passbookModal = document.getElementById('passbook_modal');
-    const closePassbookBtn = document.getElementById('close_passbook_btn');
-    const mBackPassbookBtn = document.getElementById('m_back_passbook_btn');
 
     const openPassbook = () => {
       if (profilePopoverWrapper) {
@@ -1001,16 +998,10 @@ export class TerminalUI {
     if (openHistoryBtn) openHistoryBtn.addEventListener('click', openPassbook);
     if (quickPassbookBtn) quickPassbookBtn.addEventListener('click', openPassbook);
 
-    const handleClosePassbook = () => {
-      this.switchPage('terminal');
-    };
     const purgePassbookBtn = document.getElementById('btn_purge_passbook');
     if (purgePassbookBtn) {
       purgePassbookBtn.addEventListener('click', openResetConfirmModal);
     }
-
-    if (closePassbookBtn) closePassbookBtn.addEventListener('click', handleClosePassbook);
-    if (mBackPassbookBtn) mBackPassbookBtn.addEventListener('click', handleClosePassbook);
 
     // PROJECT MONDAY SaaS Layout & Navigation Bindings (Smart Hover-to-Open & Pin Dock)
     const sidebarDock = document.getElementById('saas_sidebar_dock');

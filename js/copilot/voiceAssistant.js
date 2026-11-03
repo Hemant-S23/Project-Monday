@@ -72,6 +72,21 @@ export class VoiceAssistant {
   initSpeechSynthesis() {
     if (!this.synthesis) return;
 
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden && this.synthesis) {
+          clearTimeout(this.watchdogTimer);
+          clearInterval(this.resumeHeartbeat);
+          this.currentUtterance = null;
+          this.isSpeaking = false;
+          if (this.onSpeakingStateChange) this.onSpeakingStateChange(false);
+          try {
+            this.synthesis.cancel();
+          } catch (e) {}
+        }
+      });
+    }
+
     const configureVoices = () => {
       const voices = this.synthesis.getVoices();
       if (!voices || voices.length === 0) return;

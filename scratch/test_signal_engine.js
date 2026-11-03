@@ -109,3 +109,4 @@ console.assert(expiredSig.status === 'EXPIRED', 'Signal must be EXPIRED when exp
 console.log('✅ Automatic Expiration Verified: PENDING -> EXPIRED after validity window.');
 
 console.log('>>> ALL ALPHA RADAR SIGNAL ENGINE TESTS PASSED 100% <<<');
+

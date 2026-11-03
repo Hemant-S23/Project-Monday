@@ -385,6 +385,13 @@ export class PaperTrader {
     const estExitFeeUSD = +(notional * DELTA_FEE_RATES.TAKER).toFixed(2);
     const estTotalFeesUSD = +(entryFeeUSD + estExitFeeUSD).toFixed(2);
 
+    // Resilient fallback calculations for risk, reward, and RR ratio
+    const calculatedRisk = (stopLoss && Number(entry)) ? Math.abs(Number(entry) - Number(stopLoss)) * posSize : (margin || 20);
+    const safeRiskUSD = Number.isFinite(Number(riskUSD)) ? Number(riskUSD) : calculatedRisk;
+    const calculatedReward = (target && Number(entry)) ? Math.abs(Number(target) - Number(entry)) * posSize : (safeRiskUSD * 2);
+    const safeRewardUSD = Number.isFinite(Number(rewardUSD)) ? Number(rewardUSD) : calculatedReward;
+    const safeRRRatio = Number.isFinite(Number(rrRatio)) ? Number(rrRatio) : (safeRiskUSD > 0 ? +(safeRewardUSD / safeRiskUSD).toFixed(2) : 2);
+
     const newPosition = {
       id: tradeId,
       market,
@@ -402,14 +409,14 @@ export class PaperTrader {
       feesUSD: estTotalFeesUSD,
       feeModel: 'Delta Exchange (0.05% Taker / 0.02% Maker)',
       liquidationPrice: liquidationPrice !== null ? Number(liquidationPrice) : null,
-      riskUSD: +riskUSD.toFixed(2),
-      rewardUSD: +rewardUSD.toFixed(2),
-      rrRatio: +rrRatio.toFixed(2),
+      riskUSD: +safeRiskUSD.toFixed(2),
+      rewardUSD: +safeRewardUSD.toFixed(2),
+      rrRatio: +safeRRRatio.toFixed(2),
       status: 'OPEN',
       currentPrice: Number(entry),
       unrealizedGrossPnlUSD: 0,
       unrealizedPnlUSD: -estTotalFeesUSD,
-      unrealizedR: riskUSD > 0 ? +((-estTotalFeesUSD) / riskUSD).toFixed(2) : 0,
+      unrealizedR: safeRiskUSD > 0 ? +((-estTotalFeesUSD) / safeRiskUSD).toFixed(2) : 0,
       roePercent: margin > 0 ? +(((-estTotalFeesUSD) / margin) * 100).toFixed(1) : 0,
       timeframe: '1H / 5M',
       strategy: `${lev}x Isolated Perpetual`,

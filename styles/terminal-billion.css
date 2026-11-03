@@ -707,10 +707,10 @@ html, body {
 }
 
 .terminal-header {
-  height: 56px !important;
+  height: auto !important;
   min-height: 56px !important;
-  max-height: 56px !important;
-  padding: 0 16px !important;
+  max-height: none !important;
+  padding: 8px 16px 10px 16px !important;
   border-radius: 20px !important;
   box-sizing: border-box !important;
   background: rgba(10, 14, 24, 0.65) !important;
@@ -720,13 +720,15 @@ html, body {
   border-top: 1px solid rgba(6, 182, 212, 0.45) !important;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(6, 182, 212, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
   display: flex !important;
+  flex-wrap: wrap !important;
   align-items: center !important;
   justify-content: space-between !important;
-  gap: 8px 12px !important;
+  gap: 6px 12px !important;
   position: relative !important;
   overflow: visible !important;
   z-index: 10000 !important;
   transition: all 0.25s ease !important;
+  flex-shrink: 0 !important;
 }
 
 /* Mobile-only elements strictly hidden on desktop */
@@ -975,10 +977,19 @@ html, body {
   justify-content: flex-start !important;
   gap: 12px !important;
   min-width: 0 !important;
-  padding-top: 6px !important;
-  margin-top: 2px !important;
+  padding-top: 8px !important;
+  margin-top: 4px !important;
+  padding-bottom: 2px !important;
   border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
   position: relative !important;
+  box-sizing: border-box !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  scrollbar-width: none !important;
+}
+
+.header-ticker-strip::-webkit-scrollbar {
+  display: none !important;
 }
 
 /* Glass Search Bar */
@@ -1529,13 +1540,14 @@ html, body {
 }
 
 /* =========================================================================
-   TRUE ULTRAWIDE SCREENS (>= 1920px, e.g. 4K or Ultrawide Monitors):
+   TRUE ULTRAWIDE SCREENS (>= 2200px, e.g. 4K or Ultrawide Monitors):
    All items merge into 1 single unified row with abundant horizontal space
    ========================================================================= */
-@media (min-width: 1920px) {
+@media (min-width: 2200px) {
   .terminal-header {
     height: 58px !important;
     min-height: 58px !important;
+    max-height: 58px !important;
     padding: 0 18px !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
@@ -1555,6 +1567,7 @@ html, body {
     justify-content: flex-start !important;
     padding-top: 0 !important;
     margin-top: 0 !important;
+    padding-bottom: 0 !important;
     border-top: none !important;
     gap: 8px !important;
   }
@@ -1578,23 +1591,28 @@ html, body {
 }
 
 /* =========================================================================
-   STANDARD SCREENS & ALL ZOOM LEVELS (<= 1919px, e.g. 75%, 80%, 90%, 100%, 125%):
-   ORIGINAL MONDAY 2-RIBBON (DUAL-TIER) ARCHITECTURE - ZERO COLLISION GUARANTEED
+   STANDARD SCREENS & ALL ZOOM LEVELS (<= 2199px, e.g. 75%, 80%, 90%, 100%, 125%, 150%):
+   ORIGINAL MONDAY 2-RIBBON (DUAL-TIER) ARCHITECTURE - ZERO OVERFLOW GUARANTEED
    Row 1: Primary Market Selector + Account Balance HUD + AutoPilot
    Row 2: Search Bar + Starred Watchlist + Real-Time Live Ticker
    ========================================================================= */
-@media (max-width: 1919px) {
+@media (max-width: 2199px) {
   .terminal-header {
     height: auto !important;
-    min-height: 90px !important;
+    min-height: 94px !important;
+    max-height: none !important;
     padding: 8px 16px 10px 16px !important;
     flex-wrap: wrap !important;
     gap: 6px 12px !important;
+    box-sizing: border-box !important;
   }
 
   .header-left-cluster {
     order: 1 !important;
     flex-shrink: 0 !important;
+    height: 38px !important;
+    display: flex !important;
+    align-items: center !important;
   }
 
   .header-actions {
@@ -1602,18 +1620,24 @@ html, body {
     margin-left: auto !important;
     flex-shrink: 0 !important;
     gap: 6px !important;
+    height: 38px !important;
+    display: flex !important;
+    align-items: center !important;
   }
 
   .header-ticker-strip {
     order: 3 !important;
     width: 100% !important;
     flex: 1 1 100% !important;
-    padding-top: 6px !important;
-    margin-top: 2px !important;
+    padding-top: 8px !important;
+    margin-top: 4px !important;
+    padding-bottom: 2px !important;
     border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
     justify-content: flex-start !important;
+    align-items: center !important;
     gap: 10px !important;
     min-width: 0 !important;
+    box-sizing: border-box !important;
   }
 }
 

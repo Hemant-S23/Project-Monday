@@ -1287,21 +1287,32 @@ export class TerminalUI {
     const popoverAutopilotBadge = document.getElementById('popover_autopilot_badge');
     const popoverAutopilotLabel = document.getElementById('popover_autopilot_label');
 
-    const getPersistedMaxTrades = () => {
+    const getPersistedAutoPilotSettings = () => {
       try {
         const raw = localStorage.getItem('monday_autopilot_settings');
         if (raw) {
           const s = JSON.parse(raw);
-          return Math.max(1, Math.min(100, parseInt(s.maxTrades, 10) || 2));
+          return {
+            marginUSD: Math.max(5, Math.min(500, parseFloat(s.marginUSD) || 20)),
+            leverage: Math.max(1, Math.min(50, parseInt(s.leverage, 10) || 20)),
+            maxTrades: Math.max(1, Math.min(100, parseInt(s.maxTrades, 10) || 2)),
+            minRR: Math.max(1.5, Math.min(5.0, parseFloat(s.minRR) || 2.0))
+          };
         }
       } catch (e) {}
-      return 2;
+      return { marginUSD: 20, leverage: 20, maxTrades: 2, minRR: 2.0 };
     };
+
+    const getPersistedMaxTrades = () => getPersistedAutoPilotSettings().maxTrades;
 
     const updateAutoPilotUI = (enabled) => {
       this.autoPilotEnabled = !!enabled;
+      const s = getPersistedAutoPilotSettings();
       if (autopilotWrapper) {
         autopilotWrapper.classList.toggle('active', this.autoPilotEnabled);
+        autopilotWrapper.title = this.autoPilotEnabled
+          ? `Auto-Pilot Active: $${s.marginUSD} Margin • ${s.leverage}x Leverage • Max ${s.maxTrades} Trades • Min 1:${s.minRR.toFixed(1)} RR`
+          : `Auto-Pilot Standby: Click to engage ($${s.marginUSD} Margin • ${s.leverage}x • Max ${s.maxTrades} Trades)`;
       }
       if (autopilotBtn) {
         autopilotBtn.setAttribute('aria-checked', this.autoPilotEnabled ? 'true' : 'false');
@@ -1313,9 +1324,12 @@ export class TerminalUI {
         popoverAutopilotBadge.textContent = this.autoPilotEnabled ? 'ON' : 'OFF';
         popoverAutopilotBadge.className = `popover-toggle-badge ${this.autoPilotEnabled ? 'active' : ''}`;
       }
-      const maxT = getPersistedMaxTrades();
       if (popoverAutopilotLabel) {
-        popoverAutopilotLabel.textContent = `Auto-Pilot Execution (Max ${maxT})`;
+        popoverAutopilotLabel.textContent = `Auto-Pilot Execution (Max ${s.maxTrades})`;
+      }
+      const rCallout = document.getElementById('r_explainer_callout');
+      if (rCallout) {
+        rCallout.textContent = `1R = 1 Trade par active risk unit (Configured Margin: $${s.marginUSD})`;
       }
     };
 
@@ -1328,10 +1342,10 @@ export class TerminalUI {
       if (this.callbacks.onToggleAutoPilot) {
         this.callbacks.onToggleAutoPilot(next);
       }
-      const maxT = getPersistedMaxTrades();
+      const s = getPersistedAutoPilotSettings();
       this.showToast(
         next ? '🤖 Auto-Pilot Activated' : 'Auto-Pilot Deactivated',
-        next ? `MONDAY will automatically enter confirmed Grade A setups with strict 1% risk (Max ${maxT} trades)` : 'Manual order execution mode restored.',
+        next ? `MONDAY will automatically enter confirmed Grade A setups ($${s.marginUSD} Margin @ ${s.leverage}x, Max ${s.maxTrades} trades)` : 'Manual order execution mode restored.',
         next ? 'success' : 'info'
       );
     };

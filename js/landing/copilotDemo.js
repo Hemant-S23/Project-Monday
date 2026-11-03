@@ -27,7 +27,7 @@ export class CopilotDemoController {
         tag: 'EMOTIONAL ARMOR',
         tagColor: 'var(--shield)',
         userMsg: 'Yaar do stop loss hit ho gaye! Mood kharab ho gaya, full leverage pe revenge trade le raha hoon!',
-        mondayMsg: '🛑 **Deep breath lo! Screen se haath hatao!**\n\nTrading me consecutive losses sab face karte hain, even top hedge funds bhi. Isliye humne **Strict 1% Risk Rule** banaya tha taaki 2 losses par bhi account sirf -2R (-$40) hi down ho.\n\nRevenge trade lene ka matlab market ko free donation dena hai. Terminal minimize karo, ek cup chai piyo, market kal bhi yahi rahega! 😊',
+        mondayMsg: '🛑 **Deep breath lo! Screen se haath hatao!**\n\nTrading me consecutive losses sab face karte hain, even top hedge funds bhi. Isliye humne **Strict Risk & R:R Discipline** banaya tha taaki 2 losses par bhi account sirf -2R down ho.\n\nRevenge trade lene ka matlab market ko free donation dena hai. Terminal minimize karo, ek cup chai piyo, market kal bhi yahi rahega! 😊',
         speechText: 'Deep breath lo! Screen se haath hatao. Revenge trade lena emotional tilt hai. Terminal minimize karo, hum kal fresh setup par trade karenge!'
       }
     };
@@ -42,7 +42,7 @@ export class CopilotDemoController {
     const sl = p - riskDist;
     const tp = p + (riskDist * 3.0); // Exact 1:3.0
 
-    this.scenarios.setup.mondayMsg = `🟢 **Haan bhai, setup Grade A+ confirm ho chuka hai!**\n\n• **1H Bias:** Bullish Triple-EMA stack locked.\n• **Entry Blueprint:** $${p.toLocaleString()} | **Stop Loss:** $${sl.toLocaleString()}\n• **Target:** $${tp.toLocaleString()} with strict **1:3.0 Asymmetric R:R**.\n\nRisk strictly 1% ($20.00) calculated hai. Execution panel se initiate kar sakte ho!`;
+    this.scenarios.setup.mondayMsg = `🟢 **Haan bhai, setup Grade A+ confirm ho chuka hai!**\n\n• **1H Bias:** Bullish Triple-EMA stack locked.\n• **Entry Blueprint:** $${p.toLocaleString()} | **Stop Loss:** $${sl.toLocaleString()}\n• **Target:** $${tp.toLocaleString()} with strict **1:3.0 Asymmetric R:R**.\n\nRisk-to-Reward strictly 1:3.0 verified hai. Execution panel se initiate kar sakte ho!`;
     this.scenarios.setup.speechText = `Haan bhai, BTC ka setup Grade A confirm ho chuka hai! Entry ${p.toLocaleString()} par hai aur Stop loss strictly ${sl.toLocaleString()} par lock hai. Strict 1:3 risk reward ratio ready hai!`;
   }
 

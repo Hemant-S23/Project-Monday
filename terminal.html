@@ -1202,7 +1202,7 @@
         </button>
 
         <!-- Autonomous AI Auto-Pilot Switch (Max 2 Concurrent Trades) -->
-        <div class="autopilot-toggle-wrapper" id="autopilot_toggle_wrapper" title="Autonomous AI Execution: MONDAY will automatically enter confirmed Grade A setups with strict 1% risk (Max 2 open trades)">
+        <div class="autopilot-toggle-wrapper" id="autopilot_toggle_wrapper" title="Autonomous AI Execution: MONDAY will automatically enter confirmed Grade A setups with strict 1:2 R:R (Configurable Standards)">
           <div class="autopilot-label-group">
             <span class="autopilot-dot-pulse"></span>
             <span class="autopilot-text" id="autopilot_label_text">Auto-Pilot</span>
@@ -2582,7 +2582,7 @@
           <h3><i class="ph ph-chart-line-up"></i> 1. "+4.20R" kya hota hai? (What is R?)</h3>
           <p>Trading aur Quantitative Risk Management me <strong>"R"</strong> ka matlab hota hai <strong>R-Multiple (Risk Unit)</strong>.</p>
           <div class="concept-callout">
-            <strong>1R = 1 Trade par maximum predefined risk (1% of $2,000 = $20.00)</strong>
+            <strong id="r_explainer_callout">1R = 1 Trade par active risk unit (Configured Margin & Structural Stop Loss)</strong>
           </div>
           <ul>
             <li>Agar kisi trade par aapka $20 ka Stop Loss hai aur aap <strong>+$50 profit</strong> banate ho, toh wo <strong>+2.5R</strong> hota hai ($50 ÷ $20).</li>

@@ -44,6 +44,24 @@ export class CopilotBrain {
     this.watchlistRadar = Array.isArray(radarList) ? radarList : [];
   }
 
+  getAutoPilotConfig() {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const raw = localStorage.getItem('monday_autopilot_settings');
+        if (raw) {
+          const s = JSON.parse(raw);
+          return {
+            marginUSD: Math.max(5, Math.min(500, parseFloat(s.marginUSD) || 20)),
+            leverage: Math.max(1, Math.min(50, parseInt(s.leverage, 10) || 20)),
+            minRR: Math.max(1.5, Math.min(5.0, parseFloat(s.minRR) || 2.0)),
+            maxTrades: Math.max(1, Math.min(100, parseInt(s.maxTrades, 10) || 2))
+          };
+        }
+      }
+    } catch (e) {}
+    return { marginUSD: 20, leverage: 20, minRR: 2.0, maxTrades: 2 };
+  }
+
   formatPrice(p, currencySymbol = null) {
     const symbol = currencySymbol !== null ? currencySymbol : (this.currentContext?.market === 'India' ? '₹' : '$');
     if (p === undefined || p === null || isNaN(p)) return `${symbol}0.00`;
@@ -99,11 +117,13 @@ export class CopilotBrain {
       const confGrade = strategyState.confluenceGrade || 'GRADE A';
       const rsiStr = strategyState.rsi1H ? `1H RSI: ${strategyState.rsi1H}` : 'RSI Aligned';
       const volStr = strategyState.volumeFlow?.desc || 'Volume Absorption Confirmed';
+      const apCfg = this.getAutoPilotConfig();
+      const marginTxt = `$${apCfg.marginUSD.toFixed(2)}`;
       return `🟢 **${targetAsset} SETUP CONFIRMED (${direction})**\n\n` +
         `• **Edge:** ${confGrade} (${confScore}% Confluence)\n` +
         `• **Institutional Edge:** ${rsiStr} • ${volStr}\n` +
         `• **Execution Blueprint:** Entry: ${this.formatPrice(riskParams?.entry)} | SL: ${this.formatPrice(riskParams?.stopLoss)} | TP: ${this.formatPrice(riskParams?.target)}\n` +
-        `• **Asymmetric Edge:** Strict 1:${riskParams?.rrRatio || '3.2'} RR (Max 1% Risk: $${riskParams?.maxRiskUSD})\n` +
+        `• **Asymmetric Edge:** Strict 1:${riskParams?.rrRatio || apCfg.minRR.toFixed(1)} RR • Configured Margin: ${marginTxt}\n` +
         `Order Desk me levels load ho chuke hain ya direct blueprint se execute kar sakte ho!`;
     } else if (state === 'DEVELOPING') {
       const zLow = strategyState.ltfStructure?.zoneLow ? this.formatPrice(strategyState.ltfStructure.zoneLow) : '--';
@@ -257,7 +277,7 @@ export class CopilotBrain {
     else if (this.matchesAny(clean, [
       'dar lag raha', 'loss ho gaya', 'tension', 'confused', 'fomo', 'dar', 'darr', 'ghabrahat', 'loss'
     ])) {
-      response = `Deep breath lo! Trading me loss aur confusion sab face karte hain, even top institutional traders bhi. Isliye humne **strict 1% risk rule** banaya hai taaki ek bhi trade account ko hurt na kar sake.\n\n` +
+      response = `Deep breath lo! Trading me loss aur confusion sab face karte hain, even top institutional traders bhi. Isliye humne **strict structural R:R aur disciplined capital preservation rule** banaya hai taaki ek bhi trade account ko hurt na kar sake.\n\n` +
         `Jab tak clarity na ho, trade mat lo. Capital safe rakhna bhi ek profit hota hai. Relax karo, market kal bhi yahi rahega! 😊`;
     }
 
@@ -289,7 +309,7 @@ export class CopilotBrain {
           `• Entry: **${this.formatPrice(risk.entry)}**\n` +
           `• Stop Loss: **${this.formatPrice(risk.stopLoss)}**\n` +
           `• Target: **${this.formatPrice(risk.target)}** (1:${risk.rrRatio || 2.5} RR)\n\n` +
-          `Hamare setup rules confirm ho chuke hain. 1% risk rule maintain karke **Execute Paper Trade** button se initiate kar sakte ho!`;
+          `Hamare setup rules confirm ho chuke hain. Strict 1:2 R:R discipline maintain karke **Execute Paper Trade** button se initiate kar sakte ho!`;
       } else if (state === 'DEVELOPING') {
         response = `🟠 **Thoda sa ruko, abhi jump mat karo!**\n\n` +
           `Price reaction zone me aa gayi hai, lekin abhi hume confirmation candle close nahi mili hai. Confirmation ke bina enter karna FOMO hota hai. 2-3 candles aur watch karte hain!`;
@@ -318,14 +338,14 @@ export class CopilotBrain {
     else if (this.matchesAny(clean, [
       'risk', 'sl', 'stop loss', 'target', 'position size', 'loss kitna hoga', 'kitna loss'
     ])) {
-      response = `Hamara strictly **1% Account Risk** rule follow hota hai:\n\n` +
-        `• **Account Balance:** $${risk.accountBalance || 2000}\n` +
-        `• **Max Loss per trade:** **$${risk.maxRiskUSD || 20} (Strict 1%)**\n` +
-        `• **Calculated Stop Loss:** ${this.formatPrice(risk.stopLoss)}\n` +
+      const apCfg = this.getAutoPilotConfig();
+      response = `Hamara strictly **Disciplined Asymmetric Risk:Reward (Min 1:${apCfg.minRR.toFixed(1)} RR)** rule follow hota hai:\n\n` +
+        `• **Configured Margin per Trade:** $${apCfg.marginUSD.toFixed(2)} (${apCfg.leverage}x Isolated)\n` +
+        `• **Notional Position Exposure:** $${(apCfg.marginUSD * apCfg.leverage).toFixed(2)}\n` +
+        `• **Calculated Stop Loss:** ${this.formatPrice(risk.stopLoss)} (Technical Swing Level)\n` +
         `• **Calculated Target:** ${this.formatPrice(risk.target)}\n` +
-        `• **Recommended Position Size:** ${risk.positionSizeCoins || '--'} ${asset}\n` +
-        `• **Risk-to-Reward:** 1:${risk.rrRatio || 2.5}\n\n` +
-        `Matlab market kitna bhi turn kare, tumhara loss $${risk.maxRiskUSD || 20} se ek dollar bhi zyada nahi hoga!`;
+        `• **Target Risk-to-Reward:** 1:${risk.rrRatio || apCfg.minRR.toFixed(1)} RR\n\n` +
+        `SL technical swing point par lock rehta hai aur Capital Preservation Firewall ensure karta hai ki trade liquidation se pehle safe exit kare!`;
     }
 
     // 8.5. What is R / R-Multiple & Balance explanation ("r kya hai", "what is r", "4.2r", "balance kyu nahi badha")
@@ -333,14 +353,16 @@ export class CopilotBrain {
       'what is r', 'r kya hai', 'r multiple', 'r kya hota', '4.2r', '4.2 r', 'r ka matlab',
       'balance kyu nahi badha', 'balance kyo nahi badha', 'balance change', 'balance same', 'balance badha nahi'
     ])) {
+      const apCfg = this.getAutoPilotConfig();
+      const unitVal = apCfg.marginUSD || 20;
       response = `Bohot accha sawaal hai! Let me break it down simply:\n\n` +
         `🎯 **"R" kya hota hai? (R-Multiple / Risk Unit):**\n` +
-        `Trading aur risk management me **1R = 1 Risk Unit** hota hai. Hamare account ka predefined 1% risk per trade $20.00 hai, isliye **1R = $20**.\n` +
-        `• Agar trade me +$50 profit banta hai toh wo **+2.5R** hua ($50 ÷ $20).\n` +
-        `• Agar stop loss hit hota hai toh exactly **-1.0R (-$20)** deduct hota hai.\n` +
-        `• **+4.20R** ka matlab past trades me risk ka **4.2× net profit (+$84.12)** banaya hai!\n\n` +
+        `Trading aur quantitative risk management me **1R = 1 Risk Unit** hota hai. Hamari active Auto-Pilot configuration ke mutabiq planned per-trade margin **$${unitVal.toFixed(2)}** hai, isliye **1R = $${unitVal.toFixed(2)}**.\n` +
+        `• Agar trade me planned margin ka double profit banta hai toh wo **+2.0R** hua.\n` +
+        `• Agar stop loss hit hota hai toh maximum **-1.0R** risk unit limit rehti hai.\n` +
+        `• **+4.20R** ka matlab past trades me risk unit ka **4.2× net profit** banaya hai!\n\n` +
         `📈 **Trade lene par balance kyu nahi badha/ghata tha?**\n` +
-        `Jab trade open hoti hai, tab settled cash balance freeze rehta hai jab tak trade close na ho — balki **Net Equity aur Live Floating PnL** price ke har tick ke sath move karta hai. Ab header me Live Equity aur floating profit/loss har Binance tick ke sath realtime me fluctuate hota hua dikhta hai!`;
+        `Jab trade open hoti hai, tab settled cash balance freeze rehta hai jab tak trade close na ho — balki **Net Equity aur Live Floating PnL** price ke har tick ke sath move karta hai. Header me Live Equity aur floating profit/loss har live tick ke sath realtime me fluctuate hota hua dikhta hai!`;
     }
 
     // 8.6. Fear & Greed / Funding Rate / RSI / Whale Volume Institutional Metrics
@@ -399,13 +421,13 @@ export class CopilotBrain {
         `• **Bajaj Housing Finance (BAJAJHFL):** Record subscription wala high-demand housing finance leader.\n` +
         `• **Waaree Energies (WAREE) & Premier Energies:** Solar module aur green energy capex boom ke top leaders.\n` +
         `• **NTPC Green, Ola Electric, FirstCry, Afcons, IREDA:** Sabhi terminal me 150+ stocks ke sath fully searchable aur tradeable hain.\n\n` +
-        `Search bar me koi bhi company name ya ticker type kijiye — direct TradingView chart aur strict 1% risk calculation ready hai!`;
+        `Search bar me koi bhi company name ya ticker type kijiye — direct TradingView chart aur disciplined risk-reward calculation ready hai!`;
     }
 
     // 11. Who are you / Identity ("who are you", "naam kya hai", "fullform", "monday kya hai")
     else if (this.matchesAny(clean, ['who are you', 'kaun ho', 'naam kya', 'fullform', 'full form', 'monday kya hai'])) {
       response = `Main hoon **MONDAY** — **M**arket-**O**riented **N**eural **D**ecision **A**ssistant for **Y**ou! 🧠✨\n\n` +
-        `Main tumhari dedicated AI trading partner hoon jo market ke 1H aur 5M structure analyze karti hoon, multi-market feeds track karti hoon, aur 1% risk discipline ke sath high-probability setups spot karne me tumhari help karti hoon!`;
+        `Main tumhari dedicated AI trading partner hoon jo market ke 1H aur 5M structure analyze karti hoon, multi-market feeds track karti hoon, aur strict 1:2 R:R discipline ke sath high-probability setups spot karne me tumhari help karti hoon!`;
     }
 
     // 12. Smart, Human-like Contextual Fallback (No robotic questionnaire!)

@@ -229,7 +229,7 @@ export class PaperTrader {
         ],
         historicalContext: 'Supportive (Post-sweep continuation regime)',
         eventRisk: 'Low',
-        aiReasoning: 'BTC swept Asian low while ETH held strong. Clean 1:2.69 R:R setup with disciplined 1% risk allocation.',
+        aiReasoning: 'BTC swept Asian low while ETH held strong. Clean 1:2.69 R:R setup with disciplined capital allocation.',
         openedAt: Date.now() - 86400000 * 2,
         closedAt: Date.now() - 86400000 * 2 + 7200000
       },
@@ -290,7 +290,7 @@ export class PaperTrader {
         ],
         historicalContext: 'Mixed',
         eventRisk: 'High (Pre-CPI positioning)',
-        aiReasoning: 'Pre-CPI volatility spike wicked through stop loss before subsequent drop. Exactly 1% max risk adhered to.',
+        aiReasoning: 'Pre-CPI volatility spike wicked through stop loss before subsequent drop. Strict stop loss discipline adhered to.',
         openedAt: Date.now() - 43200000,
         closedAt: Date.now() - 36000000
       }

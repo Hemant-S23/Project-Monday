@@ -47,7 +47,7 @@
     }
   }
   </script>
-  <script type="module" crossorigin src="/assets/terminal-CLqRNEZv.js"></script>
+  <script type="module" crossorigin src="/assets/terminal-CIbMe4N_.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/cursorGlow-BZ6wkXs1.js">
   <link rel="modulepreload" crossorigin href="/assets/hero3D-DWe7XOYa.js">
   <link rel="modulepreload" crossorigin href="/assets/sfx-BD73uRAY.js">
@@ -2178,15 +2178,15 @@
       </div>
       <div class="modal-body r-explainer-body">
         <div class="explainer-section">
-          <h3><i class="ph ph-chart-line-up"></i> 1. "+4.20R" kya hota hai? (What is R?)</h3>
+          <h3 id="r_explainer_heading"><i class="ph ph-chart-line-up"></i> 1. <span id="r_explainer_header_val">"R-Multiple"</span> kya hota hai? (What is R?)</h3>
           <p>Trading aur Quantitative Risk Management me <strong>"R"</strong> ka matlab hota hai <strong>R-Multiple (Risk Unit)</strong>.</p>
           <div class="concept-callout">
-            <strong id="r_explainer_callout">1R = 1 Trade par active risk unit (Configured Margin & Structural Stop Loss)</strong>
+            <strong id="r_explainer_callout">1R = 1 Trade par active risk unit (Configured Margin: $100.00)</strong>
           </div>
-          <ul>
-            <li>Agar kisi trade par aapka $20 ka Stop Loss hai aur aap <strong>+$50 profit</strong> banate ho, toh wo <strong>+2.5R</strong> hota hai ($50 ÷ $20).</li>
-            <li>Agar trade Stop Loss hit karti hai, toh exactly <strong>-1.0R (-$20)</strong> loss hota hai.</li>
-            <li><strong>+4.20R</strong> ka matlab hai ki past closed trades me aapne apne 1R risk ka <strong>4.2× net profit (+$84.12)</strong> banaya hai!</li>
+          <ul id="r_explainer_bullets">
+            <li id="r_bullet_win">Agar kisi trade par aapka <b>$100.00</b> ka Stop Loss hai aur aap <strong>+$200.00 profit</strong> banate ho, toh wo <strong>+2.0R</strong> hota hai (+$200.00 ÷ $100.00).</li>
+            <li id="r_bullet_loss">Agar trade Stop Loss hit karti hai, toh strictly <strong>-1.0R (-$100.00)</strong> risk unit loss limit hoti hai.</li>
+            <li id="r_bullet_live">Header me <strong>R-Multiple</strong> ka matlab hai ki aapne apne 1R risk ($100.00) ke mutabiq net profit/loss banaya hai!</li>
           </ul>
         </div>
 

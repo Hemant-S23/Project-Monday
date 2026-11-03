@@ -1331,6 +1331,7 @@ export class TerminalUI {
       if (rCallout) {
         rCallout.textContent = `1R = 1 Trade par active risk unit (Configured Margin: $${s.marginUSD})`;
       }
+      this.updateRExplainerModal(s.marginUSD);
     };
 
     const toggleAutoPilot = () => {
@@ -1510,6 +1511,7 @@ export class TerminalUI {
     const backdropR = document.getElementById('backdrop_r_explainer');
 
     const openRModal = () => {
+      this.updateRExplainerModal();
       if (rModal) rModal.style.display = 'flex';
     };
     const closeRModal = () => {
@@ -3636,6 +3638,57 @@ export class TerminalUI {
     }
     if (dMargin) {
       dMargin.textContent = `$${usedMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+  }
+
+  updateRExplainerModal(margin = null) {
+    let marginUSD = margin !== null ? Number(margin) : null;
+    if (!marginUSD || isNaN(marginUSD)) {
+      try {
+        const raw = localStorage.getItem('monday_autopilot_settings');
+        if (raw) {
+          const s = JSON.parse(raw);
+          if (s && s.marginUSD) marginUSD = parseFloat(s.marginUSD);
+        }
+      } catch (e) {}
+    }
+    if (!marginUSD || isNaN(marginUSD)) marginUSD = 20;
+
+    const rCallout = document.getElementById('r_explainer_callout');
+    const rHeadingVal = document.getElementById('r_explainer_header_val');
+    const bulletWin = document.getElementById('r_bullet_win');
+    const bulletLoss = document.getElementById('r_bullet_loss');
+    const bulletLive = document.getElementById('r_bullet_live');
+
+    if (rCallout) {
+      rCallout.textContent = `1R = 1 Trade par active risk unit (Configured Margin: $${marginUSD.toFixed(2)})`;
+    }
+
+    const headerR = document.getElementById('header_total_r')?.textContent?.trim() || '+0.00R';
+    const headerPnl = document.getElementById('header_pnl_usd')?.textContent?.trim() || '($0.00)';
+
+    if (rHeadingVal) {
+      rHeadingVal.textContent = headerR !== '+0.00R' ? `"${headerR}"` : `"R-Multiple"`;
+    }
+
+    const winExampleUSD = (marginUSD * 2.0).toFixed(2);
+    if (bulletWin) {
+      bulletWin.innerHTML = `Agar kisi trade par aapka <b>$${marginUSD.toFixed(2)}</b> ka Stop Loss hai aur aap <strong>+$${winExampleUSD} profit</strong> banate ho, toh wo <strong>+2.0R</strong> hota hai (+$${winExampleUSD} ÷ $${marginUSD.toFixed(2)}).`;
+    }
+
+    if (bulletLoss) {
+      bulletLoss.innerHTML = `Agar trade Stop Loss hit karti hai, toh strictly <strong>-1.0R (-$${marginUSD.toFixed(2)})</strong> risk unit loss limit hoti hai.`;
+    }
+
+    if (bulletLive) {
+      const cleanPnl = headerPnl.replace(/[()]/g, '');
+      const parsedR = parseFloat(headerR) || 0;
+      if (Math.abs(parsedR) > 0.001) {
+        const isPos = parsedR >= 0;
+        bulletLive.innerHTML = `Header me <strong>${headerR}</strong> ka matlab hai ki aapne apne 1R risk ($${marginUSD.toFixed(2)}) ke mutabiq <strong>${cleanPnl} net ${isPos ? 'gain' : 'drawdown'}</strong> banaya hai!`;
+      } else {
+        bulletLive.innerHTML = `<strong>R-Multiple Formula:</strong> <code>Total Net PnL ÷ Configured 1R Margin ($${marginUSD.toFixed(2)}) = Current Session R</code>.`;
+      }
     }
   }
 

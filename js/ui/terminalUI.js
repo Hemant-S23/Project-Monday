@@ -4346,19 +4346,83 @@ export class TerminalUI {
       monthsRow.style.paddingLeft = '0';
       monthsRow.innerHTML = monthNames.map((name, mIdx) => {
         const weekCol = monthFirstWeekMap.has(mIdx) ? monthFirstWeekMap.get(mIdx) : Math.round(mIdx * 4.41);
-        // Weekday label width 20px + 8px gap = 28px offset. Grid column = 13px cell + 3.5px gap = 16.5px
-        const leftPx = 28 + (weekCol * 16.5);
+        // Weekday label width 22px + 8px gap = 30px offset. Grid column = 13px cell + 3.5px gap = 16.5px
+        const leftPx = 30 + (weekCol * 16.5);
         return `<span style="position: absolute; left: ${leftPx}px; font-size: 0.68rem; font-weight: 800; color: #cbd5e1; letter-spacing: 0.04em;">${name}</span>`;
       }).join('');
+    }
+
+    // Chronologically sort active trading days (up to today) to compute true mathematical streaks
+    const activeTradingDays = Array.from(dailyMap.entries())
+      .filter(([dateKey, dayData]) => {
+        if (!dayData || dayData.count <= 0) return false;
+        const [dy, dm, dd] = dateKey.split('-').map(Number);
+        const dayTime = new Date(dy, dm - 1, dd).getTime();
+        return dayTime <= todayTime;
+      })
+      .sort((a, b) => a[0].localeCompare(b[0]));
+
+    let currentWinStreak = 0;
+    let currentLossStreak = 0;
+    let maxHistoricalWinStreak = 0;
+    let tempStreak = 0;
+
+    activeTradingDays.forEach(([_, dayData]) => {
+      const net = +Number(dayData.netPnl || 0).toFixed(2);
+      if (net > 0) {
+        tempStreak++;
+        if (tempStreak > maxHistoricalWinStreak) maxHistoricalWinStreak = tempStreak;
+      } else {
+        tempStreak = 0;
+      }
+    });
+
+    if (activeTradingDays.length > 0) {
+      const latestDay = activeTradingDays[activeTradingDays.length - 1];
+      const latestNet = +Number(latestDay[1].netPnl || 0).toFixed(2);
+      if (latestNet > 0) {
+        for (let i = activeTradingDays.length - 1; i >= 0; i--) {
+          const dNet = +Number(activeTradingDays[i][1].netPnl || 0).toFixed(2);
+          if (dNet > 0) {
+            currentWinStreak++;
+          } else {
+            break;
+          }
+        }
+      } else if (latestNet < 0) {
+        for (let i = activeTradingDays.length - 1; i >= 0; i--) {
+          const dNet = +Number(activeTradingDays[i][1].netPnl || 0).toFixed(2);
+          if (dNet < 0) {
+            currentLossStreak++;
+          } else {
+            break;
+          }
+        }
+      }
     }
 
     // Attach interactive hover & click events to day inspector
     const insDateLabel = document.getElementById('inspector_date_label');
     const insDateDetails = document.getElementById('inspector_date_details');
     const insStreakVal = document.getElementById('ins_streak_val');
+    const insAlphaVal = document.getElementById('ins_alpha_val');
 
     if (insStreakVal) {
-      insStreakVal.textContent = `${winDays > 0 ? winDays : 2}d Win Streak`;
+      insStreakVal.textContent = currentWinStreak > 0 ? `${currentWinStreak}d Win Streak` : `0d Win Streak`;
+      if (insStreakVal.parentElement) {
+        insStreakVal.parentElement.title = `Active Streak: ${currentWinStreak}d Win${currentLossStreak > 0 ? ` (${currentLossStreak}d Drawdown)` : ''} | Best Historical: ${maxHistoricalWinStreak}d Win Streak`;
+      }
+    }
+
+    if (insAlphaVal && activeTradingDays.length > 1) {
+      const pnlArr = activeTradingDays.map(([_, d]) => Number(d.netPnl) || 0);
+      const mean = pnlArr.reduce((a, b) => a + b, 0) / pnlArr.length;
+      const variance = pnlArr.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / (pnlArr.length - 1);
+      const stdDev = Math.sqrt(variance);
+      if (stdDev > 0) {
+        const sharpe = ((mean / stdDev) * Math.sqrt(365)).toFixed(2);
+        insAlphaVal.textContent = `Sharpe: ${sharpe}`;
+      }
     }
 
     gridContainer.querySelectorAll('.yearbook-cell').forEach(cell => {
@@ -4481,6 +4545,10 @@ export class TerminalUI {
     if (radarPfEl) {
       radarPfEl.textContent = `${pf}x`;
       radarPfEl.className = Number(pf) >= 1.5 ? 'pod-val text-bullish' : 'pod-val text-bearish';
+    }
+    const insPfVal = document.getElementById('ins_pf_val');
+    if (insPfVal) {
+      insPfVal.textContent = `PF: ${pf}x`;
     }
     if (radarPfTag) {
       const nPf = Number(pf);

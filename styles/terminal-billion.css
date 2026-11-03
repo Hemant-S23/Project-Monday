@@ -5812,14 +5812,27 @@ html, body {
 }
 
 .yearbook-weekdays-labels {
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: space-between !important;
+  display: grid !important;
+  grid-template-rows: repeat(7, 13px) !important;
+  gap: 3.5px !important;
+  align-items: center !important;
   font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
-  font-size: 0.68rem !important;
-  font-weight: 800 !important;
-  color: #cbd5e1 !important;
-  padding: 4px 0 !important;
+  font-size: 0.60rem !important;
+  font-weight: 700 !important;
+  color: #94a3b8 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  text-align: right !important;
+  width: 22px !important;
+  user-select: none !important;
+}
+
+.yearbook-weekdays-labels span {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  height: 13px !important;
+  line-height: 13px !important;
 }
 
 .yearbook-cells-grid {

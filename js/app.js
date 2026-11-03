@@ -11,6 +11,7 @@ import { VoiceAssistant } from './copilot/voiceAssistant.js';
 import { ChartManager } from './ui/chartManager.js';
 import { TerminalUI } from './ui/terminalUI.js';
 import { AuthManager } from './auth/authManager.js';
+import { SignalEngine } from './engine/signalEngine.js';
 
 /**
  * Main Application Orchestrator
@@ -55,6 +56,9 @@ class App {
     this.chartManager = new ChartManager('tv_chart_container', {
       onExecuteInstantTrade: (orderPacket) => this.executeCurrentTrade(orderPacket)
     });
+
+    // Institutional Alpha Signal Engine
+    this.signalEngine = new SignalEngine();
 
     // UI Coordinator
     this.ui = new TerminalUI({
@@ -123,8 +127,24 @@ class App {
       },
       onSaveSupabaseConfig: (url, anonKey) => {
         this.authManager.setSupabaseConfig(url, anonKey);
+      },
+      onGetSignals: (filter) => this.signalEngine.getSignals(filter),
+      onGetActiveSignalsCount: () => this.signalEngine.getActiveCount(),
+      onClearSignals: () => {
+        this.signalEngine.clearAll();
+        this.ui.updateSignalsBadge(0);
+      },
+      onScanAllSignals: () => this.scanAllAssetsForSignals(),
+      onSelectSignalForDesk: (signal) => this.loadSignalIntoOrderDesk(signal)
+    });
+
+    this.signalEngine.subscribe(() => {
+      this.ui.updateSignalsBadge(this.signalEngine.getActiveCount());
+      if (this.ui.currentSaaSPage === 'signals') {
+        this.ui.renderSignalsPage();
       }
     });
+    this.ui.updateSignalsBadge(this.signalEngine.getActiveCount());
 
     // Voice Assistant with natural Indian and English profiles
     this.voiceAssistant = new VoiceAssistant({
@@ -262,7 +282,8 @@ class App {
     }
 
     // 3. Subscribe to default asset streams
-    ['BTC', 'ETH', 'SOL'].forEach(asset => {
+    const cryptoWatchlist = ['BTC', 'ETH', 'SOL', 'AVAX', 'LINK', 'DOGE', 'NEAR', 'SUI', 'XRP', 'ADA'];
+    cryptoWatchlist.forEach(asset => {
       this.cryptoAdapter.subscribe(asset, (data) => this.onMarketDataTick(data));
     });
     ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TCS', 'HDFCBANK'].forEach(asset => {
@@ -319,6 +340,10 @@ class App {
     // 6. Setup interval for continuous position updates, evaluation & Supabase sync
     setInterval(() => this.runFullEvaluation(), 5000);
     setInterval(() => this.syncWithSupabaseCloud(), 15000);
+
+    // 7. Initial & periodic Alpha Signals Swarm Scan
+    setTimeout(() => this.scanAllAssetsForSignals().catch(() => {}), 1500);
+    setInterval(() => this.scanAllAssetsForSignals().catch(() => {}), 60000);
   }
 
   async syncWithSupabaseCloud() {
@@ -472,6 +497,11 @@ class App {
     // Distribute tick to all active multi-chart subwindows
     this.chartManager.onRealtimeTick(data);
 
+    // Feed price tick to Alpha Signal Engine for live limit fills, target hits, & stop losses
+    if (this.signalEngine && data.asset && data.price) {
+      this.signalEngine.onPriceTick(data.asset, data.price);
+    }
+
     if (data.asset === this.currentAsset) {
       this.ui.updateTicker(data);
       if (this.ui.orderState && data.price) {
@@ -579,7 +609,7 @@ class App {
       { sentiment, fundingData, eventRisk, userStandards: settings }
     );
 
-    return {
+    const evalData = {
       targetAsset,
       currentPrice,
       strategyResult,
@@ -590,6 +620,13 @@ class App {
       candles5M,
       candles1H
     };
+
+    // Feed strategy evaluation to Alpha Signals Engine
+    if (this.signalEngine) {
+      this.signalEngine.processStrategyResult(targetAsset, evalData);
+    }
+
+    return evalData;
   }
 
   async runFullEvaluation(isBoot = false) {
@@ -1532,6 +1569,46 @@ class App {
     this.currentTimeframe = tf;
     this.chartManager.setTimeframe(tf);
     this.runFullEvaluation();
+  }
+
+  async scanAllAssetsForSignals() {
+    try {
+      const candidates = this.currentMarket === 'India'
+        ? ['NIFTY', 'BANKNIFTY']
+        : ['BTC', 'ETH', 'SOL', 'AVAX', 'LINK', 'DOGE', 'NEAR', 'SUI', 'XRP', 'ADA'];
+
+      for (const asset of candidates) {
+        try {
+          await this.getActiveAdapter().ensureAssetInitialized(asset);
+          const evalData = await this.evaluateAsset(asset);
+          if (evalData && this.signalEngine) {
+            this.signalEngine.processStrategyResult(asset, evalData);
+          }
+        } catch (e) {}
+      }
+    } catch (e) {}
+  }
+
+  loadSignalIntoOrderDesk(signal) {
+    if (!signal) return;
+    if (signal.asset !== this.currentAsset) {
+      this.switchAsset(signal.asset);
+    }
+    this.ui.switchPage('terminal');
+    if (this.ui.prefillOrderDesk) {
+      this.ui.prefillOrderDesk({
+        direction: signal.direction,
+        orderType: 'LIMIT',
+        limitPrice: signal.entryPrice,
+        stopLoss: signal.stopLossPrice,
+        takeProfit: signal.takeProfitPrice
+      });
+    }
+    this.ui.showToast(
+      '⚡ Order Desk Loaded',
+      `${signal.asset} ${signal.direction} Limit Order @ ${signal.currencySymbol || '$'}${signal.entryPrice} loaded into desk with 1:${signal.riskReward} R:R.`,
+      'info'
+    );
   }
 }
 

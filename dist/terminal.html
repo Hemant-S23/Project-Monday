@@ -47,12 +47,12 @@
     }
   }
   </script>
-  <script type="module" crossorigin src="/assets/terminal-CIbMe4N_.js"></script>
+  <script type="module" crossorigin src="/assets/terminal-yV-AKfXM.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/cursorGlow-BZ6wkXs1.js">
   <link rel="modulepreload" crossorigin href="/assets/hero3D-DWe7XOYa.js">
   <link rel="modulepreload" crossorigin href="/assets/sfx-BD73uRAY.js">
   <link rel="modulepreload" crossorigin href="/assets/authManager-DCW-oTS2.js">
-  <link rel="stylesheet" crossorigin href="/assets/terminal-CzDgrzdp.css">
+  <link rel="stylesheet" crossorigin href="/assets/terminal-D2CsYike.css">
   <link rel="stylesheet" crossorigin href="/assets/components--KCpGCq7.css">
 </head>
 <body data-mobile-page="chart">
@@ -515,6 +515,11 @@
             <span class="saas-nav-icon"><i class="ph ph-chart-line-up"></i></span>
             <span class="saas-nav-label">Terminal</span>
           </button>
+          <button class="saas-nav-item" data-page="signals" type="button">
+            <span class="saas-nav-icon"><i class="ph-bold ph-lightning" style="color: #38bdf8;"></i></span>
+            <span class="saas-nav-label">Alpha Signals</span>
+            <span class="saas-nav-badge" id="saas_signals_badge" style="display: none; background: rgba(56, 189, 248, 0.2); color: #38bdf8;">0</span>
+          </button>
           <button class="saas-nav-item" data-page="positions" type="button">
             <span class="saas-nav-icon"><i class="ph ph-briefcase"></i></span>
             <span class="saas-nav-label">Positions</span>
@@ -793,6 +798,13 @@
             } catch (e) {}
           })();
         </script>
+
+        <!-- Alpha Radar Signals Desk Trigger -->
+        <button class="header-ledger-btn header-signals-btn" id="btn_quick_signals" type="button" title="View Institutional Alpha Signals & Execution Desk">
+          <i class="ph-bold ph-lightning" style="color: #38bdf8;"></i>
+          <span>Signals</span>
+          <span class="signals-header-pill" id="header_signals_count" style="display:none; background: #38bdf8; color: #020617; font-size: 0.62rem; font-weight: 800; padding: 1px 5px; border-radius: 10px; margin-left: 4px;">0</span>
+        </button>
 
         <!-- Quick Ledger & Financial Passbook Trigger -->
         <button class="header-ledger-btn" id="btn_quick_passbook" type="button" title="View Financial Passbook & 18% GST Trade Ledger">
@@ -1551,6 +1563,98 @@
         </div>
       </div>
 
+      <!-- VIEW 2.5: ALPHA RADAR SIGNALS & EXECUTION DESK -->
+      <div class="saas-page-view" id="view_signals">
+        <div class="signals-page-container">
+          <!-- Page Header Banner -->
+          <div class="positions-header-banner signals-header-banner">
+            <div class="positions-banner-title-group">
+              <div class="positions-banner-icon" style="background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.35); color: #38bdf8;">
+                <i class="ph-bold ph-lightning"></i>
+              </div>
+              <div>
+                <h2 class="positions-banner-title">Alpha Radar • Execution Blueprints & Signals</h2>
+                <div class="positions-banner-sub" style="display: flex; gap: 8px; align-items: center; margin-top: 4px; flex-wrap: wrap;">
+                  <span class="compliance-tag" style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;">
+                    <i class="ph-fill ph-shield-check"></i> Strict 1:2 R:R Asymmetric Standard
+                  </span>
+                  <span class="compliance-gst-pill" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;">
+                    <i class="ph-bold ph-timer"></i> Dynamic Expiration & Invalidation
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="signals-header-actions" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <span class="copilot-status-badge">
+                <span class="live-dot"></span> Radar Sentinel Live
+              </span>
+              <button class="btn-purge-ledger" id="signals_scan_all_btn" type="button" title="Scan all crypto assets for Grade A Confluence Setups" style="border-color: rgba(56, 189, 248, 0.3); color: #38bdf8;">
+                <i class="ph-bold ph-radar"></i> Scan Market Swarm
+              </button>
+              <button class="btn-purge-ledger" id="signals_clear_btn" type="button" title="Purge Expired/Archived Signals">
+                <i class="ph-bold ph-trash"></i> Clear Archived
+              </button>
+            </div>
+          </div>
+
+          <!-- 4-Pod Institutional Summary Strip -->
+          <div class="passbook-audit-grid signals-metrics-strip" style="margin-bottom: 16px;">
+            <div class="audit-stat-box">
+              <span class="audit-label"><i class="ph-bold ph-hourglass-high"></i> PENDING LIMIT ORDERS</span>
+              <span class="audit-val text-warning" id="signals_stat_pending">0</span>
+              <span class="audit-sub">Awaiting retracement fill</span>
+            </div>
+            <div class="audit-stat-box">
+              <span class="audit-label"><i class="ph-bold ph-lightning"></i> ACTIVE IN-POSITION</span>
+              <span class="audit-val text-cyan" id="signals_stat_active">0</span>
+              <span class="audit-sub">Currently live in market</span>
+            </div>
+            <div class="audit-stat-box">
+              <span class="audit-label"><i class="ph-bold ph-target"></i> TARGETS HIT (+2.0R+)</span>
+              <span class="audit-val text-bullish" id="signals_stat_hit">0</span>
+              <span class="audit-sub">Full take-profit realized</span>
+            </div>
+            <div class="audit-stat-box highlight-net" id="signals_stat_box_total">
+              <span class="audit-label"><i class="ph-bold ph-scales"></i> CUMULATIVE ALPHA</span>
+              <span class="audit-val text-bullish" id="signals_stat_alpha">+0.00R</span>
+              <span class="audit-sub">Realized signal performance</span>
+            </div>
+          </div>
+
+          <!-- Filter & Controls Toolbar -->
+          <div class="passbook-filter-bar signals-filter-bar" style="margin-bottom: 16px;">
+            <div class="passbook-type-filters signals-status-filters" id="signals_status_filters">
+              <button class="passbook-filter-chip active" data-filter="ALL" type="button">All (<span id="signals_chip_all_count">0</span>)</button>
+              <button class="passbook-filter-chip" data-filter="PENDING" type="button">🟡 Pending (<span id="signals_chip_pending_count">0</span>)</button>
+              <button class="passbook-filter-chip" data-filter="ACTIVE" type="button">🟢 Active (<span id="signals_chip_active_count">0</span>)</button>
+              <button class="passbook-filter-chip" data-filter="COMPLETED" type="button">🎯 Completed</button>
+              <button class="passbook-filter-chip" data-filter="EXPIRED" type="button">⚪ Expired / Void</button>
+            </div>
+
+            <!-- Asset Quick Filter Tabs -->
+            <div class="signals-asset-filter-tray" id="signals_asset_filter_tray">
+              <button class="asset-pill-filter active" data-asset="ALL" type="button">All Assets</button>
+              <button class="asset-pill-filter" data-asset="BTC" type="button">BTC</button>
+              <button class="asset-pill-filter" data-asset="ETH" type="button">ETH</button>
+              <button class="asset-pill-filter" data-asset="SOL" type="button">SOL</button>
+              <button class="asset-pill-filter" data-asset="LINK" type="button">LINK</button>
+              <button class="asset-pill-filter" data-asset="AVAX" type="button">AVAX</button>
+              <button class="asset-pill-filter" data-asset="DOGE" type="button">DOGE</button>
+              <button class="asset-pill-filter" data-asset="NEAR" type="button">NEAR</button>
+              <button class="asset-pill-filter" data-asset="SUI" type="button">SUI</button>
+              <button class="asset-pill-filter" data-asset="XRP" type="button">XRP</button>
+              <button class="asset-pill-filter" data-asset="ADA" type="button">ADA</button>
+            </div>
+          </div>
+
+          <!-- Dynamic Signals Cards Grid -->
+          <div class="signals-cards-grid" id="signals_cards_grid">
+            <!-- Dynamically populated by TerminalUI.renderSignalsPage() -->
+          </div>
+        </div>
+      </div>
+
       <!-- VIEW 3: DEDICATED PASSBOOK & 365-DAY YEARBOOK HEATMAP -->
       <div class="saas-page-view" id="view_passbook">
         <div class="passbook-page-container">
@@ -2035,6 +2139,10 @@
       <button class="saas-mobile-tab-btn active" data-page="terminal" type="button">
         <i class="ph ph-chart-line-up"></i>
         <span>Terminal</span>
+      </button>
+      <button class="saas-mobile-tab-btn" data-page="signals" type="button">
+        <i class="ph-bold ph-lightning" style="color: #38bdf8;"></i>
+        <span>Signals</span>
       </button>
       <button class="saas-mobile-tab-btn" data-page="positions" type="button">
         <i class="ph ph-briefcase"></i>

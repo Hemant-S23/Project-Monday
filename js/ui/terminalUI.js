@@ -1072,6 +1072,64 @@ export class TerminalUI {
       });
     });
 
+    const btnQuickSignals = document.getElementById('btn_quick_signals');
+    if (btnQuickSignals) {
+      btnQuickSignals.addEventListener('click', () => this.switchPage('signals'));
+    }
+
+    const scanAllBtn = document.getElementById('signals_scan_all_btn');
+    if (scanAllBtn) {
+      scanAllBtn.addEventListener('click', async () => {
+        scanAllBtn.disabled = true;
+        scanAllBtn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Scanning Swarm...';
+        if (this.callbacks.onScanAllSignals) {
+          await this.callbacks.onScanAllSignals();
+        }
+        setTimeout(() => {
+          if (scanAllBtn) {
+            scanAllBtn.disabled = false;
+            scanAllBtn.innerHTML = '<i class="ph-bold ph-radar"></i> Scan Market Swarm';
+          }
+          this.renderSignalsPage();
+        }, 1200);
+      });
+    }
+
+    const clearSignalsBtn = document.getElementById('signals_clear_btn');
+    if (clearSignalsBtn) {
+      clearSignalsBtn.addEventListener('click', () => {
+        if (this.callbacks.onClearSignals) {
+          this.callbacks.onClearSignals();
+          this.renderSignalsPage();
+          this.showToast('🧹 Signals Purged', 'Archived and expired signals cleared.', 'info');
+        }
+      });
+    }
+
+    const statusFilterTray = document.getElementById('signals_status_filters');
+    if (statusFilterTray) {
+      statusFilterTray.querySelectorAll('.passbook-filter-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          statusFilterTray.querySelectorAll('.passbook-filter-chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          this.signalsFilter = chip.dataset.filter || 'ALL';
+          this.renderSignalsPage();
+        });
+      });
+    }
+
+    const assetFilterTray = document.getElementById('signals_asset_filter_tray');
+    if (assetFilterTray) {
+      assetFilterTray.querySelectorAll('.asset-pill-filter').forEach(pill => {
+        pill.addEventListener('click', () => {
+          assetFilterTray.querySelectorAll('.asset-pill-filter').forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+          this.signalsAssetFilter = pill.dataset.asset || 'ALL';
+          this.renderSignalsPage();
+        });
+      });
+    }
+
     const posNewTradeBtn = document.getElementById('positions_page_new_trade_btn');
     if (posNewTradeBtn) {
       posNewTradeBtn.addEventListener('click', () => this.switchPage('terminal'));
@@ -1752,7 +1810,9 @@ export class TerminalUI {
     });
 
     // 4. Page Specific Data Refresh
-    if (pageKey === 'positions') {
+    if (pageKey === 'signals') {
+      this.renderSignalsPage();
+    } else if (pageKey === 'positions') {
       this.renderPositionsPage(this._lastPositions || []);
     } else if (pageKey === 'passbook') {
       this.renderFinancialPassbook();
@@ -3689,6 +3749,352 @@ export class TerminalUI {
       } else {
         bulletLive.innerHTML = `<strong>R-Multiple Formula:</strong> <code>Total Net PnL ÷ Configured 1R Margin ($${marginUSD.toFixed(2)}) = Current Session R</code>.`;
       }
+    }
+  }
+
+  updateSignalsBadge(count = 0) {
+    const navBadge = document.getElementById('saas_signals_badge');
+    const headerPill = document.getElementById('header_signals_count');
+    if (navBadge) {
+      navBadge.textContent = count;
+      navBadge.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+    if (headerPill) {
+      headerPill.textContent = count;
+      headerPill.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+  }
+
+  prefillOrderDesk(params = {}) {
+    if (params.direction) {
+      this.orderDirection = params.direction.toUpperCase();
+      const longBtn = document.getElementById('btn_side_long');
+      const shortBtn = document.getElementById('btn_side_short');
+      if (longBtn && shortBtn) {
+        longBtn.classList.toggle('active', this.orderDirection === 'LONG');
+        shortBtn.classList.toggle('active', this.orderDirection === 'SHORT');
+      }
+    }
+    if (params.orderType === 'LIMIT') {
+      const limitTab = document.getElementById('tab_order_limit');
+      if (limitTab) limitTab.click();
+    }
+    if (params.stopLoss) {
+      const slInput = document.getElementById('order_sl_input');
+      if (slInput) {
+        slInput.value = params.stopLoss;
+        slInput.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+    if (params.takeProfit) {
+      const tpInput = document.getElementById('order_tp_input');
+      if (tpInput) {
+        tpInput.value = params.takeProfit;
+        tpInput.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+  }
+
+  renderSignalsPage() {
+    const grid = document.getElementById('signals_cards_grid');
+    if (!grid) return;
+
+    if (!this.signalsFilter) this.signalsFilter = 'ALL';
+    if (!this.signalsAssetFilter) this.signalsAssetFilter = 'ALL';
+
+    const signals = this.callbacks.onGetSignals ? this.callbacks.onGetSignals('ALL') : [];
+
+    // Calculate Summary Strip Statistics
+    let pendingCount = 0;
+    let activeCount = 0;
+    let hitCount = 0;
+    let cumulativeR = 0;
+
+    signals.forEach(s => {
+      if (s.status === 'PENDING') pendingCount++;
+      else if (s.status === 'ACTIVE') activeCount++;
+      else if (s.status === 'TP_HIT') {
+        hitCount++;
+        cumulativeR += Number(s.realizedR || s.riskReward || 2.0);
+      } else if (s.status === 'SL_HIT') {
+        cumulativeR -= 1.0;
+      }
+    });
+
+    const statPending = document.getElementById('signals_stat_pending');
+    const statActive = document.getElementById('signals_stat_active');
+    const statHit = document.getElementById('signals_stat_hit');
+    const statAlpha = document.getElementById('signals_stat_alpha');
+    const chipAll = document.getElementById('signals_chip_all_count');
+    const chipPending = document.getElementById('signals_chip_pending_count');
+    const chipActive = document.getElementById('signals_chip_active_count');
+
+    if (statPending) statPending.textContent = pendingCount;
+    if (statActive) statActive.textContent = activeCount;
+    if (statHit) statHit.textContent = hitCount;
+    if (statAlpha) {
+      const isPos = cumulativeR >= 0;
+      statAlpha.textContent = `${isPos ? '+' : ''}${cumulativeR.toFixed(2)}R`;
+      statAlpha.className = `audit-val ${isPos ? 'text-bullish' : 'text-bearish'}`;
+    }
+    if (chipAll) chipAll.textContent = signals.length;
+    if (chipPending) chipPending.textContent = pendingCount;
+    if (chipActive) chipActive.textContent = activeCount;
+
+    // Filter displayed signals
+    let displayed = signals.filter(s => {
+      if (this.signalsFilter === 'PENDING') return s.status === 'PENDING';
+      if (this.signalsFilter === 'ACTIVE') return s.status === 'ACTIVE';
+      if (this.signalsFilter === 'COMPLETED') return s.status === 'TP_HIT' || s.status === 'SL_HIT';
+      if (this.signalsFilter === 'EXPIRED') return s.status === 'EXPIRED' || s.status === 'INVALIDATED';
+      return true;
+    });
+
+    if (this.signalsAssetFilter !== 'ALL') {
+      displayed = displayed.filter(s => s.asset === this.signalsAssetFilter);
+    }
+
+    if (displayed.length === 0) {
+      grid.innerHTML = `
+        <div class="signals-empty-state">
+          <div class="signals-empty-icon"><i class="ph-bold ph-radar"></i></div>
+          <div class="signals-empty-title">No ${this.signalsFilter !== 'ALL' ? this.signalsFilter : ''} Signals in Feed</div>
+          <div class="signals-empty-desc">
+            MONDAY's neural swarm continuously evaluates order flow, HTF trends, and liquidity zones. Click <b>"Scan Market Swarm"</b> above or wait for a high-probability Grade A setup to trigger.
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    const formatCountdown = (ms) => {
+      if (ms <= 0) return '00m 00s (Expiring)';
+      const totalSec = Math.floor(ms / 1000);
+      const m = Math.floor(totalSec / 60);
+      const s = totalSec % 60;
+      return `${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s remaining`;
+    };
+
+    grid.innerHTML = displayed.map(s => {
+      const now = Date.now();
+      const remainingMs = Math.max(0, s.expiresAt - now);
+      const totalDurationMs = (s.validityMinutes || 45) * 60 * 1000;
+      const progressPct = Math.max(0, Math.min(100, (remainingMs / totalDurationMs) * 100));
+
+      const isLong = s.direction === 'LONG';
+      const dirClass = isLong ? 'long' : 'short';
+
+      // Status Badge Config
+      let statusClass = 'pending';
+      let statusLabel = '🟡 PENDING LIMIT';
+      if (s.status === 'ACTIVE') {
+        statusClass = 'active';
+        statusLabel = '🟢 ACTIVE IN-POSITION';
+      } else if (s.status === 'TP_HIT') {
+        statusClass = 'tp';
+        statusLabel = `💎 TARGET HIT (+${s.realizedR || s.riskReward}R)`;
+      } else if (s.status === 'SL_HIT') {
+        statusClass = 'sl';
+        statusLabel = `🛑 STOPPED OUT (-1.0R)`;
+      } else if (s.status === 'EXPIRED') {
+        statusClass = 'expired';
+        statusLabel = '⚪ EXPIRED';
+      } else if (s.status === 'INVALIDATED') {
+        statusClass = 'expired';
+        statusLabel = '⚠️ INVALIDATED';
+      }
+
+      // Format Issuance Time
+      const issueDate = new Date(s.issuedAt);
+      const timeStr = issueDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+      const dateStr = issueDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+
+      // Rationale list
+      const rationaleHtml = (s.rationale || []).map(r => `
+        <div class="signal-rationale-item">
+          <i class="ph-fill ph-check-circle" style="color: #38bdf8; font-size: 0.72rem;"></i>
+          <span>${r}</span>
+        </div>
+      `).join('');
+
+      return `
+        <div class="signal-card status-${statusClass}" id="card_${s.id}" data-id="${s.id}">
+          <div class="signal-card-top">
+            <div class="signal-asset-title">
+              <span>${s.asset}/USD</span>
+              <span class="signal-direction-pill ${dirClass}">${s.direction} LIMIT</span>
+              <span style="font-size: 0.65rem; color: #38bdf8; background: rgba(56, 189, 248, 0.1); padding: 2px 6px; border-radius: 4px; font-weight: 700;">${s.confluenceScore}%</span>
+            </div>
+            <span class="signal-status-badge ${statusClass}">${statusLabel}</span>
+          </div>
+
+          <div class="signal-timing-bar">
+            <span>Issued: <b>${timeStr}</b> • ${dateStr}</span>
+            <span class="signal-countdown-pill ${remainingMs < 5 * 60 * 1000 && s.status === 'PENDING' ? 'urgent' : ''}" id="countdown_${s.id}">
+              ${s.status === 'PENDING' 
+                ? `<i class="ph-bold ph-hourglass"></i> ${formatCountdown(remainingMs)}`
+                : (s.status === 'ACTIVE' ? '⚡ Filled & Live' : (s.status === 'TP_HIT' ? '🎯 Closed Win' : 'Archived'))
+              }
+            </span>
+          </div>
+
+          ${s.status === 'PENDING' ? `
+            <div class="signal-validity-track">
+              <div class="signal-validity-fill" id="fill_${s.id}" style="width: ${progressPct.toFixed(1)}%;"></div>
+            </div>
+          ` : ''}
+
+          <div class="signal-levels-grid">
+            <div class="signal-level-box">
+              <span class="signal-level-label">Entry Limit</span>
+              <div class="signal-level-val-row">
+                <span class="signal-level-val text-cyan">${s.currencySymbol || '$'}${s.entryPrice.toLocaleString()}</span>
+                <button class="signal-copy-btn" data-copy="${s.entryPrice}" title="Copy Entry Price">
+                  <i class="ph ph-copy"></i>
+                </button>
+              </div>
+            </div>
+            <div class="signal-level-box">
+              <span class="signal-level-label">Stop Loss (-1R)</span>
+              <div class="signal-level-val-row">
+                <span class="signal-level-val text-bearish">${s.currencySymbol || '$'}${s.stopLossPrice.toLocaleString()}</span>
+                <button class="signal-copy-btn" data-copy="${s.stopLossPrice}" title="Copy Stop Loss">
+                  <i class="ph ph-copy"></i>
+                </button>
+              </div>
+            </div>
+            <div class="signal-level-box">
+              <span class="signal-level-label">Target (1:${s.riskReward} RR)</span>
+              <div class="signal-level-val-row">
+                <span class="signal-level-val text-bullish">${s.currencySymbol || '$'}${s.takeProfitPrice.toLocaleString()}</span>
+                <button class="signal-copy-btn" data-copy="${s.takeProfitPrice}" title="Copy Target Price">
+                  <i class="ph ph-copy"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="signal-rationale-list">
+            ${rationaleHtml}
+          </div>
+
+          <div class="signal-actions-row">
+            <button class="signal-action-btn signal-btn-copy-full" data-id="${s.id}" type="button" title="Copy formatted order to clipboard for Delta Exchange or Binance">
+              <i class="ph-bold ph-copy"></i> Copy Order Data
+            </button>
+            <button class="signal-action-btn signal-btn-load" data-id="${s.id}" type="button" title="Pre-fill these levels directly into MONDAY Order Desk">
+              <i class="ph-bold ph-lightning"></i> Load into Desk
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    this.bindSignalsInteractivity(displayed);
+  }
+
+  bindSignalsInteractivity(displayed = []) {
+    const grid = document.getElementById('signals_cards_grid');
+    if (!grid) return;
+
+    // 1. Copy individual level button
+    grid.querySelectorAll('.signal-copy-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const val = btn.dataset.copy;
+        if (!val) return;
+        navigator.clipboard.writeText(val).then(() => {
+          btn.innerHTML = '<i class="ph-bold ph-check text-bullish"></i>';
+          btn.classList.add('copied');
+          setTimeout(() => {
+            btn.innerHTML = '<i class="ph ph-copy"></i>';
+            btn.classList.remove('copied');
+          }, 1200);
+        }).catch(() => {});
+      });
+    });
+
+    // 2. Copy Full Order Data (Formatted for Delta / Binance)
+    grid.querySelectorAll('.signal-btn-copy-full').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        const signal = displayed.find(s => s.id === id);
+        if (!signal) return;
+
+        const issueDate = new Date(signal.issuedAt);
+        const timeStr = issueDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+        const formatted = [
+          `⚡ [MONDAY Alpha Signal] ${signal.asset}/USD ${signal.direction} LIMIT`,
+          `• Entry Limit: ${signal.currencySymbol || '$'}${signal.entryPrice}`,
+          `• Stop Loss: ${signal.currencySymbol || '$'}${signal.stopLossPrice} (-1.0R)`,
+          `• Take Profit: ${signal.currencySymbol || '$'}${signal.takeProfitPrice} (+${signal.riskReward}R)`,
+          `• Confluence: ${signal.confluenceScore}% (${signal.confluenceGrade || 'GRADE A'})`,
+          `• Risk/Reward: Strict 1:${signal.riskReward} Asymmetry`,
+          `• Issued: ${timeStr} • Delta Exchange / Binance Ready`
+        ].join('\n');
+
+        navigator.clipboard.writeText(formatted).then(() => {
+          this.showToast('📋 Order Copied', `${signal.asset} ${signal.direction} limit details copied to clipboard. Ready to paste!`, 'success');
+        }).catch(() => {
+          this.showToast('📋 Order Copied', `Entry: $${signal.entryPrice} | SL: $${signal.stopLossPrice} | TP: $${signal.takeProfitPrice}`, 'success');
+        });
+      });
+    });
+
+    // 3. Load into Order Desk
+    grid.querySelectorAll('.signal-btn-load').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        const signal = displayed.find(s => s.id === id);
+        if (!signal) return;
+        if (this.callbacks.onSelectSignalForDesk) {
+          this.callbacks.onSelectSignalForDesk(signal);
+        }
+      });
+    });
+
+    // 4. Smooth 1-second Countdown Loop for active pending cards
+    if (this._signalCountdownTimer) clearInterval(this._signalCountdownTimer);
+    const pendingSignals = displayed.filter(s => s.status === 'PENDING');
+    if (pendingSignals.length > 0) {
+      this._signalCountdownTimer = setInterval(() => {
+        const now = Date.now();
+        let anyExpired = false;
+
+        pendingSignals.forEach(s => {
+          const rem = Math.max(0, s.expiresAt - now);
+          const el = document.getElementById(`countdown_${s.id}`);
+          const fill = document.getElementById(`fill_${s.id}`);
+          const totalMs = (s.validityMinutes || 45) * 60 * 1000;
+
+          if (el) {
+            if (rem <= 0) {
+              el.textContent = '00m 00s (Expired)';
+              anyExpired = true;
+            } else {
+              const sec = Math.floor(rem / 1000);
+              const m = Math.floor(sec / 60);
+              const secRem = sec % 60;
+              el.innerHTML = `<i class="ph-bold ph-hourglass"></i> ${String(m).padStart(2, '0')}m ${String(secRem).padStart(2, '0')}s remaining`;
+              if (rem < 5 * 60 * 1000) el.classList.add('urgent');
+            }
+          }
+          if (fill) {
+            const pct = Math.max(0, Math.min(100, (rem / totalMs) * 100));
+            fill.style.width = `${pct.toFixed(1)}%`;
+          }
+        });
+
+        if (anyExpired) {
+          clearInterval(this._signalCountdownTimer);
+          if (this.currentSaaSPage === 'signals') {
+            this.renderSignalsPage();
+          }
+        }
+      }, 1000);
     }
   }
 

@@ -322,6 +322,8 @@ export class CryptoAdapter extends MarketAdapter {
         .sort((a, b) => a.time - b.time); // Sort chronologically
 
       this.cache[asset][timeframe] = candles;
+      if (!this.cache[asset].syntheticFlags) this.cache[asset].syntheticFlags = {};
+      this.cache[asset].syntheticFlags[timeframe] = false;
       if (candles.length > 0) {
         this.cache[asset].price = candles[candles.length - 1].close;
       }
@@ -330,12 +332,22 @@ export class CryptoAdapter extends MarketAdapter {
       console.warn(`[CryptoAdapter] Live fetch failed for ${asset} ${timeframe}, using synthetic:`, err.message);
       const fallbackCandles = this.generateSyntheticCandles(asset, timeframe);
       this.cache[asset][timeframe] = fallbackCandles;
+      if (!this.cache[asset].syntheticFlags) this.cache[asset].syntheticFlags = {};
+      this.cache[asset].syntheticFlags[timeframe] = true;
       return fallbackCandles;
     }
   }
 
+  isAssetSynthetic(asset) {
+    const flags = this.cache[asset]?.syntheticFlags;
+    if (!flags) return false;
+    return !!(flags['1H'] || flags['5M']);
+  }
+
   generateSyntheticCandles(asset, timeframe) {
-    const currentPrice = this.cache[asset]?.price || this.getDefaultAssetPrice(asset);
+    const cachedP = this.cache[asset]?.price;
+    const marketMeta = this.allMarkets?.find(m => m.baseAsset === asset);
+    const currentPrice = (cachedP && cachedP > 0) ? cachedP : (marketMeta?.price > 0 ? marketMeta.price : this.getDefaultAssetPrice(asset));
     const count = 60;
     const intervalSec = timeframe === '1H' ? 3600 : 300;
     const now = Math.floor(Date.now() / 1000);

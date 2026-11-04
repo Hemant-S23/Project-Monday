@@ -75,6 +75,31 @@ export class SignalEngine {
     if (!evalData || !evalData.strategyResult) return null;
     const { strategyResult, currentPrice, currencySymbol = '$' } = evalData;
 
+    // 1. Strict Real-Data Gate: For Crypto, reject any signals generated on synthetic/fallback candles
+    if (currencySymbol === '$' && (evalData.isSynthetic || evalData.candlesAreSynthetic)) {
+      return null;
+    }
+
+    // 2. Minimum Liquidity & Price Gate: Skip sub-cent penny tokens and dead assets (< $0.005 or < $5M volume)
+    if (currencySymbol === '$') {
+      if (!currentPrice || currentPrice < 0.005) {
+        return null;
+      }
+      if (evalData.volume && evalData.volume > 0 && evalData.volume < 5000000) {
+        return null;
+      }
+    }
+
+    // 3. Cooldown Gate: Prevent rapid re-triggering on same asset (15-minute cooldown since last closed signal)
+    const recentClosed = this.signals.find(s => 
+      s.asset === asset && 
+      (s.status === 'SL_HIT' || s.status === 'TP_HIT' || s.status === 'INVALIDATED') &&
+      s.closedAt && (Date.now() - s.closedAt < 15 * 60 * 1000)
+    );
+    if (recentClosed) {
+      return null;
+    }
+
     // Check existing active or pending signal for this asset
     const existingActive = this.signals.find(s => 
       s.asset === asset && (s.status === 'PENDING' || s.status === 'ACTIVE')

@@ -5238,8 +5238,8 @@ export class TerminalUI {
     }
 
     // 2. Cap maximum concurrent toasts on screen (max 3)
-    if (existing.length >= 3) {
-      existing[0].remove();
+    if (existing.length >= 3 && existing[0]) {
+      if (typeof existing[0].remove === 'function') existing[0].remove();
     }
 
     const toast = document.createElement('div');
@@ -5253,7 +5253,9 @@ export class TerminalUI {
     container.appendChild(toast);
     setTimeout(() => {
       toast.classList.add('fade-out');
-      setTimeout(() => toast.remove(), 400);
+      setTimeout(() => {
+        if (toast && typeof toast.remove === 'function') toast.remove();
+      }, 400);
     }, 4500);
   }
 

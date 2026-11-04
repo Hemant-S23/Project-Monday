@@ -616,6 +616,9 @@ class App {
       { sentiment, fundingData, eventRisk, userStandards: settings }
     );
 
+    const isSynthetic = typeof adapter.isAssetSynthetic === 'function' ? adapter.isAssetSynthetic(targetAsset) : false;
+    const assetVolume = adapter.cache?.[targetAsset]?.volume || 0;
+
     const evalData = {
       targetAsset,
       currentPrice,
@@ -625,7 +628,9 @@ class App {
       fundingData,
       currencySymbol,
       candles5M,
-      candles1H
+      candles1H,
+      isSynthetic,
+      volume: assetVolume
     };
 
     // Feed strategy evaluation to Alpha Signals Engine
@@ -1573,9 +1578,30 @@ class App {
 
   async scanAllAssetsForSignals() {
     try {
-      const candidates = this.currentMarket === 'India'
-        ? ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATAMOTORS', 'HDFCBANK', 'SWIGGY', 'HYUNDAI', 'ZOMATO', 'HAL', 'INFY', 'TCS']
-        : (this.cryptoAdapter?.allMarkets ? this.cryptoAdapter.allMarkets.map(m => m.baseAsset) : ['BTC', 'ETH', 'SOL']);
+      let candidates = [];
+      if (this.currentMarket === 'India') {
+        candidates = ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATAMOTORS', 'HDFCBANK', 'SWIGGY', 'HYUNDAI', 'ZOMATO', 'HAL', 'INFY', 'TCS'];
+      } else {
+        // High-Liquidity Institutional Crypto Universe:
+        // Core high-volume, established coins where SMC and order blocks are verified
+        const curatedHighLiquidity = [
+          'BTC', 'ETH', 'SOL', 'XRP', 'DOGE', 'ADA', 'AVAX', 'SUI', 'NEAR', 'LINK',
+          'BNB', 'RENDER', 'INJ', 'TIA', 'FET', 'ARB', 'OP', 'DOT', 'LTC', 'BCH',
+          'AAVE', 'UNI', 'ICP', 'KAS', 'ATOM', 'FIL', 'APT', 'XLM', 'ALGO', 'CRV'
+        ];
+
+        if (this.cryptoAdapter?.allMarkets) {
+          // Dynamic volume filter: Coins with >= $5M 24h volume AND price >= $0.005
+          const dynamicLiquid = this.cryptoAdapter.allMarkets
+            .filter(m => (m.volume >= 5000000 || curatedHighLiquidity.includes(m.baseAsset)) && (m.price >= 0.005))
+            .map(m => m.baseAsset);
+
+          // Curated coins first, deduplicated, capped to top 25-30 to prevent Coinbase API saturation
+          candidates = Array.from(new Set([...curatedHighLiquidity, ...dynamicLiquid])).slice(0, 30);
+        } else {
+          candidates = curatedHighLiquidity.slice(0, 20);
+        }
+      }
 
       for (const asset of candidates) {
         try {

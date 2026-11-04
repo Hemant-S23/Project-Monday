@@ -4,6 +4,17 @@
  * enforces dynamic validity windows, and autonomously manages order lifecycle.
  */
 
+function formatLevelPrice(val, asset) {
+  const n = Number(val);
+  if (isNaN(n)) return 0;
+  if (asset === 'BTC') return +n.toFixed(1);
+  if (asset === 'ETH' || asset === 'SOL') return +n.toFixed(2);
+  if (n < 0.001) return +n.toFixed(6);
+  if (n < 1) return +n.toFixed(4);
+  if (n < 100) return +n.toFixed(3);
+  return +n.toFixed(2);
+}
+
 export class SignalEngine {
   constructor() {
     this.storageKey = 'monday_alpha_signals';
@@ -80,16 +91,17 @@ export class SignalEngine {
       return existingActive;
     }
 
-    // Only issue signals for High-Probability Setups (Grade A or A+, Confluence >= 75%)
-    const isGradeA = strategyResult.confluenceScore >= 75;
-    const isStateEligible = strategyResult.state === 'CONFIRMED' || strategyResult.state === 'DEVELOPING';
-    const hasValidLevels = strategyResult.levels && strategyResult.levels.entry && strategyResult.levels.stopLoss && strategyResult.levels.takeProfit;
+    // Only issue signals for High-Probability Setups (Grade A or A+, Confluence >= 70% or CONFIRMED/DEVELOPING)
+    const levels = strategyResult.levels;
+    const targetVal = levels ? (levels.takeProfit || levels.target) : null;
+    const isGradeA = (strategyResult.confluenceScore || 0) >= 70 || strategyResult.state === 'CONFIRMED' || strategyResult.state === 'DEVELOPING';
+    const isStateEligible = strategyResult.state !== 'CANCELLED' && strategyResult.state !== 'NO SETUP';
+    const hasValidLevels = levels && levels.entry && levels.stopLoss && targetVal;
 
     if (!isGradeA || !isStateEligible || !hasValidLevels) {
       return null;
     }
 
-    const levels = strategyResult.levels;
     const minRR = Number(levels.rrRatio) || 2.0;
     if (minRR < 1.5) return null; // Strict Risk:Reward safety gate
 
@@ -100,11 +112,11 @@ export class SignalEngine {
     const signal = {
       id: `SIG-${asset}-${now}`,
       asset,
-      direction: strategyResult.direction || (levels.entry < levels.takeProfit ? 'LONG' : 'SHORT'),
+      direction: strategyResult.direction || (levels.entry < targetVal ? 'LONG' : 'SHORT'),
       orderType: 'LIMIT',
-      entryPrice: +levels.entry.toFixed(asset === 'BTC' ? 1 : (asset === 'ETH' || asset === 'SOL' ? 2 : 4)),
-      stopLossPrice: +levels.stopLoss.toFixed(asset === 'BTC' ? 1 : (asset === 'ETH' || asset === 'SOL' ? 2 : 4)),
-      takeProfitPrice: +levels.takeProfit.toFixed(asset === 'BTC' ? 1 : (asset === 'ETH' || asset === 'SOL' ? 2 : 4)),
+      entryPrice: formatLevelPrice(levels.entry, asset),
+      stopLossPrice: formatLevelPrice(levels.stopLoss, asset),
+      takeProfitPrice: formatLevelPrice(targetVal, asset),
       riskReward: +minRR.toFixed(2),
       confluenceScore: strategyResult.confluenceScore || 80,
       confluenceGrade: strategyResult.confluenceGrade || 'GRADE A',

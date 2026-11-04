@@ -3779,6 +3779,17 @@ export class TerminalUI {
     }
   }
 
+  formatSignalPrice(val, currencySymbol = '$') {
+    const n = Number(val);
+    if (isNaN(n) || n === 0) return `${currencySymbol}0.00`;
+    if (n >= 1000) return `${currencySymbol}${n.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
+    if (n >= 10) return `${currencySymbol}${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    if (n >= 1) return `${currencySymbol}${n.toFixed(3)}`;
+    if (n >= 0.01) return `${currencySymbol}${n.toFixed(4)}`;
+    if (n >= 0.001) return `${currencySymbol}${n.toFixed(5)}`;
+    return `${currencySymbol}${n.toFixed(6)}`;
+  }
+
   renderSignalsPage() {
     const grid = document.getElementById('signals_cards_grid');
     if (!grid) return;
@@ -3932,7 +3943,7 @@ export class TerminalUI {
             <div class="signal-level-box">
               <span class="signal-level-label">Entry Limit</span>
               <div class="signal-level-val-row">
-                <span class="signal-level-val text-cyan">${s.currencySymbol || '$'}${s.entryPrice.toLocaleString()}</span>
+                <span class="signal-level-val text-cyan">${this.formatSignalPrice(s.entryPrice, s.currencySymbol)}</span>
                 <button class="signal-copy-btn" data-copy="${s.entryPrice}" title="Copy Entry Price">
                   <i class="ph ph-copy"></i>
                 </button>
@@ -3941,7 +3952,7 @@ export class TerminalUI {
             <div class="signal-level-box">
               <span class="signal-level-label">Stop Loss (-1R)</span>
               <div class="signal-level-val-row">
-                <span class="signal-level-val text-bearish">${s.currencySymbol || '$'}${s.stopLossPrice.toLocaleString()}</span>
+                <span class="signal-level-val text-bearish">${this.formatSignalPrice(s.stopLossPrice, s.currencySymbol)}</span>
                 <button class="signal-copy-btn" data-copy="${s.stopLossPrice}" title="Copy Stop Loss">
                   <i class="ph ph-copy"></i>
                 </button>
@@ -3950,7 +3961,7 @@ export class TerminalUI {
             <div class="signal-level-box">
               <span class="signal-level-label">Target (1:${s.riskReward} RR)</span>
               <div class="signal-level-val-row">
-                <span class="signal-level-val text-bullish">${s.currencySymbol || '$'}${s.takeProfitPrice.toLocaleString()}</span>
+                <span class="signal-level-val text-bullish">${this.formatSignalPrice(s.takeProfitPrice, s.currencySymbol)}</span>
                 <button class="signal-copy-btn" data-copy="${s.takeProfitPrice}" title="Copy Target Price">
                   <i class="ph ph-copy"></i>
                 </button>

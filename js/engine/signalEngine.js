@@ -31,7 +31,17 @@ export class SignalEngine {
         if (raw) {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed)) {
-            return parsed;
+            // Clean Slate Sanitizer: Automatically purge legacy corrupted signals with collapsed/identical levels
+            const sanitized = parsed.filter(s => {
+              const entry = Number(s.entryPrice);
+              const sl = Number(s.stopLossPrice);
+              const tp = Number(s.takeProfitPrice);
+              return entry > 0 && sl > 0 && tp > 0 && entry !== sl && entry !== tp && sl !== tp;
+            });
+            if (sanitized.length !== parsed.length) {
+              localStorage.setItem(this.storageKey, JSON.stringify(sanitized));
+            }
+            return sanitized;
           }
         }
       }

@@ -281,12 +281,13 @@ class App {
       console.warn('[App] Downtime audit error:', downtimeErr);
     }
 
-    // 3. Subscribe to default asset streams
-    const cryptoWatchlist = ['BTC', 'ETH', 'SOL', 'AVAX', 'LINK', 'DOGE', 'NEAR', 'SUI', 'XRP', 'ADA'];
-    cryptoWatchlist.forEach(asset => {
+    // 3. Subscribe to ALL assets in the market universe simultaneously (Zero-Delay Full Coverage)
+    const cryptoAssets = this.cryptoAdapter.allMarkets.map(m => m.baseAsset);
+    cryptoAssets.forEach(asset => {
       this.cryptoAdapter.subscribe(asset, (data) => this.onMarketDataTick(data));
     });
-    ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TCS', 'HDFCBANK'].forEach(asset => {
+    const indiaAssets = ['NIFTY', 'BANKNIFTY', 'SENSEX', 'FINNIFTY', 'MIDCPNIFTY', 'RELIANCE', 'TCS', 'HDFCBANK', 'SWIGGY', 'HYUNDAI', 'TATAMOTORS', 'HAL', 'ZOMATO', 'INFY', 'ICICIBANK', 'SBIN', 'BHARTIARTL', 'BAJAJHFL', 'WAREE', 'NTPCGREEN'];
+    indiaAssets.forEach(asset => {
       this.indiaAdapter.subscribe(asset, (data) => this.onMarketDataTick(data));
     });
 
@@ -562,11 +563,17 @@ class App {
       this.updateTradeJournalAndStats();
     }
 
-    this.ui.updateOpenPositions(this.paperTrader.openPositions);
-
-    // Live Header Equity HUD: updates on every real-time price tick
-    const liveMetrics = this.paperTrader.getLiveEquity(currentPrices);
-    this.ui.updateHeaderAccountHUD(liveMetrics);
+    // Batched 60 FPS UI DOM Pipeline (Keeps main thread silky smooth during 35+ coin tick torrent)
+    if (!this._hudRenderScheduled) {
+      this._hudRenderScheduled = true;
+      const scheduleFn = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (fn) => setTimeout(fn, 16);
+      scheduleFn(() => {
+        this._hudRenderScheduled = false;
+        this.ui.updateOpenPositions(this.paperTrader.openPositions);
+        const liveMetrics = this.paperTrader.getLiveEquity(currentPrices);
+        this.ui.updateHeaderAccountHUD(liveMetrics);
+      });
+    }
   }
 
   async evaluateAsset(targetAsset) {
@@ -768,19 +775,12 @@ class App {
       const openPositions = this.paperTrader.openPositions;
       if (openPositions.length >= settings.maxTrades) return;
 
-      // 🛡️ MULTI-ASSET SCANNER ARCHITECTURE
-      // Watchlist candidate assets for current market (Prioritizing currently viewed asset)
+      // 🛡️ FULL-MARKET PARALLEL SCANNER (All coins evaluated simultaneously)
       let baseCandidates;
       if (this.currentMarket === 'India') {
-        baseCandidates = ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATAMOTORS', 'HDFCBANK', 'HAL', 'ZOMATO', 'INFY', 'TCS', 'ICICIBANK', 'SBIN', 'BHARTIARTL', 'KOTAKBANK', 'LT', 'AXISBANK'];
+        baseCandidates = ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATAMOTORS', 'HDFCBANK', 'HAL', 'ZOMATO', 'INFY', 'TCS', 'ICICIBANK', 'SBIN', 'BHARTIARTL', 'KOTAKBANK', 'LT', 'AXISBANK', 'SWIGGY', 'HYUNDAI', 'BAJAJHFL', 'WAREE', 'NTPCGREEN'];
       } else {
-        const top10 = ['BTC', 'ETH', 'SOL', 'AVAX', 'LINK', 'DOGE', 'NEAR', 'SUI', 'XRP', 'ADA'];
-        if (settings.maxTrades > 10 && this.cryptoAdapter?.allMarkets?.length > 0) {
-          const allMarketAssets = this.cryptoAdapter.allMarkets.map(m => m.baseAsset).filter(Boolean);
-          baseCandidates = Array.from(new Set([...top10, ...allMarketAssets])).slice(0, Math.min(100, settings.maxTrades + 15));
-        } else {
-          baseCandidates = top10;
-        }
+        baseCandidates = this.cryptoAdapter?.allMarkets ? this.cryptoAdapter.allMarkets.map(m => m.baseAsset) : ['BTC', 'ETH', 'SOL'];
       }
       const candidateAssets = this.currentAsset
         ? [this.currentAsset, ...baseCandidates.filter(a => a !== this.currentAsset)]
@@ -1574,8 +1574,8 @@ class App {
   async scanAllAssetsForSignals() {
     try {
       const candidates = this.currentMarket === 'India'
-        ? ['NIFTY', 'BANKNIFTY']
-        : ['BTC', 'ETH', 'SOL', 'AVAX', 'LINK', 'DOGE', 'NEAR', 'SUI', 'XRP', 'ADA'];
+        ? ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATAMOTORS', 'HDFCBANK', 'SWIGGY', 'HYUNDAI', 'ZOMATO', 'HAL', 'INFY', 'TCS']
+        : (this.cryptoAdapter?.allMarkets ? this.cryptoAdapter.allMarkets.map(m => m.baseAsset) : ['BTC', 'ETH', 'SOL']);
 
       for (const asset of candidates) {
         try {

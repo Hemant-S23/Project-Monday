@@ -230,7 +230,7 @@ async function runAudit() {
 
     const cryptoCount = Object.keys(ca.cache).length;
     const indiaCount = ia.allMarkets.length;
-    check('CryptoAdapter Assets Registry', cryptoCount === 10, `Coins: ${Object.keys(ca.cache).join(', ')}`);
+    check('CryptoAdapter Assets Registry (36 Coins Live)', cryptoCount >= 35, `Coins (${cryptoCount}): ${Object.keys(ca.cache).slice(0, 10).join(', ')}...`);
     check('IndiaAdapter Instrument Coverage', indiaCount >= 180, `Total Instruments: ${indiaCount}`);
   } catch (e) {
     check('Market Adapters Core Suite', false, e.message);

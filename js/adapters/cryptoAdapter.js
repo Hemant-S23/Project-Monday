@@ -23,19 +23,6 @@ export class CryptoAdapter extends MarketAdapter {
       }
     } catch (e) {}
 
-    this.cache = {
-      'BTC': { price: lastBtc, '1H': [], '5M': [], lastUpdate: Date.now() },
-      'ETH': { price: 2550.0, '1H': [], '5M': [], lastUpdate: Date.now() },
-      'SOL': { price: 155.0, '1H': [], '5M': [], lastUpdate: Date.now() },
-      'LINK': { price: 12.18, '1H': [], '5M': [], lastUpdate: Date.now() },
-      'AVAX': { price: 28.5, '1H': [], '5M': [], lastUpdate: Date.now() },
-      'DOGE': { price: 0.142, '1H': [], '5M': [], lastUpdate: Date.now() },
-      'NEAR': { price: 5.15, '1H': [], '5M': [], lastUpdate: Date.now() },
-      'SUI': { price: 2.05, '1H': [], '5M': [], lastUpdate: Date.now() },
-      'XRP': { price: 0.54, '1H': [], '5M': [], lastUpdate: Date.now() },
-      'ADA': { price: 0.355, '1H': [], '5M': [], lastUpdate: Date.now() }
-    };
-
     this.allMarkets = [
       { baseAsset: 'BTC', symbol: 'BTC/USD', rawSymbol: 'BTC-USD', price: 82963.8, changePercent: 0.15, volume: 5000000000 },
       { baseAsset: 'ETH', symbol: 'ETH/USD', rawSymbol: 'ETH-USD', price: 3480.2, changePercent: 1.84, volume: 2500000000 },
@@ -64,11 +51,37 @@ export class CryptoAdapter extends MarketAdapter {
       { baseAsset: 'ICP', symbol: 'ICP/USD', rawSymbol: 'ICP-USD', price: 8.35, changePercent: 1.75, volume: 65000000 },
       { baseAsset: 'FIL', symbol: 'FIL/USD', rawSymbol: 'FIL-USD', price: 3.65, changePercent: 0.90, volume: 55000000 },
       { baseAsset: 'AAVE', symbol: 'AAVE/USD', rawSymbol: 'AAVE-USD', price: 158.0, changePercent: 3.40, volume: 110000000 },
-      { baseAsset: 'KAS', symbol: 'KAS/USD', rawSymbol: 'KAS-USD', price: 0.135, changePercent: 2.80, volume: 80000000 }
+      { baseAsset: 'KAS', symbol: 'KAS/USD', rawSymbol: 'KAS-USD', price: 0.135, changePercent: 2.80, volume: 80000000 },
+      { baseAsset: 'ATOM', symbol: 'ATOM/USD', rawSymbol: 'ATOM-USD', price: 4.85, changePercent: 1.20, volume: 65000000 },
+      { baseAsset: 'XLM', symbol: 'XLM/USD', rawSymbol: 'XLM-USD', price: 0.24, changePercent: 3.10, volume: 90000000 },
+      { baseAsset: 'ALGO', symbol: 'ALGO/USD', rawSymbol: 'ALGO-USD', price: 0.19, changePercent: 0.85, volume: 45000000 },
+      { baseAsset: 'CRV', symbol: 'CRV/USD', rawSymbol: 'CRV-USD', price: 0.42, changePercent: 2.15, volume: 35000000 },
+      { baseAsset: 'MKR', symbol: 'MKR/USD', rawSymbol: 'MKR-USD', price: 1520.0, changePercent: 1.60, volume: 40000000 },
+      { baseAsset: 'GRT', symbol: 'GRT/USD', rawSymbol: 'GRT-USD', price: 0.185, changePercent: 4.20, volume: 50000000 },
+      { baseAsset: 'STRK', symbol: 'STRK/USD', rawSymbol: 'STRK-USD', price: 0.46, changePercent: 1.90, volume: 38000000 },
+      { baseAsset: 'ZEC', symbol: 'ZEC/USD', rawSymbol: 'ZEC-USD', price: 42.50, changePercent: 0.70, volume: 28000000 }
     ];
+
+    // Pre-populate warm cache for all 36 crypto markets
+    this.cache = {};
+    this.allMarkets.forEach(m => {
+      const p = m.baseAsset === 'BTC' ? lastBtc : m.price;
+      this.cache[m.baseAsset] = {
+        price: p,
+        '1H': [],
+        '5M': [],
+        high24h: +(p * 1.03).toFixed(p >= 1 ? 2 : 6),
+        low24h: +(p * 0.97).toFixed(p >= 1 ? 2 : 6),
+        changePercent: m.changePercent || 0,
+        volume: m.volume || 10000000,
+        lastUpdate: Date.now()
+      };
+    });
+
     this.ws = null;
     this.isWsConnected = false;
-    this.activeSubscriptions = new Set(['BTC-USD', 'ETH-USD', 'SOL-USD', 'LINK-USD', 'AVAX-USD', 'DOGE-USD', 'NEAR-USD', 'SUI-USD', 'XRP-USD', 'ADA-USD']);
+    // Subscribe to all 36 product pairs simultaneously on Coinbase WebSocket
+    this.activeSubscriptions = new Set(this.allMarkets.map(m => m.rawSymbol));
     this.simulationTimer = null;
     this.pollingTimer = null;
   }
@@ -102,7 +115,15 @@ export class CryptoAdapter extends MarketAdapter {
       'ARB': 0.58,
       'OP': 1.62,
       'PEPE': 0.0000105,
-      'SHIB': 0.0000185
+      'SHIB': 0.0000185,
+      'ATOM': 4.85,
+      'XLM': 0.24,
+      'ALGO': 0.19,
+      'CRV': 0.42,
+      'MKR': 1520.0,
+      'GRT': 0.185,
+      'STRK': 0.46,
+      'ZEC': 42.50
     };
     return defaults[asset] || 1.25;
   }
@@ -445,14 +466,24 @@ export class CryptoAdapter extends MarketAdapter {
   }
 
   startPolling() {
-    // Poll REST candles and stats every 20 seconds
+    // Intelligent Staggered REST Candle Synchronizer (Zero Rate-Limit Overhead)
+    let pollCursor = 0;
     this.pollingTimer = setInterval(async () => {
       const activeAssets = Array.from(new Set(['BTC', 'ETH', 'SOL', ...Array.from(this.subscribers.keys())]));
-      for (const asset of activeAssets) {
-        await this.refreshStats(asset);
+      if (activeAssets.length === 0) return;
+
+      // Rotate 4 assets per cycle to guarantee zero 429 HTTP rate limits
+      const batch = [];
+      for (let i = 0; i < Math.min(4, activeAssets.length); i++) {
+        batch.push(activeAssets[(pollCursor + i) % activeAssets.length]);
+      }
+      pollCursor = (pollCursor + 4) % activeAssets.length;
+
+      for (const asset of batch) {
+        if (!this.isWsConnected) await this.refreshStats(asset);
         await this.refreshCandles(asset, '5M');
       }
-    }, 20000);
+    }, 5000);
   }
 
   startHeartbeatSimulation() {

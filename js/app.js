@@ -633,8 +633,16 @@ class App {
       volume: assetVolume
     };
 
-    // Feed strategy evaluation to Alpha Signals Engine
-    if (this.signalEngine) {
+    // Feed strategy evaluation to Alpha Signals Engine (strictly for verified institutional assets)
+    const allowedSignalAssets = this.currentMarket === 'India'
+      ? ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATAMOTORS', 'HDFCBANK', 'SWIGGY', 'HYUNDAI', 'ZOMATO', 'HAL', 'INFY', 'TCS']
+      : [
+          'BTC', 'ETH', 'SOL', 'XRP', 'DOGE', 'ADA', 'AVAX', 'SUI', 'NEAR', 'LINK',
+          'BNB', 'RENDER', 'INJ', 'TIA', 'FET', 'ARB', 'OP', 'DOT', 'LTC', 'BCH',
+          'AAVE', 'UNI', 'ICP', 'KAS', 'ATOM', 'FIL', 'APT', 'XLM', 'ALGO', 'CRV'
+        ];
+
+    if (this.signalEngine && allowedSignalAssets.includes(targetAsset)) {
       this.signalEngine.processStrategyResult(targetAsset, evalData);
     }
 
@@ -1578,30 +1586,17 @@ class App {
 
   async scanAllAssetsForSignals() {
     try {
-      let candidates = [];
-      if (this.currentMarket === 'India') {
-        candidates = ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATAMOTORS', 'HDFCBANK', 'SWIGGY', 'HYUNDAI', 'ZOMATO', 'HAL', 'INFY', 'TCS'];
-      } else {
-        // High-Liquidity Institutional Crypto Universe:
-        // Core high-volume, established coins where SMC and order blocks are verified
-        const curatedHighLiquidity = [
-          'BTC', 'ETH', 'SOL', 'XRP', 'DOGE', 'ADA', 'AVAX', 'SUI', 'NEAR', 'LINK',
-          'BNB', 'RENDER', 'INJ', 'TIA', 'FET', 'ARB', 'OP', 'DOT', 'LTC', 'BCH',
-          'AAVE', 'UNI', 'ICP', 'KAS', 'ATOM', 'FIL', 'APT', 'XLM', 'ALGO', 'CRV'
-        ];
-
-        if (this.cryptoAdapter?.allMarkets) {
-          // Dynamic volume filter: Coins with >= $5M 24h volume AND price >= $0.005
-          const dynamicLiquid = this.cryptoAdapter.allMarkets
-            .filter(m => (m.volume >= 5000000 || curatedHighLiquidity.includes(m.baseAsset)) && (m.price >= 0.005))
-            .map(m => m.baseAsset);
-
-          // Curated coins first, deduplicated, capped to top 25-30 to prevent Coinbase API saturation
-          candidates = Array.from(new Set([...curatedHighLiquidity, ...dynamicLiquid])).slice(0, 30);
-        } else {
-          candidates = curatedHighLiquidity.slice(0, 20);
-        }
-      }
+      // STRICT INSTITUTIONAL WHITELIST:
+      // Only high-liquidity, Tier-1 instruments where order blocks and volume flow are genuine.
+      // All other 400+ coins remain fully accessible in the terminal for manual charting & search,
+      // but are strictly shielded from automatic swarm signal generation.
+      const candidates = this.currentMarket === 'India'
+        ? ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATAMOTORS', 'HDFCBANK', 'SWIGGY', 'HYUNDAI', 'ZOMATO', 'HAL', 'INFY', 'TCS']
+        : [
+            'BTC', 'ETH', 'SOL', 'XRP', 'DOGE', 'ADA', 'AVAX', 'SUI', 'NEAR', 'LINK',
+            'BNB', 'RENDER', 'INJ', 'TIA', 'FET', 'ARB', 'OP', 'DOT', 'LTC', 'BCH',
+            'AAVE', 'UNI', 'ICP', 'KAS', 'ATOM', 'FIL', 'APT', 'XLM', 'ALGO', 'CRV'
+          ];
 
       for (const asset of candidates) {
         try {

@@ -31,12 +31,17 @@ export class SignalEngine {
         if (raw) {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed)) {
-            // Clean Slate Sanitizer: Automatically purge legacy corrupted signals with collapsed/identical levels
+            // Clean Slate Sanitizer: Automatically purge legacy corrupted signals with collapsed/identical/negative levels
             const sanitized = parsed.filter(s => {
               const entry = Number(s.entryPrice);
               const sl = Number(s.stopLossPrice);
               const tp = Number(s.takeProfitPrice);
-              return entry > 0 && sl > 0 && tp > 0 && entry !== sl && entry !== tp && sl !== tp;
+              if (isNaN(entry) || isNaN(sl) || isNaN(tp)) return false;
+              if (entry <= 0 || sl <= 0 || tp <= 0) return false;
+              if (entry === sl || entry === tp || sl === tp) return false;
+              if (s.direction === 'LONG' && (tp <= entry || sl >= entry)) return false;
+              if (s.direction === 'SHORT' && (tp >= entry || sl <= entry)) return false;
+              return true;
             });
             if (sanitized.length !== parsed.length) {
               localStorage.setItem(this.storageKey, JSON.stringify(sanitized));

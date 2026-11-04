@@ -397,14 +397,18 @@ export class StrategyEngine {
 
     if (trendDirection === 'BULLISH') {
       const swingLow = Math.min(...lows);
-      stopLoss = Math.min(swingLow * 0.995, currentPrice - minBuffer);
+      // Hard cap: Stop loss cannot be more than 10% away from entry
+      const maxSlBuffer = currentPrice * 0.10;
+      stopLoss = Math.max(currentPrice - maxSlBuffer, Math.min(swingLow * 0.995, currentPrice - minBuffer));
       const risk = currentPrice - stopLoss;
       target = currentPrice + (risk * rrMult);
     } else {
       const swingHigh = Math.max(...highs);
-      stopLoss = Math.max(swingHigh * 1.005, currentPrice + minBuffer);
+      // Hard cap: Stop loss cannot be more than 10% away from entry
+      const maxSlBuffer = currentPrice * 0.10;
+      stopLoss = Math.min(currentPrice + maxSlBuffer, Math.max(swingHigh * 1.005, currentPrice + minBuffer));
       const risk = stopLoss - currentPrice;
-      target = Math.max(currentPrice * 0.05, currentPrice - (risk * rrMult));
+      target = Math.max(currentPrice * 0.10, currentPrice - (risk * rrMult));
     }
 
     const risk = Math.abs(currentPrice - stopLoss);

@@ -10,6 +10,7 @@ function formatLevelPrice(val, asset) {
   if (asset === 'BTC') return +n.toFixed(1);
   if (asset === 'ETH' || asset === 'SOL') return +n.toFixed(2);
   if (n < 0.001) return +n.toFixed(6);
+  if (n < 0.01) return +n.toFixed(5);
   if (n < 1) return +n.toFixed(4);
   if (n < 100) return +n.toFixed(3);
   return +n.toFixed(2);
@@ -130,6 +131,38 @@ export class SignalEngine {
     const minRR = Number(levels.rrRatio) || 2.0;
     if (minRR < 1.5) return null; // Strict Risk:Reward safety gate
 
+    // 4. Math & Physical Distance Safety Gate:
+    // Entry, Stop Loss, and Take Profit MUST have distinct values and minimum 0.8% physical separation
+    const entryVal = Number(levels.entry);
+    const slVal = Number(levels.stopLoss);
+    const tpVal = Number(targetVal);
+
+    if (entryVal <= 0 || slVal <= 0 || tpVal <= 0) return null;
+    if (entryVal === slVal || entryVal === tpVal || slVal === tpVal) return null;
+
+    const minDistance = entryVal * 0.003; // minimum 0.3% physical separation ($200+ on BTC, distinct on alts)
+    if (Math.abs(entryVal - slVal) < minDistance || Math.abs(tpVal - entryVal) < minDistance) {
+      return null;
+    }
+
+    // Directional integrity check
+    const direction = strategyResult.direction || (entryVal < tpVal ? 'LONG' : 'SHORT');
+    if (direction === 'LONG' && (tpVal <= entryVal || slVal >= entryVal)) {
+      return null;
+    }
+    if (direction === 'SHORT' && (tpVal >= entryVal || slVal <= entryVal)) {
+      return null;
+    }
+
+    const entryPrice = formatLevelPrice(entryVal, asset);
+    const stopLossPrice = formatLevelPrice(slVal, asset);
+    const takeProfitPrice = formatLevelPrice(tpVal, asset);
+
+    // Final Guard: Verify that formatted numbers never collapse into each other
+    if (entryPrice === stopLossPrice || entryPrice === takeProfitPrice || stopLossPrice === takeProfitPrice) {
+      return null;
+    }
+
     // Dynamic Validity Window: 45 minutes for 5M pullback, 90 mins for 1H HTF confirmation
     const validityMinutes = strategyResult.htfTrend?.direction !== 'UNCLEAR' ? 45 : 30;
     const now = Date.now();
@@ -137,11 +170,11 @@ export class SignalEngine {
     const signal = {
       id: `SIG-${asset}-${now}`,
       asset,
-      direction: strategyResult.direction || (levels.entry < targetVal ? 'LONG' : 'SHORT'),
+      direction,
       orderType: 'LIMIT',
-      entryPrice: formatLevelPrice(levels.entry, asset),
-      stopLossPrice: formatLevelPrice(levels.stopLoss, asset),
-      takeProfitPrice: formatLevelPrice(targetVal, asset),
+      entryPrice,
+      stopLossPrice,
+      takeProfitPrice,
       riskReward: +minRR.toFixed(2),
       confluenceScore: strategyResult.confluenceScore || 80,
       confluenceGrade: strategyResult.confluenceGrade || 'GRADE A',

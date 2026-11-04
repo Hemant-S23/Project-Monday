@@ -21,7 +21,7 @@ export class CryptoAdapter extends MarketAdapter {
         const d = JSON.parse(cached);
         if (d && d.price && !isNaN(d.price)) lastBtc = Number(d.price);
       }
-    } catch (e) {}
+    } catch (e) { }
 
     this.allMarkets = [
       { baseAsset: 'BTC', symbol: 'BTC/USD', rawSymbol: 'BTC-USD', price: 82963.8, changePercent: 0.15, volume: 5000000000 },
@@ -207,8 +207,8 @@ export class CryptoAdapter extends MarketAdapter {
     const list = (!query || !query.trim())
       ? this.allMarkets.slice(0, 35)
       : this.allMarkets
-          .filter(m => m.baseAsset.includes(query.trim().toUpperCase()) || m.symbol.includes(query.trim().toUpperCase()))
-          .slice(0, 40);
+        .filter(m => m.baseAsset.includes(query.trim().toUpperCase()) || m.symbol.includes(query.trim().toUpperCase()))
+        .slice(0, 40);
 
     return list.map(m => {
       const cached = this.cache[m.baseAsset];

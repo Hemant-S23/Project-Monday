@@ -7,6 +7,17 @@
  * 4. Price Confirmation & Real-time AI States (NO SETUP, WAIT, DEVELOPING, CONFIRMED, CANCELLED)
  * 5. Structural SL, TP & R:R Validation (Min 1:2)
  */
+
+function formatPriceSmart(price, currencySymbol = '$') {
+  const p = Number(price);
+  if (isNaN(p) || p === 0) return `${currencySymbol}0.00`;
+  if (p >= 1000) return `${currencySymbol}${p.toFixed(1)}`;
+  if (p >= 10) return `${currencySymbol}${p.toFixed(2)}`;
+  if (p >= 1) return `${currencySymbol}${p.toFixed(3)}`;
+  if (p >= 0.01) return `${currencySymbol}${p.toFixed(4)}`;
+  return `${currencySymbol}${p.toFixed(6)}`;
+}
+
 export class StrategyEngine {
   constructor() {
     this.name = 'HTF-Trend Pullback & SMT Divergence';
@@ -100,13 +111,13 @@ export class StrategyEngine {
     let missingConditions = [];
 
     // Check 1: HTF Trend
-    reasoning.push(`1H Trend is ${htfTrend.direction} (EMA20: ${currencySymbol}${htfTrend.emaFast.toFixed(1)}, EMA50: ${currencySymbol}${htfTrend.emaSlow.toFixed(1)}).`);
+    reasoning.push(`1H Trend is ${htfTrend.direction} (EMA20: ${formatPriceSmart(htfTrend.emaFast, currencySymbol)}, EMA50: ${formatPriceSmart(htfTrend.emaSlow, currencySymbol)}).`);
 
     // Check 2: Pullback
     if (ltfStructure.inPullbackZone) {
-      reasoning.push(`5M price pulled back into ${ltfStructure.zoneName} (${currencySymbol}${ltfStructure.zoneLow.toFixed(1)} - ${currencySymbol}${ltfStructure.zoneHigh.toFixed(1)}).`);
+      reasoning.push(`5M price pulled back into ${ltfStructure.zoneName} (${formatPriceSmart(ltfStructure.zoneLow, currencySymbol)} - ${formatPriceSmart(ltfStructure.zoneHigh, currencySymbol)}).`);
     } else {
-      missingConditions.push(`5M price is extended; waiting for pullback into reaction zone (${currencySymbol}${ltfStructure.zoneLow.toFixed(1)} - ${currencySymbol}${ltfStructure.zoneHigh.toFixed(1)}).`);
+      missingConditions.push(`5M price is extended; waiting for pullback into reaction zone (${formatPriceSmart(ltfStructure.zoneLow, currencySymbol)} - ${formatPriceSmart(ltfStructure.zoneHigh, currencySymbol)}).`);
     }
 
     // Check 3: SMT Divergence
@@ -131,7 +142,7 @@ export class StrategyEngine {
 
     // Check 5: Dynamic Asymmetric Risk / Reward Rule
     if (levels.rrRatio >= minRR) {
-      reasoning.push(`Asymmetric Risk/Reward verified at 1:${levels.rrRatio.toFixed(2)} (Target: ${currencySymbol}${levels.target.toFixed(1)}, SL: ${currencySymbol}${levels.stopLoss.toFixed(1)}).`);
+      reasoning.push(`Asymmetric Risk/Reward verified at 1:${levels.rrRatio.toFixed(2)} (Target: ${formatPriceSmart(levels.target, currencySymbol)}, SL: ${formatPriceSmart(levels.stopLoss, currencySymbol)}).`);
     } else {
       missingConditions.push(`Nearest target yields RR 1:${levels.rrRatio.toFixed(2)} (Below required 1:${minRR.toFixed(1)} standard minimum).`);
     }
@@ -177,7 +188,7 @@ export class StrategyEngine {
     // State synthesis: Pure structural technical determination
     if (ltfStructure.isInvalidated) {
       state = 'CANCELLED';
-      reasoning.push(`Setup invalidated: 5M structure broke key invalidation level ${currencySymbol}${ltfStructure.invalidationLevel.toFixed(1)}.`);
+      reasoning.push(`Setup invalidated: 5M structure broke key invalidation level ${formatPriceSmart(ltfStructure.invalidationLevel, currencySymbol)}.`);
     } else if (
       ltfStructure.inPullbackZone &&
       ltfStructure.hasConfirmation &&
@@ -378,22 +389,22 @@ export class StrategyEngine {
 
     let stopLoss = 0;
     let target = 0;
-    // Guaranteed minimum 0.5% stop distance so market noise doesn't trigger instant stop outs
-    const minBuffer = currentPrice * 0.005;
+    // Guaranteed minimum 1.0% stop distance so market noise and spreads don't trigger instant stop outs
+    const minBuffer = currentPrice * 0.01;
 
     // Use precisely user-configured R:R ratio (defaults to 2.5 if unprovided)
     const rrMult = Number(targetRR) > 0 ? Number(targetRR) : 2.5;
 
     if (trendDirection === 'BULLISH') {
       const swingLow = Math.min(...lows);
-      stopLoss = Math.min(swingLow * 0.998, currentPrice - minBuffer);
+      stopLoss = Math.min(swingLow * 0.995, currentPrice - minBuffer);
       const risk = currentPrice - stopLoss;
       target = currentPrice + (risk * rrMult);
     } else {
       const swingHigh = Math.max(...highs);
-      stopLoss = Math.max(swingHigh * 1.002, currentPrice + minBuffer);
+      stopLoss = Math.max(swingHigh * 1.005, currentPrice + minBuffer);
       const risk = stopLoss - currentPrice;
-      target = currentPrice - (risk * rrMult);
+      target = Math.max(currentPrice * 0.05, currentPrice - (risk * rrMult));
     }
 
     const risk = Math.abs(currentPrice - stopLoss);

@@ -1209,15 +1209,6 @@ export class TerminalUI {
         toggleAutoPilot();
       });
     }
-    if (mBackPassbookBtn) mBackPassbookBtn.addEventListener('click', handleClosePassbook);
-
-    if (passbookModal) {
-      passbookModal.addEventListener('click', (e) => {
-        if (e.target === passbookModal) {
-          passbookModal.classList.remove('open');
-        }
-      });
-    }
 
     // Passbook Calendar & Statement Period Picker Handlers
     const periodTriggerBtn = document.getElementById('passbook_period_picker_btn');
@@ -3280,10 +3271,12 @@ export class TerminalUI {
 
       const tpInput = document.getElementById('order_tp_input');
       const slInput = document.getElementById('order_sl_input');
-      if (tpInput && !tpInput.matches(':focus') && riskParams.target) {
+      const isTpFocused = typeof document !== 'undefined' && document.activeElement === tpInput;
+      const isSlFocused = typeof document !== 'undefined' && document.activeElement === slInput;
+      if (tpInput && !isTpFocused && riskParams.target) {
         tpInput.value = cleanPrice(riskParams.target);
       }
-      if (slInput && !slInput.matches(':focus') && riskParams.stopLoss) {
+      if (slInput && !isSlFocused && riskParams.stopLoss) {
         slInput.value = cleanPrice(riskParams.stopLoss);
       }
     }

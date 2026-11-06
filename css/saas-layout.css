@@ -352,6 +352,9 @@
   flex-direction: column;
   position: relative;
   background: #070b14;
+  contain: layout paint;
+  will-change: scroll-position;
+  transform: translateZ(0);
 }
 
 .saas-page-view {
@@ -367,6 +370,8 @@
 .saas-page-view.active {
   display: flex;
   flex-direction: column;
+  contain: content;
+  transform: translateZ(0);
 }
 
 /* Trading Terminal cockpit has fixed internal viewport */
@@ -528,6 +533,8 @@
 .positions-table-wrapper {
   overflow-x: auto;
   width: 100%;
+  contain: layout paint;
+  transform: translateZ(0);
 }
 
 .positions-detailed-table {
@@ -554,8 +561,12 @@
   vertical-align: middle;
 }
 
+.positions-detailed-table tr {
+  transition: none;
+}
+
 .positions-detailed-table tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(56, 189, 248, 0.08);
 }
 
 /* =========================================================================

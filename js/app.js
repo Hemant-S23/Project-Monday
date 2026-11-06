@@ -134,6 +134,15 @@ class App {
         this.signalEngine.clearAll();
         this.ui.updateSignalsBadge(0);
       },
+      onSignalsPageOpen: () => {
+        if (this.signalEngine && this.cryptoAdapter) {
+          this.signalEngine.auditDowntimeSignals(this.cryptoAdapter).then(res => {
+            if (res && res.length > 0 && this.ui) {
+              this.ui.renderSignalsPage();
+            }
+          }).catch(() => {});
+        }
+      },
       onScanAllSignals: () => this.scanAllAssetsForSignals(),
       onSelectSignalForDesk: (signal) => this.loadSignalIntoOrderDesk(signal)
     });
@@ -281,6 +290,15 @@ class App {
       console.warn('[App] Downtime audit error:', downtimeErr);
     }
 
+    // 2.6 Audit Downtime Signals immediately to catch historical TP/SL hits from downtime
+    if (this.signalEngine && this.cryptoAdapter) {
+      this.signalEngine.auditDowntimeSignals(this.cryptoAdapter).then(resolved => {
+        if (resolved && resolved.length > 0 && this.ui && typeof this.ui.renderSignalsPage === 'function') {
+          this.ui.renderSignalsPage();
+        }
+      }).catch(e => console.warn('[App] Downtime signals audit warning:', e));
+    }
+
     // 3. Subscribe to ALL assets in the market universe simultaneously (Zero-Delay Full Coverage)
     const cryptoAssets = this.cryptoAdapter.allMarkets.map(m => m.baseAsset);
     cryptoAssets.forEach(asset => {
@@ -315,6 +333,16 @@ class App {
     // Set up network online reconnect listener for automatic cloud sync
     this.setupNetworkReconciliation();
 
+    // Restore and maintain active SaaS page (e.g. Positions, Signals, Passbook) across page reloads
+    const rawHash = (window.location.hash || '').replace('#', '').trim().toLowerCase();
+    const validPages = ['terminal', 'positions', 'signals', 'passbook', 'copilot', 'settings'];
+    const savedActivePage = (rawHash && validPages.includes(rawHash)) 
+      ? rawHash 
+      : (localStorage.getItem('monday_active_page') || 'terminal');
+    if (this.ui && typeof this.ui.switchPage === 'function') {
+      this.ui.switchPage(savedActivePage);
+    }
+
     // Run Supabase sync asynchronously without blocking chart render
     setTimeout(() => this.syncWithSupabaseCloud(), 150);
 
@@ -343,8 +371,19 @@ class App {
     setInterval(() => this.syncWithSupabaseCloud(), 15000);
 
     // 7. Initial & periodic Alpha Signals Swarm Scan
-    setTimeout(() => this.scanAllAssetsForSignals().catch(() => {}), 1500);
-    setInterval(() => this.scanAllAssetsForSignals().catch(() => {}), 60000);
+    // Yields boot CPU so initial render & animations hit 60 FPS immediately
+    setTimeout(() => {
+      const activePage = this.ui?.currentSaaSPage || localStorage.getItem('monday_active_page') || 'terminal';
+      if (activePage === 'signals') {
+        this.scanAllAssetsForSignals().catch(() => {});
+      }
+    }, 3500);
+    // Periodic swarm scan: throttled to 180s when idle, or runs on demand
+    setInterval(() => {
+      if (!document.hidden) {
+        this.scanAllAssetsForSignals().catch(() => {});
+      }
+    }, 180000);
   }
 
   async syncWithSupabaseCloud() {
@@ -489,6 +528,36 @@ class App {
           this.ui.refreshDerivativesOrderDesk();
         }
       }
+
+      // 5. Reconcile Cloud Trades with Alpha Signals Engine
+      if (this.signalEngine && Array.isArray(cloudTrades)) {
+        for (const ct of cloudTrades) {
+          if (ct.status === 'OPEN') {
+            const posFormat = {
+              id: ct.id,
+              asset: ct.asset,
+              direction: ct.direction,
+              entry: Number(ct.entry_price),
+              stopLoss: Number(ct.stop_loss),
+              target: Number(ct.target_price),
+              rrRatio: Number(ct.rr_ratio || 2.0),
+              confluenceScore: 85,
+              market: ct.market || 'Crypto'
+            };
+            this.signalEngine.registerExecutedPosition(posFormat);
+          } else if (ct.status === 'CLOSED') {
+            const closedFormat = {
+              id: ct.id,
+              asset: ct.asset,
+              result: ct.result || 'WIN',
+              exitReason: ct.result === 'WIN' ? 'TAKE_PROFIT' : 'STOP_LOSS',
+              pnlUSD: Number(ct.pnl_usd || 0),
+              closedAt: ct.closed_at ? new Date(ct.closed_at).getTime() : Date.now()
+            };
+            this.signalEngine.onPositionClosed(closedFormat, ct.result);
+          }
+        }
+      }
     } catch (e) {
       console.warn('[App] Supabase cloud sync error:', e.message);
     }
@@ -559,6 +628,10 @@ class App {
           message: `${pnlSign}$${pos.unrealizedPnlUSD}${rStr} closed at ${formattedPrice}`,
           tradeId: pos.id
         });
+
+        if (this.signalEngine) {
+          this.signalEngine.onPositionClosed(pos, result, price);
+        }
       });
       this.updateTradeJournalAndStats();
     }
@@ -633,16 +706,8 @@ class App {
       volume: assetVolume
     };
 
-    // Feed strategy evaluation to Alpha Signals Engine (strictly for verified institutional assets)
-    const allowedSignalAssets = this.currentMarket === 'India'
-      ? ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATAMOTORS', 'HDFCBANK', 'SWIGGY', 'HYUNDAI', 'ZOMATO', 'HAL', 'INFY', 'TCS']
-      : [
-          'BTC', 'ETH', 'SOL', 'XRP', 'DOGE', 'ADA', 'AVAX', 'SUI', 'NEAR', 'LINK',
-          'BNB', 'RENDER', 'INJ', 'TIA', 'FET', 'ARB', 'OP', 'DOT', 'LTC', 'BCH',
-          'AAVE', 'UNI', 'ICP', 'KAS', 'ATOM', 'FIL', 'APT', 'XLM', 'ALGO', 'CRV'
-        ];
-
-    if (this.signalEngine && allowedSignalAssets.includes(targetAsset)) {
+    // Feed strategy evaluation to Alpha Signals Engine (Auto-Pilot setup unification across genuine market assets)
+    if (this.signalEngine && !isSynthetic && (assetVolume === undefined || assetVolume > 10000 || this.currentMarket === 'India')) {
       this.signalEngine.processStrategyResult(targetAsset, evalData);
     }
 
@@ -1330,6 +1395,9 @@ class App {
     this.ui.updateHeaderAccountHUD(liveMetrics);
     this.updateTradeJournalAndStats();
     this.syncTradeToSupabase(newPos);
+    if (this.signalEngine) {
+      this.signalEngine.registerExecutedPosition(newPos);
+    }
     return newPos;
   }
 
@@ -1351,6 +1419,9 @@ class App {
       this.ui.updateOpenPositions(this.paperTrader.openPositions);
       this.updateTradeJournalAndStats();
       this.syncTradeToSupabase(closed);
+      if (this.signalEngine) {
+        this.signalEngine.onPositionClosed(closed);
+      }
     }
   }
 
@@ -1395,9 +1466,12 @@ class App {
       this.ui.updateHeaderAccountHUD(liveMetrics);
       this.updateTradeJournalAndStats();
 
-      // Sync all closed trades to Supabase
+      // Sync all closed trades to Supabase & SignalEngine
       for (const t of closedList) {
         this.syncTradeToSupabase(t);
+        if (this.signalEngine) {
+          this.signalEngine.onPositionClosed(t);
+        }
       }
     }
   }
@@ -1460,6 +1534,21 @@ class App {
       console.log('[App] Network restored. Reconciling offline trades with Supabase...');
       this.ui.showToast('Network Restored', 'Re-syncing paper trading ledger with cloud database...', 'info');
       await this.reconcileOfflineTradesWithSupabase();
+      if (this.signalEngine && this.cryptoAdapter) {
+        this.signalEngine.auditDowntimeSignals(this.cryptoAdapter).catch(() => {});
+      }
+    });
+
+    window.addEventListener('focus', () => {
+      // Immediate cloud and signals catch-up whenever window regains user focus
+      this.syncWithSupabaseCloud().catch(() => {});
+      if (this.signalEngine && this.cryptoAdapter) {
+        this.signalEngine.auditDowntimeSignals(this.cryptoAdapter).then(res => {
+          if (res && res.length > 0 && this.ui && typeof this.ui.renderSignalsPage === 'function') {
+            this.ui.renderSignalsPage();
+          }
+        }).catch(() => {});
+      }
     });
   }
 
@@ -1585,29 +1674,41 @@ class App {
   }
 
   async scanAllAssetsForSignals() {
+    if (this._isScanningAllSignals) return;
+    this._isScanningAllSignals = true;
+
     try {
-      // STRICT INSTITUTIONAL WHITELIST:
-      // Only high-liquidity, Tier-1 instruments where order blocks and volume flow are genuine.
-      // All other 400+ coins remain fully accessible in the terminal for manual charting & search,
-      // but are strictly shielded from automatic swarm signal generation.
-      const candidates = this.currentMarket === 'India'
-        ? ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATAMOTORS', 'HDFCBANK', 'SWIGGY', 'HYUNDAI', 'ZOMATO', 'HAL', 'INFY', 'TCS']
-        : [
-            'BTC', 'ETH', 'SOL', 'XRP', 'DOGE', 'ADA', 'AVAX', 'SUI', 'NEAR', 'LINK',
-            'BNB', 'RENDER', 'INJ', 'TIA', 'FET', 'ARB', 'OP', 'DOT', 'LTC', 'BCH',
-            'AAVE', 'UNI', 'ICP', 'KAS', 'ATOM', 'FIL', 'APT', 'XLM', 'ALGO', 'CRV'
-          ];
+      // Dynamic Candidate Evaluation: Aligned with Auto-Pilot Swarm
+      let candidates;
+      if (this.currentMarket === 'India') {
+        candidates = ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATAMOTORS', 'HDFCBANK', 'SWIGGY', 'HYUNDAI', 'ZOMATO', 'HAL', 'INFY', 'TCS', 'ICICIBANK', 'SBIN', 'BHARTIARTL', 'KOTAKBANK', 'LT', 'AXISBANK', 'WAREE', 'NTPCGREEN'];
+      } else {
+        const allBase = this.cryptoAdapter?.allMarkets ? this.cryptoAdapter.allMarkets.map(m => m.baseAsset) : [];
+        const priorityList = [
+          'BTC', 'ETH', 'SOL', 'XRP', 'DOGE', 'ADA', 'AVAX', 'SUI', 'NEAR', 'LINK',
+          'BNB', 'RENDER', 'INJ', 'TIA', 'FET', 'ARB', 'OP', 'DOT', 'LTC', 'BCH',
+          'AAVE', 'UNI', 'ICP', 'KAS', 'ATOM', 'FIL', 'APT', 'XLM', 'ALGO', 'CRV',
+          'COOKIE', 'AKT', 'JITOSOL', 'ZEC', 'PEPE', 'SHIB', 'QNT', 'TAO', 'WIF', 'HBAR'
+        ];
+        candidates = Array.from(new Set([...priorityList, ...allBase.slice(0, 40)]));
+      }
 
       for (const asset of candidates) {
+        if (document.hidden) break; // Don't churn background compute when tab is minimized
         try {
           await this.getActiveAdapter().ensureAssetInitialized(asset);
           const evalData = await this.evaluateAsset(asset);
           if (evalData && this.signalEngine) {
             this.signalEngine.processStrategyResult(asset, evalData);
           }
+          // Ultra-smooth UI yield: gives 120ms breathe room to browser rendering engine
+          await new Promise(r => setTimeout(r, 120));
         } catch (e) {}
       }
-    } catch (e) {}
+    } catch (e) {
+    } finally {
+      this._isScanningAllSignals = false;
+    }
   }
 
   loadSignalIntoOrderDesk(signal) {

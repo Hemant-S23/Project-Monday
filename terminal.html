@@ -55,6 +55,44 @@
   }
   </script>
 
+  <!-- Frame-0 Instant Page Router: Eliminates page flicker and restores active tab on reload -->
+  <script>
+    (function() {
+      try {
+        var rawHash = (window.location.hash || '').replace('#', '').trim().toLowerCase();
+        var rawStored = localStorage.getItem('monday_active_page');
+        var valid = ['terminal', 'positions', 'signals', 'passbook', 'copilot', 'settings'];
+        var active = (rawHash && valid.indexOf(rawHash) !== -1) ? rawHash : ((rawStored && valid.indexOf(rawStored) !== -1) ? rawStored : 'terminal');
+        
+        if (active !== 'terminal') {
+          // Immediately hide terminal view and show requested target view before DOM renders
+          var s = document.createElement('style');
+          s.id = 'frame0_page_style';
+          s.textContent = '#view_terminal { display: none !important; } #view_' + active + ' { display: flex !important; }';
+          document.head.appendChild(s);
+          
+          document.addEventListener('DOMContentLoaded', function() {
+            var termView = document.getElementById('view_terminal');
+            var targetView = document.getElementById('view_' + active);
+            if (termView && targetView) {
+              termView.classList.remove('active');
+              targetView.classList.add('active');
+            }
+            document.querySelectorAll('.saas-nav-item').forEach(function(el) {
+              el.classList.toggle('active', el.getAttribute('data-page') === active);
+            });
+            document.querySelectorAll('.saas-mobile-tab-btn').forEach(function(el) {
+              el.classList.toggle('active', el.getAttribute('data-page') === active);
+            });
+            setTimeout(function() {
+              if (s && s.parentNode) s.parentNode.removeChild(s);
+            }, 600);
+          });
+        }
+      } catch(e) {}
+    })();
+  </script>
+
   <style>
     /* =========================================================================
        BILLION-DOLLAR GLOSSOMORPHIC ONBOARDING & RISK DISCLOSURE MODAL

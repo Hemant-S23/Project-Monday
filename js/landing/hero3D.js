@@ -30,10 +30,14 @@ export class Hero3DVisualizer {
     this.clock = new THREE.Clock();
     this.animFrameId = null;
     this._isDestroyed = false;
+    this._isScrolling = false;
+    this._scrollTimeout = null;
+    this._lastFrameTime = 0;
 
     // Bound listeners for clean lifecycle
     this._onMouseMove = this._onMouseMove.bind(this);
     this._onResize = this._onResize.bind(this);
+    this._onScroll = this._onScroll.bind(this);
 
     this.init();
   }
@@ -127,14 +131,27 @@ export class Hero3DVisualizer {
       // 4. Mouse Tracking for Subtle Parallax
       window.addEventListener('mousemove', this._onMouseMove, { passive: true });
 
-      // 5. Resize Listener
+      // 5. Scroll Yield: pause 3D mesh rendering during scroll for buttery 60 FPS viewport scrolling
+      window.addEventListener('scroll', this._onScroll, { passive: true });
+      const vp = document.getElementById('saas_main_viewport');
+      if (vp) vp.addEventListener('scroll', this._onScroll, { passive: true });
+
+      // 6. Resize Listener
       window.addEventListener('resize', this._onResize, { passive: true });
 
-      // 6. Start Loop
+      // 7. Start Loop
       this.animate();
     } catch (err) {
       console.warn('[Hero3DVisualizer] WebGL initialization skipped:', err);
     }
+  }
+
+  _onScroll() {
+    this._isScrolling = true;
+    clearTimeout(this._scrollTimeout);
+    this._scrollTimeout = setTimeout(() => {
+      this._isScrolling = false;
+    }, 120);
   }
 
   _onMouseMove(e) {
@@ -157,8 +174,13 @@ export class Hero3DVisualizer {
 
     this.animFrameId = requestAnimationFrame(() => this.animate());
 
-    // Zero-lag optimization: Pause rendering when browser tab is inactive or hidden
-    if (document.hidden) return;
+    // Zero-lag optimization: Pause rendering when browser tab is hidden or when viewport is scrolling
+    if (document.hidden || this._isScrolling) return;
+
+    // Cap background 3D particle mesh at ~30 FPS to yield main-thread and GPU cycles to UI & charts
+    const now = performance.now();
+    if (now - this._lastFrameTime < 32) return;
+    this._lastFrameTime = now;
 
     const elapsed = this.clock.getElapsedTime();
 
@@ -194,6 +216,9 @@ export class Hero3DVisualizer {
       cancelAnimationFrame(this.animFrameId);
     }
     window.removeEventListener('mousemove', this._onMouseMove);
+    window.removeEventListener('scroll', this._onScroll);
+    const vp = document.getElementById('saas_main_viewport');
+    if (vp) vp.removeEventListener('scroll', this._onScroll);
     window.removeEventListener('resize', this._onResize);
 
     if (this.particles) {

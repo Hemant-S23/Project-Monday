@@ -5410,11 +5410,11 @@ html, body {
 }
 
 .positions-detailed-table tbody tr {
-  transition: background 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: none !important;
 }
 
 .positions-detailed-table tbody tr:hover td {
-  background: rgba(255, 255, 255, 0.04) !important;
+  background: rgba(56, 189, 248, 0.08) !important;
 }
 
 /* Micro-Components inside Positions Table Rows */

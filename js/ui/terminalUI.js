@@ -322,8 +322,8 @@ export class TerminalUI {
 
     // Restore URL hash page if loaded directly on mobile
     if (window.innerWidth <= 860 && window.location.hash) {
-      const initialPage = window.location.hash.replace('#', '');
-      if (['chart', 'strategy', 'copilot', 'passbook', 'journal'].includes(initialPage)) {
+      const initialPage = window.location.hash.replace('#', '').trim().toLowerCase();
+      if (['chart', 'strategy', 'copilot', 'passbook', 'journal', 'positions', 'signals', 'settings'].includes(initialPage)) {
         setTimeout(() => this.switchMobilePage(initialPage, false), 50);
       }
     }
@@ -1063,6 +1063,20 @@ export class TerminalUI {
       });
     });
 
+    // Restore Saved Active SaaS Page across page reloads (checks URL hash first, then localStorage, defaults to terminal)
+    let savedPage = 'terminal';
+    try {
+      const rawHash = (window.location.hash || '').replace('#', '').trim().toLowerCase();
+      const stored = localStorage.getItem('monday_active_page');
+      const validPages = ['terminal', 'positions', 'signals', 'passbook', 'copilot', 'settings'];
+      if (rawHash && validPages.includes(rawHash)) {
+        savedPage = rawHash;
+      } else if (stored && validPages.includes(stored)) {
+        savedPage = stored;
+      }
+    } catch (e) {}
+    this.switchPage(savedPage);
+
     const btnQuickSignals = document.getElementById('btn_quick_signals');
     if (btnQuickSignals) {
       btnQuickSignals.addEventListener('click', () => this.switchPage('signals'));
@@ -1775,6 +1789,12 @@ export class TerminalUI {
    */
   switchPage(pageKey = 'terminal') {
     this.currentSaaSPage = pageKey;
+    try {
+      localStorage.setItem('monday_active_page', pageKey);
+      if (window.location.hash !== '#' + pageKey) {
+        history.replaceState(null, '', '#' + pageKey);
+      }
+    } catch (e) {}
 
     // 1. Update Desktop Sidebar Nav Items
     document.querySelectorAll('.saas-nav-item').forEach(btn => {
@@ -1793,6 +1813,9 @@ export class TerminalUI {
 
     // 4. Page Specific Data Refresh
     if (pageKey === 'signals') {
+      if (this.callbacks.onSignalsPageOpen) {
+        this.callbacks.onSignalsPageOpen();
+      }
       this.renderSignalsPage();
     } else if (pageKey === 'positions') {
       this.renderPositionsPage(this._lastPositions || []);
@@ -1834,6 +1857,10 @@ export class TerminalUI {
     }
     if (pageKey === 'positions') {
       this.switchPage('positions');
+      return;
+    }
+    if (pageKey === 'signals') {
+      this.switchPage('signals');
       return;
     }
     if (pageKey === 'settings') {
@@ -3882,21 +3909,33 @@ export class TerminalUI {
       // Status Badge Config
       let statusClass = 'pending';
       let statusLabel = '🟡 PENDING LIMIT';
+      let timingPillText = 'Archived';
+
       if (s.status === 'ACTIVE') {
         statusClass = 'active';
-        statusLabel = '🟢 ACTIVE IN-POSITION';
+        if (s.inPortfolio) {
+          statusLabel = '🟢 ACTIVE IN-PORTFOLIO';
+          timingPillText = '⚡ Live In Portfolio';
+        } else {
+          statusLabel = '⚡ LIMIT TRIGGERED';
+          timingPillText = '🎯 Limit Triggered';
+        }
       } else if (s.status === 'TP_HIT') {
         statusClass = 'tp';
         statusLabel = `💎 TARGET HIT (+${s.realizedR || s.riskReward}R)`;
+        timingPillText = '🎯 Closed Win';
       } else if (s.status === 'SL_HIT') {
         statusClass = 'sl';
         statusLabel = `🛑 STOPPED OUT (-1.0R)`;
+        timingPillText = 'Archived';
       } else if (s.status === 'EXPIRED') {
         statusClass = 'expired';
         statusLabel = '⚪ EXPIRED';
+        timingPillText = 'Archived';
       } else if (s.status === 'INVALIDATED') {
         statusClass = 'expired';
         statusLabel = '⚠️ INVALIDATED';
+        timingPillText = 'Archived';
       }
 
       // Format Issuance Time
@@ -3928,7 +3967,7 @@ export class TerminalUI {
             <span class="signal-countdown-pill ${remainingMs < 5 * 60 * 1000 && s.status === 'PENDING' ? 'urgent' : ''}" id="countdown_${s.id}">
               ${s.status === 'PENDING' 
                 ? `<i class="ph-bold ph-hourglass"></i> ${formatCountdown(remainingMs)}`
-                : (s.status === 'ACTIVE' ? '⚡ Filled & Live' : (s.status === 'TP_HIT' ? '🎯 Closed Win' : 'Archived'))
+                : timingPillText
               }
             </span>
           </div>
@@ -5127,7 +5166,70 @@ export class TerminalUI {
       return;
     }
 
-    // Render Institutional Derivatives Table
+    // In-place Telemetry Update (Prevents DOM destruction during live price ticks to eliminate row hover/selection flicker)
+    const existingTable = wrapper.querySelector('.positions-detailed-table');
+    const existingTbody = existingTable ? existingTable.querySelector('tbody') : null;
+    const existingRows = existingTbody ? Array.from(existingTbody.querySelectorAll('tr[data-pos-id]')) : [];
+    const existingIds = existingRows.map(r => r.getAttribute('data-pos-id')).filter(Boolean);
+    const newIds = list.map(p => String(p.id));
+    const isSameStructure = existingIds.length > 0 && existingIds.length === newIds.length && existingIds.every((id, idx) => id === newIds[idx]);
+
+    if (isSameStructure) {
+      list.forEach(pos => {
+        const row = existingTbody.querySelector(`tr[data-pos-id="${pos.id}"]`);
+        if (!row) return;
+
+        const isLong = (pos.direction || 'LONG').toUpperCase() === 'LONG';
+        const unPnl = Number(pos.unrealizedPnlUSD || pos.unrealizedGrossPnlUSD || 0);
+        const isPos = unPnl >= 0;
+        const margin = Number(pos.marginUSD || pos.riskUSD || 20);
+        const roe = pos.roePercent !== undefined ? pos.roePercent : (margin > 0 ? ((unPnl / margin) * 100).toFixed(1) : 0);
+        const curP = Number(pos.currentPrice || pos.entry || 0);
+        const entryP = Number(pos.entry || 0);
+        const liqP = Number(pos.liquidationPrice || 0);
+        
+        let safetyBuffer = 'Safe';
+        let safetyClass = 'text-bullish';
+        if (liqP > 0 && curP > 0) {
+          const distPct = Math.abs((curP - liqP) / curP * 100).toFixed(1);
+          safetyBuffer = `${distPct}%`;
+          if (Number(distPct) < 5) safetyClass = 'text-bearish';
+          else if (Number(distPct) < 12) safetyClass = 'text-warning';
+        }
+
+        // 1. In-place Mark Price update
+        const markNum = row.querySelector('.mark-val-num');
+        if (markNum) {
+          markNum.textContent = this.formatPrice(curP);
+        }
+
+        // 2. In-place Safety Buffer update
+        const safetyChip = row.querySelector('.pos-safety-chip');
+        if (safetyChip) {
+          safetyChip.className = `pos-safety-chip ${safetyClass}`;
+          safetyChip.innerHTML = `<i class="ph-bold ph-shield-check"></i> ${safetyBuffer}`;
+        }
+
+        // 3. In-place PnL & ROE update
+        const pnlCell = row.querySelector('.pos-pnl-cell');
+        if (pnlCell) {
+          pnlCell.className = `pos-pnl-cell ${isPos ? 'pnl-green' : 'pnl-red'}`;
+          const pnlUsd = pnlCell.querySelector('.pnl-usd');
+          if (pnlUsd) pnlUsd.textContent = `${isPos ? '+' : ''}$${unPnl.toFixed(2)}`;
+          const pnlRoe = pnlCell.querySelector('.pnl-roe');
+          if (pnlRoe) pnlRoe.textContent = `${isPos ? '+' : ''}${roe}% ROE`;
+        }
+
+        // 4. In-place Target updates (if trailing stops or TP modified)
+        const tgtSl = row.querySelector('.tgt-sl');
+        if (tgtSl) tgtSl.textContent = pos.stopLoss ? this.formatPrice(pos.stopLoss) : '--';
+        const tgtTp = row.querySelector('.tgt-tp');
+        if (tgtTp) tgtTp.textContent = pos.target ? this.formatPrice(pos.target) : '--';
+      });
+      return;
+    }
+
+    // Render Institutional Derivatives Table (Full structure build when positions are added/removed)
     let tableHtml = `
       <table class="positions-detailed-table">
         <thead>
@@ -5182,9 +5284,9 @@ export class TerminalUI {
           </td>
           <td><span class="pos-cell-mono">${this.formatPrice(entryP)}</span></td>
           <td>
-            <span class="pos-cell-mono text-cyan">
+            <span class="pos-cell-mono text-cyan pos-mark-cell">
               <span class="live-dot-pulse"></span>
-              ${this.formatPrice(curP)}
+              <span class="mark-val-num">${this.formatPrice(curP)}</span>
             </span>
           </td>
           <td><span class="pos-cell-mono text-warning">${liqP ? this.formatPrice(liqP) : 'N/A'}</span></td>

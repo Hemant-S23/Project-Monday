@@ -1536,8 +1536,12 @@ html, body {
   vertical-align: middle !important;
 }
 
+.positions-detailed-table tbody tr {
+  transition: none !important;
+}
+
 .positions-detailed-table tbody tr:hover td {
-  background: rgba(255, 255, 255, 0.03) !important;
+  background: rgba(56, 189, 248, 0.08) !important;
 }
 
 /* =========================================================================

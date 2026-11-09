@@ -277,10 +277,9 @@ export class IndiaAdapter extends MarketAdapter {
 
   async init() {
     console.log(`[IndiaAdapter] Initializing Indian Market coverage (${this.allMarkets.length} instruments)...`);
-    // Pre-generate candles for core Indian instruments
-    for (const asset of ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'HYUNDAI', 'SWIGGY', 'ZOMATO', 'BAJAJHFL']) {
-      await this.ensureAssetInitialized(asset);
-    }
+    // Pre-generate candles for core Indian instruments in parallel
+    const core = ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'HYUNDAI', 'SWIGGY', 'ZOMATO', 'BAJAJHFL'];
+    await Promise.all(core.map(asset => this.ensureAssetInitialized(asset)));
     this.startLiveTickerFeed();
   }
 

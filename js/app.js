@@ -211,20 +211,7 @@ class App {
       this.riskEngine.setAccountBalance(this.paperTrader.balance);
     }
 
-    // 0.5 Fast-Path Cloud Hydration: Reconcile with Supabase Cloud BEFORE first UI paint
-    // Gives a fast 350ms window. Supabase typically responds in ~100-200ms.
-    // If it succeeds, the UI will paint 100% FRESH data on Frame 1, with zero lag and zero stale flash!
-    // If offline/slow, it times out in 350ms and falls back gracefully to cached localStorage.
-    try {
-      await Promise.race([
-        this.syncWithSupabaseCloud(),
-        new Promise(resolve => setTimeout(resolve, 350))
-      ]);
-    } catch (e) {
-      console.warn('[App] Pre-render cloud sync timeout/err:', e);
-    }
-
-    // Immediate Synchronous State Sync (Zero-Lag HUD, Open Positions, and Journal Restoration)
+    // Immediate Synchronous State Sync (Zero-Lag Frame 0 HUD, Open Positions, and Journal Restoration)
     this.updateTradeJournalAndStats();
     this.ui.updateOpenPositions(this.paperTrader.openPositions);
     const initialLiveMetrics = this.paperTrader.getLiveEquity();
@@ -236,104 +223,7 @@ class App {
       this.ui.refreshDerivativesOrderDesk();
     }
 
-    // 1. Initialize TradingView chart with saved theme and active adapter
-    const activeTheme = localStorage.getItem('monday_theme') || 'dark';
-    this.chartManager.setAdapter(this.getActiveAdapter());
-    this.chartManager.setAdapters({ crypto: this.cryptoAdapter, india: this.indiaAdapter });
-    this.chartManager.init(this.currentAsset, '60', this.currentMarket, activeTheme, this.getActiveAdapter());
-
-    // 2. Initialize Market Feeds in parallel
-    await Promise.all([
-      this.cryptoAdapter.init(),
-      this.indiaAdapter.init()
-    ]);
-
-    // 2.5 Audit Downtime Trades BEFORE subscribing to live ticks to guarantee exact historical timestamps!
-    try {
-      const downtimeResolved = await this.paperTrader.auditDowntimeTrades(this.cryptoAdapter);
-      if (downtimeResolved && downtimeResolved.length > 0) {
-        console.log(`[App] Downtime Catch-Up: Resolved ${downtimeResolved.length} trade(s) with accurate historical timestamps.`);
-        this.updateTradeJournalAndStats();
-        this.ui.updateOpenPositions(this.paperTrader.openPositions);
-        this.ui.updateHeaderAccountHUD(this.paperTrader.getLiveEquity());
-
-        // Single executive summary toast (replaces noisy multiple popup blast)
-        const count = downtimeResolved.length;
-        const times = downtimeResolved.map(t => new Date(t.closedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })).join(', ');
-        this.ui.showToast(
-          '⚡ Portfolio Synchronized',
-          `${count} trade(s) settled at exact historical levels (${times}). Ledger & Passbook updated.`,
-          'info'
-        );
-
-        downtimeResolved.forEach(trade => {
-          const isWin = trade.result === 'WIN';
-          const exitTimeStr = new Date(trade.closedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-          const formattedPrice = this.ui.formatPrice(trade.exitPrice, trade.market === 'India' ? '₹' : '$');
-          const pnlSign = (trade.pnlUSD || 0) >= 0 ? '+' : '';
-          const isLiq = trade.result === 'LIQUIDATED';
-
-          this.ui.addNotification({
-            type: isWin ? 'target' : isLiq ? 'liquidation' : 'stop',
-            title: isWin 
-              ? `Target Hit • ${trade.asset} ${trade.direction}` 
-              : isLiq
-                ? `Liquidated • ${trade.asset} ${trade.direction}`
-                : `Stop Loss Hit • ${trade.asset} ${trade.direction}`,
-            message: `${pnlSign}$${trade.pnlUSD} settled at ${exitTimeStr} (${formattedPrice}). Recorded in Passbook.`,
-            tradeId: trade.id,
-            timestamp: trade.closedAt // <--- Stamped with exact historical time, never app wake-up time!
-          });
-        });
-      }
-    } catch (downtimeErr) {
-      console.warn('[App] Downtime audit error:', downtimeErr);
-    }
-
-    // 2.6 Audit Downtime Signals immediately to catch historical TP/SL hits from downtime
-    if (this.signalEngine && this.cryptoAdapter) {
-      this.signalEngine.auditDowntimeSignals(this.cryptoAdapter).then(resolved => {
-        if (resolved && resolved.length > 0 && this.ui && typeof this.ui.renderSignalsPage === 'function') {
-          this.ui.renderSignalsPage();
-        }
-      }).catch(e => console.warn('[App] Downtime signals audit warning:', e));
-    }
-
-    // 3. Subscribe to ALL assets in the market universe simultaneously (Zero-Delay Full Coverage)
-    const cryptoAssets = this.cryptoAdapter.allMarkets.map(m => m.baseAsset);
-    cryptoAssets.forEach(asset => {
-      this.cryptoAdapter.subscribe(asset, (data) => this.onMarketDataTick(data));
-    });
-    const indiaAssets = ['NIFTY', 'BANKNIFTY', 'SENSEX', 'FINNIFTY', 'MIDCPNIFTY', 'RELIANCE', 'TCS', 'HDFCBANK', 'SWIGGY', 'HYUNDAI', 'TATAMOTORS', 'HAL', 'ZOMATO', 'INFY', 'ICICIBANK', 'SBIN', 'BHARTIARTL', 'BAJAJHFL', 'WAREE', 'NTPCGREEN'];
-    indiaAssets.forEach(asset => {
-      this.indiaAdapter.subscribe(asset, (data) => this.onMarketDataTick(data));
-    });
-
-    // Restore and subscribe to any active open positions in parallel
-    if (this.paperTrader.openPositions.length > 0) {
-      await Promise.all(this.paperTrader.openPositions.map(pos => {
-        const adapter = pos.market === 'India' ? this.indiaAdapter : this.cryptoAdapter;
-        return adapter.ensureAssetInitialized(pos.asset).then(() => {
-          adapter.subscribe(pos.asset, (data) => this.onMarketDataTick(data));
-        }).catch(err => console.warn('[App] Position restore warmup error:', err));
-      }));
-    }
-
-    // 4. Run first full strategic evaluation (fast-path: skips heavy multi-asset scan on frame 1)
-    this.ui.renderWatchlistTray(this.currentMarket);
-    await this.runFullEvaluation(true);
-    this.ui.updateOpenPositions(this.paperTrader.openPositions);
-    this.updateTradeJournalAndStats();
-
-    // Initialize auth profile in UI if user is already logged in
-    if (this.authManager && this.authManager.isLoggedIn()) {
-      this.ui.updateUserProfile(this.authManager.getUser());
-    }
-
-    // Set up network online reconnect listener for automatic cloud sync
-    this.setupNetworkReconciliation();
-
-    // Restore and maintain active SaaS page (e.g. Positions, Signals, Passbook) across page reloads
+    // Frame-0 Immediate SaaS Page Restoration (Zero Milliseconds delay)
     const rawHash = (window.location.hash || '').replace('#', '').trim().toLowerCase();
     const validPages = ['terminal', 'positions', 'signals', 'passbook', 'copilot', 'settings'];
     const savedActivePage = (rawHash && validPages.includes(rawHash)) 
@@ -342,6 +232,119 @@ class App {
     if (this.ui && typeof this.ui.switchPage === 'function') {
       this.ui.switchPage(savedActivePage);
     }
+
+    // 1. Initialize TradingView chart with saved theme and active adapter (Frame 0)
+    const activeTheme = localStorage.getItem('monday_theme') || 'dark';
+    this.chartManager.setAdapter(this.getActiveAdapter());
+    this.chartManager.setAdapters({ crypto: this.cryptoAdapter, india: this.indiaAdapter });
+    this.chartManager.init(this.currentAsset, '60', this.currentMarket, activeTheme, this.getActiveAdapter());
+    this.ui.renderWatchlistTray(this.currentMarket);
+
+    // Set up network online reconnect listener for automatic cloud sync
+    this.setupNetworkReconciliation();
+
+    // 2. Non-blocking Asynchronous Background Market Hydration & Sync (Never freezes UI or scrolling)
+    (async () => {
+      try {
+        // Fast-Path Cloud Hydration in background
+        try {
+          await Promise.race([
+            this.syncWithSupabaseCloud(),
+            new Promise(resolve => setTimeout(resolve, 500))
+          ]);
+        } catch (e) {
+          console.warn('[App] Background cloud sync timeout/err:', e);
+        }
+
+        // Initialize Market Feeds in parallel
+        await Promise.all([
+          this.cryptoAdapter.init(),
+          this.indiaAdapter.init()
+        ]);
+
+        // Subscribe to ALL assets in the market universe simultaneously (Zero-Delay Full Coverage)
+        const cryptoAssets = this.cryptoAdapter.allMarkets.map(m => m.baseAsset);
+        cryptoAssets.forEach(asset => {
+          this.cryptoAdapter.subscribe(asset, (data) => this.onMarketDataTick(data));
+        });
+        const indiaAssets = ['NIFTY', 'BANKNIFTY', 'SENSEX', 'FINNIFTY', 'MIDCPNIFTY', 'RELIANCE', 'TCS', 'HDFCBANK', 'SWIGGY', 'HYUNDAI', 'TATAMOTORS', 'HAL', 'ZOMATO', 'INFY', 'ICICIBANK', 'SBIN', 'BHARTIARTL', 'BAJAJHFL', 'WAREE', 'NTPCGREEN'];
+        indiaAssets.forEach(asset => {
+          this.indiaAdapter.subscribe(asset, (data) => this.onMarketDataTick(data));
+        });
+
+        // Restore and subscribe to any active open positions in parallel
+        if (this.paperTrader.openPositions.length > 0) {
+          await Promise.all(this.paperTrader.openPositions.map(pos => {
+            const adapter = pos.market === 'India' ? this.indiaAdapter : this.cryptoAdapter;
+            return adapter.ensureAssetInitialized(pos.asset).then(() => {
+              adapter.subscribe(pos.asset, (data) => this.onMarketDataTick(data));
+            }).catch(err => console.warn('[App] Position restore warmup error:', err));
+          }));
+        }
+
+        // Audit Downtime Trades BEFORE live ticks to guarantee exact historical timestamps!
+        try {
+          const downtimeResolved = await this.paperTrader.auditDowntimeTrades(this.cryptoAdapter);
+          if (downtimeResolved && downtimeResolved.length > 0) {
+            console.log(`[App] Downtime Catch-Up: Resolved ${downtimeResolved.length} trade(s) with accurate historical timestamps.`);
+            this.updateTradeJournalAndStats();
+            this.ui.updateOpenPositions(this.paperTrader.openPositions);
+            this.ui.updateHeaderAccountHUD(this.paperTrader.getLiveEquity());
+
+            const count = downtimeResolved.length;
+            const times = downtimeResolved.map(t => new Date(t.closedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })).join(', ');
+            this.ui.showToast(
+              '⚡ Portfolio Synchronized',
+              `${count} trade(s) settled at exact historical levels (${times}). Ledger & Passbook updated.`,
+              'info'
+            );
+
+            downtimeResolved.forEach(trade => {
+              const isWin = trade.result === 'WIN';
+              const exitTimeStr = new Date(trade.closedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+              const formattedPrice = this.ui.formatPrice(trade.exitPrice, trade.market === 'India' ? '₹' : '$');
+              const pnlSign = (trade.pnlUSD || 0) >= 0 ? '+' : '';
+              const isLiq = trade.result === 'LIQUIDATED';
+
+              this.ui.addNotification({
+                type: isWin ? 'target' : isLiq ? 'liquidation' : 'stop',
+                title: isWin 
+                  ? `Target Hit • ${trade.asset} ${trade.direction}` 
+                  : isLiq
+                    ? `Liquidated • ${trade.asset} ${trade.direction}`
+                    : `Stop Loss Hit • ${trade.asset} ${trade.direction}`,
+                message: `${pnlSign}$${trade.pnlUSD} settled at ${exitTimeStr} (${formattedPrice}). Recorded in Passbook.`,
+                tradeId: trade.id,
+                timestamp: trade.closedAt
+              });
+            });
+          }
+        } catch (downtimeErr) {
+          console.warn('[App] Downtime audit error:', downtimeErr);
+        }
+
+        // Audit Downtime Signals immediately to catch historical TP/SL hits from downtime
+        if (this.signalEngine && this.cryptoAdapter) {
+          this.signalEngine.auditDowntimeSignals(this.cryptoAdapter).then(resolved => {
+            if (resolved && resolved.length > 0 && this.ui && typeof this.ui.renderSignalsPage === 'function') {
+              this.ui.renderSignalsPage();
+            }
+          }).catch(e => console.warn('[App] Downtime signals audit warning:', e));
+        }
+
+        // Run strategic evaluation in background
+        await this.runFullEvaluation(true);
+        this.ui.updateOpenPositions(this.paperTrader.openPositions);
+        this.updateTradeJournalAndStats();
+
+        // Initialize auth profile in UI if user is already logged in
+        if (this.authManager && this.authManager.isLoggedIn()) {
+          this.ui.updateUserProfile(this.authManager.getUser());
+        }
+      } catch (hydrationErr) {
+        console.warn('[App] Background hydration error:', hydrationErr);
+      }
+    })();
 
     // Run Supabase sync asynchronously without blocking chart render
     setTimeout(() => this.syncWithSupabaseCloud(), 150);

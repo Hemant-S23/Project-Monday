@@ -4,15 +4,13 @@
  * Ensures zero stale cache on fresh opens while preserving ultra-fast offline fallback.
  */
 
-const CACHE_NAME = 'monday-speed-v7.6';
+const CACHE_NAME = 'monday-speed-v7.7';
 
 const PRECACHE_ASSETS = [
-  '/',
-  '/index.html',
-  '/terminal.html',
-  '/style-guide.html',
-  '/components-gallery.html',
-  '/manifest.json'
+  './',
+  './index.html',
+  './terminal.html',
+  './manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
@@ -55,24 +53,46 @@ self.addEventListener('fetch', (event) => {
   const isNavigation = req.mode === 'navigate' || req.headers.get('accept')?.includes('text/html');
 
   if (isNavigation) {
-    // 🌐 NETWORK-FIRST for HTML Entrypoints:
-    // Always fetch fresh HTML from network so users get the latest deploy. Fallback to cache only if offline.
+    // 🌐 FAIL-FAST NETWORK-FIRST WITH 1.2s TIMEOUT FOR HTML ENTRYPOINTS:
+    // Attempts to fetch fresh HTML, but if GitHub Pages or CDN doesn't answer within 1200ms,
+    // immediately serves the cached version. Eliminates 30-45s frozen screen hangs!
     event.respondWith(
-      fetch(req, { cache: 'no-cache' })
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const clone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
-          }
-          return networkResponse;
-        })
-        .catch(() => {
-          return caches.match(req).then((cached) => {
-            if (cached) return cached;
-            if (req.url.includes('terminal')) return caches.match('/terminal.html');
-            return caches.match('/index.html');
+      new Promise((resolve) => {
+        let isSettled = false;
+        const fallbackToCache = () => {
+          if (isSettled) return;
+          isSettled = true;
+          caches.match(req).then((cached) => {
+            if (cached) return resolve(cached);
+            caches.match('./terminal.html').then((termCached) => {
+              if (termCached) return resolve(termCached);
+              caches.match('/terminal.html').then((rootCached) => {
+                if (rootCached) return resolve(rootCached);
+                fetch(req).then(resolve).catch(() => {});
+              });
+            });
           });
-        })
+        };
+
+        // 1200ms strict timeout safeguard against GitHub Pages throttling
+        const timeoutId = setTimeout(fallbackToCache, 1200);
+
+        fetch(req, { cache: 'no-cache' })
+          .then((networkResponse) => {
+            if (!isSettled && networkResponse && networkResponse.status === 200) {
+              clearTimeout(timeoutId);
+              isSettled = true;
+              const clone = networkResponse.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+              resolve(networkResponse);
+            } else if (!isSettled) {
+              fallbackToCache();
+            }
+          })
+          .catch(() => {
+            fallbackToCache();
+          });
+      })
     );
     return;
   }

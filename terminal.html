@@ -20,15 +20,15 @@
   <!-- High-Speed DNS Pre-connect for Zero-Lag Boot -->
   <link rel="preconnect" href="https://api.exchange.coinbase.com" crossorigin>
   <link rel="preconnect" href="https://s3.tradingview.com" crossorigin>
-  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <!-- Phosphor Icons -->
-  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
-  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
-  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+  <!-- Phosphor Icons (Fast Edge CDN) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
   
   <!-- Stylesheets -->
   <link rel="stylesheet" href="styles/tokens.css">
@@ -50,7 +50,7 @@
   <script type="importmap">
   {
     "imports": {
-      "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
     }
   }
   </script>
@@ -3067,8 +3067,8 @@
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toast_container"></div>
 
-  <!-- TradingView Lightweight Charts (Standalone Production) -->
-  <script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
+  <!-- TradingView Lightweight Charts (Fast Edge CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
 
   <!-- Supabase Config (Reads from config file or localStorage) -->
   <script type="module" src="js/config/supabaseConfig.js"></script>
@@ -3184,39 +3184,16 @@
     });
   </script>
 
-  <!-- PWA Offline Service Worker Registration with Instant Auto-Update -->
+  <!-- PWA Offline Service Worker Registration with Seamless Cache Refresh -->
   <script type="module">
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').then((reg) => {
-          // Immediately check for updates from server
           reg.update().catch(() => {});
-
           if (reg.waiting) {
             reg.waiting.postMessage({ type: 'SKIP_WAITING' });
           }
-
-          reg.addEventListener('updatefound', () => {
-            const installingWorker = reg.installing;
-            if (installingWorker) {
-              installingWorker.addEventListener('statechange', () => {
-                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  // A new update arrived in the background!
-                  console.log('[PWA] Fresh build detected. Upgrading cache...');
-                  window.location.reload();
-                }
-              });
-            }
-          });
         }).catch(() => {});
-
-        let isRefreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!isRefreshing) {
-            isRefreshing = true;
-            window.location.reload();
-          }
-        });
       });
     }
   </script>

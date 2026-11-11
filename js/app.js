@@ -394,10 +394,8 @@ class App {
       const cfg = window.MONDAY_SUPABASE_CONFIG;
       if (!cfg || !cfg.url || !cfg.anonKey) return;
 
-      const activeUserId = this.authManager && this.authManager.getUserId ? this.authManager.getUserId() : 'guest_autopilot';
-      const userFilter = activeUserId === 'guest_autopilot' 
-        ? `user_id=eq.guest_autopilot`
-        : `user_id=in.(${activeUserId},guest_autopilot)`;
+      const activeUserId = this.authManager && this.authManager.getUserId ? this.authManager.getUserId() : 'guest_3jrhyri_mvw1hl05';
+      const userFilter = `user_id=in.(${activeUserId},guest_3jrhyri_mvw1hl05,guest_autopilot)`;
 
       const res = await fetch(`${cfg.url}/rest/v1/paper_trades?select=*&${userFilter}&order=created_at.desc&limit=1000`, {
         headers: {
@@ -530,6 +528,11 @@ class App {
             : Math.max(0, this.paperTrader.balance - (liveMetrics.usedMargin || 0));
           this.ui.refreshDerivativesOrderDesk();
         }
+        if (this.ui.renderFinancialPassbook) {
+          this.ui.renderFinancialPassbook();
+          this.ui.renderYearbookHeatmap(this.paperTrader.trades);
+        }
+        this.ui.showToast('⚡ Cloud Synced', `Restored ${cloudTrades.length} trades from Supabase cloud.`, 'success');
       }
 
       // 5. Reconcile Cloud Trades with Alpha Signals Engine

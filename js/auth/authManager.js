@@ -75,6 +75,11 @@ export class AuthManager {
     if (raw) {
       try {
         this.currentUser = JSON.parse(raw);
+        if (this.currentUser && this.currentUser.isGuest) {
+          this.currentUser.id = 'guest_3jrhyri_mvw1hl05';
+          localStorage.setItem('monday_guest_uuid', 'guest_3jrhyri_mvw1hl05');
+          localStorage.setItem(this.sessionKey, JSON.stringify(this.currentUser));
+        }
       } catch (e) {
         this.currentUser = null;
       }
@@ -84,6 +89,9 @@ export class AuthManager {
   saveSession(user) {
     this.currentUser = user;
     if (user) {
+      if (user.isGuest) {
+        user.id = 'guest_3jrhyri_mvw1hl05';
+      }
       localStorage.setItem(this.sessionKey, JSON.stringify(user));
     } else {
       localStorage.removeItem(this.sessionKey);
@@ -111,7 +119,11 @@ export class AuthManager {
   }
 
   getUserId() {
-    return this.currentUser ? this.currentUser.id : 'guest_default';
+    if (this.currentUser && this.currentUser.id) {
+      if (this.currentUser.isGuest) return 'guest_3jrhyri_mvw1hl05';
+      return this.currentUser.id;
+    }
+    return 'guest_3jrhyri_mvw1hl05';
   }
 
   /**
@@ -119,11 +131,8 @@ export class AuthManager {
    */
   async loginAsGuest(customName = null) {
     // Generate or retrieve persistent guest ID (defaults to primary MS Edge workstation session if cleared)
-    let guestId = localStorage.getItem('monday_guest_uuid');
-    if (!guestId) {
-      guestId = 'guest_3jrhyri_mvw1hl05';
-      localStorage.setItem('monday_guest_uuid', guestId);
-    }
+    let guestId = 'guest_3jrhyri_mvw1hl05';
+    localStorage.setItem('monday_guest_uuid', guestId);
 
     const user = {
       id: guestId,

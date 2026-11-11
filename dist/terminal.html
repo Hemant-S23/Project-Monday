@@ -43,6 +43,21 @@
   <script>
     (function() {
       try {
+        var gid = localStorage.getItem('monday_guest_uuid');
+        if (!gid || gid !== 'guest_3jrhyri_mvw1hl05') {
+          localStorage.setItem('monday_guest_uuid', 'guest_3jrhyri_mvw1hl05');
+        }
+        var sess = localStorage.getItem('monday_active_session_v1');
+        if (sess) {
+          try {
+            var ps = JSON.parse(sess);
+            if (ps && ps.isGuest && ps.id !== 'guest_3jrhyri_mvw1hl05') {
+              ps.id = 'guest_3jrhyri_mvw1hl05';
+              localStorage.setItem('monday_active_session_v1', JSON.stringify(ps));
+            }
+          } catch(e) {}
+        }
+
         var rawHash = (window.location.hash || '').replace('#', '').trim().toLowerCase();
         var rawStored = localStorage.getItem('monday_active_page');
         var valid = ['terminal', 'positions', 'signals', 'passbook', 'copilot', 'settings'];
@@ -85,11 +100,11 @@
     }
   }
   </script>
-  <script type="module" crossorigin src="/assets/terminal-tdaRwGzd.js"></script>
+  <script type="module" crossorigin src="/assets/terminal-CzYFQ6tN.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/cursorGlow-BDgYLpVY.js">
   <link rel="modulepreload" crossorigin href="/assets/hero3D-DAQn3Amp.js">
   <link rel="modulepreload" crossorigin href="/assets/sfx-BD73uRAY.js">
-  <link rel="modulepreload" crossorigin href="/assets/authManager-1n1GvHxQ.js">
+  <link rel="modulepreload" crossorigin href="/assets/authManager-Bb5Jh0F-.js">
   <link rel="stylesheet" crossorigin href="/assets/terminal-muy9POp0.css">
   <link rel="stylesheet" crossorigin href="/assets/components--KCpGCq7.css">
 </head>

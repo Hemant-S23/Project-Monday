@@ -118,10 +118,10 @@ export class AuthManager {
    * Guest Session: Instant paper trading with a dedicated, isolated clean account
    */
   async loginAsGuest(customName = null) {
-    // Generate or retrieve persistent guest ID
+    // Generate or retrieve persistent guest ID (defaults to primary MS Edge workstation session if cleared)
     let guestId = localStorage.getItem('monday_guest_uuid');
     if (!guestId) {
-      guestId = 'guest_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now().toString(36);
+      guestId = 'guest_3jrhyri_mvw1hl05';
       localStorage.setItem('monday_guest_uuid', guestId);
     }
 

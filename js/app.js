@@ -399,7 +399,7 @@ class App {
         ? `user_id=eq.guest_autopilot`
         : `user_id=in.(${activeUserId},guest_autopilot)`;
 
-      const res = await fetch(`${cfg.url}/rest/v1/paper_trades?select=*&${userFilter}&order=created_at.desc&limit=100`, {
+      const res = await fetch(`${cfg.url}/rest/v1/paper_trades?select=*&${userFilter}&order=created_at.desc&limit=1000`, {
         headers: {
           'apikey': cfg.anonKey,
           'Authorization': `Bearer ${cfg.anonKey}`

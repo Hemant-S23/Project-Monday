@@ -76,8 +76,8 @@ export class AuthManager {
       try {
         this.currentUser = JSON.parse(raw);
         if (this.currentUser && this.currentUser.isGuest) {
-          this.currentUser.id = 'guest_3jrhyri_mvw1hl05';
-          localStorage.setItem('monday_guest_uuid', 'guest_3jrhyri_mvw1hl05');
+          this.currentUser.id = 'guest_autopilot';
+          localStorage.setItem('monday_guest_uuid', 'guest_autopilot');
           localStorage.setItem(this.sessionKey, JSON.stringify(this.currentUser));
         }
       } catch (e) {
@@ -90,7 +90,7 @@ export class AuthManager {
     this.currentUser = user;
     if (user) {
       if (user.isGuest) {
-        user.id = 'guest_3jrhyri_mvw1hl05';
+        user.id = 'guest_autopilot';
       }
       localStorage.setItem(this.sessionKey, JSON.stringify(user));
     } else {
@@ -120,18 +120,18 @@ export class AuthManager {
 
   getUserId() {
     if (this.currentUser && this.currentUser.id) {
-      if (this.currentUser.isGuest) return 'guest_3jrhyri_mvw1hl05';
+      if (this.currentUser.isGuest) return 'guest_autopilot';
       return this.currentUser.id;
     }
-    return 'guest_3jrhyri_mvw1hl05';
+    return 'guest_autopilot';
   }
 
   /**
    * Guest Session: Instant paper trading with a dedicated, isolated clean account
    */
   async loginAsGuest(customName = null) {
-    // Generate or retrieve persistent guest ID (defaults to primary MS Edge workstation session if cleared)
-    let guestId = 'guest_3jrhyri_mvw1hl05';
+    // Persistent master guest ID unified with 24/7 cloud daemon
+    let guestId = 'guest_autopilot';
     localStorage.setItem('monday_guest_uuid', guestId);
 
     const user = {

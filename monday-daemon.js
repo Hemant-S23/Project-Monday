@@ -86,6 +86,8 @@ class MondayAutoPilotDaemon {
     this.isScanning = false;
     this.scanIntervalMs = 8000; // 8 seconds strategy scan
     this.heartbeatIntervalMs = 60000; // 60 seconds keep-alive
+    this.settingsSyncIntervalMs = 30000; // 30 seconds dynamic cloud settings sync
+    this.cachedSettings = null;
     this.startTime = Date.now();
   }
 
@@ -105,27 +107,64 @@ class MondayAutoPilotDaemon {
     return num.toFixed(8);
   }
 
+  async syncSettingsFromSupabase() {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/paper_trades?id=eq.CONFIG_AUTOPILOT_GUEST&select=*`, {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`
+        }
+      });
+      if (res.ok) {
+        const rows = await res.json();
+        if (Array.isArray(rows) && rows.length > 0) {
+          const row = rows[0];
+          let parsed = null;
+          if (row.strategy) {
+            try { parsed = JSON.parse(row.strategy); } catch(e) {}
+          }
+          const s = parsed || {};
+          const synced = {
+            marginUSD: Math.max(5, Math.min(500, parseFloat(s.marginUSD || row.risk_usd) || 100)),
+            leverage: Math.max(1, Math.min(50, parseInt(s.leverage || row.reward_usd, 10) || 20)),
+            maxTrades: Math.max(1, Math.min(100, parseInt(s.maxTrades || row.position_size, 10) || 5)),
+            minConfluence: Math.max(50, Math.min(95, parseInt(s.minConfluence, 10) || 75)),
+            minRR: Math.max(1.5, Math.min(5.0, parseFloat(s.minRR || row.rr_ratio) || 2.0)),
+            eventShieldEnabled: s.eventShieldEnabled !== false
+          };
+          this.cachedSettings = synced;
+          globalThis.localStorage.setItem('monday_autopilot_settings', JSON.stringify(synced));
+          this.log(`⚙️ [Cloud Settings Synced] MaxTrades: ${synced.maxTrades} | Margin: $${synced.marginUSD} | Lev: ${synced.leverage}x | MinRR: 1:${synced.minRR} | Shield: ${synced.eventShieldEnabled ? 'ON' : 'OFF'}`);
+        }
+      }
+    } catch (err) {
+      this.log(`Settings sync warning: ${err.message}`, 'WARN');
+    }
+  }
+
   getAutoPilotSettings() {
+    if (this.cachedSettings) return this.cachedSettings;
     try {
       const raw = globalThis.localStorage.getItem('monday_autopilot_settings');
       if (raw) {
         const s = JSON.parse(raw);
-        return {
+        this.cachedSettings = {
           minConfluence: Math.max(50, Math.min(95, parseInt(s.minConfluence, 10) || 75)),
-          minRR: Math.max(1.5, Math.min(5.0, parseFloat(s.minRR) || 2.5)),
-          marginUSD: Math.max(5, Math.min(500, parseFloat(s.marginUSD) || 20)),
+          minRR: Math.max(1.5, Math.min(5.0, parseFloat(s.minRR) || 2.0)),
+          marginUSD: Math.max(5, Math.min(500, parseFloat(s.marginUSD) || 100)),
           leverage: Math.max(1, Math.min(50, parseInt(s.leverage, 10) || 20)),
-          maxTrades: Math.max(1, Math.min(100, parseInt(s.maxTrades, 10) || 2)),
+          maxTrades: Math.max(1, Math.min(100, parseInt(s.maxTrades, 10) || 5)),
           eventShieldEnabled: s.eventShieldEnabled !== false
         };
+        return this.cachedSettings;
       }
     } catch (e) {}
     return {
       minConfluence: 75,
-      minRR: 2.5,
-      marginUSD: 20,
+      minRR: 2.0,
+      marginUSD: 100,
       leverage: 20,
-      maxTrades: 2,
+      maxTrades: 5,
       eventShieldEnabled: true
     };
   }
@@ -138,8 +177,9 @@ class MondayAutoPilotDaemon {
     this.log(`Wallet Balance: $${this.paperTrader.balance.toFixed(2)} | Active Store Positions: ${this.paperTrader.openPositions.length}`);
     this.log(`Universe: ${this.candidateAssets.join(', ')}`);
 
-    // 1. Initial Supabase Connectivity Check
+    // 1. Initial Supabase Connectivity Check & Dynamic Settings Sync
     await this.testSupabaseConnection();
+    await this.syncSettingsFromSupabase();
     await this.hydrateFromSupabase();
 
     // 2. Start Native WebSocket Feed (Millisecond Ticks)
@@ -171,7 +211,7 @@ class MondayAutoPilotDaemon {
 
   async hydrateFromSupabase() {
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/paper_trades?select=*&order=created_at.desc`, {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/paper_trades?user_id=eq.guest_autopilot&order=created_at.desc`, {
         headers: {
           'apikey': SUPABASE_KEY,
           'Authorization': `Bearer ${SUPABASE_KEY}`
@@ -180,10 +220,37 @@ class MondayAutoPilotDaemon {
       if (res.ok) {
         const cloudTrades = await res.json();
         if (Array.isArray(cloudTrades)) {
-          this.log(`Hydrated ${cloudTrades.length} trade record(s) from Supabase Cloud.`);
+          this.log(`Hydrated ${cloudTrades.length} trade record(s) from Supabase Cloud for guest_autopilot.`);
+          // Reconcile active open positions strictly from Supabase Single Source of Truth
+          const openFromCloud = cloudTrades.filter(t => t.status === 'OPEN').map(ct => ({
+            id: ct.id,
+            market: ct.market || 'Crypto',
+            asset: ct.asset,
+            direction: ct.direction,
+            entry: Number(ct.entry_price),
+            stopLoss: Number(ct.stop_loss),
+            target: Number(ct.target_price),
+            positionSize: Number(ct.position_size || 0),
+            riskUSD: Number(ct.risk_usd || 20),
+            rewardUSD: Number(ct.reward_usd || 60),
+            rrRatio: Number(ct.rr_ratio || 3.0),
+            leverage: 20,
+            marginUSD: Number(ct.risk_usd || 20),
+            notionalUSD: +(Number(ct.entry_price) * Number(ct.position_size || 0)).toFixed(2),
+            status: 'OPEN',
+            currentPrice: Number(ct.entry_price),
+            openedAt: new Date(ct.created_at).getTime()
+          }));
+          this.paperTrader.openPositions = openFromCloud;
+          if (typeof this.paperTrader.save === 'function') {
+            this.paperTrader.save();
+          }
+          this.log(`Active open positions reconciled: ${openFromCloud.length} active.`);
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      this.log(`Supabase hydration warning: ${e.message}`, 'WARN');
+    }
   }
 
   startWebSocketFeed() {
@@ -306,6 +373,37 @@ class MondayAutoPilotDaemon {
         const targetStr = this.formatDynamicPrice(pos.target);
         const setupKey = `${pos.asset}_${pos.direction}_${entryStr}_${targetStr}`;
         this.exhaustedSetups.set(setupKey, Date.now() + 1800000);
+      }
+    }
+  }
+
+  /**
+   * 🛡️ Anti-Freeze Watchdog: Independent REST-based safety net.
+   * Periodically validates mark prices across all open positions so trades are guaranteed
+   * to exit at Take-Profit or Stop-Loss even during WebSocket reconnects or dropped ticks.
+   */
+  async runPositionWatchdog() {
+    const openPositions = this.paperTrader.openPositions;
+    if (!openPositions || openPositions.length === 0) return;
+
+    for (const pos of openPositions) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 3500);
+        const res = await fetch(`https://api.exchange.coinbase.com/products/${pos.asset}-USD/ticker`, {
+          signal: controller.signal
+        });
+        clearTimeout(timeout);
+        if (res.ok) {
+          const data = await res.json();
+          const p = parseFloat(data.price);
+          if (!isNaN(p) && p > 0) {
+            this.livePrices[pos.asset] = p;
+            this.checkInstantPositionHit(pos.asset, p);
+          }
+        }
+      } catch (e) {
+        // Safety net fallback
       }
     }
   }
@@ -531,6 +629,12 @@ class MondayAutoPilotDaemon {
   }
 
   startHeartbeatLoop() {
+    // Periodic dynamic settings sync & anti-freeze watchdog every 30 seconds
+    setInterval(() => {
+      this.syncSettingsFromSupabase().catch(() => {});
+      this.runPositionWatchdog().catch(() => {});
+    }, this.settingsSyncIntervalMs);
+
     setInterval(async () => {
       const uptimeSec = Math.round((Date.now() - this.startTime) / 1000);
       const openCount = this.paperTrader.openPositions.length;
@@ -563,6 +667,7 @@ class MondayAutoPilotDaemon {
           uptimeSeconds: uptimeSec,
           balanceUSD: this.paperTrader.balance,
           openPositionsCount: this.paperTrader.openPositions.length,
+          activeSettings: this.getAutoPilotSettings(),
           wsConnected: this.isWsConnected,
           timestamp: new Date().toISOString()
         }));

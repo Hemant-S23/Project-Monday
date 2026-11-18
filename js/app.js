@@ -80,7 +80,10 @@ class App {
           this.voiceAssistant.speak('Auto-pilot deactivated. Manual mode active.');
         }
       },
-      onSaveAutoPilotSettings: async () => {
+      onSaveAutoPilotSettings: async (newSettings) => {
+        if (newSettings) {
+          await this.pushSettingsToCloud(newSettings);
+        }
         await this.runFullEvaluation();
         if (this.autoPilotEnabled) {
           await this.scanAndExecuteAutoPilot();
@@ -163,6 +166,9 @@ class App {
       onListeningStateChange: (listening) => this.ui.setVoiceListening(listening),
       onSpeakingStateChange: (speaking) => this.ui.setVoiceSpeaking(speaking)
     });
+
+    // Boot Notification & Noise Shield: Suppresses startup toast & alert blast
+    this.isBooting = true;
   }
 
   handleAuthSuccess(user) {
@@ -369,6 +375,11 @@ class App {
       this.voiceAssistant.speak(voiceGreeting);
     }, 1200);
 
+    // Lift boot silence shield after frame 0 hydration stabilizes
+    setTimeout(() => {
+      this.isBooting = false;
+    }, 6000);
+
     // 6. Setup interval for continuous position updates, evaluation & Supabase sync
     setInterval(() => this.runFullEvaluation(), 5000);
     setInterval(() => this.syncWithSupabaseCloud(), 15000);
@@ -394,8 +405,8 @@ class App {
       const cfg = window.MONDAY_SUPABASE_CONFIG;
       if (!cfg || !cfg.url || !cfg.anonKey) return;
 
-      const activeUserId = this.authManager && this.authManager.getUserId ? this.authManager.getUserId() : 'guest_3jrhyri_mvw1hl05';
-      const userFilter = `user_id=in.(${activeUserId},guest_3jrhyri_mvw1hl05,guest_autopilot)`;
+      const activeUserId = this.authManager && this.authManager.getUserId ? this.authManager.getUserId() : 'guest_autopilot';
+      const userFilter = `user_id=in.(${activeUserId},guest_autopilot)`;
 
       const res = await fetch(`${cfg.url}/rest/v1/paper_trades?select=*&${userFilter}&order=created_at.desc&limit=1000`, {
         headers: {
@@ -417,6 +428,23 @@ class App {
       const cloudClosedMap = new Map();
 
       for (const ct of cloudTrades) {
+        if (ct.status === 'CONFIG' || ct.id === 'CONFIG_AUTOPILOT_GUEST') {
+          if (ct.strategy) {
+            try {
+              const cloudSet = JSON.parse(ct.strategy);
+              if (cloudSet) {
+                const localRaw = localStorage.getItem('monday_autopilot_settings');
+                const localSet = localRaw ? JSON.parse(localRaw) : null;
+                const cloudTime = cloudSet.updatedAt ? new Date(cloudSet.updatedAt).getTime() : 0;
+                const localTime = localSet?.updatedAt ? new Date(localSet.updatedAt).getTime() : 0;
+                if (!localSet || cloudTime >= localTime) {
+                  localStorage.setItem('monday_autopilot_settings', JSON.stringify(cloudSet));
+                }
+              }
+            } catch(e) {}
+          }
+          continue;
+        }
         if (ct.status === 'OPEN') {
           cloudOpenMap.set(ct.id, ct);
         } else if (ct.status === 'CLOSED') {
@@ -942,6 +970,13 @@ class App {
         .filter(r => r.isEligible)
         .sort((a, b) => b.confluenceScore - a.confluenceScore);
 
+      // 🛡️ CLOUD-FIRST MASTER EXECUTION ARCHITECTURE:
+      // For Crypto, the 24/7 Render Cloud Daemon is the sole master autonomous execution authority.
+      // The browser cockpit visualizes live radar & copilot signals, but does not race to fire duplicate local orders.
+      if (this.currentMarket === 'Crypto') {
+        return;
+      }
+
       for (const setup of eligibleSetups) {
         if (!this.autoPilotEnabled) break;
         if (this.paperTrader.openPositions.length >= settings.maxTrades) break;
@@ -967,18 +1002,20 @@ class App {
       const tp = strategyResult.levels ? Number(strategyResult.levels.target).toLocaleString() : '';
       const lev = this.currentMarket === 'India' ? '5x Intraday' : '15x-20x Isolated';
 
-      this.ui.showToast(`🟢 ${asset} Setup CONFIRMED`, `Grade A confluence satisfied. 1:${rr} RR ready to execute.`, 'success');
+      if (!this.isBooting) {
+        this.ui.showToast(`🟢 ${asset} Setup CONFIRMED`, `Grade A confluence satisfied. 1:${rr} RR ready to execute.`, 'success');
 
-      // Comprehensive actionable voice briefing with exact levels as requested by user
-      this.voiceAssistant.speak(
-        `Alert! ${asset} ${dir} confirm ho gaya hai! Entry ${currSym}${entry} pe lo, Stop Loss ${currSym}${sl} pe lock rakho, aur Target ${currSym}${tp} hai with 1:${rr} Risk Reward.`
-      );
+        // Actionable voice briefing with exact levels
+        this.voiceAssistant.speak(
+          `Alert! ${asset} ${dir} confirm ho gaya hai! Entry ${currSym}${entry} pe lo, Stop Loss ${currSym}${sl} pe lock rakho, aur Target ${currSym}${tp} hai with 1:${rr} Risk Reward.`
+        );
 
-      this.ui.addNotification({
-        type: 'ai',
-        title: `AI Confirmed • ${asset} ${dir}`,
-        message: `Grade A (${strategyResult.confluenceScore || 85}%) • 1:${rr} RR • Entry: ${currSym}${entry} • SL: ${currSym}${sl} • TP: ${currSym}${tp}`
-      });
+        this.ui.addNotification({
+          type: 'ai',
+          title: `AI Confirmed • ${asset} ${dir}`,
+          message: `Grade A (${strategyResult.confluenceScore || 85}%) • 1:${rr} RR • Entry: ${currSym}${entry} • SL: ${currSym}${sl} • TP: ${currSym}${tp}`
+        });
+      }
 
       // Inject Interactive Trade Blueprint Card into chat transcript
       this.ui.appendTradeBlueprintCard({
@@ -1020,15 +1057,55 @@ class App {
     this.ui.appendChatMessage('copilot', briefing);
   }
 
+  async pushSettingsToCloud(settings) {
+    try {
+      const cfg = window.MONDAY_SUPABASE_CONFIG;
+      if (!cfg || !cfg.url || !cfg.anonKey) return;
+      const payload = {
+        id: 'CONFIG_AUTOPILOT_GUEST',
+        user_id: 'guest_autopilot',
+        market: this.currentMarket || 'Crypto',
+        asset: 'SETTINGS',
+        direction: 'CONFIG',
+        entry_price: 0,
+        stop_loss: 0,
+        target_price: 0,
+        risk_usd: settings.marginUSD,
+        reward_usd: settings.leverage,
+        rr_ratio: settings.minRR,
+        position_size: settings.maxTrades,
+        status: 'CONFIG',
+        strategy: JSON.stringify({
+          ...settings,
+          updatedAt: new Date().toISOString()
+        })
+      };
+
+      await fetch(`${cfg.url}/rest/v1/paper_trades`, {
+        method: 'POST',
+        headers: {
+          'apikey': cfg.anonKey,
+          'Authorization': `Bearer ${cfg.anonKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates'
+        },
+        body: JSON.stringify(payload)
+      });
+      console.log('[App] Auto-Pilot settings successfully synchronized to Supabase Cloud:', settings);
+    } catch (err) {
+      console.warn('[App] Cloud settings push warning:', err.message);
+    }
+  }
+
   getAutoPilotSettings() {
     try {
       const raw = localStorage.getItem('monday_autopilot_settings');
       if (raw) {
         const s = JSON.parse(raw);
         return {
-          marginUSD: Math.max(5, Math.min(500, parseFloat(s.marginUSD) || 20)),
+          marginUSD: Math.max(5, Math.min(500, parseFloat(s.marginUSD) || 100)),
           leverage: Math.max(1, Math.min(50, parseInt(s.leverage, 10) || (this.currentMarket === 'India' ? 5 : 20))),
-          maxTrades: Math.max(1, Math.min(100, parseInt(s.maxTrades, 10) || 2)),
+          maxTrades: Math.max(1, Math.min(100, parseInt(s.maxTrades, 10) || 5)),
           minConfluence: Math.max(50, Math.min(95, parseInt(s.minConfluence, 10) || 75)),
           minRR: Math.max(1.5, Math.min(5.0, parseFloat(s.minRR) || 2.0)),
           eventShieldEnabled: s.eventShieldEnabled !== false
@@ -1036,9 +1113,9 @@ class App {
       }
     } catch (e) {}
     return {
-      marginUSD: 20,
+      marginUSD: 100,
       leverage: this.currentMarket === 'India' ? 5 : 20,
-      maxTrades: 2,
+      maxTrades: 5,
       minConfluence: 75,
       minRR: 2.0,
       eventShieldEnabled: true
@@ -1386,15 +1463,17 @@ class App {
     adapter.subscribe(newPos.asset, (data) => this.onMarketDataTick(data));
 
     const formattedEntry = this.ui.formatPrice(newPos.entry);
-    this.ui.showToast('🚀 Order Executed', `${newPos.asset} ${newPos.direction} [${newPos.leverage}x] entered at ${formattedEntry}. Live tracking active!`, 'success');
-    this.voiceAssistant.speak(`${newPos.asset} ${newPos.direction} entered with ${newPos.leverage}x leverage.`);
+    if (!this.isBooting) {
+      this.ui.showToast('🚀 Order Executed', `${newPos.asset} ${newPos.direction} [${newPos.leverage}x] entered at ${formattedEntry}. Live tracking active!`, 'success');
+      this.voiceAssistant.speak(`${newPos.asset} ${newPos.direction} entered with ${newPos.leverage}x leverage.`);
 
-    this.ui.addNotification({
-      type: 'order',
-      title: `Order Executed • ${newPos.asset} ${newPos.direction} [${newPos.leverage}x]`,
-      message: `Entered at ${formattedEntry} • Margin: $${newPos.marginUSD}`,
-      tradeId: newPos.id
-    });
+      this.ui.addNotification({
+        type: 'order',
+        title: `Order Executed • ${newPos.asset} ${newPos.direction} [${newPos.leverage}x]`,
+        message: `Entered at ${formattedEntry} • Margin: $${newPos.marginUSD}`,
+        tradeId: newPos.id
+      });
+    }
 
     this.ui.updateOpenPositions(this.paperTrader.openPositions);
     const liveMetrics = this.paperTrader.getLiveEquity();

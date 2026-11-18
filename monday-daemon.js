@@ -181,6 +181,7 @@ class MondayAutoPilotDaemon {
     await this.testSupabaseConnection();
     await this.syncSettingsFromSupabase();
     await this.hydrateFromSupabase();
+    await this.runPositionWatchdog();
 
     // 2. Start Native WebSocket Feed (Millisecond Ticks)
     this.startWebSocketFeed();
@@ -391,6 +392,7 @@ class MondayAutoPilotDaemon {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 3500);
         const res = await fetch(`https://api.exchange.coinbase.com/products/${pos.asset}-USD/ticker`, {
+          headers: { 'User-Agent': 'Monday-Daemon/4.7' },
           signal: controller.signal
         });
         clearTimeout(timeout);

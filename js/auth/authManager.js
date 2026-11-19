@@ -157,6 +157,10 @@ export class AuthManager {
     callback(this.currentUser);
   }
 
+  onAuthChange(callback) {
+    return this.onAuthStateChange(callback);
+  }
+
   notify() {
     this.listeners.forEach(cb => {
       try { cb(this.currentUser); } catch (e) { console.error(e); }
@@ -168,6 +172,10 @@ export class AuthManager {
   }
 
   getUser() {
+    return this.currentUser;
+  }
+
+  getCurrentUser() {
     return this.currentUser;
   }
 

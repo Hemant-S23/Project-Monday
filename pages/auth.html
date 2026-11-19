@@ -1162,12 +1162,7 @@
     if (btnGoogle) {
       btnGoogle.addEventListener('click', async (e) => {
         e.preventDefault();
-        const riskAccepted = localStorage.getItem('monday_risk_accepted') === 'true';
-        if (!riskAccepted) {
-          openRiskModal('google');
-        } else {
-          await executeGoogleOAuth();
-        }
+        await executeGoogleOAuth();
       });
     }
 

@@ -114,7 +114,14 @@ class App {
       },
       onGoogleSignIn: async () => {
         const res = await this.authManager.signInWithGoogle();
-        if (res && res.user) {
+        if (res && !res.success && res.error) {
+          const isNotEnabled = res.error.toLowerCase().includes('not enabled');
+          const errMsg = isNotEnabled
+            ? 'Google Sign-In is not enabled in Supabase yet. Please enable it in Supabase Dashboard -> Auth -> Providers -> Google.'
+            : res.error;
+          this.ui.showAuthAlert(errMsg, 'error');
+          this.ui.showToast('Google Sign-In', errMsg, 'warning');
+        } else if (res && res.user) {
           this.handleAuthSuccess(res.user);
         }
       },

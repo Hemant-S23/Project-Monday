@@ -15,38 +15,91 @@ export class AuthManager {
     this.sessionKey = 'monday_active_session_v1';
     this.supabaseClient = null;
     this.listeners = [];
+    this._readyPromise = null;
 
-    this.initSupabase();
     this.restoreSession();
+    this.ready();
   }
 
   /**
-   * Initializes Supabase client if credentials are configured
+   * Asynchronous readiness check: waits for Supabase SDK and processes any OAuth callback
    */
-  initSupabase() {
+  async ready() {
+    if (this._readyPromise) return this._readyPromise;
+    this._readyPromise = this._initAsync();
+    return this._readyPromise;
+  }
+
+  async _initAsync() {
     const config = this.getSupabaseConfig();
     if (config && config.url && config.anonKey) {
-      if (window.supabase) {
-        try {
-          this.supabaseClient = window.supabase.createClient(config.url, config.anonKey);
-          console.log('[AuthManager] Supabase client initialized successfully.');
-        } catch (err) {
-          console.warn('[AuthManager] Failed to initialize Supabase client:', err);
-        }
-      } else {
-        // Retry if supabase CDN script is still downloading
-        const checkInterval = setInterval(() => {
-          if (window.supabase) {
-            clearInterval(checkInterval);
-            try {
-              this.supabaseClient = window.supabase.createClient(config.url, config.anonKey);
-              console.log('[AuthManager] Supabase client initialized on CDN ready.');
-            } catch (err) {}
+      // Wait up to 3 seconds for window.supabase CDN to be available
+      for (let i = 0; i < 30; i++) {
+        if (window.supabase) {
+          try {
+            this.supabaseClient = window.supabase.createClient(config.url, config.anonKey);
+            console.log('[AuthManager] Supabase client initialized.');
+            break;
+          } catch (e) {
+            console.warn('[AuthManager] Supabase createClient error:', e);
           }
-        }, 150);
-        setTimeout(() => clearInterval(checkInterval), 5000);
+        }
+        await new Promise(r => setTimeout(r, 100));
       }
     }
+
+    if (this.supabaseClient) {
+      try {
+        // Set up real-time listener for OAuth logins, token refreshes & logouts
+        this.supabaseClient.auth.onAuthStateChange(async (event, session) => {
+          console.log('[AuthManager] Supabase Auth State Change:', event, session?.user?.email);
+          if (session && session.user) {
+            const u = session.user;
+            const user = {
+              id: u.id,
+              email: u.email,
+              name: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0] || 'Trader',
+              avatar: u.user_metadata?.avatar_url || u.user_metadata?.picture || null,
+              isGuest: false,
+              createdAt: u.created_at
+            };
+            this.saveSession(user);
+          } else if (event === 'SIGNED_OUT') {
+            this.saveSession(null);
+          }
+        });
+
+        // Proactively exchange OAuth redirect tokens (hash or code)
+        const { data: { session } } = await this.supabaseClient.auth.getSession();
+        if (session && session.user) {
+          const u = session.user;
+          const user = {
+            id: u.id,
+            email: u.email,
+            name: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0] || 'Trader',
+            avatar: u.user_metadata?.avatar_url || u.user_metadata?.picture || null,
+            isGuest: false,
+            createdAt: u.created_at
+          };
+          this.saveSession(user);
+
+          // Clean URL hash after successful OAuth absorption
+          if (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('type=recovery'))) {
+            history.replaceState(null, document.title, window.location.pathname + window.location.search);
+          }
+          return user;
+        }
+      } catch (err) {
+        console.warn('[AuthManager] Supabase getSession warning:', err);
+      }
+    }
+
+    this.restoreSession();
+    return this.currentUser;
+  }
+
+  initSupabase() {
+    this.ready();
   }
 
   getSupabaseConfig() {

@@ -135,6 +135,13 @@ class MondayAutoPilotDaemon {
           this.cachedSettings = synced;
           globalThis.localStorage.setItem('monday_autopilot_settings', JSON.stringify(synced));
           this.log(`⚙️ [Cloud Settings Synced] MaxTrades: ${synced.maxTrades} | Margin: $${synced.marginUSD} | Lev: ${synced.leverage}x | MinRR: 1:${synced.minRR} | Shield: ${synced.eventShieldEnabled ? 'ON' : 'OFF'}`);
+
+          // Dynamically scope daemon to authenticated Google user when available
+          const activeUid = s.userId || row.user_id;
+          if (activeUid && activeUid !== 'guest_autopilot' && this.paperTrader.userId !== activeUid) {
+            this.paperTrader.setUser(activeUid);
+            this.log(`👤 [Master User Scoped] Autopilot 24/7 bound to User: ${activeUid}`, 'SUCCESS');
+          }
         }
       }
     } catch (err) {
@@ -212,7 +219,8 @@ class MondayAutoPilotDaemon {
 
   async hydrateFromSupabase() {
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/paper_trades?user_id=eq.guest_autopilot&order=created_at.desc`, {
+      const targetUid = this.paperTrader.userId || 'guest_autopilot';
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/paper_trades?user_id=eq.${targetUid}&order=created_at.desc`, {
         headers: {
           'apikey': SUPABASE_KEY,
           'Authorization': `Bearer ${SUPABASE_KEY}`
@@ -221,7 +229,7 @@ class MondayAutoPilotDaemon {
       if (res.ok) {
         const cloudTrades = await res.json();
         if (Array.isArray(cloudTrades)) {
-          this.log(`Hydrated ${cloudTrades.length} trade record(s) from Supabase Cloud for guest_autopilot.`);
+          this.log(`Hydrated ${cloudTrades.length} trade record(s) from Supabase Cloud for ${targetUid}.`);
           // Reconcile active open positions strictly from Supabase Single Source of Truth
           const openFromCloud = cloudTrades.filter(t => t.status === 'OPEN').map(ct => ({
             id: ct.id,
@@ -578,7 +586,7 @@ class MondayAutoPilotDaemon {
     try {
       const payload = {
         id: trade.id,
-        user_id: 'guest_autopilot',
+        user_id: this.paperTrader.userId || 'guest_autopilot',
         market: 'Crypto',
         asset: trade.asset,
         direction: trade.direction,

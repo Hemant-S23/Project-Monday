@@ -186,6 +186,8 @@ class App {
         : Math.max(0, this.paperTrader.balance - (liveMetrics.usedMargin || 0));
       this.ui.refreshDerivativesOrderDesk();
     }
+    this.syncWithSupabaseCloud();
+    this.pushSettingsToCloud(this.getAutoPilotSettings()).catch(() => {});
     this.paperTrader.auditDowntimeTrades(this.cryptoAdapter).then(resolved => {
       if (resolved && resolved.length > 0) {
         this.updateTradeJournalAndStats();
@@ -204,11 +206,16 @@ class App {
     console.log('[App] Initializing AI Trading Co-Pilot for Crypto and Indian Markets...');
 
     // 0. Verify Auth Session & update UI state (Seamless instant-cockpit entry)
+    await this.authManager.ready();
     let currentUser = this.authManager.getUser();
     if (!currentUser) {
-      // Auto-activate instant Guest Trader (GT) account so user never gets stuck behind an auth wall
-      const guestRes = await this.authManager.loginAsGuest();
-      currentUser = guestRes.user;
+      const hasOAuthTokens = (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('type='))) ||
+                             (window.location.search && window.location.search.includes('code='));
+      if (!hasOAuthTokens) {
+        // Auto-activate instant Guest Trader account only if user did not initiate an OAuth login
+        const guestRes = await this.authManager.loginAsGuest();
+        currentUser = guestRes.user;
+      }
     }
     if (currentUser) {
       this.ui.updateUserProfile(currentUser);
@@ -1061,9 +1068,10 @@ class App {
     try {
       const cfg = window.MONDAY_SUPABASE_CONFIG;
       if (!cfg || !cfg.url || !cfg.anonKey) return;
+      const activeUserId = this.authManager && this.authManager.getUserId ? this.authManager.getUserId() : 'guest_autopilot';
       const payload = {
         id: 'CONFIG_AUTOPILOT_GUEST',
-        user_id: 'guest_autopilot',
+        user_id: activeUserId,
         market: this.currentMarket || 'Crypto',
         asset: 'SETTINGS',
         direction: 'CONFIG',
@@ -1077,6 +1085,7 @@ class App {
         status: 'CONFIG',
         strategy: JSON.stringify({
           ...settings,
+          userId: activeUserId,
           updatedAt: new Date().toISOString()
         })
       };

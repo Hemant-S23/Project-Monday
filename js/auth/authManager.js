@@ -321,32 +321,39 @@ export class AuthManager {
   }
 
   /**
-   * Google OAuth trigger
+   * Google OAuth trigger (100% Authentic Cloud OAuth via Supabase)
    */
   async signInWithGoogle() {
+    await this.ready();
     if (this.supabaseClient) {
       try {
-        const { error } = await this.supabaseClient.auth.signInWithOAuth({
+        const redirectTo = new URL(
+          window.location.href.includes('/pages/') ? '../terminal.html' : 'terminal.html',
+          window.location.href
+        ).href.split('?')[0].split('#')[0];
+
+        console.log('[AuthManager] Initiating Google OAuth with redirectTo:', redirectTo);
+        const { data, error } = await this.supabaseClient.auth.signInWithOAuth({
           provider: 'google',
-          options: { redirectTo: window.location.origin + window.location.pathname }
+          options: {
+            redirectTo: redirectTo,
+            queryParams: {
+              access_type: 'offline',
+              prompt: 'select_account'
+            }
+          }
         });
         if (error) return { success: false, error: error.message };
-        return { success: true };
+        return { success: true, data };
       } catch (err) {
         return { success: false, error: err.message };
       }
     }
 
-    // Demo Google OAuth simulation when Supabase keys not set yet
-    const demoUser = {
-      id: 'google_user_' + Date.now(),
-      email: 'trader.google@gmail.com',
-      name: 'Google Trader',
-      isGuest: false,
-      createdAt: new Date().toISOString()
+    return { 
+      success: false, 
+      error: 'Supabase Cloud authentication client is not available. Please check network connection.' 
     };
-    this.saveSession(demoUser);
-    return { success: true, user: demoUser };
   }
 
   signOut() {

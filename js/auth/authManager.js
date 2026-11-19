@@ -328,7 +328,7 @@ export class AuthManager {
     if (this.supabaseClient) {
       try {
         const redirectTo = new URL(
-          window.location.href.includes('/pages/') ? '../terminal.html' : 'terminal.html',
+          window.location.href.includes('/pages/') ? 'auth.html' : 'pages/auth.html',
           window.location.href
         ).href.split('?')[0].split('#')[0];
 
@@ -354,6 +354,53 @@ export class AuthManager {
       success: false, 
       error: 'Supabase Cloud authentication client is not available. Please check network connection.' 
     };
+  }
+
+  /**
+   * Update authenticated user's password (e.g. during onboarding)
+   */
+  async updateUserPassword(newPassword) {
+    if (!newPassword || newPassword.length < 6) {
+      return { success: false, error: 'Password must be at least 6 characters.' };
+    }
+    if (this.supabaseClient) {
+      try {
+        const { data, error } = await this.supabaseClient.auth.updateUser({
+          password: newPassword
+        });
+        if (error) return { success: false, error: error.message };
+        return { success: true, user: data.user };
+      } catch (e) {
+        return { success: false, error: e.message };
+      }
+    }
+    return { success: true };
+  }
+
+  /**
+   * Update user profile (name, callsign, preferences) in Supabase and local cache
+   */
+  async updateUserProfile(profileData = {}) {
+    if (this.currentUser) {
+      this.currentUser = { ...this.currentUser, ...profileData };
+      this.saveSession(this.currentUser);
+    }
+
+    if (this.supabaseClient && this.currentUser?.id && !this.currentUser.isGuest) {
+      try {
+        await this.supabaseClient.from('profiles').upsert({
+          id: this.currentUser.id,
+          email: this.currentUser.email,
+          full_name: profileData.name || this.currentUser.name,
+          callsign: profileData.callsign || this.currentUser.name,
+          market_focus: profileData.marketFocus || 'DUAL',
+          updated_at: new Date().toISOString()
+        });
+      } catch (e) {
+        console.warn('[AuthManager] Supabase profile upsert error:', e);
+      }
+    }
+    return { success: true, user: this.currentUser };
   }
 
   signOut() {

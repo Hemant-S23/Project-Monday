@@ -25,6 +25,10 @@
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="styles/components.css">
 
+  <!-- Supabase JS Client & Project Config -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module" src="js/config/supabaseConfig.js"></script>
+
   <!-- Three.js Native ESM Importmap for Zero-Lag 3D Terrain -->
   <script type="importmap">
   {
@@ -983,7 +987,7 @@
 
     <!-- Right Actions -->
     <div class="flex items-center gap-2">
-      <a href="pages/auth.html" class="btn-ghost" style="font-size: 0.85rem;">Sign In</a>
+      <a href="pages/auth.html" class="btn-ghost" id="nav_auth_btn" style="font-size: 0.85rem;">Sign In</a>
       <button type="button" class="cmd-k-chip" id="nav_btn_cmdk" title="Press Ctrl+K to search">
         <i class="ph-bold ph-command"></i> Ctrl+K
       </button>
@@ -2534,7 +2538,42 @@
       }
     });
 
-    // 12. Register PWA Offline Service Worker
+    // 12. Dynamic User Session in Navbar
+    try {
+      import('./js/auth/authManager.js').then(({ AuthManager }) => {
+        const authMgr = new AuthManager();
+        const updateNav = (u) => {
+          const authBtn = document.getElementById('nav_auth_btn');
+          if (!authBtn || !u || u.isGuest) return;
+          const firstName = (u.name || 'Trader').split(' ')[0];
+          const avatar = u.avatar || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(u.email || u.id)}`;
+          authBtn.className = '';
+          authBtn.style.display = 'inline-flex';
+          authBtn.style.alignItems = 'center';
+          authBtn.style.gap = '8px';
+          authBtn.style.padding = '4px 12px';
+          authBtn.style.background = 'rgba(255, 255, 255, 0.05)';
+          authBtn.style.border = '1px solid rgba(6, 182, 212, 0.35)';
+          authBtn.style.borderRadius = '999px';
+          authBtn.style.color = '#ffffff';
+          authBtn.style.textDecoration = 'none';
+          authBtn.style.fontSize = '0.82rem';
+          authBtn.style.fontWeight = '600';
+          authBtn.innerHTML = `
+            <img src="${avatar}" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover;" onerror="this.style.display='none'">
+            <span>${firstName}</span>
+            <span style="font-size: 0.65rem; background: rgba(16, 185, 129, 0.15); color: #34d399; padding: 1px 6px; border-radius: 4px; font-weight: 700;">PRO</span>
+          `;
+        };
+        authMgr.onAuthChange(updateNav);
+        authMgr.ready().then(() => {
+          const cur = authMgr.getCurrentUser();
+          if (cur) updateNav(cur);
+        });
+      }).catch(()=>{});
+    } catch(e) {}
+
+    // 13. Register PWA Offline Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').then(r => { r.update().catch(()=>{}); if(r.waiting) r.waiting.postMessage({type:'SKIP_WAITING'}); }).catch(()=>{});

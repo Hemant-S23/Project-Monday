@@ -374,7 +374,11 @@ export class PaperTrader {
       }
     }
 
-    const tradeId = `TRADE-${String(this.trades.length + this.openPositions.length + 1).padStart(3, '0')}`;
+    const userTag = (this.userId && this.userId !== 'default' && this.userId !== 'guest_autopilot') 
+      ? this.userId.slice(0, 6) 
+      : 'GST';
+    const tradeSeq = String(this.trades.length + this.openPositions.length + 1).padStart(3, '0');
+    const tradeId = (tradeData && tradeData.id) ? tradeData.id : `TRD-${userTag}-${Date.now().toString(36).toUpperCase()}-${tradeSeq}`;
     const lev = Math.max(1, Number(leverage) || 1);
     const posSize = Number(positionSize) || 0;
     const notional = notionalUSD !== null ? Number(notionalUSD) : +(entryNum * posSize).toFixed(2);

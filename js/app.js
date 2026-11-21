@@ -199,6 +199,7 @@ class App {
       this.ui.refreshDerivativesOrderDesk();
     }
     this.syncWithSupabaseCloud();
+    this.reconcileOfflineTradesWithSupabase().catch(() => {});
     this.pushSettingsToCloud(this.getAutoPilotSettings()).catch(() => {});
     this.paperTrader.auditDowntimeTrades(this.cryptoAdapter).then(resolved => {
       if (resolved && resolved.length > 0) {
@@ -371,8 +372,12 @@ class App {
       }
     })();
 
-    // Run Supabase sync asynchronously without blocking chart render
-    setTimeout(() => this.syncWithSupabaseCloud(), 150);
+    // Run Supabase sync and background offline reconciliation asynchronously without blocking chart render
+    setTimeout(() => {
+      this.syncWithSupabaseCloud().then(() => {
+        this.reconcileOfflineTradesWithSupabase().catch(() => {});
+      }).catch(() => {});
+    }, 150);
 
     // 5. Initial greeting from MONDAY
     setTimeout(() => {
@@ -425,7 +430,26 @@ class App {
       if (!cfg || !cfg.url || !cfg.anonKey) return;
 
       const activeUserId = this.authManager && this.authManager.getUserId ? this.authManager.getUserId() : 'guest_autopilot';
-      const userFilter = `user_id=in.(${activeUserId},guest_autopilot)`;
+      const isAuth = this.authManager && typeof this.authManager.isUserAuthenticated === 'function' && this.authManager.isUserAuthenticated();
+      const currentUser = this.authManager && this.authManager.getUser ? this.authManager.getUser() : null;
+      const isOwner = currentUser && (currentUser.email === 'hsmcpl06@gmail.com' || (currentUser.name && currentUser.name.toLowerCase().includes('hemant')));
+
+      // Strict User Isolation:
+      // - Master Owner (Hemant): queries his personal UUID trades AND claims historical master daemon trades
+      // - Any other registered user: strictly queries user_id = eq.${activeUserId} (100% private vault)
+      // - Guest: queries user_id = eq.guest_autopilot
+      let userFilter;
+      if (isAuth) {
+        userFilter = isOwner 
+          ? `user_id=in.(${activeUserId},guest_autopilot)` 
+          : `user_id=eq.${activeUserId}`;
+      } else {
+        userFilter = `user_id=eq.guest_autopilot`;
+      }
+
+      const token = (this.authManager && typeof this.authManager.getAuthToken === 'function')
+        ? await this.authManager.getAuthToken()
+        : cfg.anonKey;
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000);
@@ -433,7 +457,7 @@ class App {
       const res = await fetch(`${cfg.url}/rest/v1/paper_trades?select=*&${userFilter}&order=created_at.desc&limit=1000`, {
         headers: {
           'apikey': cfg.anonKey,
-          'Authorization': `Bearer ${cfg.anonKey}`
+          'Authorization': `Bearer ${token}`
         },
         signal: controller.signal
       });
@@ -1077,8 +1101,13 @@ class App {
       const cfg = window.MONDAY_SUPABASE_CONFIG;
       if (!cfg || !cfg.url || !cfg.anonKey) return;
       const activeUserId = this.authManager && this.authManager.getUserId ? this.authManager.getUserId() : 'guest_autopilot';
+      const token = (this.authManager && typeof this.authManager.getAuthToken === 'function')
+        ? await this.authManager.getAuthToken()
+        : cfg.anonKey;
+
+      const configId = activeUserId === 'guest_autopilot' ? 'CONFIG_AUTOPILOT_GUEST' : `CONFIG_AUTOPILOT_${activeUserId}`;
       const payload = {
-        id: 'CONFIG_AUTOPILOT_GUEST',
+        id: configId,
         user_id: activeUserId,
         market: this.currentMarket || 'Crypto',
         asset: 'SETTINGS',
@@ -1102,7 +1131,7 @@ class App {
         method: 'POST',
         headers: {
           'apikey': cfg.anonKey,
-          'Authorization': `Bearer ${cfg.anonKey}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
           'Prefer': 'resolution=merge-duplicates'
         },
@@ -1635,6 +1664,10 @@ class App {
       const cfg = window.MONDAY_SUPABASE_CONFIG;
       if (!cfg || !cfg.url || !cfg.anonKey || !trade) return;
       const activeUserId = this.authManager && this.authManager.getUserId ? this.authManager.getUserId() : 'guest_autopilot';
+      const token = (this.authManager && typeof this.authManager.getAuthToken === 'function')
+        ? await this.authManager.getAuthToken()
+        : cfg.anonKey;
+
       const payload = {
         id: trade.id,
         user_id: activeUserId,
@@ -1660,7 +1693,7 @@ class App {
         method: 'POST',
         headers: {
           'apikey': cfg.anonKey,
-          'Authorization': `Bearer ${cfg.anonKey}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
           'Prefer': 'resolution=merge-duplicates'
         },
@@ -1675,7 +1708,7 @@ class App {
     try {
       const cfg = window.MONDAY_SUPABASE_CONFIG;
       if (!cfg || !cfg.url || !cfg.anonKey) return;
-      const toSync = [...(this.paperTrader.openPositions || []), ...(this.paperTrader.trades || []).slice(0, 15)];
+      const toSync = [...(this.paperTrader.openPositions || []), ...(this.paperTrader.trades || []).slice(0, 100)];
       await Promise.all(toSync.map(trade => this.syncTradeToSupabase(trade)));
       console.log(`[App] Supabase cloud sync reconciled ${toSync.length} items in parallel.`);
     } catch (err) {

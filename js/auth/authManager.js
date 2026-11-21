@@ -177,6 +177,25 @@ export class AuthManager {
     return !!this.currentUser;
   }
 
+  isUserAuthenticated() {
+    return !!(this.currentUser && !this.currentUser.isGuest && this.currentUser.id && this.currentUser.id !== 'guest_autopilot');
+  }
+
+  async getAuthToken() {
+    if (this.supabaseClient) {
+      try {
+        const { data: { session } } = await this.supabaseClient.auth.getSession();
+        if (session && session.access_token) {
+          return session.access_token;
+        }
+      } catch (e) {
+        console.warn('[AuthManager] getAuthToken error:', e);
+      }
+    }
+    const cfg = this.getSupabaseConfig();
+    return cfg?.anonKey || null;
+  }
+
   getUser() {
     return this.currentUser;
   }

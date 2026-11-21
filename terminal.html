@@ -511,9 +511,8 @@
 </head>
 <body data-mobile-page="chart">
 
-  <!-- Ambient Chromatic Background Orbs, 3D Liquidity Canvas & Tech Grid -->
+  <!-- Ambient Chromatic Background Orbs & Tech Grid -->
   <div class="ambient-background-layer" aria-hidden="true">
-    <div class="hero-3d-canvas-wrap" id="terminal_canvas_3d"></div>
     <div class="ambient-orb orb-violet"></div>
     <div class="ambient-orb orb-cyan"></div>
     <div class="ambient-orb orb-emerald"></div>
@@ -3165,23 +3164,6 @@
       document.addEventListener('DOMContentLoaded', initTerminalRiskGate);
     } else {
       initTerminalRiskGate();
-    }
-  </script>
-
-  <!-- 3D Liquid Volatility Mesh Background (Matching Landing Page Experience) -->
-  <script type="module">
-    import { Hero3DVisualizer } from './js/landing/hero3D.js';
-    function init3D() {
-      try {
-        new Hero3DVisualizer('terminal_canvas_3d');
-      } catch (err) {
-        console.warn('[Terminal] 3D background visualizer initialization:', err);
-      }
-    }
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', init3D);
-    } else {
-      init3D();
     }
   </script>
 

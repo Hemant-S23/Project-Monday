@@ -1003,6 +1003,15 @@ export class TerminalUI {
       purgePassbookBtn.addEventListener('click', openResetConfirmModal);
     }
 
+    const syncCloudPassbookBtn = document.getElementById('btn_sync_cloud_passbook');
+    if (syncCloudPassbookBtn) {
+      syncCloudPassbookBtn.addEventListener('click', () => {
+        if (typeof this.callbacks.onSyncCloud === 'function') {
+          this.callbacks.onSyncCloud();
+        }
+      });
+    }
+
     // PROJECT MONDAY SaaS Layout & Navigation Bindings (Smart Hover-to-Open & Pin Dock)
     const sidebarDock = document.getElementById('saas_sidebar_dock');
     const sidebarEl = document.getElementById('saas_sidebar');

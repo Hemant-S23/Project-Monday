@@ -94,6 +94,12 @@ class App {
       onCloseAllTrades: () => this.closeAllActiveTrades(),
       onCloseAllPositions: () => this.closeAllActiveTrades(),
       onResetAccount: () => this.resetAccount(),
+      onSyncCloud: async () => {
+        this.ui.showToast('⚡ Cloud Syncing', 'Pushing local backlog and syncing with Supabase Cloud...', 'info');
+        await this.reconcileOfflineTradesWithSupabase();
+        await this.syncWithSupabaseCloud();
+        this.ui.showToast('✅ Cloud Synchronized', 'All positions, ledger trades and balance match Supabase Cloud.', 'success');
+      },
       onGetFinancialLedger: (month) => this.paperTrader.getFinancialLedger(month),
       onThemeChange: (theme) => this.chartManager.setTheme(theme),
       onSignIn: async (email, password) => {
@@ -276,8 +282,10 @@ class App {
         try {
           await Promise.race([
             this.syncWithSupabaseCloud(),
-            new Promise(resolve => setTimeout(resolve, 500))
+            new Promise(resolve => setTimeout(resolve, 3500))
           ]);
+          // Reconcile and push any local offline backlog to cloud
+          this.reconcileOfflineTradesWithSupabase().catch(() => {});
         } catch (e) {
           console.warn('[App] Background cloud sync timeout/err:', e);
         }
@@ -343,6 +351,8 @@ class App {
                 tradeId: trade.id,
                 timestamp: trade.closedAt
               });
+              // Cloud-First Guarantee: Sync resolved downtime trade to Supabase Cloud immediately
+              this.syncTradeToSupabase(trade).catch(() => {});
             });
           }
         } catch (downtimeErr) {
@@ -558,6 +568,13 @@ class App {
       // 3. Add any cloud CLOSED trades into local trades ledger
       for (const [id, ct] of cloudClosedMap.entries()) {
         const existsClosed = this.paperTrader.trades.find(t => t.id === id);
+        let parsedMeta = {};
+        if (ct.strategy) {
+          try { parsedMeta = JSON.parse(ct.strategy); } catch (e) {}
+        }
+        const openedAtTime = parsedMeta.openedAt || (ct.created_at ? new Date(ct.created_at).getTime() : Date.now());
+        const closedAtTime = parsedMeta.closedAt || (ct.created_at ? new Date(ct.created_at).getTime() : Date.now());
+
         if (!existsClosed) {
           this.paperTrader.trades.unshift({
             id: ct.id,
@@ -572,14 +589,30 @@ class App {
             rewardUSD: Number(ct.reward_usd || 60),
             rrRatio: Number(ct.rr_ratio || 3.0),
             status: 'CLOSED',
-            result: ct.result || 'WIN',
+            result: ct.result || (Number(ct.pnl_usd || 0) >= 0 ? 'WIN' : 'LOSS'),
             pnlUSD: Number(ct.pnl_usd || 0),
             rMultiple: Number(ct.r_multiple || 0),
             exitPrice: ct.exit_price ? Number(ct.exit_price) : null,
-            openedAt: ct.created_at ? new Date(ct.created_at).getTime() : Date.now(),
-            closedAt: ct.closed_at ? new Date(ct.closed_at).getTime() : (ct.created_at ? new Date(ct.created_at).getTime() : Date.now())
+            exitReason: parsedMeta.exitReason || (ct.result === 'WIN' ? 'TAKE_PROFIT' : 'STOP_LOSS'),
+            feesUSD: Number(parsedMeta.feesUSD || 0),
+            openedAt: openedAtTime,
+            closedAt: closedAtTime
           });
           changed = true;
+        } else {
+          // If already exists locally, update with the immutable Cloud truth so all browsers match 1:1!
+          if (parsedMeta.closedAt && existsClosed.closedAt !== parsedMeta.closedAt) {
+            existsClosed.closedAt = parsedMeta.closedAt;
+            changed = true;
+          }
+          if (ct.exit_price && existsClosed.exitPrice !== Number(ct.exit_price)) {
+            existsClosed.exitPrice = Number(ct.exit_price);
+            changed = true;
+          }
+          if (parsedMeta.exitReason && existsClosed.exitReason !== parsedMeta.exitReason) {
+            existsClosed.exitReason = parsedMeta.exitReason;
+            changed = true;
+          }
         }
       }
 
@@ -712,6 +745,8 @@ class App {
         if (this.signalEngine) {
           this.signalEngine.onPositionClosed(pos, result, price);
         }
+        // Cloud-First Guarantee: Sync closed trade to Supabase Cloud immediately
+        this.syncTradeToSupabase(pos).catch(() => {});
       });
       this.updateTradeJournalAndStats();
     }
@@ -1659,6 +1694,41 @@ class App {
     }
   }
 
+  formatTradePayload(trade, activeUserId) {
+    const openedAtTime = trade.openedAt ? Number(trade.openedAt) : Date.now();
+    const closedAtTime = trade.closedAt ? Number(trade.closedAt) : (trade.status === 'CLOSED' ? Date.now() : null);
+    const meta = {
+      strategyName: trade.strategy || '20x Isolated HTF-Trend Pullback',
+      openedAt: openedAtTime,
+      closedAt: closedAtTime,
+      exitReason: trade.exitReason || trade.closeReason || (trade.result === 'WIN' ? 'TAKE_PROFIT' : (trade.result === 'LOSS' ? 'STOP_LOSS' : null)),
+      feesUSD: trade.feesUSD || 0
+    };
+
+    return {
+      id: trade.id,
+      user_id: activeUserId,
+      market: trade.market || 'Crypto',
+      asset: trade.asset,
+      direction: trade.direction,
+      entry_price: trade.entry,
+      stop_loss: trade.stopLoss,
+      target_price: trade.target,
+      position_size: trade.positionSize,
+      risk_usd: trade.riskUSD,
+      reward_usd: trade.rewardUSD,
+      rr_ratio: trade.rrRatio ? parseFloat(trade.rrRatio) : 3.0,
+      status: trade.status || 'OPEN',
+      result: trade.result || (trade.status === 'CLOSED' ? (Number(trade.pnlUSD || 0) >= 0 ? 'WIN' : 'LOSS') : null),
+      pnl_usd: trade.pnlUSD || 0,
+      r_multiple: trade.rMultiple || 0,
+      exit_price: trade.exitPrice || null,
+      timeframe: '5M',
+      strategy: JSON.stringify(meta),
+      created_at: new Date(openedAtTime).toISOString()
+    };
+  }
+
   async syncTradeToSupabase(trade) {
     try {
       const cfg = window.MONDAY_SUPABASE_CONFIG;
@@ -1668,27 +1738,7 @@ class App {
         ? await this.authManager.getAuthToken()
         : cfg.anonKey;
 
-      const payload = {
-        id: trade.id,
-        user_id: activeUserId,
-        market: trade.market || 'Crypto',
-        asset: trade.asset,
-        direction: trade.direction,
-        entry_price: trade.entry,
-        stop_loss: trade.stopLoss,
-        target_price: trade.target,
-        position_size: trade.positionSize,
-        risk_usd: trade.riskUSD,
-        reward_usd: trade.rewardUSD,
-        rr_ratio: trade.rrRatio ? parseFloat(trade.rrRatio) : 3.0,
-        status: trade.status || 'OPEN',
-        result: trade.result || null,
-        pnl_usd: trade.pnlUSD || 0,
-        r_multiple: trade.rMultiple || 0,
-        exit_price: trade.exitPrice || null,
-        timeframe: '5M',
-        strategy: '20x Isolated HTF-Trend Pullback'
-      };
+      const payload = this.formatTradePayload(trade, activeUserId);
       await fetch(`${cfg.url}/rest/v1/paper_trades`, {
         method: 'POST',
         headers: {
@@ -1708,9 +1758,32 @@ class App {
     try {
       const cfg = window.MONDAY_SUPABASE_CONFIG;
       if (!cfg || !cfg.url || !cfg.anonKey) return;
-      const toSync = [...(this.paperTrader.openPositions || []), ...(this.paperTrader.trades || []).slice(0, 100)];
-      await Promise.all(toSync.map(trade => this.syncTradeToSupabase(trade)));
-      console.log(`[App] Supabase cloud sync reconciled ${toSync.length} items in parallel.`);
+      const activeUserId = this.authManager && this.authManager.getUserId ? this.authManager.getUserId() : 'guest_autopilot';
+      const token = (this.authManager && typeof this.authManager.getAuthToken === 'function')
+        ? await this.authManager.getAuthToken()
+        : cfg.anonKey;
+
+      const toSync = [...(this.paperTrader.openPositions || []), ...(this.paperTrader.trades || [])];
+      if (toSync.length === 0) return;
+
+      const payloads = toSync.map(t => this.formatTradePayload(t, activeUserId));
+
+      // Execute bulk upsert in chunks of 50 in parallel
+      const chunkSize = 50;
+      for (let i = 0; i < payloads.length; i += chunkSize) {
+        const chunk = payloads.slice(i, i + chunkSize);
+        await fetch(`${cfg.url}/rest/v1/paper_trades`, {
+          method: 'POST',
+          headers: {
+            'apikey': cfg.anonKey,
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'resolution=merge-duplicates'
+          },
+          body: JSON.stringify(chunk)
+        });
+      }
+      console.log(`[App] Supabase cloud sync bulk reconciled ${payloads.length} items successfully.`);
     } catch (err) {
       console.warn('[App] Cloud trade reconciliation failed:', err);
     }

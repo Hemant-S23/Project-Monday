@@ -51,8 +51,12 @@ CREATE TABLE IF NOT EXISTS public.paper_trades (
   exit_price NUMERIC,
   timeframe TEXT,
   strategy TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  closed_at TIMESTAMPTZ
 );
+
+-- Add closed_at column if updating existing installation
+ALTER TABLE public.paper_trades ADD COLUMN IF NOT EXISTS closed_at TIMESTAMPTZ;
 
 -- Enable RLS for trades
 ALTER TABLE public.paper_trades ENABLE ROW LEVEL SECURITY;

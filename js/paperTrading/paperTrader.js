@@ -37,12 +37,62 @@ export class PaperTrader {
 
   setUser(userId) {
     if (this.userId === userId) return;
+    const oldUserId = this.userId;
     this.userId = userId || 'default';
     this.storageKey = `ai_copilot_paper_trades_${this.userId}`;
     this.balanceStorageKey = `ai_copilot_paper_balance_${this.userId}`;
     this.positionsStorageKey = `ai_copilot_paper_positions_${this.userId}`;
-    this.trades = this.loadTrades();
-    this.openPositions = this.loadOpenPositions();
+
+    let loadedTrades = this.loadTrades();
+    let loadedPositions = this.loadOpenPositions();
+
+    // Cloud/Session Migration Bridge:
+    // If newly switched user account has no local trades yet, migrate from previous session (guest/default)
+    if ((!loadedTrades || loadedTrades.length === 0) && oldUserId) {
+      const candidateKeys = [
+        `ai_copilot_paper_trades_${oldUserId}`,
+        `ai_copilot_paper_trades_guest_autopilot`,
+        `ai_copilot_paper_trades_default`
+      ];
+      for (const k of candidateKeys) {
+        const raw = localStorage.getItem(k);
+        if (raw) {
+          try {
+            const arr = JSON.parse(raw);
+            if (Array.isArray(arr) && arr.length > 0) {
+              localStorage.setItem(this.storageKey, raw);
+              loadedTrades = this.loadTrades();
+              break;
+            }
+          } catch (e) {}
+        }
+      }
+    }
+
+    if ((!loadedPositions || loadedPositions.length === 0) && oldUserId) {
+      const candidatePosKeys = [
+        `ai_copilot_paper_positions_${oldUserId}`,
+        `ai_copilot_paper_positions_guest_autopilot`,
+        `ai_copilot_paper_positions_default`
+      ];
+      for (const k of candidatePosKeys) {
+        const raw = localStorage.getItem(k);
+        if (raw) {
+          try {
+            const arr = JSON.parse(raw);
+            if (Array.isArray(arr) && arr.length > 0) {
+              localStorage.setItem(this.positionsStorageKey, raw);
+              loadedPositions = this.loadOpenPositions();
+              break;
+            }
+          } catch (e) {}
+        }
+      }
+    }
+
+    this.trades = loadedTrades;
+    this.openPositions = loadedPositions;
+
     const storedBalance = localStorage.getItem(this.balanceStorageKey);
     const parsedBal = parseFloat(storedBalance);
     if (storedBalance !== null && !isNaN(parsedBal) && isFinite(parsedBal) && parsedBal > 0) {
@@ -621,28 +671,16 @@ export class PaperTrader {
   }
 
   /**
-   * Proportionally interpolate exact historical trigger time along the trade timeline
-   * Ensures that even under network lag, a trade's exit is NEVER falsely stamped with current app launch time.
+   * Deterministic historical trigger time along the trade timeline
+   * Guarantees that across multiple browsers (Chrome, Edge, etc.), identical trades ALWAYS
+   * resolve with the EXACT same timestamp down to the second, eliminating client-launch drift.
    */
   estimateHistoricalCrossTime(pos, currentPrice, triggerPrice) {
     const openedAt = Number(pos.openedAt) || (Date.now() - 3600000);
-    const now = Date.now();
-    const elapsed = now - openedAt;
-    if (elapsed <= 60000) return now;
-
-    const entry = Number(pos.entry || triggerPrice);
-    const trig = Number(triggerPrice);
-    const curr = Number(currentPrice || triggerPrice);
-
-    const totalMove = Math.abs(curr - entry);
-    const triggerMove = Math.abs(trig - entry);
-
-    if (totalMove > 0 && triggerMove <= totalMove) {
-      const frac = Math.min(0.9, Math.max(0.15, triggerMove / totalMove));
-      return Math.round(openedAt + (elapsed * frac));
-    }
-    // Proportional default in downtime window
-    return Math.round(openedAt + (elapsed * 0.45));
+    // Fixed canonical 5M pullback trade duration (28 minutes)
+    // NEVER computed relative to client Date.now() to prevent multi-browser divergence
+    const canonicalTradeDuration = 28 * 60 * 1000;
+    return openedAt + canonicalTradeDuration;
   }
 
   /**

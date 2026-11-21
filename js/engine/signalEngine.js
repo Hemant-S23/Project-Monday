@@ -19,11 +19,38 @@ function formatLevelPrice(val, asset) {
 export class SignalEngine {
   constructor() {
     this.storageKey = 'monday_alpha_signals';
+    this.archivedClearedAt = 0;
+    if (typeof localStorage !== 'undefined') {
+      this.archivedClearedAt = Number(localStorage.getItem('monday_signals_cleared_at') || 0);
+    }
     this.signals = this.loadSignals();
     this.listeners = new Set();
     this.lastScannedPrices = new Map();
     this.onSignalFillCallback = null;
     this.onSignalChangeCallback = null;
+  }
+
+  setArchivedClearedAt(timestamp) {
+    const t = Number(timestamp) || 0;
+    if (t > this.archivedClearedAt) {
+      this.archivedClearedAt = t;
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('monday_signals_cleared_at', String(t));
+      }
+      this.notify();
+    }
+  }
+
+  clearArchived(timestamp = Date.now()) {
+    this.setArchivedClearedAt(timestamp);
+    // Instant UI prune: remove archived signals cleared before or at watermark
+    this.signals = this.signals.filter(s => {
+      const isArchived = s.status === 'TP_HIT' || s.status === 'SL_HIT' || s.status === 'EXPIRED' || s.status === 'INVALIDATED';
+      if (!isArchived) return true;
+      const t = s.closedAt || s.issuedAt || 0;
+      return t > this.archivedClearedAt;
+    });
+    this.saveSignals();
   }
 
   setOnSignalFill(callback) {
@@ -67,7 +94,7 @@ export class SignalEngine {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed)) {
             // Clean Slate Sanitizer: Automatically purge legacy corrupted signals and phantom clone loops
-            const sanitized = parsed.filter(s => {
+            let sanitized = parsed.filter(s => {
               // Purge legacy hardcoded mock/duplicate BTC $60k setups
               if (s.asset === 'BTC' && Number(s.entryPrice) === 60000 && Number(s.stopLossPrice) === 59000) {
                 return false;
@@ -82,6 +109,16 @@ export class SignalEngine {
               if (s.direction === 'SHORT' && (tp >= entry || sl <= entry)) return false;
               return true;
             });
+
+            // User-Level Watermark Filter: Purge archived signals cleared before watermark
+            if (this.archivedClearedAt > 0) {
+              sanitized = sanitized.filter(s => {
+                const isArchived = s.status === 'TP_HIT' || s.status === 'SL_HIT' || s.status === 'EXPIRED' || s.status === 'INVALIDATED';
+                if (!isArchived) return true;
+                const t = s.closedAt || s.issuedAt || 0;
+                return t > this.archivedClearedAt;
+              });
+            }
 
             // Universal Same-Day Setup Deduplicator: purge phantom clone loops
             const clean = this.deduplicateSignals(sanitized);
@@ -143,13 +180,25 @@ export class SignalEngine {
         (s.asset === ct.asset && s.direction === ct.direction && Math.abs(Number(s.entryPrice) - Number(entryP)) < 0.001)
       );
 
+      // Filter out cloud signals that were cleared by this user's archive watermark
+      const isArchived = status === 'TP_HIT' || status === 'SL_HIT' || status === 'INVALIDATED' || status === 'EXPIRED';
+      const sigTime = ct.closed_at ? new Date(ct.closed_at).getTime() : (meta.closedAt || meta.issuedAt || (ct.created_at ? new Date(ct.created_at).getTime() : 0));
+      if (isArchived && this.archivedClearedAt > 0 && sigTime <= this.archivedClearedAt) {
+        // If it was already loaded locally, prune it
+        if (existingIndex >= 0) {
+          this.signals.splice(existingIndex, 1);
+          hasChanged = true;
+        }
+        continue;
+      }
+
       if (existingIndex >= 0) {
         const existing = this.signals[existingIndex];
-        // If cloud holds resolved terminal state (TP_HIT, SL_HIT, INVALIDATED), update existing
-        if (existing.status !== status && (status === 'TP_HIT' || status === 'SL_HIT' || status === 'INVALIDATED' || status === 'EXPIRED')) {
+        // Cloud-First Authority: Always mirror canonical cloud state
+        if (existing.status !== status) {
           existing.status = status;
-          existing.closedAt = ct.closed_at ? new Date(ct.closed_at).getTime() : Date.now();
-          existing.realizedR = Number(ct.r_multiple) || (status === 'TP_HIT' ? (existing.riskReward || 2.0) : -1.0);
+          existing.closedAt = ct.closed_at ? new Date(ct.closed_at).getTime() : (meta.closedAt || Date.now());
+          existing.realizedR = Number(ct.r_multiple) || (status === 'TP_HIT' ? (Number(ct.rr_ratio) || 2.0) : (status === 'SL_HIT' ? -1.0 : 0));
           hasChanged = true;
         }
       } else {
@@ -710,19 +759,28 @@ export class SignalEngine {
 
   getSignals(filter = 'ALL') {
     this.checkTimeouts();
+    const visible = this.signals.filter(s => {
+      const isArchived = s.status === 'TP_HIT' || s.status === 'SL_HIT' || s.status === 'EXPIRED' || s.status === 'INVALIDATED';
+      if (isArchived && this.archivedClearedAt > 0) {
+        const t = s.closedAt || s.issuedAt || 0;
+        if (t <= this.archivedClearedAt) return false;
+      }
+      return true;
+    });
+
     if (filter === 'PENDING') {
-      return this.signals.filter(s => s.status === 'PENDING');
+      return visible.filter(s => s.status === 'PENDING');
     }
     if (filter === 'ACTIVE') {
-      return this.signals.filter(s => s.status === 'ACTIVE');
+      return visible.filter(s => s.status === 'ACTIVE');
     }
     if (filter === 'COMPLETED') {
-      return this.signals.filter(s => s.status === 'TP_HIT' || s.status === 'SL_HIT');
+      return visible.filter(s => s.status === 'TP_HIT' || s.status === 'SL_HIT');
     }
     if (filter === 'EXPIRED') {
-      return this.signals.filter(s => s.status === 'EXPIRED' || s.status === 'INVALIDATED');
+      return visible.filter(s => s.status === 'EXPIRED' || s.status === 'INVALIDATED');
     }
-    return [...this.signals];
+    return visible;
   }
 
   getActiveCount() {

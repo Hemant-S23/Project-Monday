@@ -147,8 +147,10 @@ class App {
       onGetSignals: (filter) => this.signalEngine.getSignals(filter),
       onGetActiveSignalsCount: () => this.signalEngine.getActiveCount(),
       onClearSignals: () => {
-        this.signalEngine.clearAll();
-        this.ui.updateSignalsBadge(0);
+        const now = Date.now();
+        this.signalEngine.clearArchived(now);
+        this.pushSettingsToCloud().catch(() => {});
+        this.ui.updateSignalsBadge(this.signalEngine.getActiveCount());
       },
       onSignalsPageOpen: () => {
         if (this.signalEngine && this.cryptoAdapter) {
@@ -533,6 +535,17 @@ class App {
                 if (cloudSet.voiceMuted !== undefined) {
                   localStorage.setItem('monday_voice_muted', String(cloudSet.voiceMuted));
                   if (this.voiceAssistant) this.voiceAssistant.voiceMuted = !!cloudSet.voiceMuted;
+                }
+                // 7. Signals Archived Cleared Watermark
+                if (cloudSet.signalsArchivedClearedAt) {
+                  const cloudT = Number(cloudSet.signalsArchivedClearedAt) || 0;
+                  const localT = Number(localStorage.getItem('monday_signals_cleared_at') || 0);
+                  if (cloudT > localT) {
+                    localStorage.setItem('monday_signals_cleared_at', String(cloudT));
+                    if (this.signalEngine) {
+                      this.signalEngine.setArchivedClearedAt(cloudT);
+                    }
+                  }
                 }
               }
             } catch(e) {}
@@ -1209,6 +1222,7 @@ class App {
         multiLayout: localStorage.getItem('monday_multi_layout') || '1',
         preferredMarket: this.currentMarket || 'Crypto',
         voiceMuted: this.voiceAssistant?.voiceMuted || false,
+        signalsArchivedClearedAt: Number(localStorage.getItem('monday_signals_cleared_at') || 0),
         updatedAt: new Date().toISOString()
       };
 

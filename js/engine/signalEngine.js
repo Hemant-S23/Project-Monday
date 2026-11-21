@@ -95,8 +95,14 @@ export class SignalEngine {
           if (Array.isArray(parsed)) {
             // Clean Slate Sanitizer: Automatically purge legacy corrupted signals and phantom clone loops
             let sanitized = parsed.filter(s => {
-              // Purge legacy hardcoded mock/duplicate BTC $60k setups
-              if (s.asset === 'BTC' && Number(s.entryPrice) === 60000 && Number(s.stopLossPrice) === 59000) {
+              // Purge legacy hardcoded mock/duplicate BTC $60k setups and test signals
+              if (s.asset === 'BTC' && Number(s.entryPrice) === 60000) {
+                return false;
+              }
+              if (s.id && (s.id.toLowerCase().includes('test') || s.id.toLowerCase().includes('bat'))) {
+                return false;
+              }
+              if (s.tradeId && (s.tradeId.toLowerCase().includes('test') || s.tradeId.toLowerCase().includes('bat'))) {
                 return false;
               }
               const entry = Number(s.entryPrice);
@@ -515,6 +521,8 @@ export class SignalEngine {
    */
   registerExecutedPosition(pos) {
     if (!pos || !pos.asset) return null;
+    if (pos.id && (pos.id.toLowerCase().includes('test') || pos.id.toLowerCase().includes('bat'))) return null;
+    if (pos.asset === 'BTC' && Number(pos.entry) === 60000) return null;
     const now = Date.now();
     const entryPrice = formatLevelPrice(pos.entry, pos.asset);
     const direction = (pos.direction || 'LONG').toUpperCase();

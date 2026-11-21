@@ -626,7 +626,8 @@ class App {
       // 3. Add any cloud CLOSED trades into local trades ledger
       for (const [id, ct] of cloudClosedMap.entries()) {
         // Discard any test or dummy rows
-        if (ct.id && (ct.id.includes('TEST_') || ct.id.includes('TEST_BAT'))) continue;
+        if (ct.id && (ct.id.toLowerCase().includes('test') || ct.id.toLowerCase().includes('bat'))) continue;
+        if (ct.asset === 'BTC' && Number(ct.entry_price) === 60000) continue;
         if (ct.asset === 'ETH' && Number(ct.entry_price) === 3000 && Math.abs(Number(ct.pnl_usd || 0)) < 0.01) continue;
 
         const existsClosed = this.paperTrader.trades.find(t => t.id === id);
@@ -727,6 +728,8 @@ class App {
       if (this.signalEngine && Array.isArray(cloudTrades)) {
         for (const ct of cloudTrades) {
           if (ct.status === 'OPEN') {
+            if (ct.id && (ct.id.toLowerCase().includes('test') || ct.id.toLowerCase().includes('bat'))) continue;
+            if (ct.asset === 'BTC' && Number(ct.entry_price) === 60000) continue;
             const alreadyHasSig = this.signalEngine.signals.some(s => s.tradeId === ct.id);
             if (!alreadyHasSig) {
               const posFormat = {
@@ -1920,7 +1923,8 @@ class App {
 
       // 2. Reconcile paper trades
       const toSyncTrades = [...(this.paperTrader.openPositions || []), ...(this.paperTrader.trades || [])].filter(t => {
-        if (t.id && (t.id.includes('TEST_') || t.id.includes('TEST_BAT'))) return false;
+        if (t.id && (t.id.toLowerCase().includes('test') || t.id.toLowerCase().includes('bat'))) return false;
+        if (t.asset === 'BTC' && Number(t.entry) === 60000) return false;
         if (t.asset === 'ETH' && Number(t.entry) === 3000 && Math.abs(Number(t.pnlUSD || 0)) < 0.01) return false;
         return true;
       });

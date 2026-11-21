@@ -112,7 +112,19 @@ export class PaperTrader {
     if (raw) {
       try {
         const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed : [];
+        if (Array.isArray(parsed)) {
+          // Clean Slate Purger: Remove any lingering dummy/test/mock positions
+          const clean = parsed.filter(p => {
+            if (!p || !p.asset) return false;
+            if (p.id && (p.id.toLowerCase().includes('test') || p.id.toLowerCase().includes('bat'))) return false;
+            if (p.asset === 'BTC' && Number(p.entry) === 60000) return false;
+            return true;
+          });
+          if (clean.length !== parsed.length) {
+            localStorage.setItem(this.positionsStorageKey, JSON.stringify(clean));
+          }
+          return clean;
+        }
       } catch (e) {
         console.error('Failed to parse stored open positions:', e);
       }
@@ -167,7 +179,8 @@ export class PaperTrader {
           // Identify any rapid glitch loop, dummy test or duplicate trades
           const isGlitchLoopTrade = (t) => {
             // 1. Purge any dummy or test rows permanently
-            if (t.id && (t.id.includes('TEST_') || t.id.includes('TEST_BAT'))) return true;
+            if (t.id && (t.id.toLowerCase().includes('test') || t.id.toLowerCase().includes('bat'))) return true;
+            if (t.asset === 'BTC' && Number(t.entry) === 60000) return true;
             if (t.asset === 'ETH' && Number(t.entry) === 3000 && Math.abs(Number(t.pnlUSD || 0)) < 0.01) return true;
             if (t.result === 'LIQUIDATED' && Number(t.pnlUSD || 0) === 0) return true;
 

@@ -567,6 +567,10 @@ class App {
 
       // 3. Add any cloud CLOSED trades into local trades ledger
       for (const [id, ct] of cloudClosedMap.entries()) {
+        // Discard any test or dummy rows
+        if (ct.id && (ct.id.includes('TEST_') || ct.id.includes('TEST_BAT'))) continue;
+        if (ct.asset === 'ETH' && Number(ct.entry_price) === 3000 && Math.abs(Number(ct.pnl_usd || 0)) < 0.01) continue;
+
         const existsClosed = this.paperTrader.trades.find(t => t.id === id);
         let parsedMeta = {};
         if (ct.strategy) {
@@ -574,6 +578,17 @@ class App {
         }
         const openedAtTime = parsedMeta.openedAt || (ct.created_at ? new Date(ct.created_at).getTime() : Date.now());
         const closedAtTime = parsedMeta.closedAt || (ct.created_at ? new Date(ct.created_at).getTime() : Date.now());
+
+        // Discard if an identical setup has already been recorded for this asset on this date (Anti-Duplicate Guard)
+        const cloudDateStr = new Date(closedAtTime).toDateString();
+        const duplicateSetup = !existsClosed && this.paperTrader.trades.some(t => {
+          const tDateStr = new Date(t.closedAt || t.openedAt || Date.now()).toDateString();
+          return t.asset === ct.asset && 
+                 t.direction === ct.direction && 
+                 tDateStr === cloudDateStr &&
+                 Math.abs(Number(t.entry) - Number(ct.entry_price)) < 0.001;
+        });
+        if (duplicateSetup) continue;
 
         if (!existsClosed) {
           this.paperTrader.trades.unshift({
@@ -1763,7 +1778,11 @@ class App {
         ? await this.authManager.getAuthToken()
         : cfg.anonKey;
 
-      const toSync = [...(this.paperTrader.openPositions || []), ...(this.paperTrader.trades || [])];
+      const toSync = [...(this.paperTrader.openPositions || []), ...(this.paperTrader.trades || [])].filter(t => {
+        if (t.id && (t.id.includes('TEST_') || t.id.includes('TEST_BAT'))) return false;
+        if (t.asset === 'ETH' && Number(t.entry) === 3000 && Math.abs(Number(t.pnlUSD || 0)) < 0.01) return false;
+        return true;
+      });
       if (toSync.length === 0) return;
 
       const payloads = toSync.map(t => this.formatTradePayload(t, activeUserId));

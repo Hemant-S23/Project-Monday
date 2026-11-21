@@ -164,11 +164,15 @@ export class PaperTrader {
           });
 
           const seenSignatures = {};
-          // Identify any rapid glitch loop trades
+          // Identify any rapid glitch loop, dummy test or duplicate trades
           const isGlitchLoopTrade = (t) => {
+            // 1. Purge any dummy or test rows permanently
+            if (t.id && (t.id.includes('TEST_') || t.id.includes('TEST_BAT'))) return true;
+            if (t.asset === 'ETH' && Number(t.entry) === 3000 && Math.abs(Number(t.pnlUSD || 0)) < 0.01) return true;
             if (t.result === 'LIQUIDATED' && Number(t.pnlUSD || 0) === 0) return true;
+
             const duration = (t.closedAt || 0) - (t.openedAt || 0);
-            if ((t.result === 'LOSS' || t.result === 'LIQUIDATED') && duration < 120000) return true;
+            if ((t.result === 'LOSS' || t.result === 'LIQUIDATED') && duration < 120000 && duration > 0 && Math.abs(Number(t.pnlUSD || 0)) === 0) return true;
 
             // Specific known runaway glitch loops (XRP, NEAR, DOGE, LINK dummy glitch)
             if (t.asset === 'XRP' && Math.abs(Number(t.entry) - 1.332) < 0.05) return true;
@@ -177,15 +181,17 @@ export class PaperTrader {
             if (t.asset === 'LINK' && (Number(t.exitPrice) > 50 || Number(t.pnlUSD) > 500)) return true;
             if (Number(t.rMultiple) > 30 || (Number(t.riskUSD) > 0 && Number(t.pnlUSD) / Number(t.riskUSD) > 30)) return true;
 
-            // Universal loop detector: if same identical setup was repeated > 3 times, keep only 1 and purge duplicates
+            // Universal Same-Day Setup Deduplicator:
+            // If the exact same setup (Asset + Direction + Entry + Exit) appears more than once on the same date,
+            // keep the FIRST canonical instance and purge any duplicate re-audit ghosts.
+            const closedDate = t.closedAt ? new Date(t.closedAt).toDateString() : (t.openedAt ? new Date(t.openedAt).toDateString() : '');
             const entryStr = this.formatDynamicPrice(t.entry);
             const exitStr = this.formatDynamicPrice(t.target || t.exitPrice);
-            const sig = `${t.asset}_${t.direction}_${entryStr}_${exitStr}`;
-            if (signatureCounts[sig] > 3) {
-              seenSignatures[sig] = (seenSignatures[sig] || 0) + 1;
-              if (seenSignatures[sig] > 1) {
-                return true; // Duplicate of the runaway loop!
-              }
+            const sig = `${closedDate}_${t.asset}_${t.direction}_${entryStr}_${exitStr}`;
+
+            seenSignatures[sig] = (seenSignatures[sig] || 0) + 1;
+            if (seenSignatures[sig] > 1) {
+              return true; // Duplicate copy of the same trade setup!
             }
 
             if (duration < 15000 && Math.abs(Number(t.pnlUSD || 0)) > 0) return true;
@@ -701,6 +707,12 @@ export class PaperTrader {
       try {
         // If position was already closed by Supabase or another process, skip
         if (!this.openPositions.some(p => p.id === pos.id)) return;
+
+        // Anti-Duplicate Firewall: If trade for this setup or position ID is already closed in ledger, never re-audit
+        if (this.trades.some(t => t.id === pos.id || (t.asset === pos.asset && t.direction === pos.direction && Math.abs((t.openedAt || 0) - (pos.openedAt || 0)) < 60000))) {
+          this.openPositions = this.openPositions.filter(p => p.id !== pos.id);
+          return;
+        }
 
         const isCrypto = !pos.market || pos.market === 'Crypto';
         let candles = [];

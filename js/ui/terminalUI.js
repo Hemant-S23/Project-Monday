@@ -1096,16 +1096,17 @@ export class TerminalUI {
       scanAllBtn.addEventListener('click', async () => {
         scanAllBtn.disabled = true;
         scanAllBtn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Scanning Swarm...';
-        if (this.callbacks.onScanAllSignals) {
-          await this.callbacks.onScanAllSignals();
-        }
-        setTimeout(() => {
+        try {
+          if (this.callbacks.onScanAllSignals) {
+            await this.callbacks.onScanAllSignals();
+          }
+        } finally {
           if (scanAllBtn) {
             scanAllBtn.disabled = false;
             scanAllBtn.innerHTML = '<i class="ph-bold ph-radar"></i> Scan Market Swarm';
           }
           this.renderSignalsPage();
-        }, 1200);
+        }
       });
     }
 

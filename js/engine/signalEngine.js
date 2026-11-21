@@ -23,10 +23,40 @@ export class SignalEngine {
     this.listeners = new Set();
     this.lastScannedPrices = new Map();
     this.onSignalFillCallback = null;
+    this.onSignalChangeCallback = null;
   }
 
   setOnSignalFill(callback) {
     this.onSignalFillCallback = callback;
+  }
+
+  setOnSignalChange(callback) {
+    this.onSignalChangeCallback = callback;
+  }
+
+  deduplicateSignals(list = null) {
+    const target = list || this.signals;
+    const seen = new Set();
+    const deduped = [];
+
+    for (const s of target) {
+      if (!s || !s.asset) continue;
+      const entryF = formatLevelPrice(s.entryPrice, s.asset);
+      const direction = (s.direction || 'LONG').toUpperCase();
+      // Distinguish signals uniquely by tradeId or by setup signature
+      const sigKey = s.tradeId 
+        ? `TRADE_${s.tradeId}` 
+        : `${s.asset}_${direction}_${entryF}`;
+
+      if (!seen.has(sigKey)) {
+        seen.add(sigKey);
+        deduped.push(s);
+      }
+    }
+    if (!list) {
+      this.signals = deduped;
+    }
+    return deduped;
   }
 
   loadSignals() {
@@ -48,10 +78,13 @@ export class SignalEngine {
               if (s.direction === 'SHORT' && (tp >= entry || sl <= entry)) return false;
               return true;
             });
-            if (sanitized.length !== parsed.length) {
-              localStorage.setItem(this.storageKey, JSON.stringify(sanitized));
+
+            // Universal Same-Day Setup Deduplicator: purge phantom clone loops
+            const clean = this.deduplicateSignals(sanitized);
+            if (clean.length !== parsed.length) {
+              localStorage.setItem(this.storageKey, JSON.stringify(clean));
             }
-            return sanitized;
+            return clean;
           }
         }
       }
@@ -63,8 +96,9 @@ export class SignalEngine {
 
   saveSignals() {
     try {
+      this.deduplicateSignals();
       if (typeof localStorage !== 'undefined') {
-        // Keep up to 100 most recent signals
+        // Keep up to 100 most recent unique signals
         const toSave = this.signals.slice(0, 100);
         localStorage.setItem(this.storageKey, JSON.stringify(toSave));
       }
@@ -72,6 +106,83 @@ export class SignalEngine {
       console.warn('[SignalEngine] Failed to persist signals:', e);
     }
     this.notify();
+    if (typeof this.onSignalChangeCallback === 'function' && this.signals.length > 0) {
+      try {
+        this.onSignalChangeCallback(this.signals[0]);
+      } catch (e) {}
+    }
+  }
+
+  /**
+   * Cross-Browser Cloud Reconciler:
+   * Merges authoritative signals from Supabase Cloud into local Alpha Radar desk
+   */
+  mergeCloudSignals(cloudSignals = []) {
+    if (!Array.isArray(cloudSignals) || cloudSignals.length === 0) return;
+    let hasChanged = false;
+
+    for (const ct of cloudSignals) {
+      if (!ct || !ct.asset) continue;
+      let meta = {};
+      if (ct.strategy) {
+        try { meta = JSON.parse(ct.strategy); } catch (e) {}
+      }
+      const rawStatus = (ct.status || '').replace('SIGNAL_', '').trim();
+      const status = rawStatus || (ct.result === 'WIN' ? 'TP_HIT' : (ct.result === 'LOSS' ? 'SL_HIT' : 'ACTIVE'));
+      const entryP = formatLevelPrice(ct.entry_price, ct.asset);
+      const slP = formatLevelPrice(ct.stop_loss, ct.asset);
+      const tpP = formatLevelPrice(ct.target_price, ct.asset);
+
+      const existingIndex = this.signals.findIndex(s => 
+        s.id === ct.id || 
+        (meta.tradeId && s.tradeId === meta.tradeId) ||
+        (s.asset === ct.asset && s.direction === ct.direction && Math.abs(Number(s.entryPrice) - Number(entryP)) < 0.001)
+      );
+
+      if (existingIndex >= 0) {
+        const existing = this.signals[existingIndex];
+        // If cloud holds resolved terminal state (TP_HIT, SL_HIT, INVALIDATED), update existing
+        if (existing.status !== status && (status === 'TP_HIT' || status === 'SL_HIT' || status === 'INVALIDATED' || status === 'EXPIRED')) {
+          existing.status = status;
+          existing.closedAt = ct.closed_at ? new Date(ct.closed_at).getTime() : Date.now();
+          existing.realizedR = Number(ct.r_multiple) || (status === 'TP_HIT' ? (existing.riskReward || 2.0) : -1.0);
+          hasChanged = true;
+        }
+      } else {
+        const newSig = {
+          id: ct.id,
+          tradeId: meta.tradeId || null,
+          asset: ct.asset,
+          direction: ct.direction,
+          orderType: 'LIMIT',
+          entryPrice: entryP,
+          stopLossPrice: slP,
+          takeProfitPrice: tpP,
+          riskReward: Number(ct.rr_ratio) || 2.0,
+          confluenceScore: meta.confluenceScore || 85,
+          confluenceGrade: meta.confluenceGrade || 'GRADE A',
+          rationale: Array.isArray(meta.rationale) && meta.rationale.length > 0 
+            ? meta.rationale 
+            : ['1H HTF Directional Confluence', 'Institutional Order Flow'],
+          currencySymbol: meta.currencySymbol || (ct.market === 'India' ? '₹' : '$'),
+          issuedAt: meta.issuedAt || (ct.created_at ? new Date(ct.created_at).getTime() : Date.now()),
+          validityMinutes: meta.validityMinutes || 45,
+          expiresAt: meta.expiresAt || (Date.now() + 2700000),
+          status: status,
+          inPortfolio: false,
+          filledAt: meta.filledAt || null,
+          closedAt: ct.closed_at ? new Date(ct.closed_at).getTime() : meta.closedAt || null,
+          realizedR: Number(ct.r_multiple) || (status === 'TP_HIT' ? (Number(ct.rr_ratio) || 2.0) : (status === 'SL_HIT' ? -1.0 : 0))
+        };
+        this.signals.push(newSig);
+        hasChanged = true;
+      }
+    }
+
+    if (hasChanged) {
+      this.deduplicateSignals();
+      this.saveSignals();
+    }
   }
 
   subscribe(listener) {
@@ -342,19 +453,27 @@ export class SignalEngine {
    * Ensures any trade taken by Auto-Pilot or manual desk immediately appears as an ACTIVE signal card
    */
   registerExecutedPosition(pos) {
-    if (!pos || !pos.asset) return;
+    if (!pos || !pos.asset) return null;
     const now = Date.now();
-    let sig = this.signals.find(s => s.asset === pos.asset && (s.status === 'PENDING' || s.status === 'ACTIVE'));
+    const entryPrice = formatLevelPrice(pos.entry, pos.asset);
+    const direction = (pos.direction || 'LONG').toUpperCase();
+
+    // 1. Anti-Duplicate Check across ALL statuses (PENDING, ACTIVE, TP_HIT, SL_HIT, EXPIRED)
+    let sig = this.signals.find(s => 
+      (pos.id && s.tradeId === pos.id) ||
+      (s.asset === pos.asset && s.direction === direction && Math.abs(Number(s.entryPrice) - Number(entryPrice)) < 0.001)
+    );
     if (sig) {
-      sig.status = 'ACTIVE';
-      sig.inPortfolio = true;
-      sig.tradeId = pos.id;
-      sig.filledAt = sig.filledAt || now;
-      this.saveSignals();
+      if (sig.status === 'PENDING') {
+        sig.status = 'ACTIVE';
+        sig.inPortfolio = true;
+        sig.tradeId = pos.id;
+        sig.filledAt = sig.filledAt || now;
+        this.saveSignals();
+      }
       return sig;
     }
 
-    const entryPrice = formatLevelPrice(pos.entry, pos.asset);
     const stopLossPrice = formatLevelPrice(pos.stopLoss, pos.asset);
     const takeProfitPrice = formatLevelPrice(pos.target, pos.asset);
     const rr = Number(pos.rrRatio) || 2.0;
@@ -363,7 +482,7 @@ export class SignalEngine {
       id: `SIG-${pos.asset}-${now}`,
       tradeId: pos.id,
       asset: pos.asset,
-      direction: pos.direction || 'LONG',
+      direction: direction,
       orderType: 'MARKET',
       entryPrice,
       stopLossPrice,

@@ -156,6 +156,9 @@ export class AuthManager {
       localStorage.removeItem(this.sessionKey);
     }
     this.notify();
+    try {
+      window.dispatchEvent(new CustomEvent('monday:auth-changed', { detail: user }));
+    } catch (e) {}
   }
 
   onAuthStateChange(callback) {

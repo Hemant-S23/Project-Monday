@@ -169,6 +169,9 @@ class App {
         this.ui.renderSignalsPage();
       }
     });
+    this.signalEngine.setOnSignalChange((sig) => {
+      this.syncSignalToSupabase(sig).catch(() => {});
+    });
     this.signalEngine.setOnSignalFill(async (signal) => {
       if (this.autoPilotEnabled) {
         await this.handleAutoPilotSignalFill(signal);
@@ -276,6 +279,14 @@ class App {
 
     // Set up network online reconnect listener for automatic cloud sync
     this.setupNetworkReconciliation();
+
+    // Cross-tab and post-login real-time cloud synchronizer
+    window.addEventListener('monday:auth-changed', (e) => {
+      if (e.detail) {
+        console.log('[App] Auth state updated across context. Synchronizing cockpit for:', e.detail.email);
+        this.handleAuthSuccess(e.detail);
+      }
+    });
 
     // 2. Non-blocking Asynchronous Background Market Hydration & Sync (Never freezes UI or scrolling)
     (async () => {
@@ -484,25 +495,61 @@ class App {
       // Index cloud trades by status
       const cloudOpenMap = new Map();
       const cloudClosedMap = new Map();
+      const cloudSignals = [];
 
       for (const ct of cloudTrades) {
-        if (ct.status === 'CONFIG' || ct.id === 'CONFIG_AUTOPILOT_GUEST') {
+        if (ct.status === 'CONFIG' || ct.id.startsWith('CONFIG_')) {
           if (ct.strategy) {
             try {
               const cloudSet = JSON.parse(ct.strategy);
               if (cloudSet) {
-                const localRaw = localStorage.getItem('monday_autopilot_settings');
-                const localSet = localRaw ? JSON.parse(localRaw) : null;
-                const cloudTime = cloudSet.updatedAt ? new Date(cloudSet.updatedAt).getTime() : 0;
-                const localTime = localSet?.updatedAt ? new Date(localSet.updatedAt).getTime() : 0;
-                if (!localSet || cloudTime >= localTime) {
-                  localStorage.setItem('monday_autopilot_settings', JSON.stringify(cloudSet));
+                // 1. Auto-Pilot Risk Settings
+                const apSettings = cloudSet.autopilotSettings || (cloudSet.riskPerTradePercent !== undefined ? cloudSet : null);
+                if (apSettings) {
+                  const localRaw = localStorage.getItem('monday_autopilot_settings');
+                  const localSet = localRaw ? JSON.parse(localRaw) : null;
+                  const cloudTime = apSettings.updatedAt ? new Date(apSettings.updatedAt).getTime() : 0;
+                  const localTime = localSet?.updatedAt ? new Date(localSet.updatedAt).getTime() : 0;
+                  if (!localSet || cloudTime >= localTime) {
+                    localStorage.setItem('monday_autopilot_settings', JSON.stringify(apSettings));
+                  }
+                }
+                // 2. Master Auto-Pilot Toggle
+                if (cloudSet.autoPilotEnabled !== undefined) {
+                  this.autoPilotEnabled = !!cloudSet.autoPilotEnabled;
+                  localStorage.setItem('monday_auto_pilot', String(this.autoPilotEnabled));
+                  if (this.ui) this.ui.autoPilotEnabled = this.autoPilotEnabled;
+                }
+                // 3. Pinned User Watchlist
+                if (Array.isArray(cloudSet.watchlist) && cloudSet.watchlist.length > 0) {
+                  localStorage.setItem('monday_user_watchlist', JSON.stringify(cloudSet.watchlist));
+                  if (this.ui) this.ui.userWatchlist = cloudSet.watchlist;
+                }
+                // 4. Multi-Chart Layout
+                if (cloudSet.multiLayout) {
+                  localStorage.setItem('monday_multi_layout', cloudSet.multiLayout);
+                }
+                // 5. Preferred Market Focus
+                if (cloudSet.preferredMarket && cloudSet.preferredMarket !== this.currentMarket) {
+                  localStorage.setItem('monday_preferred_market', cloudSet.preferredMarket);
+                }
+                // 6. Voice Assistant Mute
+                if (cloudSet.voiceMuted !== undefined) {
+                  localStorage.setItem('monday_voice_muted', String(cloudSet.voiceMuted));
+                  if (this.voiceAssistant) this.voiceAssistant.voiceMuted = !!cloudSet.voiceMuted;
                 }
               }
             } catch(e) {}
           }
           continue;
         }
+
+        // Alpha Signals Desk Sync
+        if (ct.id.startsWith('SIG-') || (ct.status && ct.status.startsWith('SIGNAL_'))) {
+          cloudSignals.push(ct);
+          continue;
+        }
+
         if (ct.status === 'OPEN') {
           cloudOpenMap.set(ct.id, ct);
         } else if (ct.status === 'CLOSED') {
@@ -659,32 +706,33 @@ class App {
         this.ui.showToast('⚡ Cloud Synced', `Restored ${cloudTrades.length} trades from Supabase cloud.`, 'success');
       }
 
-      // 5. Reconcile Cloud Trades with Alpha Signals Engine
+      // 5. Merge Alpha Signals from Cloud into SignalEngine
+      if (this.signalEngine && cloudSignals.length > 0) {
+        this.signalEngine.mergeCloudSignals(cloudSignals);
+        if (this.ui && this.ui.currentSaaSPage === 'signals') {
+          this.ui.renderSignalsPage();
+        }
+      }
+
+      // 6. Reconcile Active Open Cloud Trades with Alpha Signals Desk
       if (this.signalEngine && Array.isArray(cloudTrades)) {
         for (const ct of cloudTrades) {
           if (ct.status === 'OPEN') {
-            const posFormat = {
-              id: ct.id,
-              asset: ct.asset,
-              direction: ct.direction,
-              entry: Number(ct.entry_price),
-              stopLoss: Number(ct.stop_loss),
-              target: Number(ct.target_price),
-              rrRatio: Number(ct.rr_ratio || 2.0),
-              confluenceScore: 85,
-              market: ct.market || 'Crypto'
-            };
-            this.signalEngine.registerExecutedPosition(posFormat);
-          } else if (ct.status === 'CLOSED') {
-            const closedFormat = {
-              id: ct.id,
-              asset: ct.asset,
-              result: ct.result || 'WIN',
-              exitReason: ct.result === 'WIN' ? 'TAKE_PROFIT' : 'STOP_LOSS',
-              pnlUSD: Number(ct.pnl_usd || 0),
-              closedAt: ct.closed_at ? new Date(ct.closed_at).getTime() : Date.now()
-            };
-            this.signalEngine.onPositionClosed(closedFormat, ct.result);
+            const alreadyHasSig = this.signalEngine.signals.some(s => s.tradeId === ct.id);
+            if (!alreadyHasSig) {
+              const posFormat = {
+                id: ct.id,
+                asset: ct.asset,
+                direction: ct.direction,
+                entry: Number(ct.entry_price),
+                stopLoss: Number(ct.stop_loss),
+                target: Number(ct.target_price),
+                rrRatio: Number(ct.rr_ratio || 2.0),
+                confluenceScore: 85,
+                market: ct.market || 'Crypto'
+              };
+              this.signalEngine.registerExecutedPosition(posFormat);
+            }
           }
         }
       }
@@ -1148,7 +1196,7 @@ class App {
     this.ui.appendChatMessage('copilot', briefing);
   }
 
-  async pushSettingsToCloud(settings) {
+  async pushSettingsToCloud(settings = null) {
     try {
       const cfg = window.MONDAY_SUPABASE_CONFIG;
       if (!cfg || !cfg.url || !cfg.anonKey) return;
@@ -1156,6 +1204,17 @@ class App {
       const token = (this.authManager && typeof this.authManager.getAuthToken === 'function')
         ? await this.authManager.getAuthToken()
         : cfg.anonKey;
+
+      const apSettings = settings || this.getAutoPilotSettings();
+      const userConfig = {
+        autopilotSettings: apSettings,
+        autoPilotEnabled: this.autoPilotEnabled,
+        watchlist: this.ui?.userWatchlist || JSON.parse(localStorage.getItem('monday_user_watchlist') || '[]'),
+        multiLayout: localStorage.getItem('monday_multi_layout') || '1',
+        preferredMarket: this.currentMarket || 'Crypto',
+        voiceMuted: this.voiceAssistant?.voiceMuted || false,
+        updatedAt: new Date().toISOString()
+      };
 
       const configId = activeUserId === 'guest_autopilot' ? 'CONFIG_AUTOPILOT_GUEST' : `CONFIG_AUTOPILOT_${activeUserId}`;
       const payload = {
@@ -1167,16 +1226,12 @@ class App {
         entry_price: 0,
         stop_loss: 0,
         target_price: 0,
-        risk_usd: settings.marginUSD,
-        reward_usd: settings.leverage,
-        rr_ratio: settings.minRR,
-        position_size: settings.maxTrades,
+        risk_usd: apSettings.marginUSD || 20,
+        reward_usd: apSettings.leverage || 20,
+        rr_ratio: apSettings.minRR || 2.5,
+        position_size: apSettings.maxTrades || 3,
         status: 'CONFIG',
-        strategy: JSON.stringify({
-          ...settings,
-          userId: activeUserId,
-          updatedAt: new Date().toISOString()
-        })
+        strategy: JSON.stringify(userConfig)
       };
 
       await fetch(`${cfg.url}/rest/v1/paper_trades`, {
@@ -1189,7 +1244,7 @@ class App {
         },
         body: JSON.stringify(payload)
       });
-      console.log('[App] Auto-Pilot settings successfully synchronized to Supabase Cloud:', settings);
+      console.log('[App] Full user settings & workspace preferences synced to Supabase Cloud.');
     } catch (err) {
       console.warn('[App] Cloud settings push warning:', err.message);
     }
@@ -1746,6 +1801,47 @@ class App {
     };
   }
 
+  formatSignalPayload(signal, activeUserId) {
+    const issuedAtTime = signal.issuedAt ? Number(signal.issuedAt) : Date.now();
+    const meta = {
+      confluenceScore: signal.confluenceScore || 85,
+      confluenceGrade: signal.confluenceGrade || 'GRADE A',
+      rationale: signal.rationale || ['1H HTF Directional Confluence', 'Institutional Order Flow'],
+      currencySymbol: signal.currencySymbol || '$',
+      validityMinutes: signal.validityMinutes || 45,
+      issuedAt: issuedAtTime,
+      expiresAt: signal.expiresAt || (issuedAtTime + 2700000),
+      filledAt: signal.filledAt || null,
+      closedAt: signal.closedAt || null,
+      tradeId: signal.tradeId || null,
+      invalidatedReason: signal.invalidatedReason || null
+    };
+
+    return {
+      id: signal.id,
+      user_id: activeUserId,
+      market: signal.currencySymbol === '₹' ? 'India' : 'Crypto',
+      asset: signal.asset,
+      direction: signal.direction,
+      entry_price: signal.entryPrice,
+      stop_loss: signal.stopLossPrice,
+      target_price: signal.takeProfitPrice,
+      position_size: 0,
+      risk_usd: 0,
+      reward_usd: 0,
+      rr_ratio: signal.riskReward,
+      status: 'SIGNAL_' + signal.status,
+      result: signal.status === 'TP_HIT' ? 'WIN' : (signal.status === 'SL_HIT' ? 'LOSS' : null),
+      pnl_usd: 0,
+      r_multiple: signal.realizedR || 0,
+      exit_price: signal.takeProfitPrice,
+      timeframe: '5M',
+      strategy: JSON.stringify(meta),
+      created_at: new Date(issuedAtTime).toISOString(),
+      closed_at: signal.closedAt ? new Date(signal.closedAt).toISOString() : null
+    };
+  }
+
   async syncTradeToSupabase(trade) {
     try {
       const cfg = window.MONDAY_SUPABASE_CONFIG;
@@ -1771,6 +1867,31 @@ class App {
     }
   }
 
+  async syncSignalToSupabase(signal) {
+    try {
+      const cfg = window.MONDAY_SUPABASE_CONFIG;
+      if (!cfg || !cfg.url || !cfg.anonKey || !signal) return;
+      const activeUserId = this.authManager && this.authManager.getUserId ? this.authManager.getUserId() : 'guest_autopilot';
+      const token = (this.authManager && typeof this.authManager.getAuthToken === 'function')
+        ? await this.authManager.getAuthToken()
+        : cfg.anonKey;
+
+      const payload = this.formatSignalPayload(signal, activeUserId);
+      await fetch(`${cfg.url}/rest/v1/paper_trades`, {
+        method: 'POST',
+        headers: {
+          'apikey': cfg.anonKey,
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates'
+        },
+        body: JSON.stringify(payload)
+      });
+    } catch (e) {
+      console.warn('[App] Supabase signal sync offline/failed:', e.message);
+    }
+  }
+
   async reconcileOfflineTradesWithSupabase() {
     try {
       const cfg = window.MONDAY_SUPABASE_CONFIG;
@@ -1780,19 +1901,28 @@ class App {
         ? await this.authManager.getAuthToken()
         : cfg.anonKey;
 
-      const toSync = [...(this.paperTrader.openPositions || []), ...(this.paperTrader.trades || [])].filter(t => {
+      // 1. Reconcile user settings & preferences
+      this.pushSettingsToCloud().catch(() => {});
+
+      // 2. Reconcile paper trades
+      const toSyncTrades = [...(this.paperTrader.openPositions || []), ...(this.paperTrader.trades || [])].filter(t => {
         if (t.id && (t.id.includes('TEST_') || t.id.includes('TEST_BAT'))) return false;
         if (t.asset === 'ETH' && Number(t.entry) === 3000 && Math.abs(Number(t.pnlUSD || 0)) < 0.01) return false;
         return true;
       });
-      if (toSync.length === 0) return;
 
-      const payloads = toSync.map(t => this.formatTradePayload(t, activeUserId));
+      const tradePayloads = toSyncTrades.map(t => this.formatTradePayload(t, activeUserId));
+
+      // 3. Reconcile genuine signals from Alpha Radar
+      const signalPayloads = (this.signalEngine?.signals || []).slice(0, 50).map(s => this.formatSignalPayload(s, activeUserId));
+
+      const allPayloads = [...tradePayloads, ...signalPayloads];
+      if (allPayloads.length === 0) return;
 
       // Execute bulk upsert in chunks of 50 in parallel
       const chunkSize = 50;
-      for (let i = 0; i < payloads.length; i += chunkSize) {
-        const chunk = payloads.slice(i, i + chunkSize);
+      for (let i = 0; i < allPayloads.length; i += chunkSize) {
+        const chunk = allPayloads.slice(i, i + chunkSize);
         await fetch(`${cfg.url}/rest/v1/paper_trades`, {
           method: 'POST',
           headers: {
@@ -1804,7 +1934,7 @@ class App {
           body: JSON.stringify(chunk)
         });
       }
-      console.log(`[App] Supabase cloud sync bulk reconciled ${payloads.length} items successfully.`);
+      console.log(`[App] Supabase cloud sync bulk reconciled ${allPayloads.length} items (trades + signals + config) successfully.`);
     } catch (err) {
       console.warn('[App] Cloud trade reconciliation failed:', err);
     }
@@ -1981,8 +2111,16 @@ class App {
         } catch (e) {}
       }
     } catch (e) {
+      console.warn('[App] Scan all signals error:', e);
     } finally {
       this._isScanningAllSignals = false;
+      if (this.ui && typeof this.ui.renderSignalsPage === 'function') {
+        this.ui.renderSignalsPage();
+      }
+      this.reconcileOfflineTradesWithSupabase().catch(() => {});
+      if (this.ui && typeof this.ui.showToast === 'function') {
+        this.ui.showToast('Alpha Radar Synchronized', 'Market swarm analysis complete. Real-time institutional setups updated.', 'success');
+      }
     }
   }
 

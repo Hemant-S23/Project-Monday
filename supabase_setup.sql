@@ -58,6 +58,11 @@ CREATE TABLE IF NOT EXISTS public.paper_trades (
 -- Add closed_at column if updating existing installation
 ALTER TABLE public.paper_trades ADD COLUMN IF NOT EXISTS closed_at TIMESTAMPTZ;
 
+-- Performance Indexes for sub-millisecond multi-device queries
+CREATE INDEX IF NOT EXISTS idx_paper_trades_user_id ON public.paper_trades(user_id);
+CREATE INDEX IF NOT EXISTS idx_paper_trades_status ON public.paper_trades(status);
+CREATE INDEX IF NOT EXISTS idx_paper_trades_created_at ON public.paper_trades(created_at DESC);
+
 -- Enable RLS for trades
 ALTER TABLE public.paper_trades ENABLE ROW LEVEL SECURITY;
 

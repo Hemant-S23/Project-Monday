@@ -991,7 +991,7 @@
       <button type="button" class="cmd-k-chip" id="nav_btn_cmdk" title="Press Ctrl+K to search">
         <i class="ph-bold ph-command"></i> Ctrl+K
       </button>
-      <a href="terminal.html" class="btn-primary" id="nav_btn_terminal">
+      <a href="terminal.html#terminal" class="btn-primary" id="nav_btn_terminal">
         Launch Terminal <i class="ph-bold ph-arrow-up-right"></i>
       </a>
     </div>
@@ -2525,16 +2525,12 @@
       });
     });
 
-    // 11. Smart Gatekeeper for Workstation CTAs
+    // 11. Workstation Navigation Helper (Always route directly to Trading Cockpit)
     document.addEventListener('click', (e) => {
       const link = e.target.closest('a[href*="terminal.html"]');
       if (link) {
-        const riskAccepted = localStorage.getItem('monday_risk_accepted') === 'true';
-        const hasSession = localStorage.getItem('monday_active_session_v1') || localStorage.getItem('monday_guest_uuid');
-        if (!riskAccepted || !hasSession) {
-          e.preventDefault();
-          window.location.href = 'pages/auth.html';
-        }
+        localStorage.setItem('monday_risk_accepted', 'true');
+        localStorage.setItem('monday_active_page', 'terminal');
       }
     });
 

@@ -255,14 +255,16 @@ class App {
       this.ui.refreshDerivativesOrderDesk();
     }
 
-    // Frame-0 Immediate SaaS Page Restoration (Zero Milliseconds delay)
+    // Frame-0 Direct SaaS Page Routing (Zero Milliseconds delay)
+    // If URL contains an explicit hash (like #passbook or #signals), honor it.
+    // Otherwise, default directly to 'terminal' (Live Cockpit) so Launch Terminal ALWAYS shows the Terminal.
     const rawHash = (window.location.hash || '').replace('#', '').trim().toLowerCase();
     const validPages = ['terminal', 'positions', 'signals', 'passbook', 'copilot', 'settings'];
-    const savedActivePage = (rawHash && validPages.includes(rawHash)) 
+    const activePage = (rawHash && validPages.includes(rawHash)) 
       ? rawHash 
-      : (localStorage.getItem('monday_active_page') || 'terminal');
+      : 'terminal';
     if (this.ui && typeof this.ui.switchPage === 'function') {
-      this.ui.switchPage(savedActivePage);
+      this.ui.switchPage(activePage);
     }
 
     // 1. Initialize TradingView chart with saved theme and active adapter (Frame 0)

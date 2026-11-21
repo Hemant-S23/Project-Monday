@@ -1277,8 +1277,10 @@
 
         try { sfx?.playSuccess?.(); } catch (e) {}
       } else {
-        // Already onboarded -> Ensure local storage matches and navigate to Home Page
+        // Already onboarded -> Ensure local storage matches and navigate straight to Trading Terminal
         localStorage.setItem('monday_onboarded_' + user.id, 'true');
+        localStorage.setItem('monday_risk_accepted', 'true');
+        localStorage.setItem('monday_active_page', 'terminal');
         if (user.callsign) localStorage.setItem('monday_trader_name', user.callsign);
 
         if (standardView) standardView.style.display = 'none';
@@ -1290,8 +1292,8 @@
 
         try { sfx?.playSuccess?.(); } catch (e) {}
         setTimeout(() => {
-          window.location.href = '../index.html';
-        }, 1200);
+          window.location.href = '../terminal.html#terminal';
+        }, 1000);
       }
     }
 
@@ -1365,11 +1367,12 @@
         localStorage.setItem('monday_trader_name', callsign || fullName);
         localStorage.setItem('monday_preferred_market', marketFocus);
         localStorage.setItem('monday_risk_accepted', 'true');
+        localStorage.setItem('monday_active_page', 'terminal');
         localStorage.setItem('monday_onboarded_' + userId, 'true');
 
         try { sfx?.playSuccess?.(); } catch (e) {}
 
-        // Switch to redirect screen and navigate to Home Page
+        // Switch to redirect screen and navigate straight to Trading Terminal
         const onboardingView = document.getElementById('onboarding_auth_view');
         const redirectingView = document.getElementById('redirecting_auth_view');
         if (onboardingView) onboardingView.style.display = 'none';
@@ -1379,7 +1382,7 @@
         if (redirectGreeting) redirectGreeting.textContent = `Profile Verified! Welcome, ${callsign}!`;
 
         setTimeout(() => {
-          window.location.href = '../index.html';
+          window.location.href = '../terminal.html#terminal';
         }, 1000);
       });
     }

@@ -457,17 +457,13 @@ class App {
       const currentUser = this.authManager && this.authManager.getUser ? this.authManager.getUser() : null;
       const isOwner = currentUser && (currentUser.email === 'hsmcpl06@gmail.com' || (currentUser.name && currentUser.name.toLowerCase().includes('hemant')));
 
-      // Strict User Isolation:
-      // - Master Owner (Hemant): queries his personal UUID trades AND claims historical master daemon trades
-      // - Any other registered user: strictly queries user_id = eq.${activeUserId} (100% private vault)
-      // - Guest: queries user_id = eq.guest_autopilot
+      // Strict User Isolation + Universal Alpha Signals Access:
+      // - Users query their personal trades + guest historical trades + all universal cloud signals
       let userFilter;
       if (isAuth) {
-        userFilter = isOwner 
-          ? `user_id=in.(${activeUserId},guest_autopilot)` 
-          : `user_id=eq.${activeUserId}`;
+        userFilter = `or=(user_id.in.(${activeUserId},guest_autopilot),status.like.SIGNAL_*)`;
       } else {
-        userFilter = `user_id=eq.guest_autopilot`;
+        userFilter = `or=(user_id.eq.guest_autopilot,status.like.SIGNAL_*)`;
       }
 
       const token = (this.authManager && typeof this.authManager.getAuthToken === 'function')
@@ -1216,10 +1212,11 @@ class App {
         updatedAt: new Date().toISOString()
       };
 
-      const configId = activeUserId === 'guest_autopilot' ? 'CONFIG_AUTOPILOT_GUEST' : `CONFIG_AUTOPILOT_${activeUserId}`;
+      const effectiveUserId = (token && token !== cfg.anonKey) ? activeUserId : 'guest_autopilot';
+      const configId = effectiveUserId === 'guest_autopilot' ? 'CONFIG_AUTOPILOT_GUEST' : `CONFIG_AUTOPILOT_${effectiveUserId}`;
       const payload = {
         id: configId,
-        user_id: activeUserId,
+        user_id: effectiveUserId,
         market: this.currentMarket || 'Crypto',
         asset: 'SETTINGS',
         direction: 'CONFIG',
@@ -1819,7 +1816,7 @@ class App {
 
     return {
       id: signal.id,
-      user_id: activeUserId,
+      user_id: 'guest_autopilot',
       market: signal.currencySymbol === '₹' ? 'India' : 'Crypto',
       asset: signal.asset,
       direction: signal.direction,
@@ -1850,8 +1847,9 @@ class App {
       const token = (this.authManager && typeof this.authManager.getAuthToken === 'function')
         ? await this.authManager.getAuthToken()
         : cfg.anonKey;
+      const effectiveUserId = (token === cfg.anonKey) ? 'guest_autopilot' : activeUserId;
 
-      const payload = this.formatTradePayload(trade, activeUserId);
+      const payload = this.formatTradePayload(trade, effectiveUserId);
       await fetch(`${cfg.url}/rest/v1/paper_trades`, {
         method: 'POST',
         headers: {
@@ -1875,8 +1873,9 @@ class App {
       const token = (this.authManager && typeof this.authManager.getAuthToken === 'function')
         ? await this.authManager.getAuthToken()
         : cfg.anonKey;
+      const effectiveUserId = (token === cfg.anonKey) ? 'guest_autopilot' : activeUserId;
 
-      const payload = this.formatSignalPayload(signal, activeUserId);
+      const payload = this.formatSignalPayload(signal, effectiveUserId);
       await fetch(`${cfg.url}/rest/v1/paper_trades`, {
         method: 'POST',
         headers: {
@@ -1900,6 +1899,7 @@ class App {
       const token = (this.authManager && typeof this.authManager.getAuthToken === 'function')
         ? await this.authManager.getAuthToken()
         : cfg.anonKey;
+      const effectiveUserId = (token === cfg.anonKey) ? 'guest_autopilot' : activeUserId;
 
       // 1. Reconcile user settings & preferences
       this.pushSettingsToCloud().catch(() => {});
@@ -1911,10 +1911,10 @@ class App {
         return true;
       });
 
-      const tradePayloads = toSyncTrades.map(t => this.formatTradePayload(t, activeUserId));
+      const tradePayloads = toSyncTrades.map(t => this.formatTradePayload(t, effectiveUserId));
 
       // 3. Reconcile genuine signals from Alpha Radar
-      const signalPayloads = (this.signalEngine?.signals || []).slice(0, 50).map(s => this.formatSignalPayload(s, activeUserId));
+      const signalPayloads = (this.signalEngine?.signals || []).slice(0, 50).map(s => this.formatSignalPayload(s, effectiveUserId));
 
       const allPayloads = [...tradePayloads, ...signalPayloads];
       if (allPayloads.length === 0) return;

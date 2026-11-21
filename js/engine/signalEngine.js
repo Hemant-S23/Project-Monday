@@ -43,10 +43,10 @@ export class SignalEngine {
       if (!s || !s.asset) continue;
       const entryF = formatLevelPrice(s.entryPrice, s.asset);
       const direction = (s.direction || 'LONG').toUpperCase();
-      // Distinguish signals uniquely by tradeId or by setup signature
-      const sigKey = s.tradeId 
-        ? `TRADE_${s.tradeId}` 
-        : `${s.asset}_${direction}_${entryF}`;
+      // Distinguish signals uniquely by asset, direction, entry level, and calendar date:
+      // Permanently collapses all phantom clone loops into a single authoritative setup
+      const dateKey = s.issuedAt ? new Date(s.issuedAt).toDateString() : '';
+      const sigKey = `${s.asset}_${direction}_${entryF}_${dateKey}`;
 
       if (!seen.has(sigKey)) {
         seen.add(sigKey);
@@ -66,8 +66,12 @@ export class SignalEngine {
         if (raw) {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed)) {
-            // Clean Slate Sanitizer: Automatically purge legacy corrupted signals with collapsed/identical/negative levels
+            // Clean Slate Sanitizer: Automatically purge legacy corrupted signals and phantom clone loops
             const sanitized = parsed.filter(s => {
+              // Purge legacy hardcoded mock/duplicate BTC $60k setups
+              if (s.asset === 'BTC' && Number(s.entryPrice) === 60000 && Number(s.stopLossPrice) === 59000) {
+                return false;
+              }
               const entry = Number(s.entryPrice);
               const sl = Number(s.stopLossPrice);
               const tp = Number(s.takeProfitPrice);
@@ -180,6 +184,14 @@ export class SignalEngine {
     }
 
     if (hasChanged) {
+      // Prioritize active and pending signals over completed/archived
+      this.signals.sort((a, b) => {
+        const order = { 'PENDING': 3, 'ACTIVE': 2, 'TP_HIT': 1, 'SL_HIT': 1, 'EXPIRED': 0, 'INVALIDATED': 0 };
+        const scoreA = order[a.status] !== undefined ? order[a.status] : 1;
+        const scoreB = order[b.status] !== undefined ? order[b.status] : 1;
+        if (scoreB !== scoreA) return scoreB - scoreA;
+        return (b.issuedAt || 0) - (a.issuedAt || 0);
+      });
       this.deduplicateSignals();
       this.saveSignals();
     }

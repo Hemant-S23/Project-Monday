@@ -1,0 +1,33 @@
+name: MONDAY 24/7 Alpha Radar Autonomous Daemon
+
+on:
+  schedule:
+    # Run every 5 minutes, 24/7
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    # Allows manual execution on demand from GitHub Actions tab
+
+concurrency:
+  group: alpha-radar-daemon
+  cancel-in-progress: false
+
+jobs:
+  run-alpha-radar:
+    name: Market Sweep & Signal Blueprint Engine
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Execute Autonomous Alpha Radar Sweep
+        run: node scripts/alpha_radar_daemon.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://nzvnjfogvwvgjgbqqsxy.supabase.co' }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im56dm5qZm9ndnd2Z2pnYnFxc3h5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2Mjc2NTAsImV4cCI6MjEwNzIwMzY1MH0._1SPrzenFcZOB7pM0FsO0Nc82DUmTJP74LWGZp6b7wU' }}

@@ -4,7 +4,7 @@
  * Ensures zero stale cache on fresh opens while preserving ultra-fast offline fallback.
  */
 
-const CACHE_NAME = 'monday-speed-v8.1';
+const CACHE_NAME = 'monday-speed-v8.2';
 
 const PRECACHE_ASSETS = [
   './',

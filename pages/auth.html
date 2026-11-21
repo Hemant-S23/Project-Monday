@@ -714,7 +714,7 @@
 
             <!-- Submit Button -->
             <button type="submit" class="btn-primary" id="auth_submit_btn" style="width: 100%; padding: 13px; margin-top: 6px; justify-content: center;">
-              <span id="auth_submit_text">Sign In with Email</span> <i class="ph-bold ph-arrow-right"></i>
+              <span id="auth_submit_text">Sign In</span> <i class="ph-bold ph-arrow-right"></i>
             </button>
           </form>
 
@@ -966,7 +966,7 @@
       groupName.style.display = 'none';
       title.textContent = 'Welcome Back';
       sub.textContent = 'Sign in or create an account to synchronize your trading statements.';
-      submitText.textContent = 'Sign In with Email';
+      submitText.textContent = 'Sign In';
       forgotLink.style.display = 'block';
       sfx.playClick();
     });
@@ -981,6 +981,33 @@
       forgotLink.style.display = 'none';
       sfx.playClick();
     });
+
+    // Forgot Password Flow
+    if (forgotLink) {
+      forgotLink.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const emailInput = document.getElementById('auth_email');
+        const emailVal = (emailInput?.value || '').trim();
+        if (!emailVal) {
+          alert('Please enter your email address in the field above to receive a password reset link.');
+          emailInput?.focus();
+          return;
+        }
+        try {
+          forgotLink.textContent = 'Sending link...';
+          const res = await authManager.resetPasswordForEmail(emailVal);
+          if (res && res.success) {
+            alert(`Password reset instructions sent to ${emailVal}! Please check your email inbox.`);
+          } else {
+            alert('Unable to send password reset: ' + (res?.error || 'Unknown error'));
+          }
+        } catch (err) {
+          alert('Password reset error: ' + err.message);
+        } finally {
+          forgotLink.textContent = 'Forgot password?';
+        }
+      });
+    }
 
     // Eye Password Toggle
     const eyeBtn = document.getElementById('auth_eye_toggle');
@@ -1196,14 +1223,14 @@
             alert('Authentication Error: ' + (res?.error || 'Unable to sign in.'));
             if (submitBtn) {
               submitBtn.disabled = false;
-              submitBtn.innerHTML = `<span id="auth_submit_text">${isSignUp ? 'Create Account' : 'Sign In with Email'}</span> <i class="ph-bold ph-arrow-right"></i>`;
+              submitBtn.innerHTML = `<span id="auth_submit_text">${isSignUp ? 'Create Account' : 'Sign In'}</span> <i class="ph-bold ph-arrow-right"></i>`;
             }
           }
         } catch (err) {
           alert('Auth Exception: ' + err.message);
           if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = `<span id="auth_submit_text">${isSignUp ? 'Create Account' : 'Sign In with Email'}</span> <i class="ph-bold ph-arrow-right"></i>`;
+            submitBtn.innerHTML = `<span id="auth_submit_text">${isSignUp ? 'Create Account' : 'Sign In'}</span> <i class="ph-bold ph-arrow-right"></i>`;
           }
         }
       };
@@ -1221,7 +1248,10 @@
       const onboardingView = document.getElementById('onboarding_auth_view');
       const redirectingView = document.getElementById('redirecting_auth_view');
 
-      const isOnboarded = localStorage.getItem('monday_onboarded_' + user.id) === 'true';
+      // 🛡️ Cross-browser persistent check: verify cloud metadata OR local browser cache
+      const isCloudOnboarded = !!(user.isOnboarded || user.user_metadata?.is_onboarded || user.user_metadata?.isOnboarded);
+      const isLocalOnboarded = localStorage.getItem('monday_onboarded_' + user.id) === 'true';
+      const isOnboarded = isCloudOnboarded || isLocalOnboarded;
 
       if (!isOnboarded) {
         // Show SaaS Onboarding View
@@ -1235,7 +1265,7 @@
         const fullNameInput = document.getElementById('onboard_full_name');
         const callsignInput = document.getElementById('onboard_callsign');
 
-        const firstName = (user.name || 'Trader').split(' ')[0];
+        const firstName = (user.callsign || user.name || 'Trader').split(' ')[0];
 
         if (avatarImg) {
           avatarImg.src = user.avatar || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(user.email || user.id)}`;
@@ -1243,17 +1273,20 @@
         if (welcomeName) welcomeName.textContent = `Welcome, ${firstName}`;
         if (emailDisplay) emailDisplay.textContent = user.email || 'Verified Trader';
         if (fullNameInput && !fullNameInput.value) fullNameInput.value = user.name || '';
-        if (callsignInput && !callsignInput.value) callsignInput.value = firstName;
+        if (callsignInput && !callsignInput.value) callsignInput.value = user.callsign || firstName;
 
         try { sfx?.playSuccess?.(); } catch (e) {}
       } else {
-        // Already onboarded -> Show friendly redirect screen and navigate to Home Page
+        // Already onboarded -> Ensure local storage matches and navigate to Home Page
+        localStorage.setItem('monday_onboarded_' + user.id, 'true');
+        if (user.callsign) localStorage.setItem('monday_trader_name', user.callsign);
+
         if (standardView) standardView.style.display = 'none';
         if (onboardingView) onboardingView.style.display = 'none';
         if (redirectingView) redirectingView.style.display = 'block';
 
         const redirectGreeting = document.getElementById('redirect_user_greeting');
-        if (redirectGreeting) redirectGreeting.textContent = `Welcome back, ${user.name || 'Trader'}!`;
+        if (redirectGreeting) redirectGreeting.textContent = `Welcome back, ${user.callsign || user.name || 'Trader'}!`;
 
         try { sfx?.playSuccess?.(); } catch (e) {}
         setTimeout(() => {
@@ -1321,11 +1354,12 @@
           }
         }
 
-        // Update profile in Supabase & local cache
+        // Update profile in Supabase (Auth user_metadata + profiles table) & local cache
         await authManager.updateUserProfile({
           name: fullName,
           callsign: callsign,
-          marketFocus: marketFocus
+          marketFocus: marketFocus,
+          is_onboarded: true
         });
 
         localStorage.setItem('monday_trader_name', callsign || fullName);

@@ -59,7 +59,10 @@ export class AuthManager {
               id: u.id,
               email: u.email,
               name: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0] || 'Trader',
+              callsign: u.user_metadata?.callsign || u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0] || 'Trader',
               avatar: u.user_metadata?.avatar_url || u.user_metadata?.picture || null,
+              isOnboarded: !!(u.user_metadata?.is_onboarded || u.user_metadata?.isOnboarded),
+              user_metadata: u.user_metadata || {},
               isGuest: false,
               createdAt: u.created_at
             };
@@ -77,7 +80,10 @@ export class AuthManager {
             id: u.id,
             email: u.email,
             name: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0] || 'Trader',
+            callsign: u.user_metadata?.callsign || u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0] || 'Trader',
             avatar: u.user_metadata?.avatar_url || u.user_metadata?.picture || null,
+            isOnboarded: !!(u.user_metadata?.is_onboarded || u.user_metadata?.isOnboarded),
+            user_metadata: u.user_metadata || {},
             isGuest: false,
             createdAt: u.created_at
           };
@@ -230,6 +236,10 @@ export class AuthManager {
           id: data.user.id,
           email: data.user.email,
           name: data.user.user_metadata?.full_name || cleanEmail.split('@')[0],
+          callsign: data.user.user_metadata?.callsign || data.user.user_metadata?.full_name || cleanEmail.split('@')[0],
+          avatar: data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture || null,
+          isOnboarded: !!(data.user.user_metadata?.is_onboarded || data.user.user_metadata?.isOnboarded),
+          user_metadata: data.user.user_metadata || {},
           isGuest: false,
           createdAt: data.user.created_at
         };
@@ -365,6 +375,28 @@ export class AuthManager {
   }
 
   /**
+   * Request password reset link sent to user's email
+   */
+  async resetPasswordForEmail(email) {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    if (!cleanEmail) {
+      return { success: false, error: 'Please enter your email address first.' };
+    }
+    if (this.supabaseClient) {
+      try {
+        const { error } = await this.supabaseClient.auth.resetPasswordForEmail(cleanEmail, {
+          redirectTo: window.location.origin + window.location.pathname
+        });
+        if (error) return { success: false, error: error.message };
+        return { success: true };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+    return { success: false, error: 'Password reset requires an active internet connection.' };
+  }
+
+  /**
    * Update authenticated user's password (e.g. during onboarding)
    */
   async updateUserPassword(newPassword) {
@@ -390,11 +422,26 @@ export class AuthManager {
    */
   async updateUserProfile(profileData = {}) {
     if (this.currentUser) {
-      this.currentUser = { ...this.currentUser, ...profileData };
+      this.currentUser = { ...this.currentUser, ...profileData, isOnboarded: true };
       this.saveSession(this.currentUser);
     }
 
     if (this.supabaseClient && this.currentUser?.id && !this.currentUser.isGuest) {
+      // 1. Update Supabase Auth user_metadata directly (cross-browser persistent single source of truth)
+      try {
+        await this.supabaseClient.auth.updateUser({
+          data: {
+            full_name: profileData.name || this.currentUser.name,
+            callsign: profileData.callsign || this.currentUser.callsign || profileData.name,
+            market_focus: profileData.marketFocus || 'DUAL',
+            is_onboarded: true
+          }
+        });
+      } catch (err) {
+        console.warn('[AuthManager] Supabase auth.updateUser metadata warning:', err);
+      }
+
+      // 2. Upsert into profiles table if present
       try {
         await this.supabaseClient.from('profiles').upsert({
           id: this.currentUser.id,

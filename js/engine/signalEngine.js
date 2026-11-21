@@ -22,6 +22,11 @@ export class SignalEngine {
     this.signals = this.loadSignals();
     this.listeners = new Set();
     this.lastScannedPrices = new Map();
+    this.onSignalFillCallback = null;
+  }
+
+  setOnSignalFill(callback) {
+    this.onSignalFillCallback = callback;
   }
 
   loadSignals() {
@@ -252,6 +257,9 @@ export class SignalEngine {
             signal.status = 'ACTIVE';
             signal.filledAt = now;
             hasChanged = true;
+            if (typeof this.onSignalFillCallback === 'function') {
+              try { this.onSignalFillCallback(signal); } catch (e) { console.error('[SignalEngine] Fill callback error:', e); }
+            }
           } 
           // If price shoots up directly to target BEFORE entering: INVALIDATED
           else if (price >= signal.takeProfitPrice) {
@@ -273,6 +281,9 @@ export class SignalEngine {
             signal.status = 'ACTIVE';
             signal.filledAt = now;
             hasChanged = true;
+            if (typeof this.onSignalFillCallback === 'function') {
+              try { this.onSignalFillCallback(signal); } catch (e) { console.error('[SignalEngine] Fill callback error:', e); }
+            }
           }
           // If price dumps directly to target BEFORE entering: INVALIDATED
           else if (price <= signal.takeProfitPrice) {

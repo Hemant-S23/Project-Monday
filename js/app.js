@@ -163,6 +163,11 @@ class App {
         this.ui.renderSignalsPage();
       }
     });
+    this.signalEngine.setOnSignalFill(async (signal) => {
+      if (this.autoPilotEnabled) {
+        await this.handleAutoPilotSignalFill(signal);
+      }
+    });
     this.ui.updateSignalsBadge(this.signalEngine.getActiveCount());
 
     // Voice Assistant with natural Indian and English profiles
@@ -421,6 +426,9 @@ class App {
 
       const activeUserId = this.authManager && this.authManager.getUserId ? this.authManager.getUserId() : 'guest_autopilot';
       const userFilter = `user_id=in.(${activeUserId},guest_autopilot)`;
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
 
       const res = await fetch(`${cfg.url}/rest/v1/paper_trades?select=*&${userFilter}&order=created_at.desc&limit=1000`, {
         headers: {
@@ -984,13 +992,6 @@ class App {
         .filter(r => r.isEligible)
         .sort((a, b) => b.confluenceScore - a.confluenceScore);
 
-      // 🛡️ CLOUD-FIRST MASTER EXECUTION ARCHITECTURE:
-      // For Crypto, the 24/7 Render Cloud Daemon is the sole master autonomous execution authority.
-      // The browser cockpit visualizes live radar & copilot signals, but does not race to fire duplicate local orders.
-      if (this.currentMarket === 'Crypto') {
-        return;
-      }
-
       for (const setup of eligibleSetups) {
         if (!this.autoPilotEnabled) break;
         if (this.paperTrader.openPositions.length >= settings.maxTrades) break;
@@ -1136,6 +1137,58 @@ class App {
       minRR: 2.0,
       eventShieldEnabled: true
     };
+  }
+
+  async handleAutoPilotSignalFill(signal) {
+    if (!signal || !this.autoPilotEnabled) return;
+    const settings = this.getAutoPilotSettings();
+
+    // Check max concurrent trades limit
+    if (settings.maxTrades < 900 && this.paperTrader.openPositions.length >= settings.maxTrades) {
+      console.warn(`[Auto-Pilot Fill] Max ${settings.maxTrades} trades already open. Skipping fill for ${signal.asset}.`);
+      return;
+    }
+
+    // Check duplicate position on same asset
+    if (this.paperTrader.openPositions.some(p => p.asset === signal.asset)) {
+      return;
+    }
+
+    const lev = settings.leverage || (this.currentMarket === 'India' ? 5 : 20);
+    const marginUSD = settings.marginUSD || 100;
+    const notional = +(marginUSD * lev).toFixed(2);
+    const rawPos = notional / signal.entryPrice;
+    const posSize = signal.entryPrice >= 1000 
+      ? +rawPos.toFixed(6) 
+      : (signal.entryPrice >= 1 ? +rawPos.toFixed(4) : +rawPos.toFixed(2));
+    const rr = Number(signal.riskReward) || 2.0;
+
+    const trade = this.paperTrader.executePaperTrade({
+      asset: signal.asset,
+      market: this.currentMarket || 'Crypto',
+      direction: signal.direction,
+      entry: signal.entryPrice,
+      stopLoss: signal.stopLossPrice,
+      target: signal.takeProfitPrice,
+      leverage: lev,
+      marginUSD: marginUSD,
+      notionalUSD: notional,
+      positionSize: posSize,
+      rrRatio: rr,
+      riskUSD: marginUSD,
+      rewardUSD: +(marginUSD * rr).toFixed(2)
+    });
+
+    if (trade) {
+      signal.tradeId = trade.id;
+      signal.inPortfolio = true;
+      this.updateTradeJournalAndStats();
+      this.ui.updateOpenPositions(this.paperTrader.openPositions);
+      this.ui.updateHeaderAccountHUD(this.paperTrader.getLiveEquity());
+      this.syncTradeToSupabase(trade).catch(() => {});
+      this.ui.showToast('🤖 Auto-Pilot Position Filled', `${signal.asset} ${signal.direction} Limit Order filled @ $${signal.entryPrice}!`, 'success');
+      this.voiceAssistant.speak(`Auto-pilot position filled for ${signal.asset} ${signal.direction}. Stoploss and target armed.`);
+    }
   }
 
   async processAutoPilotExecution(asset, direction, strategyResult) {
@@ -1653,21 +1706,6 @@ class App {
     });
   }
 
-  handleAuthSuccess(user) {
-    if (!user) return;
-    this.ui.hideAuthOverlay();
-    this.ui.updateUserProfile(user);
-    this.paperTrader.setUser(user.id);
-    this.riskEngine.setAccountBalance(this.paperTrader.balance);
-    this.updateTradeJournalAndStats();
-    this.ui.updateOpenPositions(this.paperTrader.openPositions);
-    const liveMetrics = this.paperTrader.getLiveEquity();
-    this.ui.updateHeaderAccountHUD(liveMetrics);
-    this.ui.showToast('Logged In', `Welcome back, ${user.name || user.email || 'Trader'}!`, 'success');
-    this.voiceAssistant.speak(`Welcome ${user.name || 'Trader'}. Account sync complete.`);
-    this.reconcileOfflineTradesWithSupabase();
-  }
-
   async resetAccount() {
     this.paperTrader.resetAccount(true);
     this.riskEngine.setAccountBalance(2000);
@@ -1800,7 +1838,16 @@ class App {
           await this.getActiveAdapter().ensureAssetInitialized(asset);
           const evalData = await this.evaluateAsset(asset);
           if (evalData && this.signalEngine) {
-            this.signalEngine.processStrategyResult(asset, evalData);
+            const sig = this.signalEngine.processStrategyResult(asset, evalData);
+            if (sig && this.autoPilotEnabled) {
+              const sr = evalData.strategyResult;
+              const htfDir = sr?.htfTrend?.direction;
+              const execDir = sig.direction;
+              const directionAligned = (htfDir === 'BULLISH' && execDir === 'LONG') || (htfDir === 'BEARISH' && execDir === 'SHORT');
+              if (directionAligned && (sr?.state === 'CONFIRMED' || (sr?.confluenceScore >= 75 && sr?.levels?.rrRatio >= 1.5))) {
+                await this.processAutoPilotExecution(asset, execDir, sr);
+              }
+            }
           }
           // Ultra-smooth UI yield: gives 120ms breathe room to browser rendering engine
           await new Promise(r => setTimeout(r, 120));

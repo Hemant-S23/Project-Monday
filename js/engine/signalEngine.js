@@ -165,8 +165,23 @@ export class SignalEngine {
    * Merges authoritative signals from Supabase Cloud into local Alpha Radar desk
    */
   mergeCloudSignals(cloudSignals = []) {
-    if (!Array.isArray(cloudSignals) || cloudSignals.length === 0) return;
+    if (!Array.isArray(cloudSignals)) return;
     let hasChanged = false;
+
+    // Cloud Master Filter: Identify authoritative cloud signal IDs & keys
+    const cloudIds = new Set(cloudSignals.map(ct => ct.id));
+    const cloudKeys = new Set(cloudSignals.map(ct => `${ct.asset}_${ct.direction}_${formatLevelPrice(ct.entry_price, ct.asset)}`));
+
+    // Pure Cloud Purge: Immediately eliminate any local phantom signals that do not exist in the Cloud
+    const beforeCount = this.signals.length;
+    this.signals = this.signals.filter(s => {
+      if (s.inPortfolio || (s.tradeId && s.tradeId.startsWith('TRADE-'))) return true;
+      const sKey = `${s.asset}_${s.direction}_${formatLevelPrice(s.entryPrice, s.asset)}`;
+      return cloudIds.has(s.id) || cloudKeys.has(sKey);
+    });
+    if (this.signals.length !== beforeCount) {
+      hasChanged = true;
+    }
 
     for (const ct of cloudSignals) {
       if (!ct || !ct.asset) continue;
@@ -480,8 +495,9 @@ export class SignalEngine {
         }
       }
 
-      // 3. Active position state transitions (TP / SL Watcher)
-      else if (signal.status === 'ACTIVE') {
+      // 3. Active position state transitions: Managed canonically by 24/7 Cloud Daemon
+      // to prevent single-browser tick flickers from falsely triggering SL/TP prematurely
+      else if (signal.status === 'ACTIVE' && !signal.id?.startsWith('SIG-')) {
         if (signal.direction === 'LONG') {
           if (price >= signal.takeProfitPrice) {
             signal.status = 'TP_HIT';

@@ -987,8 +987,14 @@ export class PaperTrader {
     const losses = filtered.filter(t => t.result === 'LOSS' || t.result === 'LIQUIDATED' || (Number(t.pnlUSD || 0) < 0));
     const breakevens = filtered.filter(t => t.result === 'BREAKEVEN' || (Number(t.pnlUSD || 0) === 0 && t.result !== 'LIQUIDATED'));
 
-    const totalBrokerage = +filtered.reduce((acc, t) => acc + (t.brokerageFeeUSD || (t.totalFeesUSD ? +(t.totalFeesUSD / 1.18).toFixed(2) : 0)), 0).toFixed(2);
-    const totalGST = +filtered.reduce((acc, t) => acc + (t.gstUSD || (t.totalFeesUSD ? +(t.totalFeesUSD - (t.totalFeesUSD / 1.18)).toFixed(2) : 0)), 0).toFixed(2);
+    const totalBrokerage = +filtered.reduce((acc, t) => {
+      const b = Number(t.brokerageFeeUSD !== undefined ? t.brokerageFeeUSD : (t.totalFeesUSD ? +(t.totalFeesUSD / 1.18).toFixed(2) : (t.feesUSD ? +(t.feesUSD / 1.18).toFixed(2) : 0)));
+      return acc + b;
+    }, 0).toFixed(2);
+    const totalGST = +filtered.reduce((acc, t) => {
+      const g = Number(t.gstUSD !== undefined ? t.gstUSD : (t.totalFeesUSD ? +(t.totalFeesUSD - (t.totalFeesUSD / 1.18)).toFixed(2) : (t.feesUSD ? +(t.feesUSD - (t.feesUSD / 1.18)).toFixed(2) : 0)));
+      return acc + g;
+    }, 0).toFixed(2);
     const totalCharges = +(totalBrokerage + totalGST).toFixed(2);
     const netSettledPnl = +filtered.reduce((acc, t) => acc + (Number(t.pnlUSD) || 0), 0).toFixed(2);
     // Double-entry accounting: Gross PnL minus Charges equals Net Settled to the penny

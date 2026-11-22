@@ -4487,9 +4487,10 @@ export class TerminalUI {
       const netPnlToday = +todayTrades.reduce((acc, t) => acc + (Number(t.pnlUSD) || 0), 0).toFixed(2);
       const netRToday = +todayTrades.reduce((acc, t) => acc + (Number(t.rMultiple) || 0), 0).toFixed(1);
       const chargesToday = +todayTrades.reduce((acc, t) => {
-        const brokerage = Number(t.brokerageFeeUSD || (t.totalFeesUSD ? +(t.totalFeesUSD / 1.18).toFixed(2) : 0));
-        const gst = Number(t.gstUSD || (t.totalFeesUSD ? +(t.totalFeesUSD - brokerage).toFixed(2) : 0));
-        return acc + Number(t.totalChargesUSD || t.totalFeesUSD || +(brokerage + gst).toFixed(2));
+        const fees = Number(t.totalFeesUSD || t.feesUSD || 0);
+        const brokerage = Number(t.brokerageFeeUSD !== undefined ? t.brokerageFeeUSD : (fees > 0 ? +(fees / 1.18).toFixed(2) : 0));
+        const gst = Number(t.gstUSD !== undefined ? t.gstUSD : (fees > 0 ? +(fees - brokerage).toFixed(2) : 0));
+        return acc + Number(t.totalChargesUSD || fees || +(brokerage + gst).toFixed(2));
       }, 0).toFixed(2);
 
       const dBadge = document.getElementById('daily_date_label');

@@ -27,6 +27,39 @@ function formatLevelPrice(val, asset) {
   return +n.toFixed(2);
 }
 
+function formatSupabaseRow(sig) {
+  let meta = {};
+  if (sig.strategy) {
+    try { meta = typeof sig.strategy === 'string' ? JSON.parse(sig.strategy) : sig.strategy; } catch (e) {}
+  }
+  if (sig.closed_at) {
+    meta.closedAt = sig.closed_at;
+  }
+
+  return {
+    id: sig.id,
+    user_id: 'guest_autopilot',
+    market: sig.market || 'Crypto',
+    asset: sig.asset,
+    direction: sig.direction,
+    entry_price: Number(sig.entry_price),
+    stop_loss: Number(sig.stop_loss),
+    target_price: Number(sig.target_price),
+    position_size: Number(sig.position_size || 0),
+    risk_usd: Number(sig.risk_usd || 0),
+    reward_usd: Number(sig.reward_usd || 0),
+    rr_ratio: Number(sig.rr_ratio || 2.0),
+    status: sig.status,
+    result: sig.result || null,
+    pnl_usd: Number(sig.pnl_usd || 0),
+    r_multiple: Number(sig.r_multiple || 0),
+    exit_price: sig.exit_price ? Number(sig.exit_price) : null,
+    timeframe: sig.timeframe || '5M',
+    strategy: JSON.stringify(meta),
+    created_at: sig.created_at || new Date().toISOString()
+  };
+}
+
 async function fetchCoinbaseCandles(symbol, granularity) {
   const url = `https://api.exchange.coinbase.com/products/${symbol}-USD/candles?granularity=${granularity}`;
   try {
@@ -233,9 +266,13 @@ async function runDaemon() {
           'Content-Type': 'application/json',
           'Prefer': 'resolution=merge-duplicates'
         },
-        body: JSON.stringify(updatedSignals)
+        body: JSON.stringify(updatedSignals.map(formatSupabaseRow))
       });
       console.log(`[Alpha Radar Daemon] Supabase upsert response status: ${res.status}`);
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('[Alpha Radar Daemon] Supabase upsert error details:', errorText);
+      }
     } catch (pushErr) {
       console.error('[Alpha Radar Daemon] Failed to upsert signals:', pushErr.message);
     }

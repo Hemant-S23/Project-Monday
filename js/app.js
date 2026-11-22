@@ -433,20 +433,15 @@ class App {
     setInterval(() => this.runFullEvaluation(), 5000);
     setInterval(() => this.syncWithSupabaseCloud(), 15000);
 
-    // 7. Initial & periodic Alpha Signals Swarm Scan
-    // Yields boot CPU so initial render & animations hit 60 FPS immediately
+    // 7. Initial & periodic Alpha Signals Cloud Sync
     setTimeout(() => {
-      const activePage = this.ui?.currentSaaSPage || localStorage.getItem('monday_active_page') || 'terminal';
-      if (activePage === 'signals') {
-        this.scanAllAssetsForSignals().catch(() => {});
-      }
-    }, 3500);
-    // Periodic swarm scan: throttled to 180s when idle, or runs on demand
+      this.syncWithSupabaseCloud().catch(() => {});
+    }, 2000);
     setInterval(() => {
       if (!document.hidden) {
-        this.scanAllAssetsForSignals().catch(() => {});
+        this.syncWithSupabaseCloud().catch(() => {});
       }
-    }, 180000);
+    }, 30000);
   }
 
   async syncWithSupabaseCloud() {
@@ -668,7 +663,11 @@ class App {
             rMultiple: Number(ct.r_multiple || 0),
             exitPrice: ct.exit_price ? Number(ct.exit_price) : null,
             exitReason: parsedMeta.exitReason || (ct.result === 'WIN' ? 'TAKE_PROFIT' : 'STOP_LOSS'),
-            feesUSD: Number(parsedMeta.feesUSD || 0),
+            feesUSD: Number(parsedMeta.feesUSD || parsedMeta.totalFeesUSD || 0),
+            totalFeesUSD: Number(parsedMeta.feesUSD || parsedMeta.totalFeesUSD || 0),
+            brokerageFeeUSD: Number(parsedMeta.brokerageFeeUSD !== undefined ? parsedMeta.brokerageFeeUSD : (Number(parsedMeta.feesUSD || 0) > 0 ? +(Number(parsedMeta.feesUSD) / 1.18).toFixed(2) : 0)),
+            gstUSD: Number(parsedMeta.gstUSD !== undefined ? parsedMeta.gstUSD : (Number(parsedMeta.feesUSD || 0) > 0 ? +(Number(parsedMeta.feesUSD) - Number(parsedMeta.feesUSD) / 1.18).toFixed(2) : 0)),
+            grossPnLUSD: Number(parsedMeta.grossPnLUSD !== undefined ? parsedMeta.grossPnLUSD : (Number(ct.pnl_usd || 0) + Number(parsedMeta.feesUSD || 0))),
             openedAt: openedAtTime,
             closedAt: closedAtTime
           });
@@ -685,6 +684,14 @@ class App {
           }
           if (parsedMeta.exitReason && existsClosed.exitReason !== parsedMeta.exitReason) {
             existsClosed.exitReason = parsedMeta.exitReason;
+            changed = true;
+          }
+          if (parsedMeta.feesUSD !== undefined && (!existsClosed.feesUSD || existsClosed.feesUSD !== Number(parsedMeta.feesUSD))) {
+            existsClosed.feesUSD = Number(parsedMeta.feesUSD);
+            existsClosed.totalFeesUSD = Number(parsedMeta.feesUSD);
+            existsClosed.brokerageFeeUSD = Number(parsedMeta.brokerageFeeUSD || (existsClosed.feesUSD > 0 ? +(existsClosed.feesUSD / 1.18).toFixed(2) : 0));
+            existsClosed.gstUSD = Number(parsedMeta.gstUSD || (existsClosed.feesUSD > 0 ? +(existsClosed.feesUSD - existsClosed.brokerageFeeUSD).toFixed(2) : 0));
+            existsClosed.grossPnLUSD = Number(parsedMeta.grossPnLUSD || (Number(ct.pnl_usd || 0) + existsClosed.feesUSD));
             changed = true;
           }
         }
@@ -1783,12 +1790,21 @@ class App {
   formatTradePayload(trade, activeUserId) {
     const openedAtTime = trade.openedAt ? Number(trade.openedAt) : Date.now();
     const closedAtTime = trade.closedAt ? Number(trade.closedAt) : (trade.status === 'CLOSED' ? Date.now() : null);
+    const fees = Number(trade.feesUSD || trade.totalFeesUSD || 0);
+    const brokerage = Number(trade.brokerageFeeUSD !== undefined ? trade.brokerageFeeUSD : (fees > 0 ? +(fees / 1.18).toFixed(2) : 0));
+    const gst = Number(trade.gstUSD !== undefined ? trade.gstUSD : (fees > 0 ? +(fees - brokerage).toFixed(2) : 0));
+    const gross = Number(trade.grossPnLUSD !== undefined ? trade.grossPnLUSD : (trade.pnlUSD ? +(Number(trade.pnlUSD) + fees).toFixed(2) : 0));
+
     const meta = {
       strategyName: trade.strategy || '20x Isolated HTF-Trend Pullback',
       openedAt: openedAtTime,
       closedAt: closedAtTime,
       exitReason: trade.exitReason || trade.closeReason || (trade.result === 'WIN' ? 'TAKE_PROFIT' : (trade.result === 'LOSS' ? 'STOP_LOSS' : null)),
-      feesUSD: trade.feesUSD || 0
+      feesUSD: fees,
+      totalFeesUSD: fees,
+      brokerageFeeUSD: brokerage,
+      gstUSD: gst,
+      grossPnLUSD: gross
     };
 
     return {
@@ -1851,8 +1867,7 @@ class App {
       exit_price: signal.takeProfitPrice,
       timeframe: '5M',
       strategy: JSON.stringify(meta),
-      created_at: new Date(issuedAtTime).toISOString(),
-      closed_at: signal.closedAt ? new Date(signal.closedAt).toISOString() : null
+      created_at: new Date(issuedAtTime).toISOString()
     };
   }
 
@@ -1930,17 +1945,12 @@ class App {
       });
 
       const tradePayloads = toSyncTrades.map(t => this.formatTradePayload(t, effectiveUserId));
+      if (tradePayloads.length === 0) return;
 
-      // 3. Reconcile genuine signals from Alpha Radar
-      const signalPayloads = (this.signalEngine?.signals || []).slice(0, 50).map(s => this.formatSignalPayload(s, effectiveUserId));
-
-      const allPayloads = [...tradePayloads, ...signalPayloads];
-      if (allPayloads.length === 0) return;
-
-      // Execute bulk upsert in chunks of 50 in parallel
-      const chunkSize = 50;
-      for (let i = 0; i < allPayloads.length; i += chunkSize) {
-        const chunk = allPayloads.slice(i, i + chunkSize);
+      // Execute bulk upsert of user trades in chunks of 25 in parallel
+      const chunkSize = 25;
+      for (let i = 0; i < tradePayloads.length; i += chunkSize) {
+        const chunk = tradePayloads.slice(i, i + chunkSize);
         await fetch(`${cfg.url}/rest/v1/paper_trades`, {
           method: 'POST',
           headers: {
@@ -1952,7 +1962,7 @@ class App {
           body: JSON.stringify(chunk)
         });
       }
-      console.log(`[App] Supabase cloud sync bulk reconciled ${allPayloads.length} items (trades + signals + config) successfully.`);
+      console.log(`[App] Supabase cloud sync bulk reconciled ${tradePayloads.length} user trades successfully.`);
     } catch (err) {
       console.warn('[App] Cloud trade reconciliation failed:', err);
     }
@@ -2092,44 +2102,10 @@ class App {
     this._isScanningAllSignals = true;
 
     try {
-      // Dynamic Candidate Evaluation: Aligned with Auto-Pilot Swarm
-      let candidates;
-      if (this.currentMarket === 'India') {
-        candidates = ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATAMOTORS', 'HDFCBANK', 'SWIGGY', 'HYUNDAI', 'ZOMATO', 'HAL', 'INFY', 'TCS', 'ICICIBANK', 'SBIN', 'BHARTIARTL', 'KOTAKBANK', 'LT', 'AXISBANK', 'WAREE', 'NTPCGREEN'];
-      } else {
-        const allBase = this.cryptoAdapter?.allMarkets ? this.cryptoAdapter.allMarkets.map(m => m.baseAsset) : [];
-        const priorityList = [
-          'BTC', 'ETH', 'SOL', 'XRP', 'DOGE', 'ADA', 'AVAX', 'SUI', 'NEAR', 'LINK',
-          'BNB', 'RENDER', 'INJ', 'TIA', 'FET', 'ARB', 'OP', 'DOT', 'LTC', 'BCH',
-          'AAVE', 'UNI', 'ICP', 'KAS', 'ATOM', 'FIL', 'APT', 'XLM', 'ALGO', 'CRV',
-          'COOKIE', 'AKT', 'JITOSOL', 'ZEC', 'PEPE', 'SHIB', 'QNT', 'TAO', 'WIF', 'HBAR'
-        ];
-        candidates = Array.from(new Set([...priorityList, ...allBase.slice(0, 40)]));
-      }
-
-      for (const asset of candidates) {
-        if (document.hidden) break; // Don't churn background compute when tab is minimized
-        try {
-          await this.getActiveAdapter().ensureAssetInitialized(asset);
-          const evalData = await this.evaluateAsset(asset);
-          if (evalData && this.signalEngine) {
-            const sig = this.signalEngine.processStrategyResult(asset, evalData);
-            if (sig && this.autoPilotEnabled) {
-              const sr = evalData.strategyResult;
-              const htfDir = sr?.htfTrend?.direction;
-              const execDir = sig.direction;
-              const directionAligned = (htfDir === 'BULLISH' && execDir === 'LONG') || (htfDir === 'BEARISH' && execDir === 'SHORT');
-              if (directionAligned && (sr?.state === 'CONFIRMED' || (sr?.confluenceScore >= 75 && sr?.levels?.rrRatio >= 1.5))) {
-                await this.processAutoPilotExecution(asset, execDir, sr);
-              }
-            }
-          }
-          // Ultra-smooth UI yield: gives 120ms breathe room to browser rendering engine
-          await new Promise(r => setTimeout(r, 120));
-        } catch (e) {}
-      }
+      // Pure Cloud Architecture: Fetch canonical institutional setups from 24/7 Cloud Daemon
+      await this.syncWithSupabaseCloud();
     } catch (e) {
-      console.warn('[App] Scan all signals error:', e);
+      console.warn('[App] Scan all signals cloud sync error:', e);
     } finally {
       this._isScanningAllSignals = false;
       if (this.ui && typeof this.ui.renderSignalsPage === 'function') {
@@ -2137,7 +2113,7 @@ class App {
       }
       this.reconcileOfflineTradesWithSupabase().catch(() => {});
       if (this.ui && typeof this.ui.showToast === 'function') {
-        this.ui.showToast('Alpha Radar Synchronized', 'Market swarm analysis complete. Real-time institutional setups updated.', 'success');
+        this.ui.showToast('Alpha Radar Synchronized', 'Real-time institutional setups verified from 24/7 Cloud Sentinel.', 'success');
       }
     }
   }

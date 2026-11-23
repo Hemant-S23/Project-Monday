@@ -146,11 +146,26 @@ class App {
       },
       onGetSignals: (filter) => this.signalEngine.getSignals(filter),
       onGetActiveSignalsCount: () => this.signalEngine.getActiveCount(),
-      onClearSignals: () => {
+      onClearSignals: async () => {
         const now = Date.now();
         this.signalEngine.clearArchived(now);
         this.pushSettingsToCloud().catch(() => {});
         this.ui.updateSignalsBadge(this.signalEngine.getActiveCount());
+
+        // Cloud Prune: Delete archived/expired signals from Supabase Cloud
+        try {
+          const cfg = window.MONDAY_SUPABASE_CONFIG;
+          if (cfg && cfg.url && cfg.anonKey) {
+            await fetch(`${cfg.url}/rest/v1/paper_trades?status=in.(SIGNAL_TP_HIT,SIGNAL_SL_HIT,SIGNAL_EXPIRED,SIGNAL_INVALIDATED)`, {
+              method: 'DELETE',
+              headers: {
+                'apikey': cfg.anonKey,
+                'Authorization': `Bearer ${cfg.anonKey}`
+              }
+            });
+            console.log('[Signals Cloud Prune] Archived signals deleted from Supabase Cloud.');
+          }
+        } catch (e) {}
       },
       onSignalsPageOpen: () => {
         if (this.signalEngine && this.cryptoAdapter) {

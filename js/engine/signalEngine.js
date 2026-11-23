@@ -43,8 +43,17 @@ export class SignalEngine {
 
   clearArchived(timestamp = Date.now()) {
     this.setArchivedClearedAt(timestamp);
-    // Instant UI prune: remove archived signals cleared before or at watermark
+    const VALID_CRYPTO_ASSETS = new Set([
+      'BTC', 'ETH', 'SOL', 'AVAX', 'LINK',
+      'DOGE', 'NEAR', 'SUI', 'XRP', 'ADA', 'AAVE', 'INJ', 'LTC', 'UNI', 'PEPE'
+    ]);
+    // Instant UI prune: remove archived signals cleared before or at watermark, and any stale/non-universe setups
     this.signals = this.signals.filter(s => {
+      if (!s.asset || !VALID_CRYPTO_ASSETS.has(s.asset.toUpperCase())) return false;
+      const issuedTime = Number(s.issuedAt) || 0;
+      if (issuedTime > 0 && (Date.now() - issuedTime > 24 * 60 * 60 * 1000) && (s.status === 'PENDING' || s.status === 'ACTIVE')) {
+        return false;
+      }
       const isArchived = s.status === 'TP_HIT' || s.status === 'SL_HIT' || s.status === 'EXPIRED' || s.status === 'INVALIDATED';
       if (!isArchived) return true;
       const t = s.closedAt || s.issuedAt || 0;
@@ -94,7 +103,23 @@ export class SignalEngine {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed)) {
             // Clean Slate Sanitizer: Automatically purge legacy corrupted signals and phantom clone loops
+            const VALID_CRYPTO_ASSETS = new Set([
+              'BTC', 'ETH', 'SOL', 'AVAX', 'LINK',
+              'DOGE', 'NEAR', 'SUI', 'XRP', 'ADA', 'AAVE', 'INJ', 'LTC', 'UNI', 'PEPE'
+            ]);
+
             let sanitized = parsed.filter(s => {
+              // 1. Asset Universe Guard: Purge obsolete tokens (like CTSI or test symbols)
+              if (!s.asset || !VALID_CRYPTO_ASSETS.has(s.asset.toUpperCase())) {
+                return false;
+              }
+
+              // 2. Stale Zombie Signal Purger: Any pending or active signal older than 24 hours is permanently dead
+              const issuedTime = Number(s.issuedAt) || 0;
+              if (issuedTime > 0 && (Date.now() - issuedTime > 24 * 60 * 60 * 1000) && (s.status === 'PENDING' || s.status === 'ACTIVE')) {
+                return false;
+              }
+
               // Purge legacy hardcoded mock/duplicate BTC $60k setups and test signals
               if (s.asset === 'BTC' && Number(s.entryPrice) === 60000) {
                 return false;

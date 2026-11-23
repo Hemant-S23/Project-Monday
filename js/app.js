@@ -1998,20 +1998,47 @@ class App {
     this.ui.updateOpenPositions([]);
     const liveMetrics = this.paperTrader.getLiveEquity();
     this.ui.updateHeaderAccountHUD(liveMetrics);
+    if (typeof this.ui.renderFinancialPassbook === 'function') {
+      this.ui.renderFinancialPassbook();
+    }
     this.ui.showToast('Account Reset', 'Clean account balance restored to $2,000.00 with 0 trades.', 'info');
 
-    // Cloud-Aware Reset: Also purge Supabase paper_trades so cloud sync doesn't resurrect deleted trades
+    // 🔒 ClOUD PURGE: Delete any user paper trades from Supabase Cloud
     try {
       const cfg = window.MONDAY_SUPABASE_CONFIG;
       if (cfg && cfg.url && cfg.anonKey) {
-        await fetch(`${cfg.url}/rest/v1/paper_trades?id=neq.NONE`, {
-          method: 'DELETE',
+        const activeUserId = this.authManager && this.authManager.getUserId ? this.authManager.getUserId() : 'guest_autopilot';
+        const token = (this.authManager && typeof this.authManager.getAuthToken === 'function')
+          ? await this.authManager.getAuthToken()
+          : cfg.anonKey;
+
+        // Purge OPEN and CLOSED paper portfolio trades across user scopes (never touch Alpha Radar signals)
+        const targetUids = [...new Set([activeUserId, 'guest_autopilot', 'default'])];
+        for (const uid of targetUids) {
+          await fetch(`${cfg.url}/rest/v1/paper_trades?user_id=eq.${uid}&status=in.(OPEN,CLOSED)`, {
+            method: 'DELETE',
+            headers: {
+              'apikey': cfg.anonKey,
+              'Authorization': `Bearer ${token}`
+            }
+          });
+        }
+
+        // Also reset cloud config row balance to clean $2,000
+        await fetch(`${cfg.url}/rest/v1/paper_trades?id=eq.CONFIG_AUTOPILOT_GUEST`, {
+          method: 'PATCH',
           headers: {
             'apikey': cfg.anonKey,
-            'Authorization': `Bearer ${cfg.anonKey}`
-          }
-        });
-        console.log('[Cloud Reset] Supabase paper_trades table purged successfully.');
+            'Authorization': `Bearer ${cfg.anonKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            risk_usd: 2000,
+            pnl_usd: 0
+          })
+        }).catch(() => {});
+
+        console.log('[Cloud Reset] User paper trades purged from Supabase Cloud successfully.');
       }
     } catch (err) {
       console.warn('[Cloud Reset] Supabase trade purge error:', err);

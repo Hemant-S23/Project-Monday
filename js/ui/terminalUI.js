@@ -880,10 +880,10 @@ export class TerminalUI {
     }
 
     if (confirmResetBtn) {
-      confirmResetBtn.addEventListener('click', () => {
+      confirmResetBtn.addEventListener('click', async () => {
         closeResetConfirmModal();
         if (this.callbacks.onResetAccount) {
-          this.callbacks.onResetAccount();
+          await this.callbacks.onResetAccount();
         }
         if (typeof this.renderFinancialPassbook === 'function') {
           this.renderFinancialPassbook();

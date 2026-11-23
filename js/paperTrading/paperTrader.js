@@ -37,61 +37,14 @@ export class PaperTrader {
 
   setUser(userId) {
     if (this.userId === userId) return;
-    const oldUserId = this.userId;
     this.userId = userId || 'default';
     this.storageKey = `ai_copilot_paper_trades_${this.userId}`;
     this.balanceStorageKey = `ai_copilot_paper_balance_${this.userId}`;
     this.positionsStorageKey = `ai_copilot_paper_positions_${this.userId}`;
 
-    let loadedTrades = this.loadTrades();
-    let loadedPositions = this.loadOpenPositions();
-
-    // Cloud/Session Migration Bridge:
-    // If newly switched user account has no local trades yet, migrate from previous session (guest/default)
-    if ((!loadedTrades || loadedTrades.length === 0) && oldUserId) {
-      const candidateKeys = [
-        `ai_copilot_paper_trades_${oldUserId}`,
-        `ai_copilot_paper_trades_guest_autopilot`,
-        `ai_copilot_paper_trades_default`
-      ];
-      for (const k of candidateKeys) {
-        const raw = localStorage.getItem(k);
-        if (raw) {
-          try {
-            const arr = JSON.parse(raw);
-            if (Array.isArray(arr) && arr.length > 0) {
-              localStorage.setItem(this.storageKey, raw);
-              loadedTrades = this.loadTrades();
-              break;
-            }
-          } catch (e) {}
-        }
-      }
-    }
-
-    if ((!loadedPositions || loadedPositions.length === 0) && oldUserId) {
-      const candidatePosKeys = [
-        `ai_copilot_paper_positions_${oldUserId}`,
-        `ai_copilot_paper_positions_guest_autopilot`,
-        `ai_copilot_paper_positions_default`
-      ];
-      for (const k of candidatePosKeys) {
-        const raw = localStorage.getItem(k);
-        if (raw) {
-          try {
-            const arr = JSON.parse(raw);
-            if (Array.isArray(arr) && arr.length > 0) {
-              localStorage.setItem(this.positionsStorageKey, raw);
-              loadedPositions = this.loadOpenPositions();
-              break;
-            }
-          } catch (e) {}
-        }
-      }
-    }
-
-    this.trades = loadedTrades;
-    this.openPositions = loadedPositions;
+    // Load user-scoped trades directly (No ghost copying from other sessions)
+    this.trades = this.loadTrades();
+    this.openPositions = this.loadOpenPositions();
 
     const storedBalance = localStorage.getItem(this.balanceStorageKey);
     const parsedBal = parseFloat(storedBalance);
@@ -1100,10 +1053,42 @@ export class PaperTrader {
     this.openPositions = [];
     if (clearTrades) {
       this.trades = [];
-      localStorage.setItem(this.storageKey, JSON.stringify([]));
+      try {
+        if (typeof localStorage !== 'undefined') {
+          // Purge all trade and position keys across all accounts and legacy stores
+          const keysToRemove = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && (
+              k.startsWith('ai_copilot_paper_trades') || 
+              k.startsWith('ai_copilot_paper_positions') || 
+              k.startsWith('monday_paper_trades') || 
+              k.startsWith('monday_open_positions')
+            )) {
+              keysToRemove.push(k);
+            }
+          }
+          keysToRemove.forEach(k => localStorage.removeItem(k));
+          localStorage.setItem(this.storageKey, JSON.stringify([]));
+        }
+      } catch (e) {}
     }
-    localStorage.setItem(this.balanceStorageKey, this.initialBalance.toFixed(2));
-    localStorage.setItem(this.positionsStorageKey, JSON.stringify([]));
+
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const balKeys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && (k.startsWith('ai_copilot_paper_balance') || k.startsWith('monday_paper_balance'))) {
+            balKeys.push(k);
+          }
+        }
+        balKeys.forEach(k => localStorage.setItem(k, this.initialBalance.toFixed(2)));
+        localStorage.setItem(this.balanceStorageKey, this.initialBalance.toFixed(2));
+        localStorage.setItem(this.positionsStorageKey, JSON.stringify([]));
+      }
+    } catch (e) {}
+
     this.save();
   }
 }

@@ -131,11 +131,13 @@ class MondayAutoPilotDaemon {
             maxTrades: Math.max(1, Math.min(100, parseInt(s.maxTrades || row.position_size, 10) || 5)),
             minConfluence: Math.max(50, Math.min(95, parseInt(s.minConfluence, 10) || 75)),
             minRR: Math.max(1.5, Math.min(5.0, parseFloat(s.minRR || row.rr_ratio) || 2.0)),
-            eventShieldEnabled: s.eventShieldEnabled !== false
+            eventShieldEnabled: s.eventShieldEnabled !== false,
+            autoPilotEnabled: s.autoPilotEnabled !== false
           };
           this.cachedSettings = synced;
+          this.autoPilotEnabled = synced.autoPilotEnabled;
           globalThis.localStorage.setItem('monday_autopilot_settings', JSON.stringify(synced));
-          this.log(`⚙️ [Cloud Settings Synced] MaxTrades: ${synced.maxTrades} | Margin: $${synced.marginUSD} | Lev: ${synced.leverage}x | MinRR: 1:${synced.minRR} | Shield: ${synced.eventShieldEnabled ? 'ON' : 'OFF'}`);
+          this.log(`⚙️ [Cloud Settings Synced] AutoPilot: ${synced.autoPilotEnabled ? 'ON' : 'OFF'} | MaxTrades: ${synced.maxTrades} | Margin: $${synced.marginUSD} | Lev: ${synced.leverage}x | MinRR: 1:${synced.minRR} | Shield: ${synced.eventShieldEnabled ? 'ON' : 'OFF'}`);
 
           // Dynamically scope daemon to authenticated Google user when available
           const activeUid = s.userId || row.user_id;
@@ -707,7 +709,11 @@ class MondayAutoPilotDaemon {
           return; // Reject: Live price has drifted/departed from exact setup entry
         }
 
-        await this.executeAutonomousTrade(asset, strategyResult, currentPrice);
+        if (settings.autoPilotEnabled !== false && this.autoPilotEnabled !== false) {
+          await this.executeAutonomousTrade(asset, strategyResult, currentPrice);
+        } else {
+          this.log(`[Auto-Pilot Standby] Confirmed setup on ${asset}, but Auto-Pilot is set to OFF in Cloud.`, 'INFO');
+        }
       }
     } catch (err) {
       this.log(`Error evaluating ${asset}: ${err.message}`, 'WARN');

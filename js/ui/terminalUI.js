@@ -1397,6 +1397,7 @@ export class TerminalUI {
       }
       this.updateRExplainerModal(s.marginUSD);
     };
+    this.updateAutoPilotUI = updateAutoPilotUI;
 
     const toggleAutoPilot = () => {
       const next = !this.autoPilotEnabled;

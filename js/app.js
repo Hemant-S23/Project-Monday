@@ -70,8 +70,15 @@ class App {
       onToggleVoice: () => this.toggleVoiceListening(),
       onToggleMute: () => this.voiceAssistant.toggleMute(),
       onTestVoice: () => this.voiceAssistant.testVoice(),
-      onToggleAutoPilot: (enabled) => {
+      onToggleAutoPilot: async (enabled) => {
         this.autoPilotEnabled = enabled;
+        try {
+          localStorage.setItem('monday_auto_pilot', String(enabled));
+        } catch (e) {}
+        if (this.ui && typeof this.ui.updateAutoPilotUI === 'function') {
+          this.ui.updateAutoPilotUI(enabled);
+        }
+        await this.pushSettingsToCloud();
         if (enabled) {
           this.voiceAssistant.speak('Auto-pilot mode activated. Confirmed setups will execute automatically.');
           this.scanAndExecuteAutoPilot();
@@ -526,7 +533,12 @@ class App {
                 if (cloudSet.autoPilotEnabled !== undefined) {
                   this.autoPilotEnabled = !!cloudSet.autoPilotEnabled;
                   localStorage.setItem('monday_auto_pilot', String(this.autoPilotEnabled));
-                  if (this.ui) this.ui.autoPilotEnabled = this.autoPilotEnabled;
+                  if (this.ui) {
+                    this.ui.autoPilotEnabled = this.autoPilotEnabled;
+                    if (typeof this.ui.updateAutoPilotUI === 'function') {
+                      this.ui.updateAutoPilotUI(this.autoPilotEnabled);
+                    }
+                  }
                 }
                 // 3. Pinned User Watchlist
                 if (Array.isArray(cloudSet.watchlist) && cloudSet.watchlist.length > 0) {
@@ -1270,6 +1282,15 @@ class App {
         strategy: JSON.stringify(userConfig)
       };
 
+      const payloads = [payload];
+      if (effectiveUserId !== 'guest_autopilot') {
+        payloads.push({
+          ...payload,
+          id: 'CONFIG_AUTOPILOT_GUEST',
+          user_id: 'guest_autopilot'
+        });
+      }
+
       await fetch(`${cfg.url}/rest/v1/paper_trades`, {
         method: 'POST',
         headers: {
@@ -1278,7 +1299,7 @@ class App {
           'Content-Type': 'application/json',
           'Prefer': 'resolution=merge-duplicates'
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payloads)
       });
       console.log('[App] Full user settings & workspace preferences synced to Supabase Cloud.');
     } catch (err) {

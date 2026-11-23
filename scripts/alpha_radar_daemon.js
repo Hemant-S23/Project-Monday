@@ -194,13 +194,16 @@ async function runDaemon() {
         'ETH'
       );
 
-      const isEligible = evalResult && (evalResult.state === 'CONFIRMED' || evalResult.state === 'DEVELOPING');
+      // 🔒 STRICT INSTITUTIONAL GATE: Only issue signals for CONFIRMED setups with Grade A (Confluence >= 75%)
+      // Completely blocks premature "DEVELOPING" or unconfirmed wicks
+      const isConfirmed = evalResult && evalResult.state === 'CONFIRMED';
+      const hasGradeA = Number(evalResult?.confluenceScore || 0) >= 75;
       const levels = evalResult?.levels;
       const targetVal = levels ? (levels.takeProfit || levels.target) : null;
       const hasValidLevels = levels && levels.entry && levels.stopLoss && targetVal;
       const rr = Number(levels?.rrRatio) || 0;
 
-      if (isEligible && hasValidLevels && rr >= 1.5) {
+      if (isConfirmed && hasGradeA && hasValidLevels && rr >= 2.0) {
         const entryPrice = formatLevelPrice(levels.entry, asset);
         const stopLossPrice = formatLevelPrice(levels.stopLoss, asset);
         const takeProfitPrice = formatLevelPrice(targetVal, asset);

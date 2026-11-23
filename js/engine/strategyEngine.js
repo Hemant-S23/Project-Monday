@@ -239,6 +239,8 @@ export class StrategyEngine {
     const emaFast = this.calculateEMA(closes, 12);
     const emaMid  = this.calculateEMA(closes, 26);
     const emaSlow = this.calculateEMA(closes, 50);
+    // 200 EMA Macro Anchor (Institutional Regime Standard)
+    const ema200  = closes.length >= 40 ? this.calculateEMA(closes, Math.min(200, closes.length)) : emaSlow;
     const lastClose = closes[closes.length - 1];
 
     // --- Primary Signal: Triple EMA Stack ---
@@ -252,36 +254,46 @@ export class StrategyEngine {
     const structureBullish = recentHighs[recentHighs.length - 1] > recentHighs[0] && recentLows[recentLows.length - 1] > recentLows[0];
     const structureBearish = recentHighs[recentHighs.length - 1] < recentHighs[0] && recentLows[recentLows.length - 1] < recentLows[0];
 
-    // --- Tertiary: Price vs EMA50 (the slow anchor — most reliable) ---
+    // --- Tertiary: Price vs Anchor EMAs ---
     const aboveSlowEMA = lastClose > emaSlow;
     const belowSlowEMA = lastClose < emaSlow;
+    const above200EMA  = lastClose > ema200;
+    const below200EMA  = lastClose < ema200;
 
     let direction = 'UNCLEAR';
     let confidence = 0;
 
     // Count bullish evidence
-    if (bullishStack)   confidence += 3;
+    if (bullishStack)     confidence += 3;
     if (structureBullish) confidence += 2;
-    if (aboveSlowEMA)   confidence += 1;
+    if (aboveSlowEMA)     confidence += 1;
+    if (above200EMA)      confidence += 2;
 
     // Count bearish evidence (negative)
-    if (bearishStack)   confidence -= 3;
+    if (bearishStack)     confidence -= 3;
     if (structureBearish) confidence -= 2;
-    if (belowSlowEMA)   confidence -= 1;
+    if (belowSlowEMA)     confidence -= 1;
+    if (below200EMA)      confidence -= 2;
 
-    // Require at least 3 evidence points to commit to a direction
-    if (confidence >= 3) {
+    // 🔒 INSTITUTIONAL MACRO REGIME SHIELD:
+    // If price is solidly above 200 EMA, NEVER commit to BEARISH (macro bull cannot be shorted)
+    // If price is solidly below 200 EMA, NEVER commit to BULLISH (macro bear cannot be bought)
+    if (above200EMA && confidence <= -3) {
+      direction = 'UNCLEAR'; // Treat minor pullback in bull trend as consolidation, not bearish reversal
+    } else if (below200EMA && confidence >= 3) {
+      direction = 'UNCLEAR'; // Treat bear rally as consolidation, not bullish breakout
+    } else if (confidence >= 3) {
       direction = 'BULLISH';
     } else if (confidence <= -3) {
       direction = 'BEARISH';
     }
-    // confidence between -2 and +2 = UNCLEAR (no trade zone)
 
     return {
       direction,
       emaFast,
       emaSlow: emaMid, // expose mid as emaSlow for UI compatibility
       ema50: emaSlow,
+      ema200,
       lastClose,
       confidence
     };
@@ -382,6 +394,28 @@ export class StrategyEngine {
     };
   }
 
+  /**
+   * Average True Range (14 Periods) — Standard Volatility Measure
+   */
+  calculateATR(candles, period = 14) {
+    if (!candles || candles.length < 2) return 0;
+    const trs = [];
+    for (let i = 1; i < candles.length; i++) {
+      const h = Number(candles[i].high) || 0;
+      const l = Number(candles[i].low) || 0;
+      const prevClose = Number(candles[i - 1].close) || 0;
+      const tr = Math.max(h - l, Math.abs(h - prevClose), Math.abs(l - prevClose));
+      trs.push(tr);
+    }
+    if (trs.length === 0) return 0;
+    const p = Math.min(period, trs.length);
+    let atr = trs.slice(0, p).reduce((a, b) => a + b, 0) / p;
+    for (let i = p; i < trs.length; i++) {
+      atr = (atr * (p - 1) + trs[i]) / p;
+    }
+    return atr;
+  }
+
   calculateLevelsAndRR(candles, trendDirection, currentPrice, targetRR = 2.5) {
     const slice = candles.slice(-20);
     const highs = slice.map(c => c.high);
@@ -389,24 +423,30 @@ export class StrategyEngine {
 
     let stopLoss = 0;
     let target = 0;
-    // Guaranteed minimum 1.0% stop distance so market noise and spreads don't trigger instant stop outs
-    const minBuffer = currentPrice * 0.01;
+
+    // 🔒 INSTITUTIONAL ATR VOLATILITY BREATHING ROOM:
+    // Minimum 1.5x ATR14 or 1.8% floor to absorb 5M/15M market noise wicks
+    const atr14 = this.calculateATR(candles, 14);
+    const dynamicBuffer = Math.max(atr14 * 1.5, currentPrice * 0.018);
+    const maxSlBuffer = currentPrice * 0.08; // 8% hard boundary cap
 
     // Use precisely user-configured R:R ratio (defaults to 2.5 if unprovided)
     const rrMult = Number(targetRR) > 0 ? Number(targetRR) : 2.5;
 
     if (trendDirection === 'BULLISH') {
       const swingLow = Math.min(...lows);
-      // Hard cap: Stop loss cannot be more than 10% away from entry
-      const maxSlBuffer = currentPrice * 0.10;
-      stopLoss = Math.max(currentPrice - maxSlBuffer, Math.min(swingLow * 0.995, currentPrice - minBuffer));
+      const structuralSl = swingLow * 0.997;
+      const atrSl = currentPrice - dynamicBuffer;
+      // Ensure Stop Loss is beyond swing low AND gives full ATR breathing space
+      stopLoss = Math.max(currentPrice - maxSlBuffer, Math.min(structuralSl, atrSl));
       const risk = currentPrice - stopLoss;
       target = currentPrice + (risk * rrMult);
     } else {
       const swingHigh = Math.max(...highs);
-      // Hard cap: Stop loss cannot be more than 10% away from entry
-      const maxSlBuffer = currentPrice * 0.10;
-      stopLoss = Math.min(currentPrice + maxSlBuffer, Math.max(swingHigh * 1.005, currentPrice + minBuffer));
+      const structuralSl = swingHigh * 1.003;
+      const atrSl = currentPrice + dynamicBuffer;
+      // Ensure Stop Loss is beyond swing high AND gives full ATR breathing space
+      stopLoss = Math.min(currentPrice + maxSlBuffer, Math.max(structuralSl, atrSl));
       const risk = stopLoss - currentPrice;
       target = Math.max(currentPrice * 0.10, currentPrice - (risk * rrMult));
     }
@@ -419,6 +459,7 @@ export class StrategyEngine {
       entry: currentPrice,
       stopLoss,
       target,
+      atr: atr14,
       riskDistance: risk,
       rewardDistance: reward,
       rrRatio: +rrRatio.toFixed(1)

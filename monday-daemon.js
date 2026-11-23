@@ -81,6 +81,7 @@ class MondayAutoPilotDaemon {
     this.candleCache = {};
     this.cooldowns = new Map();
     this.exhaustedSetups = new Map();
+    this.activeRadarSignals = [];
     this.ws = null;
     this.isWsConnected = false;
     this.isScanning = false;
@@ -188,6 +189,7 @@ class MondayAutoPilotDaemon {
     await this.testSupabaseConnection();
     await this.syncSettingsFromSupabase();
     await this.hydrateFromSupabase();
+    await this.fetchRadarSignals();
     await this.runPositionWatchdog();
 
     // 2. Start Native WebSocket Feed (Millisecond Ticks)
@@ -214,6 +216,143 @@ class MondayAutoPilotDaemon {
       }
     } catch (err) {
       this.log(`⚠️ Supabase connection warning: ${err.message}`, 'WARN');
+    }
+  }
+
+  formatRadarRow(sig) {
+    let meta = {};
+    if (sig.strategy) {
+      try { meta = typeof sig.strategy === 'string' ? JSON.parse(sig.strategy) : sig.strategy; } catch (e) {}
+    }
+    if (sig.closed_at) meta.closedAt = sig.closed_at;
+
+    return {
+      id: sig.id,
+      user_id: 'guest_autopilot',
+      market: sig.market || 'Crypto',
+      asset: sig.asset,
+      direction: sig.direction,
+      entry_price: Number(sig.entry_price),
+      stop_loss: Number(sig.stop_loss),
+      target_price: Number(sig.target_price),
+      position_size: Number(sig.position_size || 0),
+      risk_usd: Number(sig.risk_usd || 0),
+      reward_usd: Number(sig.reward_usd || 0),
+      rr_ratio: Number(sig.rr_ratio || 2.5),
+      status: sig.status,
+      result: sig.result || null,
+      pnl_usd: Number(sig.pnl_usd || 0),
+      r_multiple: Number(sig.r_multiple || 0),
+      exit_price: sig.exit_price ? Number(sig.exit_price) : null,
+      timeframe: sig.timeframe || '5M',
+      strategy: JSON.stringify(meta),
+      created_at: sig.created_at || new Date().toISOString()
+    };
+  }
+
+  async fetchRadarSignals() {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/paper_trades?select=*&status=like.SIGNAL_*&order=created_at.desc&limit=50`, {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`
+        }
+      });
+      if (res.ok) {
+        this.activeRadarSignals = await res.json();
+        this.log(`📡 Loaded ${this.activeRadarSignals.length} Alpha Radar signals from Cloud.`);
+      }
+    } catch (e) {
+      this.log(`Could not sync radar signals: ${e.message}`, 'WARN');
+    }
+  }
+
+  async auditRadarSignals() {
+    if (!Array.isArray(this.activeRadarSignals) || this.activeRadarSignals.length === 0) {
+      await this.fetchRadarSignals();
+    }
+    if (!this.activeRadarSignals.length) return;
+
+    const updated = [];
+    const now = Date.now();
+
+    for (const sig of this.activeRadarSignals) {
+      const currentPrice = this.livePrices[sig.asset];
+      if (!currentPrice || currentPrice <= 0) continue;
+
+      let meta = {};
+      if (sig.strategy) {
+        try { meta = typeof sig.strategy === 'string' ? JSON.parse(sig.strategy) : sig.strategy; } catch (e) {}
+      }
+      const isLong = (sig.direction || 'LONG').toUpperCase() === 'LONG';
+      const entryP = Number(sig.entry_price);
+      const slP = Number(sig.stop_loss);
+      const tpP = Number(sig.target_price);
+
+      if (sig.status === 'SIGNAL_PENDING') {
+        const filled = isLong ? (currentPrice <= entryP) : (currentPrice >= entryP);
+        const expired = now >= (meta.expiresAt || (new Date(sig.created_at).getTime() + 2700000));
+        if (filled) {
+          sig.status = 'SIGNAL_ACTIVE';
+          meta.filledAt = now;
+          sig.strategy = JSON.stringify(meta);
+          updated.push(sig);
+          this.log(`🎯 [RADAR LIMIT FILLED] ${sig.asset} ${sig.direction} Limit Order filled at $${currentPrice}!`, 'SIGNAL');
+        } else if (expired) {
+          sig.status = 'SIGNAL_EXPIRED';
+          sig.closed_at = new Date(now).toISOString();
+          updated.push(sig);
+          this.log(`⏰ [RADAR LIMIT EXPIRED] ${sig.asset} ${sig.direction} Limit Order expired.`, 'WARN');
+        }
+      } else if (sig.status === 'SIGNAL_ACTIVE') {
+        const tpHit = isLong ? (currentPrice >= tpP) : (currentPrice <= tpP);
+        const slHit = isLong ? (currentPrice <= slP) : (currentPrice >= slP);
+
+        if (tpHit) {
+          sig.status = 'SIGNAL_TP_HIT';
+          sig.result = 'WIN';
+          sig.r_multiple = Number(sig.rr_ratio) || 2.5;
+          sig.closed_at = new Date(now).toISOString();
+          meta.closedAt = now;
+          sig.strategy = JSON.stringify(meta);
+          updated.push(sig);
+          this.log(`🏆 [RADAR TARGET HIT] ${sig.asset} ${sig.direction} reached target (+${sig.r_multiple}R)!`, 'SETTLED');
+        } else if (slHit) {
+          sig.status = 'SIGNAL_SL_HIT';
+          sig.result = 'LOSS';
+          sig.r_multiple = -1.0;
+          sig.closed_at = new Date(now).toISOString();
+          meta.closedAt = now;
+          sig.strategy = JSON.stringify(meta);
+          updated.push(sig);
+          this.log(`🛑 [RADAR STOPPED OUT] ${sig.asset} ${sig.direction} hit stop loss (-1.0R).`, 'SETTLED');
+        }
+      }
+    }
+
+    if (updated.length > 0) {
+      await this.pushRadarUpdates(updated);
+    }
+  }
+
+  async pushRadarUpdates(signals) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/paper_trades`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates'
+        },
+        body: JSON.stringify(signals.map(s => this.formatRadarRow(s)))
+      });
+      if (!res.ok) {
+        const err = await res.text();
+        this.log(`Radar push error: ${err}`, 'WARN');
+      }
+    } catch (e) {
+      this.log(`Failed to push radar updates: ${e.message}`, 'WARN');
     }
   }
 
@@ -495,6 +634,53 @@ class MondayAutoPilotDaemon {
 
       // Dynamic execution eligibility matching user configured confluence and minRR
       if (isConfirmed && score >= settings.minConfluence && rr >= settings.minRR) {
+        // 🔒 ALPHA RADAR INSTITUTIONAL BLUEPRINT SWEEP (24/7 Autonomy)
+        // When confirmed Grade A confluence forms, issue limit blueprint to Cloud Radar
+        const hasActiveRadar = this.activeRadarSignals.some(s => s.asset === asset && (s.status === 'SIGNAL_PENDING' || s.status === 'SIGNAL_ACTIVE'));
+        if (!hasActiveRadar) {
+          const now = Date.now();
+          const sigId = `SIG-${asset}-${now}`;
+          const validityMinutes = 45;
+          const meta = {
+            confluenceScore: score,
+            confluenceGrade: strategyResult.confluenceGrade || 'GRADE A',
+            rationale: Array.isArray(strategyResult.reasoning) && strategyResult.reasoning.length > 0
+              ? strategyResult.reasoning.slice(0, 3)
+              : ['1H HTF Directional Confluence', 'Institutional Order Flow Retracement', 'Strict 1:2 R:R Asymmetry'],
+            currencySymbol: '$',
+            validityMinutes,
+            issuedAt: now,
+            expiresAt: now + (validityMinutes * 60 * 1000)
+          };
+
+          const newRadarSig = {
+            id: sigId,
+            user_id: 'guest_autopilot',
+            market: 'Crypto',
+            asset,
+            direction: strategyResult.direction || 'LONG',
+            entry_price: Number(this.formatDynamicPrice(strategyResult.levels.entry)),
+            stop_loss: Number(this.formatDynamicPrice(strategyResult.levels.stopLoss)),
+            target_price: Number(this.formatDynamicPrice(strategyResult.levels.target)),
+            position_size: 0,
+            risk_usd: 0,
+            reward_usd: 0,
+            rr_ratio: +rr.toFixed(2),
+            status: 'SIGNAL_PENDING',
+            result: null,
+            pnl_usd: 0,
+            r_multiple: 0,
+            exit_price: null,
+            timeframe: '5M',
+            strategy: JSON.stringify(meta),
+            created_at: new Date(now).toISOString()
+          };
+
+          this.activeRadarSignals.unshift(newRadarSig);
+          this.pushRadarUpdates([newRadarSig]).catch(() => {});
+          this.log(`📡 [24/7 RADAR SIGNAL ISSUED] ${asset} ${newRadarSig.direction} Limit @ $${newRadarSig.entry_price} (SL: $${newRadarSig.stop_loss}, TP: $${newRadarSig.target_price}, Score: ${score}%)`, 'SIGNAL');
+        }
+
         // Enforce maximum concurrent active basket limit (e.g. 10 trades)
         if (this.paperTrader.openPositions.length >= settings.maxTrades) {
           return;
@@ -643,16 +829,19 @@ class MondayAutoPilotDaemon {
     setInterval(() => {
       this.syncSettingsFromSupabase().catch(() => {});
       this.runPositionWatchdog().catch(() => {});
+      this.auditRadarSignals().catch(() => {});
     }, this.settingsSyncIntervalMs);
 
     setInterval(async () => {
       const uptimeSec = Math.round((Date.now() - this.startTime) / 1000);
       const openCount = this.paperTrader.openPositions.length;
       const closedCount = this.paperTrader.trades.length;
+      const radarCount = this.activeRadarSignals.length;
       const bal = this.paperTrader.balance.toFixed(2);
       const wsStatus = this.isWsConnected ? '⚡ Connected (Realtime)' : '⚠️ Reconnecting';
 
       try {
+        await this.fetchRadarSignals();
         await fetch(`${SUPABASE_URL}/rest/v1/paper_trades?limit=1`, {
           headers: {
             'apikey': SUPABASE_KEY,
@@ -661,7 +850,7 @@ class MondayAutoPilotDaemon {
         });
       } catch (e) {}
 
-      this.log(`💓 [Heartbeat] Uptime: ${uptimeSec}s | Wallet: $${bal} | Open Trades: ${openCount} | Closed: ${closedCount} | WS: ${wsStatus}`);
+      this.log(`💓 [Heartbeat] Uptime: ${uptimeSec}s | Wallet: $${bal} | Open Trades: ${openCount} | Closed: ${closedCount} | Radar Signals: ${radarCount} | WS: ${wsStatus}`);
     }, this.heartbeatIntervalMs);
   }
 
@@ -677,6 +866,7 @@ class MondayAutoPilotDaemon {
           uptimeSeconds: uptimeSec,
           balanceUSD: this.paperTrader.balance,
           openPositionsCount: this.paperTrader.openPositions.length,
+          radarSignalsCount: this.activeRadarSignals.length,
           activeSettings: this.getAutoPilotSettings(),
           wsConnected: this.isWsConnected,
           timestamp: new Date().toISOString()

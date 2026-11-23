@@ -330,14 +330,16 @@ export class SignalEngine {
       return existingActive;
     }
 
-    // Only issue signals for High-Probability Setups (Grade A or A+, Confluence >= 70% or CONFIRMED/DEVELOPING)
+    // 🔒 STRICT INSTITUTIONAL GATE: Only issue signals for CONFIRMED setups with Grade A (Confluence >= 75%)
+    // Zero-tolerance for unconfirmed "DEVELOPING" or "WAIT" states.
     const levels = strategyResult.levels;
     const targetVal = levels ? (levels.takeProfit || levels.target) : null;
-    const isGradeA = (strategyResult.confluenceScore || 0) >= 70 || strategyResult.state === 'CONFIRMED' || strategyResult.state === 'DEVELOPING';
+    const isConfirmed = strategyResult.state === 'CONFIRMED';
+    const hasInstitutionalConfluence = (strategyResult.confluenceScore || 0) >= 75;
     const isStateEligible = strategyResult.state !== 'CANCELLED' && strategyResult.state !== 'NO SETUP';
     const hasValidLevels = levels && levels.entry && levels.stopLoss && targetVal;
 
-    if (!isGradeA || !isStateEligible || !hasValidLevels) {
+    if (!isConfirmed || !hasInstitutionalConfluence || !isStateEligible || !hasValidLevels) {
       return null;
     }
 

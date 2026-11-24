@@ -6596,9 +6596,9 @@
   inset: 0 !important;
   width: 100% !important;
   height: 100% !important;
-  background: rgba(0, 0, 0, 0.72) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
+  background: rgba(5, 7, 15, 0.82) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
   z-index: 1 !important;
 }
 
@@ -6606,18 +6606,18 @@
   position: relative !important;
   z-index: 2 !important;
   width: 100% !important;
-  max-width: 360px !important;
-  background: #0d1321 !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75) !important;
-  border-radius: 16px !important;
-  padding: 28px 24px 22px !important;
+  max-width: 400px !important;
+  background: rgba(13, 19, 33, 0.96) !important;
+  border: 1px solid rgba(239, 68, 68, 0.28) !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 35px rgba(239, 68, 68, 0.12) !important;
+  border-radius: 18px !important;
+  padding: 32px 26px 24px !important;
   box-sizing: border-box !important;
   text-align: center !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  animation: modal-pop 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  animation: modal-pop 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .reset-close-btn {

@@ -337,6 +337,21 @@ class MondayAutoPilotDaemon {
           sig.strategy = JSON.stringify(meta);
           updated.push(sig);
           this.log(`🛑 [RADAR STOPPED OUT] ${sig.asset} ${sig.direction} hit stop loss (-1.0R).`, 'SETTLED');
+        } else {
+          // ⚡ AUTOPILOT ACTIVE SIGNAL ADOPTION:
+          // If Auto-Pilot is enabled and the desk holds 0 positions for this active tradeable signal,
+          // verify that live price is still healthy between SL and TP, and execute the desk position!
+          const settings = this.getAutoPilotSettings();
+          const alreadyOpen = this.paperTrader.openPositions.some(p => p.asset === sig.asset);
+          if (!alreadyOpen && this.paperTrader.openPositions.length < settings.maxTrades && this.autoPilotEnabled !== false && settings.autoPilotEnabled !== false) {
+            const isInsideLevels = isLong ? (currentPrice > slP && currentPrice < tpP) : (currentPrice < slP && currentPrice > tpP);
+            const targetDistance = Math.abs(tpP - entryP);
+            const currentDistance = isLong ? (currentPrice - entryP) : (entryP - currentPrice);
+            const progressRatio = targetDistance > 0 ? (currentDistance / targetDistance) : 0;
+            if (isInsideLevels && progressRatio < 0.50) {
+              await this.executeSignalFillTrade(sig, currentPrice);
+            }
+          }
         }
       }
     }

@@ -754,11 +754,39 @@ class App {
         }
       }
 
-      // 5. Merge Alpha Signals from Cloud into SignalEngine
+      // 5. Merge Alpha Signals from Cloud into SignalEngine & Auto-Pilot Desk
       if (this.signalEngine && cloudSignals.length > 0) {
         this.signalEngine.mergeCloudSignals(cloudSignals);
         if (this.ui && this.ui.currentSaaSPage === 'signals') {
           this.ui.renderSignalsPage();
+        }
+
+        // ⚡ Immediate Auto-Pilot Execution for Active Tradeable Signals
+        if (this.autoPilotEnabled) {
+          const settings = this.getAutoPilotSettings();
+          for (const cs of cloudSignals) {
+            if (this.paperTrader.openPositions.length >= settings.maxTrades) break;
+            const alreadyOpen = this.paperTrader.openPositions.some(p => p.asset === cs.asset);
+            if (cs.status === 'SIGNAL_ACTIVE' && !alreadyOpen) {
+              const adapter = this.getActiveAdapter();
+              const curP = adapter ? adapter.getCurrentPrice(cs.asset) : Number(cs.entry_price);
+              const isLong = (cs.direction || 'LONG').toUpperCase() === 'LONG';
+              const slP = Number(cs.stop_loss);
+              const tpP = Number(cs.target_price);
+              const inZone = isLong ? (curP > slP && curP < tpP) : (curP < slP && curP > tpP);
+              if (inZone) {
+                this.handleAutoPilotSignalFill({
+                  id: cs.id,
+                  asset: cs.asset,
+                  direction: cs.direction,
+                  entryPrice: Number(cs.entry_price),
+                  stopLossPrice: slP,
+                  takeProfitPrice: tpP,
+                  riskReward: Number(cs.rr_ratio) || 2.5
+                });
+              }
+            }
+          }
         }
       }
 
@@ -2023,9 +2051,6 @@ class App {
   }
 
   async resetAccount() {
-    const confirmed = window.confirm("⚠️ Are you sure you want to reset your account?\n\nThis will permanently purge all paper trades, positions, and ledger history for this account from both local storage and the cloud. Your balance will be restored to a clean $2,000.00.");
-    if (!confirmed) return;
-
     this.paperTrader.resetAccount(true);
     this.riskEngine.setAccountBalance(2000);
 

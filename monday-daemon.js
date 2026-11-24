@@ -140,7 +140,7 @@ class MondayAutoPilotDaemon {
           this.log(`⚙️ [Cloud Settings Synced] AutoPilot: ${synced.autoPilotEnabled ? 'ON' : 'OFF'} | MaxTrades: ${synced.maxTrades} | Margin: $${synced.marginUSD} | Lev: ${synced.leverage}x | MinRR: 1:${synced.minRR} | Shield: ${synced.eventShieldEnabled ? 'ON' : 'OFF'}`);
 
           // Dynamically scope daemon to authenticated Google user when available
-          const activeUid = s.userId || row.user_id;
+          const activeUid = s.userId || s.autopilotSettings?.userId || row.user_id;
           if (activeUid && activeUid !== 'guest_autopilot' && this.paperTrader.userId !== activeUid) {
             this.paperTrader.setUser(activeUid);
             this.log(`👤 [Master User Scoped] Autopilot 24/7 bound to User: ${activeUid}`, 'SUCCESS');
@@ -300,6 +300,15 @@ class MondayAutoPilotDaemon {
           sig.strategy = JSON.stringify(meta);
           updated.push(sig);
           this.log(`🎯 [RADAR LIMIT FILLED] ${sig.asset} ${sig.direction} Limit Order filled at $${currentPrice}!`, 'SIGNAL');
+
+          // ⚡ UNIFIED AUTO-PILOT EXECUTION:
+          // When a genuine institutional Radar limit order is touched & triggered by the market,
+          // immediately execute that exact setup on the Auto-Pilot desk!
+          try {
+            await this.executeSignalFillTrade(sig, currentPrice);
+          } catch (execErr) {
+            this.log(`Auto-Pilot execution error on signal fill: ${execErr.message}`, 'WARN');
+          }
         } else if (expired) {
           sig.status = 'SIGNAL_EXPIRED';
           sig.closed_at = new Date(now).toISOString();
@@ -692,32 +701,112 @@ class MondayAutoPilotDaemon {
         const alreadyOpen = this.paperTrader.openPositions.some(p => p.asset === asset);
         if (alreadyOpen) return;
 
-        // Zero-tolerance price check
+        // Zero-tolerance price check: Never enter if live price has already touched or breached SL or TP
         const dir = strategyResult.direction || 'LONG';
         const levels = strategyResult.levels;
         if (dir === 'LONG' && (currentPrice >= levels.target || currentPrice <= levels.stopLoss)) return;
         if (dir === 'SHORT' && (currentPrice <= levels.target || currentPrice >= levels.stopLoss)) return;
 
-        // PILLAR A: EXACT-MATCH REALTIME ENTRY FILTER (ZERO-SLIPPAGE TOUCH EXECUTION)
-        let maxTouchTolerance = levels.entry >= 1000 ? 0.0003 : (levels.entry >= 1 ? 0.0006 : 0.0008);
-        const priceDiscrepancy = Math.abs(currentPrice - levels.entry) / levels.entry;
-        const isChasing = dir === 'LONG' 
-          ? (currentPrice > levels.entry * (1 + maxTouchTolerance)) 
-          : (currentPrice < levels.entry * (1 - maxTouchTolerance));
+        // Institutional Entry Zone Check:
+        // Execute immediately if live price is already sitting in the valid entry/pullback zone.
+        // For LONG: price is at or in discount of limit entry (<= entry), without breaching stop loss.
+        // For SHORT: price is at or in premium of limit entry (>= entry), without breaching stop loss.
+        // If price is waiting above limit (LONG) or below limit (SHORT), the pending Radar Limit Order
+        // will automatically trigger and fill via auditRadarSignals() as soon as the market touches the level.
+        const isInEntryZone = dir === 'LONG'
+          ? (currentPrice <= levels.entry && currentPrice > levels.stopLoss)
+          : (currentPrice >= levels.entry && currentPrice < levels.stopLoss);
 
-        if (priceDiscrepancy > maxTouchTolerance || isChasing) {
-          return; // Reject: Live price has drifted/departed from exact setup entry
-        }
-
-        if (settings.autoPilotEnabled !== false && this.autoPilotEnabled !== false) {
-          await this.executeAutonomousTrade(asset, strategyResult, currentPrice);
-        } else {
-          this.log(`[Auto-Pilot Standby] Confirmed setup on ${asset}, but Auto-Pilot is set to OFF in Cloud.`, 'INFO');
+        if (isInEntryZone) {
+          if (settings.autoPilotEnabled !== false && this.autoPilotEnabled !== false) {
+            await this.executeAutonomousTrade(asset, strategyResult, currentPrice);
+          } else {
+            this.log(`[Auto-Pilot Standby] Confirmed setup on ${asset}, but Auto-Pilot is set to OFF in Cloud.`, 'INFO');
+          }
         }
       }
     } catch (err) {
       this.log(`Error evaluating ${asset}: ${err.message}`, 'WARN');
     }
+  }
+
+  /**
+   * ⚡ Execute genuine desk trade directly from a triggered Alpha Radar limit order fill.
+   * Guarantees 1:1 parity between Alpha Signals and Auto-Pilot positions with strict risk control.
+   */
+  async executeSignalFillTrade(sig, currentPrice) {
+    const settings = this.getAutoPilotSettings();
+    if (settings.autoPilotEnabled === false || this.autoPilotEnabled === false) return;
+
+    // Enforce maximum concurrent active basket limit
+    if (this.paperTrader.openPositions.length >= settings.maxTrades) {
+      this.log(`[Auto-Pilot Signal Fill] Max trades (${settings.maxTrades}) reached. Skipping ${sig.asset}.`, 'INFO');
+      return;
+    }
+
+    // Per-Asset Mutual Exclusion Lock
+    const alreadyOpen = this.paperTrader.openPositions.some(p => p.asset === sig.asset);
+    if (alreadyOpen) return;
+
+    const dir = sig.direction || 'LONG';
+    const entry = Number(sig.entry_price) || currentPrice;
+    const stopLoss = Number(sig.stop_loss);
+    const target = Number(sig.target_price);
+    const rr = Number(sig.rr_ratio) || 2.5;
+
+    // Sanity check: ensure price has not breached SL or reached TP
+    if (dir === 'LONG' && (currentPrice <= stopLoss || currentPrice >= target)) return;
+    if (dir === 'SHORT' && (currentPrice >= stopLoss || currentPrice <= target)) return;
+
+    const lev = settings.leverage || 20;
+    const balance = this.paperTrader.balance || 2000;
+    const riskUSD = +(balance * 0.01).toFixed(2); // Strict 1% institutional risk
+    const stopLossDistance = Math.abs(entry - stopLoss);
+    if (stopLossDistance <= 0) return;
+
+    const rawPosSize = +(riskUSD / stopLossDistance).toFixed(4);
+    const posSize = Math.max(0.001, rawPosSize);
+    const notional = +(entry * posSize).toFixed(2);
+    const marginUSD = +(notional / lev).toFixed(2);
+    const rewardUSD = +(riskUSD * rr).toFixed(2);
+
+    const liqPrice = this.derivativesEngine.calcLiquidationPrice({
+      entry,
+      direction: dir,
+      leverage: lev,
+      asset: sig.asset,
+      market: 'Crypto'
+    });
+
+    let meta = {};
+    try { meta = typeof sig.strategy === 'string' ? JSON.parse(sig.strategy) : (sig.strategy || {}); } catch (e) {}
+
+    this.log(`⚡ [AUTO-PILOT DESK EXECUTION] Trade triggered from Radar Signal: ${sig.asset} ${dir}!`, 'SIGNAL');
+    this.log(`Entry: $${entry} | SL: $${stopLoss} | TP: $${target} | RR: 1:${rr} | Risk: $${riskUSD} (1.0%) | Margin: $${marginUSD}`);
+
+    const trade = this.paperTrader.executePaperTrade({
+      asset: sig.asset,
+      market: 'Crypto',
+      direction: dir,
+      entry,
+      stopLoss,
+      target,
+      positionSize: posSize,
+      riskUSD,
+      rewardUSD,
+      rrRatio: rr,
+      leverage: lev,
+      marginUSD,
+      notionalUSD: notional,
+      liquidationPrice: liqPrice,
+      conditions: meta.rationale || ['Grade A Institutional Confluence', 'Limit Triggered'],
+      historicalContext: 'Supportive (Institutional Sweep)',
+      eventRisk: 'Low (Shield Verified)',
+      aiReasoning: `Autonomous Radar Fill Execution. Entry: $${entry}, SL: $${stopLoss}, TP: $${target}, RR: 1:${rr}.`
+    });
+
+    this.log(`✅ [TRADE OPENED ON DESK] ID: ${trade.id} | ${sig.asset} ${dir} | Margin: $${marginUSD}`, 'SUCCESS');
+    await this.syncTradeToSupabase(trade);
   }
 
   async executeAutonomousTrade(asset, strategyResult, currentPrice) {

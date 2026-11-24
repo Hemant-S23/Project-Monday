@@ -477,10 +477,11 @@ class App {
       const isOwner = currentUser && (currentUser.email === 'hsmcpl06@gmail.com' || (currentUser.name && currentUser.name.toLowerCase().includes('hemant')));
 
       // Strict User Isolation + Universal Alpha Signals Access:
-      // - Users query their personal trades + guest historical trades + all universal cloud signals
+      // - Authenticated users query strictly their personal trades + universal cloud signals
+      // - Unauthenticated users query guest trades + universal cloud signals
       let userFilter;
       if (isAuth) {
-        userFilter = `or=(user_id.in.(${activeUserId},guest_autopilot),status.like.SIGNAL_*)`;
+        userFilter = `or=(user_id.eq.${activeUserId},status.like.SIGNAL_*)`;
       } else {
         userFilter = `or=(user_id.eq.guest_autopilot,status.like.SIGNAL_*)`;
       }
@@ -747,7 +748,10 @@ class App {
           this.ui.renderFinancialPassbook();
           this.ui.renderYearbookHeatmap(this.paperTrader.trades);
         }
-        this.ui.showToast('⚡ Cloud Synced', `Restored ${cloudTrades.length} trades from Supabase cloud.`, 'success');
+        const restoredPortfolioCount = cloudOpenMap.size + cloudClosedMap.size;
+        if (restoredPortfolioCount > 0) {
+          this.ui.showToast('⚡ Cloud Synced', `Synchronized ${restoredPortfolioCount} portfolio trade(s) from Cloud.`, 'success');
+        }
       }
 
       // 5. Merge Alpha Signals from Cloud into SignalEngine
@@ -1251,8 +1255,11 @@ class App {
         ? await this.authManager.getAuthToken()
         : cfg.anonKey;
 
+      const effectiveUserId = (token && token !== cfg.anonKey) ? activeUserId : 'guest_autopilot';
       const apSettings = settings || this.getAutoPilotSettings();
+      apSettings.userId = effectiveUserId;
       const userConfig = {
+        userId: effectiveUserId,
         autopilotSettings: apSettings,
         autoPilotEnabled: this.autoPilotEnabled,
         watchlist: this.ui?.userWatchlist || JSON.parse(localStorage.getItem('monday_user_watchlist') || '[]'),
@@ -1262,8 +1269,6 @@ class App {
         signalsArchivedClearedAt: Number(localStorage.getItem('monday_signals_cleared_at') || 0),
         updatedAt: new Date().toISOString()
       };
-
-      const effectiveUserId = (token && token !== cfg.anonKey) ? activeUserId : 'guest_autopilot';
       const configId = effectiveUserId === 'guest_autopilot' ? 'CONFIG_AUTOPILOT_GUEST' : `CONFIG_AUTOPILOT_${effectiveUserId}`;
       const payload = {
         id: configId,
@@ -1529,41 +1534,31 @@ class App {
       }
     }
 
-    // =========================================================================
-    // PILLAR A: EXACT-MATCH REALTIME ENTRY FILTER (ZERO-SLIPPAGE TOUCH EXECUTION)
-    // =========================================================================
-    // Strict Touch Rule: Order ONLY executes if live chart price physically touches/matches entry level.
-    // If live price has drifted, missed, or moved towards target/SL, Monday will NOT enter.
-    let maxTouchTolerance;
-    if (rawEntry >= 1000) {
-      maxTouchTolerance = 0.0003; // ~0.03% for high-value tokens (BTC, ETH)
-    } else if (rawEntry >= 1) {
-      maxTouchTolerance = 0.0006; // ~0.06% for mid-tier tokens (SOL, NEAR, AVAX, SUI)
-    } else {
-      maxTouchTolerance = 0.0008; // ~0.08% for sub-dollar tokens (XRP, ADA, DOGE)
-    }
+    // Institutional Entry Zone Check:
+    // Only execute if live market price is sitting in the valid entry/pullback zone (at or better than limit entry)
+    // without breaching stop-loss or chasing towards target.
+    const isInEntryZone = direction === 'LONG'
+      ? (livePrice <= rawEntry && livePrice > stopLoss)
+      : (livePrice >= rawEntry && livePrice < stopLoss);
 
-    const priceDiscrepancy = Math.abs(livePrice - rawEntry) / rawEntry;
-    const isChasing = direction === 'LONG' 
-      ? (livePrice > rawEntry * (1 + maxTouchTolerance)) 
-      : (livePrice < rawEntry * (1 - maxTouchTolerance));
-
-    if (priceDiscrepancy > maxTouchTolerance || isChasing) {
-      const diffFormatted = (priceDiscrepancy * 100).toFixed(3);
-      console.warn(`[Pillar A Guard] Execution REJECTED for ${asset}: Live market price ($${livePrice}) does not match entry level ($${rawEntry}). Discrepancy: ${diffFormatted}%. Zero-slippage exact touch policy active.`);
+    if (!isInEntryZone) {
+      const isChasing = direction === 'LONG' ? (livePrice > rawEntry) : (livePrice < rawEntry);
+      console.warn(`[Auto-Pilot Entry Gate] Setup for ${asset} ${direction} is outside entry zone (Live: $${livePrice}, Entry: $${rawEntry}).`);
       this.ui.appendAutonomousDecisionCard({
         action: 'SKIPPED',
         asset,
         direction,
         openCount: currentOpenCount,
         maxTrades: settings.maxTrades,
-        skipReason: '🎯 PILLAR A: EXACT-MATCH TICK REJECTED',
-        skipExplanation: `Live realtime price ($${livePrice}) is not at the exact setup entry ($${rawEntry}). Market has drifted by ${diffFormatted}%. Zero-slippage policy active — order discarded to eliminate loops and bad fills.`
+        skipReason: isChasing ? '🚫 ANTI-CHASING SHIELD ACTIVE' : '⏳ AWAITING LIMIT ENTRY TOUCH',
+        skipExplanation: isChasing 
+          ? `Live market price ($${livePrice}) has moved past entry towards target. Auto-Pilot strictly forbids chasing to protect risk-reward asymmetry.`
+          : `Live market price ($${livePrice}) is awaiting retracement to limit level ($${rawEntry}). Order will trigger automatically upon limit fill.`
       });
       return;
     }
 
-    // Fill at exact live market tick to the penny (Zero Slippage)
+    // Fill at exact live market tick to the penny
     const entry = livePrice;
 
     // 4. Autonomous Execution (Configured Margin & Leverage)
@@ -2028,18 +2023,43 @@ class App {
   }
 
   async resetAccount() {
+    const confirmed = window.confirm("⚠️ Are you sure you want to reset your account?\n\nThis will permanently purge all paper trades, positions, and ledger history for this account from both local storage and the cloud. Your balance will be restored to a clean $2,000.00.");
+    if (!confirmed) return;
+
     this.paperTrader.resetAccount(true);
     this.riskEngine.setAccountBalance(2000);
+
+    // Forcefully wipe all trade and position keys from localStorage across all user profiles
+    try {
+      const allKeys = Object.keys(localStorage);
+      for (const k of allKeys) {
+        if (k.startsWith('ai_copilot_paper_') || k.startsWith('monday_paper_')) {
+          if (k.includes('balance')) {
+            localStorage.setItem(k, '2000.00');
+          } else if (k.includes('trades') || k.includes('positions')) {
+            localStorage.setItem(k, JSON.stringify([]));
+          }
+        }
+      }
+    } catch (e) {}
+
     this.updateTradeJournalAndStats();
     this.ui.updateOpenPositions([]);
     const liveMetrics = this.paperTrader.getLiveEquity();
     this.ui.updateHeaderAccountHUD(liveMetrics);
+    if (this.ui.orderState) {
+      this.ui.orderState.availableBalance = 2000;
+      this.ui.refreshDerivativesOrderDesk();
+    }
     if (typeof this.ui.renderFinancialPassbook === 'function') {
       this.ui.renderFinancialPassbook();
     }
-    this.ui.showToast('Account Reset', 'Clean account balance restored to $2,000.00 with 0 trades.', 'info');
+    if (typeof this.ui.renderYearbookHeatmap === 'function') {
+      this.ui.renderYearbookHeatmap([]);
+    }
+    this.ui.showToast('Account Reset', 'Clean account balance restored to $2,000.00 with 0 trades.', 'success');
 
-    // 🔒 ClOUD PURGE: Delete any user paper trades from Supabase Cloud
+    // 🔒 CLOUD PURGE: Delete user paper trades from Supabase Cloud
     try {
       const cfg = window.MONDAY_SUPABASE_CONFIG;
       if (cfg && cfg.url && cfg.anonKey) {
@@ -2061,18 +2081,24 @@ class App {
         }
 
         // Also reset cloud config row balance to clean $2,000
-        await fetch(`${cfg.url}/rest/v1/paper_trades?id=eq.CONFIG_AUTOPILOT_GUEST`, {
-          method: 'PATCH',
-          headers: {
-            'apikey': cfg.anonKey,
-            'Authorization': `Bearer ${cfg.anonKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            risk_usd: 2000,
-            pnl_usd: 0
-          })
-        }).catch(() => {});
+        const configIds = ['CONFIG_AUTOPILOT_GUEST'];
+        if (activeUserId && activeUserId !== 'guest_autopilot') {
+          configIds.push(`CONFIG_AUTOPILOT_${activeUserId}`);
+        }
+        for (const cid of configIds) {
+          await fetch(`${cfg.url}/rest/v1/paper_trades?id=eq.${cid}`, {
+            method: 'PATCH',
+            headers: {
+              'apikey': cfg.anonKey,
+              'Authorization': `Bearer ${cfg.anonKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              risk_usd: 2000,
+              pnl_usd: 0
+            })
+          }).catch(() => {});
+        }
 
         console.log('[Cloud Reset] User paper trades purged from Supabase Cloud successfully.');
       }

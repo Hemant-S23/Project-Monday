@@ -335,26 +335,28 @@ export class PaperTrader {
     }
   }
 
-  executePaperTrade({
-    asset,
-    market = 'Crypto',
-    direction,
-    entry,
-    stopLoss,
-    target,
-    positionSize,
-    riskUSD,
-    rewardUSD,
-    rrRatio,
-    leverage = 20,
-    marginUSD = null,
-    notionalUSD = null,
-    liquidationPrice = null,
-    conditions = [],
-    historicalContext = 'Supportive',
-    eventRisk = 'Low',
-    aiReasoning = ''
-  }) {
+  executePaperTrade(tradeData = {}) {
+    const {
+      id = null,
+      asset,
+      market = 'Crypto',
+      direction,
+      entry,
+      stopLoss,
+      target,
+      positionSize,
+      riskUSD,
+      rewardUSD,
+      rrRatio,
+      leverage = 20,
+      marginUSD = null,
+      notionalUSD = null,
+      liquidationPrice = null,
+      conditions = [],
+      historicalContext = 'Supportive',
+      eventRisk = 'Low',
+      aiReasoning = ''
+    } = tradeData;
     const dir = (direction || 'LONG').toUpperCase();
     const entryNum = Number(entry);
     const slNum = Number(stopLoss);

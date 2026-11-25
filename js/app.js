@@ -23,7 +23,7 @@ try {
   localStorage.setItem('monday_theme', 'dark');
   document.documentElement.setAttribute('data-theme', 'dark');
   if (document.body) document.body.setAttribute('data-theme', 'dark');
-} catch (e) {}
+} catch (e) { }
 
 class App {
   constructor() {
@@ -31,6 +31,8 @@ class App {
     this.currentAsset = 'BTC';
     this.currentTimeframe = '1H';
     this.lastKnownState = null;
+    this._isSyncingCloud = false;
+    this._boundOnMarketDataTick = (data) => this.onMarketDataTick(data);
     try {
       this.autoPilotEnabled = localStorage.getItem('monday_auto_pilot') === 'true';
     } catch (e) {
@@ -74,7 +76,7 @@ class App {
         this.autoPilotEnabled = enabled;
         try {
           localStorage.setItem('monday_auto_pilot', String(enabled));
-        } catch (e) {}
+        } catch (e) { }
         if (this.ui && typeof this.ui.updateAutoPilotUI === 'function') {
           this.ui.updateAutoPilotUI(enabled);
         }
@@ -104,7 +106,7 @@ class App {
       onSyncCloud: async () => {
         this.ui.showToast('⚡ Cloud Syncing', 'Pushing local backlog and syncing with Supabase Cloud...', 'info');
         await this.reconcileOfflineTradesWithSupabase();
-        await this.syncWithSupabaseCloud();
+        await this.syncWithSupabaseCloud(true);
         this.ui.showToast('✅ Cloud Synchronized', 'All positions, ledger trades and balance match Supabase Cloud.', 'success');
       },
       onGetFinancialLedger: (month) => this.paperTrader.getFinancialLedger(month),
@@ -156,7 +158,7 @@ class App {
       onClearSignals: async () => {
         const now = Date.now();
         this.signalEngine.clearArchived(now);
-        this.pushSettingsToCloud().catch(() => {});
+        this.pushSettingsToCloud().catch(() => { });
         this.ui.updateSignalsBadge(this.signalEngine.getActiveCount());
 
         // Cloud Prune: Delete archived/expired signals from Supabase Cloud
@@ -172,7 +174,7 @@ class App {
             });
             console.log('[Signals Cloud Prune] Archived signals deleted from Supabase Cloud.');
           }
-        } catch (e) {}
+        } catch (e) { }
       },
       onSignalsPageOpen: () => {
         if (this.signalEngine && this.cryptoAdapter) {
@@ -180,7 +182,7 @@ class App {
             if (res && res.length > 0 && this.ui) {
               this.ui.renderSignalsPage();
             }
-          }).catch(() => {});
+          }).catch(() => { });
         }
       },
       onScanAllSignals: () => this.scanAllAssetsForSignals(),
@@ -194,7 +196,7 @@ class App {
       }
     });
     this.signalEngine.setOnSignalChange((sig) => {
-      this.syncSignalToSupabase(sig).catch(() => {});
+      this.syncSignalToSupabase(sig).catch(() => { });
     });
     this.signalEngine.setOnSignalFill(async (signal) => {
       if (this.autoPilotEnabled) {
@@ -232,8 +234,8 @@ class App {
       this.ui.refreshDerivativesOrderDesk();
     }
     this.syncWithSupabaseCloud();
-    this.reconcileOfflineTradesWithSupabase().catch(() => {});
-    this.pushSettingsToCloud(this.getAutoPilotSettings()).catch(() => {});
+    this.reconcileOfflineTradesWithSupabase().catch(() => { });
+    this.pushSettingsToCloud(this.getAutoPilotSettings()).catch(() => { });
     this.paperTrader.auditDowntimeTrades(this.cryptoAdapter).then(resolved => {
       if (resolved && resolved.length > 0) {
         this.updateTradeJournalAndStats();
@@ -256,7 +258,7 @@ class App {
     let currentUser = this.authManager.getUser();
     if (!currentUser) {
       const hasOAuthTokens = (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('type='))) ||
-                             (window.location.search && window.location.search.includes('code='));
+        (window.location.search && window.location.search.includes('code='));
       if (!hasOAuthTokens) {
         // Auto-activate instant Guest Trader account only if user did not initiate an OAuth login
         const guestRes = await this.authManager.loginAsGuest();
@@ -287,8 +289,8 @@ class App {
     // Otherwise, default directly to 'terminal' (Live Cockpit) so Launch Terminal ALWAYS shows the Terminal.
     const rawHash = (window.location.hash || '').replace('#', '').trim().toLowerCase();
     const validPages = ['terminal', 'positions', 'signals', 'passbook', 'copilot', 'settings'];
-    const activePage = (rawHash && validPages.includes(rawHash)) 
-      ? rawHash 
+    const activePage = (rawHash && validPages.includes(rawHash))
+      ? rawHash
       : 'terminal';
     if (this.ui && typeof this.ui.switchPage === 'function') {
       this.ui.switchPage(activePage);
@@ -322,7 +324,7 @@ class App {
             new Promise(resolve => setTimeout(resolve, 3500))
           ]);
           // Reconcile and push any local offline backlog to cloud
-          this.reconcileOfflineTradesWithSupabase().catch(() => {});
+          this.reconcileOfflineTradesWithSupabase().catch(() => { });
         } catch (e) {
           console.warn('[App] Background cloud sync timeout/err:', e);
         }
@@ -336,11 +338,11 @@ class App {
         // Subscribe to ALL assets in the market universe simultaneously (Zero-Delay Full Coverage)
         const cryptoAssets = this.cryptoAdapter.allMarkets.map(m => m.baseAsset);
         cryptoAssets.forEach(asset => {
-          this.cryptoAdapter.subscribe(asset, (data) => this.onMarketDataTick(data));
+          this.cryptoAdapter.subscribe(asset, this._boundOnMarketDataTick);
         });
         const indiaAssets = ['NIFTY', 'BANKNIFTY', 'SENSEX', 'FINNIFTY', 'MIDCPNIFTY', 'RELIANCE', 'TCS', 'HDFCBANK', 'SWIGGY', 'HYUNDAI', 'TATAMOTORS', 'HAL', 'ZOMATO', 'INFY', 'ICICIBANK', 'SBIN', 'BHARTIARTL', 'BAJAJHFL', 'WAREE', 'NTPCGREEN'];
         indiaAssets.forEach(asset => {
-          this.indiaAdapter.subscribe(asset, (data) => this.onMarketDataTick(data));
+          this.indiaAdapter.subscribe(asset, this._boundOnMarketDataTick);
         });
 
         // Restore and subscribe to any active open positions in parallel
@@ -348,7 +350,7 @@ class App {
           await Promise.all(this.paperTrader.openPositions.map(pos => {
             const adapter = pos.market === 'India' ? this.indiaAdapter : this.cryptoAdapter;
             return adapter.ensureAssetInitialized(pos.asset).then(() => {
-              adapter.subscribe(pos.asset, (data) => this.onMarketDataTick(data));
+              adapter.subscribe(pos.asset, this._boundOnMarketDataTick);
             }).catch(err => console.warn('[App] Position restore warmup error:', err));
           }));
         }
@@ -379,8 +381,8 @@ class App {
 
               this.ui.addNotification({
                 type: isWin ? 'target' : isLiq ? 'liquidation' : 'stop',
-                title: isWin 
-                  ? `Target Hit • ${trade.asset} ${trade.direction}` 
+                title: isWin
+                  ? `Target Hit • ${trade.asset} ${trade.direction}`
                   : isLiq
                     ? `Liquidated • ${trade.asset} ${trade.direction}`
                     : `Stop Loss Hit • ${trade.asset} ${trade.direction}`,
@@ -389,7 +391,7 @@ class App {
                 timestamp: trade.closedAt
               });
               // Cloud-First Guarantee: Sync resolved downtime trade to Supabase Cloud immediately
-              this.syncTradeToSupabase(trade).catch(() => {});
+              this.syncTradeToSupabase(trade).catch(() => { });
             });
           }
         } catch (downtimeErr) {
@@ -422,8 +424,8 @@ class App {
     // Run Supabase sync and background offline reconciliation asynchronously without blocking chart render
     setTimeout(() => {
       this.syncWithSupabaseCloud().then(() => {
-        this.reconcileOfflineTradesWithSupabase().catch(() => {});
-      }).catch(() => {});
+        this.reconcileOfflineTradesWithSupabase().catch(() => { });
+      }).catch(() => { });
     }, 150);
 
     // 5. Initial greeting from MONDAY
@@ -453,20 +455,21 @@ class App {
 
     // 6. Setup interval for continuous position updates, evaluation & Supabase sync
     setInterval(() => this.runFullEvaluation(), 5000);
-    setInterval(() => this.syncWithSupabaseCloud(), 15000);
-
-    // 7. Initial & periodic Alpha Signals Cloud Sync
-    setTimeout(() => {
-      this.syncWithSupabaseCloud().catch(() => {});
-    }, 2000);
     setInterval(() => {
       if (!document.hidden) {
-        this.syncWithSupabaseCloud().catch(() => {});
+        this.syncWithSupabaseCloud(false).catch(() => { });
       }
-    }, 30000);
+    }, 15000);
+
+    // 7. Initial Alpha Signals & Portfolio Cloud Sync (full 1000-row boot hydration)
+    setTimeout(() => {
+      this.syncWithSupabaseCloud(true).catch(() => { });
+    }, 2000);
   }
 
-  async syncWithSupabaseCloud() {
+  async syncWithSupabaseCloud(isFullSync = true) {
+    if (this._isSyncingCloud) return;
+    this._isSyncingCloud = true;
     try {
       const cfg = window.MONDAY_SUPABASE_CONFIG;
       if (!cfg || !cfg.url || !cfg.anonKey) return;
@@ -493,7 +496,8 @@ class App {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-      const res = await fetch(`${cfg.url}/rest/v1/paper_trades?select=*&${userFilter}&order=created_at.desc&limit=1000`, {
+      const fetchLimit = isFullSync ? 1000 : 100;
+      const res = await fetch(`${cfg.url}/rest/v1/paper_trades?select=*&${userFilter}&order=created_at.desc&limit=${fetchLimit}`, {
         headers: {
           'apikey': cfg.anonKey,
           'Authorization': `Bearer ${token}`
@@ -571,7 +575,7 @@ class App {
                   }
                 }
               }
-            } catch(e) {}
+            } catch (e) { }
           }
           continue;
         }
@@ -598,8 +602,8 @@ class App {
         if (cloudClosedMap.has(pos.id)) {
           // Closed in cloud! Prune from local open
           changed = true;
-        } else if (pos.id && pos.id.startsWith('TRADE-') && !cloudOpenMap.has(pos.id) && cloudClosedMap.size > 0) {
-          // Ghost position from earlier session that is no longer in cloud
+        } else if (isFullSync && pos.id && pos.id.startsWith('TRADE-') && !cloudOpenMap.has(pos.id) && cloudClosedMap.size > 0) {
+          // Ghost position from earlier session that is no longer in cloud (only check on full sync)
           changed = true;
         } else {
           reconciledOpen.push(pos);
@@ -656,7 +660,7 @@ class App {
         const existsClosed = this.paperTrader.trades.find(t => t.id === id);
         let parsedMeta = {};
         if (ct.strategy) {
-          try { parsedMeta = JSON.parse(ct.strategy); } catch (e) {}
+          try { parsedMeta = JSON.parse(ct.strategy); } catch (e) { }
         }
         const openedAtTime = parsedMeta.openedAt || (ct.created_at ? new Date(ct.created_at).getTime() : Date.now());
         const closedAtTime = parsedMeta.closedAt || (ct.created_at ? new Date(ct.created_at).getTime() : Date.now());
@@ -665,10 +669,10 @@ class App {
         const cloudDateStr = new Date(closedAtTime).toDateString();
         const duplicateSetup = !existsClosed && this.paperTrader.trades.some(t => {
           const tDateStr = new Date(t.closedAt || t.openedAt || Date.now()).toDateString();
-          return t.asset === ct.asset && 
-                 t.direction === ct.direction && 
-                 tDateStr === cloudDateStr &&
-                 Math.abs(Number(t.entry) - Number(ct.entry_price)) < 0.001;
+          return t.asset === ct.asset &&
+            t.direction === ct.direction &&
+            tDateStr === cloudDateStr &&
+            Math.abs(Number(t.entry) - Number(ct.entry_price)) < 0.001;
         });
         if (duplicateSetup) continue;
 
@@ -744,9 +748,8 @@ class App {
             : Math.max(0, this.paperTrader.balance - (liveMetrics.usedMargin || 0));
           this.ui.refreshDerivativesOrderDesk();
         }
-        if (this.ui.renderFinancialPassbook) {
+        if (this.ui.currentSaaSPage === 'passbook' && this.ui.renderFinancialPassbook) {
           this.ui.renderFinancialPassbook();
-          this.ui.renderYearbookHeatmap(this.paperTrader.trades);
         }
         const restoredPortfolioCount = cloudOpenMap.size + cloudClosedMap.size;
         if (restoredPortfolioCount > 0) {
@@ -816,6 +819,8 @@ class App {
       }
     } catch (e) {
       console.warn('[App] Supabase cloud sync error:', e.message);
+    } finally {
+      this._isSyncingCloud = false;
     }
   }
 
@@ -839,8 +844,8 @@ class App {
     // Check open positions for target or stop hit dynamically across all traded assets & markets
     const currentPrices = {};
     this.paperTrader.openPositions.forEach(pos => {
-      const price = pos.market === 'India' 
-        ? this.indiaAdapter.getCurrentPrice(pos.asset) 
+      const price = pos.market === 'India'
+        ? this.indiaAdapter.getCurrentPrice(pos.asset)
         : this.cryptoAdapter.getCurrentPrice(pos.asset);
       if (price) currentPrices[pos.asset] = price;
     });
@@ -876,10 +881,10 @@ class App {
         const rStr = pos.unrealizedR !== undefined ? ` (${pos.unrealizedR >= 0 ? '+' : ''}${pos.unrealizedR}R)` : '';
         this.ui.addNotification({
           type: isWin ? 'target' : isLiq ? 'liquidation' : 'stop',
-          title: isWin 
-            ? `Target Hit • ${pos.asset} ${pos.direction}` 
-            : isLiq 
-              ? `Liquidated • ${pos.asset} ${pos.direction}` 
+          title: isWin
+            ? `Target Hit • ${pos.asset} ${pos.direction}`
+            : isLiq
+              ? `Liquidated • ${pos.asset} ${pos.direction}`
               : `Stop Loss Hit • ${pos.asset} ${pos.direction}`,
           message: `${pnlSign}$${pos.unrealizedPnlUSD}${rStr} closed at ${formattedPrice}`,
           tradeId: pos.id
@@ -889,7 +894,7 @@ class App {
           this.signalEngine.onPositionClosed(pos, result, price);
         }
         // Cloud-First Guarantee: Sync closed trade to Supabase Cloud immediately
-        this.syncTradeToSupabase(pos).catch(() => {});
+        this.syncTradeToSupabase(pos).catch(() => { });
       });
       this.updateTradeJournalAndStats();
     }
@@ -925,8 +930,8 @@ class App {
       adapter.getHistoricalCandles(targetAsset, '1H'),
       adapter.getHistoricalCandles(targetAsset, '5M'),
       adapter.getHistoricalCandles(relatedAsset, '5M'),
-      this.currentMarket === 'India' 
-        ? Promise.resolve(this.newsEngine.getMarketSentiment('India')) 
+      this.currentMarket === 'India'
+        ? Promise.resolve(this.newsEngine.getMarketSentiment('India'))
         : this.newsEngine.fetchFearAndGreed(),
       this.derivativesEngine.fetchLiveFundingRate(targetAsset, this.currentMarket)
     ]);
@@ -978,7 +983,7 @@ class App {
 
     // Hyper-Sensitive Event Risk Scanner (Ultra-rapid news check)
     if (this.newsEngine.fetchBreakingNewsFeed) {
-      this.newsEngine.fetchBreakingNewsFeed().catch(() => {});
+      this.newsEngine.fetchBreakingNewsFeed().catch(() => { });
     }
 
     const evalData = await this.evaluateAsset(targetAsset);
@@ -1123,7 +1128,7 @@ class App {
         : baseCandidates;
 
       // Filter out assets that already have active positions to avoid redundant overhead
-      const availableCandidates = candidateAssets.filter(asset => 
+      const availableCandidates = candidateAssets.filter(asset =>
         !this.paperTrader.openPositions.some(p => p.asset === asset)
       );
 
@@ -1162,7 +1167,7 @@ class App {
 
             // Dynamic execution eligibility: Either state is CONFIRMED, or score meets user standards
             const isEligible = (
-              strategyResult.state === 'CONFIRMED' || 
+              strategyResult.state === 'CONFIRMED' ||
               (strategyResult.confluenceScore >= settings.minConfluence && strategyResult.levels?.rrRatio >= settings.minRR)
             ) && strategyResult.levels;
 
@@ -1354,7 +1359,7 @@ class App {
           eventShieldEnabled: s.eventShieldEnabled !== false
         };
       }
-    } catch (e) {}
+    } catch (e) { }
     return {
       marginUSD: 100,
       leverage: this.currentMarket === 'India' ? 5 : 20,
@@ -1384,8 +1389,8 @@ class App {
     const marginUSD = settings.marginUSD || 100;
     const notional = +(marginUSD * lev).toFixed(2);
     const rawPos = notional / signal.entryPrice;
-    const posSize = signal.entryPrice >= 1000 
-      ? +rawPos.toFixed(6) 
+    const posSize = signal.entryPrice >= 1000
+      ? +rawPos.toFixed(6)
       : (signal.entryPrice >= 1 ? +rawPos.toFixed(4) : +rawPos.toFixed(2));
     const rr = Number(signal.riskReward) || 2.0;
 
@@ -1411,7 +1416,7 @@ class App {
       this.updateTradeJournalAndStats();
       this.ui.updateOpenPositions(this.paperTrader.openPositions);
       this.ui.updateHeaderAccountHUD(this.paperTrader.getLiveEquity());
-      this.syncTradeToSupabase(trade).catch(() => {});
+      this.syncTradeToSupabase(trade).catch(() => { });
       this.ui.showToast('🤖 Auto-Pilot Position Filled', `${signal.asset} ${signal.direction} Limit Order filled @ $${signal.entryPrice}!`, 'success');
       this.voiceAssistant.speak(`Auto-pilot position filled for ${signal.asset} ${signal.direction}. Stoploss and target armed.`);
     }
@@ -1435,7 +1440,7 @@ class App {
     if (isShieldActive) {
       const now = Date.now();
       const shockTitle = eventRisk.activeEvents?.[0]?.title || eventRisk.summary || 'Breaking Macro / Regulatory Shock';
-      
+
       // Debounce notifications: only alert user once every 10 minutes
       if (!this.lastEventShieldToastTime || (now - this.lastEventShieldToastTime) > 600000) {
         this.lastEventShieldToastTime = now;
@@ -1579,7 +1584,7 @@ class App {
         openCount: currentOpenCount,
         maxTrades: settings.maxTrades,
         skipReason: isChasing ? '🚫 ANTI-CHASING SHIELD ACTIVE' : '⏳ AWAITING LIMIT ENTRY TOUCH',
-        skipExplanation: isChasing 
+        skipExplanation: isChasing
           ? `Live market price ($${livePrice}) has moved past entry towards target. Auto-Pilot strictly forbids chasing to protect risk-reward asymmetry.`
           : `Live market price ($${livePrice}) is awaiting retracement to limit level ($${rawEntry}). Order will trigger automatically upon limit fill.`
       });
@@ -1594,16 +1599,16 @@ class App {
     const marginUSD = settings.marginUSD;
     const notionalUSD = +(marginUSD * leverage).toFixed(2);
     const rawPosSize = notionalUSD / entry;
-    const positionSize = entry >= 1000 
-      ? +rawPosSize.toFixed(6) 
+    const positionSize = entry >= 1000
+      ? +rawPosSize.toFixed(6)
       : (entry >= 1 ? +rawPosSize.toFixed(4) : (entry >= 0.01 ? +rawPosSize.toFixed(2) : Math.round(rawPosSize)));
     const riskUSD = marginUSD;
     const rewardUSD = +(riskUSD * rr).toFixed(2);
-    const rawLiq = direction === 'LONG' 
-      ? entry * (1 - (1 / leverage) * 0.95) 
+    const rawLiq = direction === 'LONG'
+      ? entry * (1 - (1 / leverage) * 0.95)
       : entry * (1 + (1 / leverage) * 0.95);
-    const liqPrice = entry >= 1000 
-      ? +rawLiq.toFixed(2) 
+    const liqPrice = entry >= 1000
+      ? +rawLiq.toFixed(2)
       : (entry >= 1 ? +rawLiq.toFixed(4) : (entry >= 0.01 ? +rawLiq.toFixed(6) : +rawLiq.toFixed(8)));
 
     const orderPacket = {
@@ -1745,7 +1750,7 @@ class App {
 
     // Ensure live market tick listener is active for this asset
     await adapter.ensureAssetInitialized(newPos.asset);
-    adapter.subscribe(newPos.asset, (data) => this.onMarketDataTick(data));
+    adapter.subscribe(newPos.asset, this._boundOnMarketDataTick);
 
     const formattedEntry = this.ui.formatPrice(newPos.entry);
     if (!this.isBooting) {
@@ -1993,7 +1998,7 @@ class App {
       const effectiveUserId = (token === cfg.anonKey) ? 'guest_autopilot' : activeUserId;
 
       // 1. Reconcile user settings & preferences
-      this.pushSettingsToCloud().catch(() => {});
+      this.pushSettingsToCloud().catch(() => { });
 
       // 2. Reconcile paper trades
       const toSyncTrades = [...(this.paperTrader.openPositions || []), ...(this.paperTrader.trades || [])].filter(t => {
@@ -2033,19 +2038,19 @@ class App {
       this.ui.showToast('Network Restored', 'Re-syncing paper trading ledger with cloud database...', 'info');
       await this.reconcileOfflineTradesWithSupabase();
       if (this.signalEngine && this.cryptoAdapter) {
-        this.signalEngine.auditDowntimeSignals(this.cryptoAdapter).catch(() => {});
+        this.signalEngine.auditDowntimeSignals(this.cryptoAdapter).catch(() => { });
       }
     });
 
     window.addEventListener('focus', () => {
       // Immediate cloud and signals catch-up whenever window regains user focus
-      this.syncWithSupabaseCloud().catch(() => {});
+      this.syncWithSupabaseCloud().catch(() => { });
       if (this.signalEngine && this.cryptoAdapter) {
         this.signalEngine.auditDowntimeSignals(this.cryptoAdapter).then(res => {
           if (res && res.length > 0 && this.ui && typeof this.ui.renderSignalsPage === 'function') {
             this.ui.renderSignalsPage();
           }
-        }).catch(() => {});
+        }).catch(() => { });
       }
     });
   }
@@ -2066,7 +2071,7 @@ class App {
           }
         }
       }
-    } catch (e) {}
+    } catch (e) { }
 
     this.updateTradeJournalAndStats();
     this.ui.updateOpenPositions([]);
@@ -2122,7 +2127,7 @@ class App {
               risk_usd: 2000,
               pnl_usd: 0
             })
-          }).catch(() => {});
+          }).catch(() => { });
         }
 
         console.log('[Cloud Reset] User paper trades purged from Supabase Cloud successfully.');
@@ -2145,11 +2150,11 @@ class App {
 
     const adapter = this.getActiveAdapter();
     await adapter.ensureAssetInitialized(asset);
-    
+
     const snapshot = adapter.getSnapshot(asset);
     this.ui.updateTicker(snapshot);
 
-    adapter.subscribe(asset, (data) => this.onMarketDataTick(data));
+    adapter.subscribe(asset, this._boundOnMarketDataTick);
 
     this.chartManager.setAdapter(adapter);
     this.chartManager.setAsset(asset, this.currentMarket);
@@ -2184,7 +2189,7 @@ class App {
     this.ui.setMarket(market, defaultPills);
 
     await adapter.ensureAssetInitialized(defaultAsset);
-    adapter.subscribe(defaultAsset, (data) => this.onMarketDataTick(data));
+    adapter.subscribe(defaultAsset, this._boundOnMarketDataTick);
 
     const snapshot = adapter.getSnapshot(defaultAsset);
     this.ui.updateTicker(snapshot);
@@ -2225,7 +2230,7 @@ class App {
       if (this.ui && typeof this.ui.renderSignalsPage === 'function') {
         this.ui.renderSignalsPage();
       }
-      this.reconcileOfflineTradesWithSupabase().catch(() => {});
+      this.reconcileOfflineTradesWithSupabase().catch(() => { });
       if (this.ui && typeof this.ui.showToast === 'function') {
         this.ui.showToast('Alpha Radar Synchronized', 'Real-time institutional setups verified from 24/7 Cloud Sentinel.', 'success');
       }

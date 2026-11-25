@@ -71,10 +71,11 @@ class MondayAutoPilotDaemon {
     this.paperTrader = new PaperTrader(2000.0, 'guest_autopilot');
     this.derivativesEngine = new DerivativesEngine();
 
-    // High-liquidity multi-asset universe
+    // High-liquidity multi-asset universe (Synced with Alpha Radar)
     this.candidateAssets = [
       'BTC', 'ETH', 'SOL', 'AVAX', 'LINK',
-      'DOGE', 'NEAR', 'SUI', 'XRP', 'ADA'
+      'DOGE', 'NEAR', 'SUI', 'XRP', 'ADA',
+      'DOT', 'INJ', 'OP', 'STRK', 'LTC', 'UNI'
     ];
 
     this.livePrices = {};

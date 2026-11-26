@@ -845,18 +845,18 @@ Main tumhari dedicated AI trading partner hoon jo market ke 1H aur 5M structure 
         </div>
       `;let e=n.querySelector(`#btn_empty_to_terminal`);e&&e.addEventListener(`click`,()=>this.switchPage(`terminal`));return}let f=n.querySelector(`.positions-detailed-table`),p=f?f.querySelector(`tbody`):null,m=(p?Array.from(p.querySelectorAll(`tr[data-pos-id]`)):[]).map(e=>e.getAttribute(`data-pos-id`)).filter(Boolean),h=t.map(e=>String(e.id));if(m.length>0&&m.length===h.length&&m.every((e,t)=>e===h[t])){t.forEach(e=>{let t=p.querySelector(`tr[data-pos-id="${e.id}"]`);if(!t)return;(e.direction||`LONG`).toUpperCase();let n=Number(e.unrealizedPnlUSD||e.unrealizedGrossPnlUSD||0),r=n>=0,i=Number(e.marginUSD||e.riskUSD||20),a=e.roePercent===void 0?i>0?(n/i*100).toFixed(1):0:e.roePercent,o=Number(e.currentPrice||e.entry||0);Number(e.entry||0);let s=Number(e.liquidationPrice||0),c=`Safe`,l=`text-bullish`;if(s>0&&o>0){let e=Math.abs((o-s)/o*100).toFixed(1);c=`${e}%`,Number(e)<5?l=`text-bearish`:Number(e)<12&&(l=`text-warning`)}let u=t.querySelector(`.mark-val-num`);u&&(u.textContent=this.formatPrice(o));let d=t.querySelector(`.pos-safety-chip`);d&&(d.className=`pos-safety-chip ${l}`,d.innerHTML=`<i class="ph-bold ph-shield-check"></i> ${c}`);let f=t.querySelector(`.pos-pnl-cell`);if(f){f.className=`pos-pnl-cell ${r?`pnl-green`:`pnl-red`}`;let e=f.querySelector(`.pnl-usd`);e&&(e.textContent=`${r?`+`:``}$${n.toFixed(2)}`);let t=f.querySelector(`.pnl-roe`);t&&(t.textContent=`${r?`+`:``}${a}% ROE`)}let m=t.querySelector(`.tgt-sl`);m&&(m.textContent=e.stopLoss?this.formatPrice(e.stopLoss):`--`);let h=t.querySelector(`.tgt-tp`);h&&(h.textContent=e.target?this.formatPrice(e.target):`--`)});return}let g=`
       <table class="positions-detailed-table">
-        <thead>
+        <thead style="position: sticky; top: 0; z-index: 30;">
           <tr>
-            <th>Market & Direction</th>
-            <th>Size & Notional</th>
-            <th>Entry Price</th>
-            <th>Mark Price</th>
-            <th>Est. Liq Price</th>
-            <th>Safety Buffer</th>
-            <th>Margin Locked</th>
-            <th>Unrealized PnL (ROE%)</th>
-            <th>Targets</th>
-            <th>Action</th>
+            <th style="position: sticky; top: 0; z-index: 30; background: #0d1527;">Market & Direction</th>
+            <th style="position: sticky; top: 0; z-index: 30; background: #0d1527;">Size & Notional</th>
+            <th style="position: sticky; top: 0; z-index: 30; background: #0d1527;">Entry Price</th>
+            <th style="position: sticky; top: 0; z-index: 30; background: #0d1527;">Mark Price</th>
+            <th style="position: sticky; top: 0; z-index: 30; background: #0d1527;">Est. Liq Price</th>
+            <th style="position: sticky; top: 0; z-index: 30; background: #0d1527;">Safety Buffer</th>
+            <th style="position: sticky; top: 0; z-index: 30; background: #0d1527;">Margin Locked</th>
+            <th style="position: sticky; top: 0; z-index: 30; background: #0d1527;">Unrealized PnL (ROE%)</th>
+            <th style="position: sticky; top: 0; z-index: 30; background: #0d1527;">Targets</th>
+            <th style="position: sticky; top: 0; z-index: 30; background: #0d1527;">Action</th>
           </tr>
         </thead>
         <tbody>

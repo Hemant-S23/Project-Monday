@@ -5297,18 +5297,18 @@ export class TerminalUI {
     // Render Institutional Derivatives Table (Full structure build when positions are added/removed)
     let tableHtml = `
       <table class="positions-detailed-table">
-        <thead>
+        <thead style="position: sticky; top: 0; z-index: 30;">
           <tr>
-            <th>Market & Direction</th>
-            <th>Size & Notional</th>
-            <th>Entry Price</th>
-            <th>Mark Price</th>
-            <th>Est. Liq Price</th>
-            <th>Safety Buffer</th>
-            <th>Margin Locked</th>
-            <th>Unrealized PnL (ROE%)</th>
-            <th>Targets</th>
-            <th>Action</th>
+            <th style="position: sticky; top: 0; z-index: 30; background: #0d1527;">Market & Direction</th>
+            <th style="position: sticky; top: 0; z-index: 30; background: #0d1527;">Size & Notional</th>
+            <th style="position: sticky; top: 0; z-index: 30; background: #0d1527;">Entry Price</th>
+            <th style="position: sticky; top: 0; z-index: 30; background: #0d1527;">Mark Price</th>
+            <th style="position: sticky; top: 0; z-index: 30; background: #0d1527;">Est. Liq Price</th>
+            <th style="position: sticky; top: 0; z-index: 30; background: #0d1527;">Safety Buffer</th>
+            <th style="position: sticky; top: 0; z-index: 30; background: #0d1527;">Margin Locked</th>
+            <th style="position: sticky; top: 0; z-index: 30; background: #0d1527;">Unrealized PnL (ROE%)</th>
+            <th style="position: sticky; top: 0; z-index: 30; background: #0d1527;">Targets</th>
+            <th style="position: sticky; top: 0; z-index: 30; background: #0d1527;">Action</th>
           </tr>
         </thead>
         <tbody>

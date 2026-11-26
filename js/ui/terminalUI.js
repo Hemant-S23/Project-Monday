@@ -1116,8 +1116,26 @@ export class TerminalUI {
         if (this.callbacks.onClearSignals) {
           this.callbacks.onClearSignals();
           this.renderSignalsPage();
-          this.showToast('🧹 Signals Purged', 'Archived and expired signals cleared.', 'info');
+          this.showToast('🧹 Expired Orders Cleared', 'Unfilled and stale limit orders purged. Wins and Cumulative Alpha preserved.', 'info');
         }
+      });
+    }
+
+    const alphaTfToggle = document.getElementById('alpha_timeframe_toggle');
+    if (alphaTfToggle) {
+      alphaTfToggle.querySelectorAll('.alpha-tf-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const tf = btn.dataset.tf || 'ALL';
+          this.alphaTimeframe = tf;
+          alphaTfToggle.querySelectorAll('.alpha-tf-btn').forEach(b => {
+            const isMatch = b.dataset.tf === tf;
+            b.classList.toggle('active', isMatch);
+            b.style.background = isMatch ? 'rgba(56, 189, 248, 0.25)' : 'transparent';
+            b.style.color = isMatch ? '#38bdf8' : '#94a3b8';
+          });
+          this.renderSignalsPage();
+        });
       });
     }
 
@@ -3834,23 +3852,41 @@ export class TerminalUI {
 
     if (!this.signalsFilter) this.signalsFilter = 'ALL';
     if (!this.signalsAssetFilter) this.signalsAssetFilter = 'ALL';
+    if (!this.alphaTimeframe) this.alphaTimeframe = 'ALL';
 
     const signals = this.callbacks.onGetSignals ? this.callbacks.onGetSignals('ALL') : [];
+    const is24H = this.alphaTimeframe === '24H';
+    const now = Date.now();
 
     // Calculate Summary Strip Statistics
     let pendingCount = 0;
     let activeCount = 0;
     let hitCount = 0;
+    let completedCount = 0;
+    let expiredCount = 0;
     let cumulativeR = 0;
 
     signals.forEach(s => {
-      if (s.status === 'PENDING') pendingCount++;
-      else if (s.status === 'ACTIVE') activeCount++;
-      else if (s.status === 'TP_HIT') {
-        hitCount++;
-        cumulativeR += Number(s.realizedR || s.riskReward || 2.0);
-      } else if (s.status === 'SL_HIT') {
-        cumulativeR -= 1.0;
+      if (s.status === 'PENDING') {
+        pendingCount++;
+      } else if (s.status === 'ACTIVE') {
+        activeCount++;
+      } else if (s.status === 'TP_HIT' || s.status === 'SL_HIT') {
+        completedCount++;
+        const closedTime = Number(s.closedAt || s.issuedAt || 0);
+        const inWindow = !is24H || (closedTime > 0 && (now - closedTime <= 24 * 60 * 60 * 1000));
+        if (s.status === 'TP_HIT') {
+          if (inWindow) {
+            hitCount++;
+            cumulativeR += Number(s.realizedR || s.riskReward || 2.0);
+          }
+        } else if (s.status === 'SL_HIT') {
+          if (inWindow) {
+            cumulativeR -= 1.0;
+          }
+        }
+      } else if (s.status === 'EXPIRED' || s.status === 'INVALIDATED') {
+        expiredCount++;
       }
     });
 
@@ -3858,9 +3894,12 @@ export class TerminalUI {
     const statActive = document.getElementById('signals_stat_active');
     const statHit = document.getElementById('signals_stat_hit');
     const statAlpha = document.getElementById('signals_stat_alpha');
+    const statAlphaSub = document.getElementById('signals_stat_alpha_sub');
     const chipAll = document.getElementById('signals_chip_all_count');
     const chipPending = document.getElementById('signals_chip_pending_count');
     const chipActive = document.getElementById('signals_chip_active_count');
+    const chipCompleted = document.getElementById('signals_chip_completed_count');
+    const chipExpired = document.getElementById('signals_chip_expired_count');
 
     if (statPending) statPending.textContent = pendingCount;
     if (statActive) statActive.textContent = activeCount;
@@ -3870,9 +3909,14 @@ export class TerminalUI {
       statAlpha.textContent = `${isPos ? '+' : ''}${cumulativeR.toFixed(2)}R`;
       statAlpha.className = `audit-val ${isPos ? 'text-bullish' : 'text-bearish'}`;
     }
+    if (statAlphaSub) {
+      statAlphaSub.textContent = is24H ? 'Last 24h realized alpha' : 'All-time realized signal performance';
+    }
     if (chipAll) chipAll.textContent = signals.length;
     if (chipPending) chipPending.textContent = pendingCount;
     if (chipActive) chipActive.textContent = activeCount;
+    if (chipCompleted) chipCompleted.textContent = completedCount;
+    if (chipExpired) chipExpired.textContent = expiredCount;
 
     // Filter displayed signals
     let displayed = signals.filter(s => {
@@ -3886,6 +3930,15 @@ export class TerminalUI {
     if (this.signalsAssetFilter !== 'ALL') {
       displayed = displayed.filter(s => s.asset === this.signalsAssetFilter);
     }
+
+    // Always sort Active and Pending signals to the top for a crisp, actionable desk
+    displayed.sort((a, b) => {
+      const statusOrder = { 'ACTIVE': 3, 'PENDING': 2, 'TP_HIT': 1, 'SL_HIT': 1, 'EXPIRED': 0, 'INVALIDATED': 0 };
+      const sA = statusOrder[a.status] !== undefined ? statusOrder[a.status] : 1;
+      const sB = statusOrder[b.status] !== undefined ? statusOrder[b.status] : 1;
+      if (sB !== sA) return sB - sA;
+      return (b.issuedAt || 0) - (a.issuedAt || 0);
+    });
 
     if (displayed.length === 0) {
       grid.innerHTML = `

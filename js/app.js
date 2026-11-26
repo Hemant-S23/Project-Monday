@@ -161,18 +161,18 @@ class App {
         this.pushSettingsToCloud().catch(() => { });
         this.ui.updateSignalsBadge(this.signalEngine.getActiveCount());
 
-        // Cloud Prune: Delete archived/expired signals from Supabase Cloud
+        // Cloud Prune: ONLY delete unexecuted expired / invalidated signals. NEVER delete TP_HIT or SL_HIT!
         try {
           const cfg = window.MONDAY_SUPABASE_CONFIG;
           if (cfg && cfg.url && cfg.anonKey) {
-            await fetch(`${cfg.url}/rest/v1/paper_trades?status=in.(SIGNAL_TP_HIT,SIGNAL_SL_HIT,SIGNAL_EXPIRED,SIGNAL_INVALIDATED)`, {
+            await fetch(`${cfg.url}/rest/v1/paper_trades?status=in.(SIGNAL_EXPIRED,SIGNAL_INVALIDATED)`, {
               method: 'DELETE',
               headers: {
                 'apikey': cfg.anonKey,
                 'Authorization': `Bearer ${cfg.anonKey}`
               }
             });
-            console.log('[Signals Cloud Prune] Archived signals deleted from Supabase Cloud.');
+            console.log('[Signals Cloud Prune] Unfilled and expired signals deleted from Supabase Cloud. Wins preserved.');
           }
         } catch (e) { }
       },
@@ -496,7 +496,7 @@ class App {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-      const fetchLimit = isFullSync ? 1000 : 100;
+      const fetchLimit = 1000;
       const res = await fetch(`${cfg.url}/rest/v1/paper_trades?select=*&${userFilter}&order=created_at.desc&limit=${fetchLimit}`, {
         headers: {
           'apikey': cfg.anonKey,

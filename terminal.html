@@ -2045,8 +2045,8 @@
               <button class="btn-purge-ledger" id="signals_scan_all_btn" type="button" title="Scan all crypto assets for Grade A Confluence Setups" style="border-color: rgba(56, 189, 248, 0.3); color: #38bdf8;">
                 <i class="ph-bold ph-radar"></i> Scan Market Swarm
               </button>
-              <button class="btn-purge-ledger" id="signals_clear_btn" type="button" title="Purge Expired/Archived Signals">
-                <i class="ph-bold ph-trash"></i> Clear Archived
+              <button class="btn-purge-ledger" id="signals_clear_btn" type="button" title="Purge Stale & Unfilled Limit Orders (Preserves all Wins and Cumulative Alpha)">
+                <i class="ph-bold ph-trash"></i> Clear Expired
               </button>
             </div>
           </div>
@@ -2068,10 +2068,16 @@
               <span class="audit-val text-bullish" id="signals_stat_hit">0</span>
               <span class="audit-sub">Full take-profit realized</span>
             </div>
-            <div class="audit-stat-box highlight-net" id="signals_stat_box_total">
-              <span class="audit-label"><i class="ph-bold ph-scales"></i> CUMULATIVE ALPHA</span>
+            <div class="audit-stat-box highlight-net" id="signals_stat_box_total" style="position: relative;">
+              <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                <span class="audit-label"><i class="ph-bold ph-scales"></i> CUMULATIVE ALPHA</span>
+                <div class="alpha-timeframe-toggle" id="alpha_timeframe_toggle" style="display: inline-flex; background: rgba(255, 255, 255, 0.06); border-radius: 6px; padding: 2px; border: 1px solid rgba(255, 255, 255, 0.1); font-size: 10px; font-weight: 600;">
+                  <button type="button" class="alpha-tf-btn active" data-tf="ALL" style="background: rgba(56, 189, 248, 0.25); color: #38bdf8; border: none; border-radius: 4px; padding: 2px 7px; cursor: pointer; font-size: 10px; transition: all 0.2s;">All-Time</button>
+                  <button type="button" class="alpha-tf-btn" data-tf="24H" style="background: transparent; color: #94a3b8; border: none; border-radius: 4px; padding: 2px 7px; cursor: pointer; font-size: 10px; transition: all 0.2s;">24H</button>
+                </div>
+              </div>
               <span class="audit-val text-bullish" id="signals_stat_alpha">+0.00R</span>
-              <span class="audit-sub">Realized signal performance</span>
+              <span class="audit-sub" id="signals_stat_alpha_sub">Realized signal performance</span>
             </div>
           </div>
 
@@ -2081,8 +2087,8 @@
               <button class="passbook-filter-chip active" data-filter="ALL" type="button">All (<span id="signals_chip_all_count">0</span>)</button>
               <button class="passbook-filter-chip" data-filter="PENDING" type="button">🟡 Pending (<span id="signals_chip_pending_count">0</span>)</button>
               <button class="passbook-filter-chip" data-filter="ACTIVE" type="button">🟢 Active (<span id="signals_chip_active_count">0</span>)</button>
-              <button class="passbook-filter-chip" data-filter="COMPLETED" type="button">🎯 Completed</button>
-              <button class="passbook-filter-chip" data-filter="EXPIRED" type="button">⚪ Expired / Void</button>
+              <button class="passbook-filter-chip" data-filter="COMPLETED" type="button">🎯 Completed (<span id="signals_chip_completed_count">0</span>)</button>
+              <button class="passbook-filter-chip" data-filter="EXPIRED" type="button">⚪ Expired / Void (<span id="signals_chip_expired_count">0</span>)</button>
             </div>
 
             <!-- Asset Quick Filter Tabs -->

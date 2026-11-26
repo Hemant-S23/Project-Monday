@@ -43,21 +43,20 @@ export class SignalEngine {
 
   clearArchived(timestamp = Date.now()) {
     this.setArchivedClearedAt(timestamp);
-    const VALID_CRYPTO_ASSETS = new Set([
-      'BTC', 'ETH', 'SOL', 'AVAX', 'LINK',
-      'DOGE', 'NEAR', 'SUI', 'XRP', 'ADA', 'AAVE', 'INJ', 'LTC', 'UNI', 'PEPE'
-    ]);
-    // Instant UI prune: remove archived signals cleared before or at watermark, and any stale/non-universe setups
+    // Instant UI prune: remove ONLY unexecuted expired or invalidated setups.
+    // NEVER delete completed trades (TP_HIT or SL_HIT) so Cumulative Alpha and win track record remain intact forever.
     this.signals = this.signals.filter(s => {
-      if (!s.asset || !VALID_CRYPTO_ASSETS.has(s.asset.toUpperCase())) return false;
+      if (!s.asset) return false;
       const issuedTime = Number(s.issuedAt) || 0;
-      if (issuedTime > 0 && (Date.now() - issuedTime > 24 * 60 * 60 * 1000) && (s.status === 'PENDING' || s.status === 'ACTIVE')) {
+      // Stale Unfilled Orders: Purge PENDING orders older than 24 hours
+      if (issuedTime > 0 && (Date.now() - issuedTime > 24 * 60 * 60 * 1000) && s.status === 'PENDING') {
         return false;
       }
-      const isArchived = s.status === 'TP_HIT' || s.status === 'SL_HIT' || s.status === 'EXPIRED' || s.status === 'INVALIDATED';
-      if (!isArchived) return true;
-      const t = s.closedAt || s.issuedAt || 0;
-      return t > this.archivedClearedAt;
+      // Purge unexecuted expired or invalidated signals
+      if (s.status === 'EXPIRED' || s.status === 'INVALIDATED') {
+        return false;
+      }
+      return true; // Keep all ACTIVE, PENDING, TP_HIT, SL_HIT permanently safe
     });
     this.saveSignals();
   }
@@ -102,21 +101,15 @@ export class SignalEngine {
         if (raw) {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed)) {
-            // Clean Slate Sanitizer: Automatically purge legacy corrupted signals and phantom clone loops
-            const VALID_CRYPTO_ASSETS = new Set([
-              'BTC', 'ETH', 'SOL', 'AVAX', 'LINK',
-              'DOGE', 'NEAR', 'SUI', 'XRP', 'ADA', 'AAVE', 'INJ', 'LTC', 'UNI', 'PEPE'
-            ]);
-
             let sanitized = parsed.filter(s => {
-              // 1. Asset Universe Guard: Purge obsolete tokens (like CTSI or test symbols)
-              if (!s.asset || !VALID_CRYPTO_ASSETS.has(s.asset.toUpperCase())) {
+              // 1. Asset Guard: Purge corrupted or test setups
+              if (!s.asset || typeof s.asset !== 'string' || s.asset.toLowerCase().includes('test')) {
                 return false;
               }
 
-              // 2. Stale Zombie Signal Purger: Any pending or active signal older than 24 hours is permanently dead
+              // 2. Stale Zombie Signal Purger: ONLY purge PENDING unfilled limit orders older than 24 hours
               const issuedTime = Number(s.issuedAt) || 0;
-              if (issuedTime > 0 && (Date.now() - issuedTime > 24 * 60 * 60 * 1000) && (s.status === 'PENDING' || s.status === 'ACTIVE')) {
+              if (issuedTime > 0 && (Date.now() - issuedTime > 24 * 60 * 60 * 1000) && s.status === 'PENDING') {
                 return false;
               }
 
@@ -170,8 +163,8 @@ export class SignalEngine {
     try {
       this.deduplicateSignals();
       if (typeof localStorage !== 'undefined') {
-        // Keep up to 100 most recent unique signals
-        const toSave = this.signals.slice(0, 100);
+        // Keep up to 500 signals locally
+        const toSave = this.signals.slice(0, 500);
         localStorage.setItem(this.storageKey, JSON.stringify(toSave));
       }
     } catch (e) {
@@ -197,10 +190,12 @@ export class SignalEngine {
     const cloudIds = new Set(cloudSignals.map(ct => ct.id));
     const cloudKeys = new Set(cloudSignals.map(ct => `${ct.asset}_${ct.direction}_${formatLevelPrice(ct.entry_price, ct.asset)}`));
 
-    // Pure Cloud Purge: Immediately eliminate any local phantom signals that do not exist in the Cloud
+    // Pure Cloud Purge: Only eliminate local phantom setups that do not exist in the Cloud
+    // Never delete completed win/loss history from memory on cloud merge
     const beforeCount = this.signals.length;
     this.signals = this.signals.filter(s => {
       if (s.inPortfolio || (s.tradeId && s.tradeId.startsWith('TRADE-'))) return true;
+      if (s.status === 'TP_HIT' || s.status === 'SL_HIT') return true;
       const sKey = `${s.asset}_${s.direction}_${formatLevelPrice(s.entryPrice, s.asset)}`;
       return cloudIds.has(s.id) || cloudKeys.has(sKey);
     });

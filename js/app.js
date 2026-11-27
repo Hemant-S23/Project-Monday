@@ -477,6 +477,173 @@ class App {
     setTimeout(() => {
       this.syncWithSupabaseCloud(true).catch(() => { });
     }, 2000);
+
+    // 8. 24/7 Supabase Realtime WebSocket Cockpit Activation (Zero-Poll Live Stream)
+    setTimeout(() => {
+      this.initSupabaseRealtime();
+    }, 800);
+  }
+
+  /**
+   * 24/7 Live Supabase Realtime WebSocket Engine.
+   * Eliminates polling delay and local storage reliance by subscribing directly to Postgres changes.
+   * Orders, TP hits, SL hits, and Circuit Breakers update within <50ms!
+   */
+  initSupabaseRealtime() {
+    try {
+      const cfg = window.MONDAY_SUPABASE_CONFIG;
+      if (!cfg || !cfg.url || !cfg.anonKey) return;
+      if (!window.supabase || typeof window.supabase.createClient !== 'function') {
+        setTimeout(() => this.initSupabaseRealtime(), 1000);
+        return;
+      }
+
+      if (this._realtimeSubscription) return;
+
+      const client = window.supabase.createClient(cfg.url, cfg.anonKey);
+      this.supabaseClient = client;
+
+      console.log('[Realtime] Subscribing to 24/7 Supabase Realtime WebSocket channel for paper_trades...');
+      const channel = client
+        .channel('public:paper_trades')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'paper_trades' },
+          (payload) => {
+            this.handleRealtimeTradeUpdate(payload);
+          }
+        )
+        .subscribe((status) => {
+          console.log(`[Realtime] Channel subscription status: ${status}`);
+          if (status === 'SUBSCRIBED') {
+            console.log('⚡ [Realtime] Live Cockpit Connected! Instant push updates active.');
+          }
+        });
+
+      this._realtimeSubscription = channel;
+    } catch (err) {
+      console.warn('[Realtime] Failed to initialize Supabase Realtime:', err);
+    }
+  }
+
+  handleRealtimeTradeUpdate(payload) {
+    if (!payload) return;
+    const { eventType, new: newRow, old: oldRow } = payload;
+    const trade = newRow || oldRow;
+    if (!trade || !trade.id) return;
+
+    // 1. If it's a configuration row, trigger settings reload
+    if (trade.id.startsWith('CONFIG_') || trade.status === 'CONFIG') {
+      this.syncWithSupabaseCloud(false).catch(() => {});
+      return;
+    }
+
+    // 2. If it's a signal row
+    if (trade.id.startsWith('SIG-') || (trade.status && trade.status.startsWith('SIGNAL_'))) {
+      if (this.signalEngine) {
+        if (eventType === 'DELETE') {
+          this.signalEngine.signals = this.signalEngine.signals.filter(s => s.id !== trade.id);
+        } else {
+          const idx = this.signalEngine.signals.findIndex(s => s.id === trade.id);
+          const formatted = this.signalEngine.formatCloudSignal(trade);
+          if (idx !== -1) {
+            this.signalEngine.signals[idx] = { ...this.signalEngine.signals[idx], ...formatted };
+          } else {
+            this.signalEngine.signals.unshift(formatted);
+          }
+        }
+        if (this.ui && typeof this.ui.renderSignalsPage === 'function' && this.ui.currentSaaSPage === 'signals') {
+          this.ui.renderSignalsPage();
+        }
+      }
+      return;
+    }
+
+    // 3. Regular Paper Trade Events
+    if (eventType === 'INSERT') {
+      if (trade.status === 'OPEN') {
+        const exists = this.paperTrader.openPositions.some(p => p.id === trade.id);
+        if (!exists) {
+          const entryP = Number(trade.entry_price || trade.entry) || 0;
+          const posSz = Number(trade.position_size) || 0;
+          const notional = +(entryP * posSz).toFixed(2);
+          const entryFee = +(notional * 0.0005).toFixed(2);
+
+          const newPos = {
+            id: trade.id,
+            market: trade.market || 'Crypto',
+            asset: trade.asset,
+            direction: trade.direction,
+            entry: entryP,
+            stopLoss: Number(trade.stop_loss),
+            target: Number(trade.target_price),
+            positionSize: posSz,
+            riskUSD: Number(trade.risk_usd || 20),
+            rewardUSD: Number(trade.reward_usd || 60),
+            rrRatio: Number(trade.rr_ratio || 3.0),
+            leverage: 20,
+            marginUSD: Number(trade.risk_usd || 20),
+            notionalUSD: notional,
+            entryFeeUSD: entryFee,
+            estExitFeeUSD: entryFee,
+            status: 'OPEN',
+            currentPrice: entryP,
+            unrealizedPnlUSD: 0,
+            unrealizedGrossPnlUSD: 0,
+            unrealizedR: 0,
+            roePercent: 0,
+            feesUSD: +(entryFee * 2 * 1.18).toFixed(2),
+            openedAt: new Date(trade.created_at).getTime()
+          };
+
+          this.paperTrader.openPositions.unshift(newPos);
+          this.ui.updateOpenPositions(this.paperTrader.openPositions);
+          this.ui.updateHeaderAccountHUD(this.paperTrader.getLiveEquity());
+
+          if (!this.isBooting) {
+            this.ui.showToast('🚀 Order Executed', `${trade.asset} ${trade.direction} entered at $${entryP}. Live!`, 'success');
+            if (this.voiceAssistant) this.voiceAssistant.speak(`${trade.asset} ${trade.direction} entered.`);
+          }
+        }
+      } else if (trade.status === 'CLOSED') {
+        this.syncWithSupabaseCloud(false).catch(() => {});
+      }
+    } else if (eventType === 'UPDATE') {
+      if (trade.status === 'CLOSED') {
+        // Trade closed in Cloud! Remove from open positions
+        const openIdx = this.paperTrader.openPositions.findIndex(p => p.id === trade.id);
+        if (openIdx !== -1) {
+          this.paperTrader.openPositions.splice(openIdx, 1);
+        }
+
+        const isWin = trade.result === 'WIN';
+        const pnl = Number(trade.pnl_usd) || 0;
+        const pnlSign = pnl >= 0 ? '+' : '';
+        const exitP = Number(trade.exit_price || trade.target_price || trade.entry_price);
+        const formattedPrice = this.ui.formatPrice(exitP, '$');
+
+        // Refresh cloud ledger sync to populate Passbook and update Balance immediately
+        this.syncWithSupabaseCloud(false).then(() => {
+          if (!this.isBooting) {
+            const title = isWin ? '🎯 TARGET HIT!' : '🛑 STOP LOSS HIT!';
+            const msg = `${trade.asset} closed at ${formattedPrice} (${trade.result}). PnL: ${pnlSign}$${pnl}`;
+            this.ui.showToast(title, msg, isWin ? 'success' : 'danger');
+            if (this.voiceAssistant) this.voiceAssistant.speak(`${trade.asset} trade hit ${isWin ? 'Target' : 'Stop loss'}.`);
+          }
+        }).catch(() => {});
+      } else if (trade.status === 'OPEN') {
+        const localPos = this.paperTrader.openPositions.find(p => p.id === trade.id);
+        if (localPos) {
+          if (trade.stop_loss) localPos.stopLoss = Number(trade.stop_loss);
+          if (trade.target_price) localPos.target = Number(trade.target_price);
+        }
+      }
+    } else if (eventType === 'DELETE') {
+      this.paperTrader.openPositions = this.paperTrader.openPositions.filter(p => p.id !== trade.id);
+      this.paperTrader.trades = this.paperTrader.trades.filter(t => t.id !== trade.id);
+      this.ui.updateOpenPositions(this.paperTrader.openPositions);
+      this.updateTradeJournalAndStats();
+    }
   }
 
   async syncWithSupabaseCloud(isFullSync = true) {

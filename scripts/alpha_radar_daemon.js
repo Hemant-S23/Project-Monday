@@ -84,10 +84,10 @@ async function runDaemon() {
   console.log(`[Alpha Radar Daemon] Starting autonomous market sweep at ${new Date().toISOString()}...`);
   const strategyEngine = new StrategyEngine();
 
-  // 1. Fetch current active/pending signals from Supabase Cloud
+  // 1. Fetch current active/pending signals AND live open positions from Supabase Cloud
   let existingSignals = [];
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/paper_trades?select=*&status=like.SIGNAL_*&order=created_at.desc&limit=60`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/paper_trades?select=*&or=(status.like.SIGNAL_*,status.eq.OPEN)&order=created_at.desc&limit=100`, {
       headers: {
         'apikey': SUPABASE_KEY,
         'Authorization': `Bearer ${SUPABASE_KEY}`
@@ -174,6 +174,72 @@ async function runDaemon() {
             sig.strategy = JSON.stringify(meta);
             updatedSignals.push(sig);
             console.log(`[STOP LOSS] ${asset} ${sig.direction} stopped out (-1.0R).`);
+          }
+        }
+        // Check Active OPEN Paper Trades (24/7 Cloud Sentinel Portfolio Execution)
+        else if (sig.status === 'OPEN') {
+          const tpHit = tpP > 0 ? (isLong ? (currentPrice >= tpP) : (currentPrice <= tpP)) : false;
+          const slHit = slP > 0 ? (isLong ? (currentPrice <= slP) : (currentPrice >= slP)) : false;
+          const posSize = Number(sig.position_size || 0);
+
+          // 🛡️ Early Circuit Breaker Check (Loss > -0.35R with 5M EMA20 breakdown)
+          const priceDelta = isLong ? (currentPrice - entryP) : (entryP - currentPrice);
+          const currentLossUSD = priceDelta * posSize;
+          const posRiskUSD = Number(sig.risk_usd || 20);
+          const currentR = currentLossUSD / posRiskUSD;
+          let structuralCut = false;
+          if (c5M && c5M.length >= 20 && currentR <= -0.35) {
+            const closes = c5M.map(c => c.close);
+            const ema20 = strategyEngine.calculateEMA(closes, 20);
+            const closedCandle = c5M[c5M.length - 2];
+            if (isLong && (closedCandle.close < ema20 || currentPrice < ema20)) {
+              const swingLow3 = Math.min(...c5M.slice(-4, -1).map(c => c.low));
+              if (currentPrice < swingLow3) structuralCut = true;
+            } else if (!isLong && (closedCandle.close > ema20 || currentPrice > ema20)) {
+              const swingHigh3 = Math.max(...c5M.slice(-4, -1).map(c => c.high));
+              if (currentPrice > swingHigh3) structuralCut = true;
+            }
+          }
+
+          if (tpHit) {
+            sig.status = 'CLOSED';
+            sig.result = 'WIN';
+            sig.exit_price = tpP;
+            const netDelta = isLong ? (tpP - entryP) : (entryP - tpP);
+            sig.pnl_usd = +(netDelta * posSize * 0.999).toFixed(2);
+            sig.r_multiple = +(sig.pnl_usd / posRiskUSD).toFixed(2);
+            sig.closed_at = new Date(now).toISOString();
+            meta.closedAt = now;
+            meta.exitReason = 'TAKE_PROFIT';
+            sig.strategy = JSON.stringify(meta);
+            updatedSignals.push(sig);
+            console.log(`[TARGET HIT - OPEN POSITION] ${asset} ${sig.direction} closed at Target (+$${sig.pnl_usd})!`);
+          } else if (slHit) {
+            sig.status = 'CLOSED';
+            sig.result = 'LOSS';
+            sig.exit_price = slP;
+            const netDelta = isLong ? (slP - entryP) : (entryP - slP);
+            sig.pnl_usd = +(netDelta * posSize * 1.001).toFixed(2);
+            sig.r_multiple = -1.0;
+            sig.closed_at = new Date(now).toISOString();
+            meta.closedAt = now;
+            meta.exitReason = 'STOP_LOSS';
+            sig.strategy = JSON.stringify(meta);
+            updatedSignals.push(sig);
+            console.log(`[STOP LOSS - OPEN POSITION] ${asset} ${sig.direction} stopped out (-1.0R).`);
+          } else if (structuralCut) {
+            sig.status = 'CLOSED';
+            sig.result = 'LOSS';
+            sig.exit_price = currentPrice;
+            sig.pnl_usd = +(currentLossUSD * 1.001).toFixed(2);
+            sig.r_multiple = +currentR.toFixed(2);
+            sig.closed_at = new Date(now).toISOString();
+            meta.closedAt = now;
+            meta.exitReason = 'STRUCTURAL_INVALIDATION';
+            meta.savedRiskR = +(Math.max(0, 1.0 - Math.abs(currentR))).toFixed(2);
+            sig.strategy = JSON.stringify(meta);
+            updatedSignals.push(sig);
+            console.log(`[CIRCUIT BREAKER - OPEN POSITION] ${asset} ${sig.direction} cut early at ${currentR.toFixed(2)}R. Saved ~${meta.savedRiskR}R!`);
           }
         }
       }

@@ -685,10 +685,10 @@ class App {
       // - Authenticated users query strictly their personal trades + universal cloud signals
       // - Unauthenticated users query guest trades + universal cloud signals
       let userFilter;
-      if (isAuth) {
+      if (isAuth && !isOwner) {
         userFilter = `or=(user_id.eq.${activeUserId},status.like.SIGNAL_*)`;
       } else {
-        userFilter = `or=(user_id.eq.guest_autopilot,status.like.SIGNAL_*)`;
+        userFilter = `or=(user_id.eq.${activeUserId},user_id.eq.guest_autopilot,status.like.SIGNAL_*)`;
       }
 
       const token = (this.authManager && typeof this.authManager.getAuthToken === 'function')

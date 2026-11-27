@@ -5334,6 +5334,10 @@ export class TerminalUI {
         else if (Number(distPct) < 12) safetyClass = 'text-warning';
       }
 
+      const openTime = pos.openedAt || pos.entryTime || pos.created_at ? new Date(pos.openedAt || pos.entryTime || pos.created_at) : new Date();
+      const openTimeFormatted = openTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+      const openDateFormatted = openTime.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+
       tableHtml += `
         <tr data-pos-id="${pos.id}">
           <td>
@@ -5341,6 +5345,10 @@ export class TerminalUI {
               <span class="pos-asset-symbol">${pos.asset}/USD</span>
               <span class="pos-direction-pill ${(pos.direction || 'LONG').toLowerCase()}">${pos.direction || 'LONG'}</span>
               <span class="pos-lev-pill">${pos.leverage || 20}x</span>
+            </div>
+            <div style="font-size: 0.68rem; color: #64748b; font-family: var(--font-mono, 'JetBrains Mono', monospace); margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+              <i class="ph ph-clock" style="font-size: 0.72rem; color: #38bdf8;"></i>
+              <span>${openDateFormatted} • ${openTimeFormatted}</span>
             </div>
           </td>
           <td>

@@ -21,7 +21,7 @@ export class SignalEngine {
     this.storageKey = 'monday_alpha_signals';
     this.archivedClearedAt = 0;
     if (typeof localStorage !== 'undefined') {
-      this.archivedClearedAt = Number(localStorage.getItem('monday_signals_cleared_at') || 0);
+      localStorage.removeItem('monday_signals_cleared_at');
     }
     this.signals = this.loadSignals();
     this.listeners = new Set();
@@ -134,10 +134,10 @@ export class SignalEngine {
               return true;
             });
 
-            // User-Level Watermark Filter: Purge archived signals cleared before watermark
+            // User-Level Watermark Filter: Only purge unexecuted expired or invalidated setups
             if (this.archivedClearedAt > 0) {
               sanitized = sanitized.filter(s => {
-                const isArchived = s.status === 'TP_HIT' || s.status === 'SL_HIT' || s.status === 'EXPIRED' || s.status === 'INVALIDATED';
+                const isArchived = s.status === 'EXPIRED' || s.status === 'INVALIDATED';
                 if (!isArchived) return true;
                 const t = s.closedAt || s.issuedAt || 0;
                 return t > this.archivedClearedAt;
@@ -221,8 +221,8 @@ export class SignalEngine {
         (s.asset === ct.asset && s.direction === ct.direction && Math.abs(Number(s.entryPrice) - Number(entryP)) < 0.001)
       );
 
-      // Filter out cloud signals that were cleared by this user's archive watermark
-      const isArchived = status === 'TP_HIT' || status === 'SL_HIT' || status === 'INVALIDATED' || status === 'EXPIRED';
+      // Filter out cloud signals that were cleared by this user's archive watermark (unfilled expired only)
+      const isArchived = status === 'INVALIDATED' || status === 'EXPIRED';
       const sigTime = ct.closed_at ? new Date(ct.closed_at).getTime() : (meta.closedAt || meta.issuedAt || (ct.created_at ? new Date(ct.created_at).getTime() : 0));
       if (isArchived && this.archivedClearedAt > 0 && sigTime <= this.archivedClearedAt) {
         // If it was already loaded locally, prune it
@@ -811,7 +811,7 @@ export class SignalEngine {
   getSignals(filter = 'ALL') {
     this.checkTimeouts();
     const visible = this.signals.filter(s => {
-      const isArchived = s.status === 'TP_HIT' || s.status === 'SL_HIT' || s.status === 'EXPIRED' || s.status === 'INVALIDATED';
+      const isArchived = s.status === 'EXPIRED' || s.status === 'INVALIDATED';
       if (isArchived && this.archivedClearedAt > 0) {
         const t = s.closedAt || s.issuedAt || 0;
         if (t <= this.archivedClearedAt) return false;

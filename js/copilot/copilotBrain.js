@@ -45,21 +45,15 @@ export class CopilotBrain {
   }
 
   getAutoPilotConfig() {
-    try {
-      if (typeof localStorage !== 'undefined') {
-        const raw = localStorage.getItem('monday_autopilot_settings');
-        if (raw) {
-          const s = JSON.parse(raw);
-          return {
-            marginUSD: Math.max(5, Math.min(500, parseFloat(s.marginUSD) || 20)),
-            leverage: Math.max(1, Math.min(50, parseInt(s.leverage, 10) || 20)),
-            minRR: Math.max(1.5, Math.min(5.0, parseFloat(s.minRR) || 2.0)),
-            maxTrades: Math.max(1, Math.min(100, parseInt(s.maxTrades, 10) || 2))
-          };
-        }
-      }
-    } catch (e) {}
+    if (this._autoPilotConfig) return this._autoPilotConfig;
+    if (typeof window !== 'undefined' && window.__AI_COPILOT_APP__ && typeof window.__AI_COPILOT_APP__.getAutoPilotSettings === 'function') {
+      return window.__AI_COPILOT_APP__.getAutoPilotSettings();
+    }
     return { marginUSD: 20, leverage: 20, minRR: 2.0, maxTrades: 2 };
+  }
+
+  setAutoPilotConfig(cfg) {
+    if (cfg && typeof cfg === 'object') this._autoPilotConfig = cfg;
   }
 
   formatPrice(p, currencySymbol = null) {

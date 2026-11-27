@@ -8,11 +8,6 @@ export class SoundEffectsController {
   constructor() {
     this.audioCtx = null;
     this.isMuted = false;
-    try {
-      this.isMuted = localStorage.getItem('monday_sfx_muted') === 'true';
-    } catch (e) {
-      this.isMuted = false;
-    }
   }
 
   getAudioContext() {
@@ -30,9 +25,6 @@ export class SoundEffectsController {
 
   toggleMute() {
     this.isMuted = !this.isMuted;
-    try {
-      localStorage.setItem('monday_sfx_muted', String(this.isMuted));
-    } catch (e) {}
     return this.isMuted;
   }
 

@@ -14,21 +14,15 @@ const PRECACHE_ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_ASSETS).catch((err) => {
-        console.warn('[ServiceWorker] Pre-cache warning:', err);
-      });
-    }).then(() => self.skipWaiting())
-  );
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => {
-          console.log('[ServiceWorker] Purging legacy cache:', key);
+        keys.map((key) => {
+          console.log('[ServiceWorker] Purging cache:', key);
           return caches.delete(key);
         })
       );

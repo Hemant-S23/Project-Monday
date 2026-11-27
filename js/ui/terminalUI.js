@@ -14,14 +14,7 @@ export class TerminalUI {
     this.derivativesEngine = new DerivativesEngine();
 
     // Active order state for Delta Exchange derivatives desk
-    let initialEntry = 86500;
-    try {
-      const cached = localStorage.getItem('monday_last_known_ticker');
-      if (cached) {
-        const d = JSON.parse(cached);
-        if (d && d.price && !isNaN(d.price)) initialEntry = Number(d.price);
-      }
-    } catch (e) {}
+    const initialEntry = 86500;
 
     const slDist = +(initialEntry * 0.008).toFixed(2);
     this.orderState = {
@@ -40,25 +33,10 @@ export class TerminalUI {
 
     // Cached strategy state for order desk synchronization
     this.latestStrategyState = null;
-
-    // Autonomous AI Auto-Pilot State (Persisted)
-    try {
-      this.autoPilotEnabled = localStorage.getItem('monday_auto_pilot') === 'true';
-    } catch (e) {
-      this.autoPilotEnabled = false;
-    }
-
-    // User Starred Watchlist state (Persisted in localStorage)
-    try {
-      const savedWatchlist = localStorage.getItem('monday_user_watchlist');
-      this.userWatchlist = savedWatchlist ? JSON.parse(savedWatchlist) : {
-        Crypto: ['BTC', 'ETH', 'SOL']
-      };
-    } catch (e) {
-      this.userWatchlist = {
-        Crypto: ['BTC', 'ETH', 'SOL']
-      };
-    }
+    this.autoPilotEnabled = true;
+    this.userWatchlist = {
+      Crypto: ['BTC', 'ETH', 'SOL', 'OP', 'DOGE', 'SUI', 'ALGO', 'ARB', 'INJ', 'UNI']
+    };
 
     // Financial Passbook & Calendar Filter State
     this.passbookCurrentMonth = 'THIS_MONTH';
@@ -107,9 +85,6 @@ export class TerminalUI {
       this.showToast('Watchlist', `⭐ Added ${cleanSym} to Watchlist`, 'success');
       added = true;
     }
-    try {
-      localStorage.setItem('monday_user_watchlist', JSON.stringify(this.userWatchlist));
-    } catch (e) {}
 
     // Synchronize any star buttons currently visible in search results or elsewhere
     document.querySelectorAll(`.search-star-btn`).forEach(btn => {
@@ -433,7 +408,7 @@ export class TerminalUI {
       dToggleAutopilot.addEventListener('click', () => {
         const toggle = document.getElementById('popover_autopilot_toggle');
         if (toggle) toggle.click();
-        const isAp = localStorage.getItem('monday_auto_pilot') === 'true';
+        const isAp = !!this.autoPilotEnabled;
         const badge = document.getElementById('d_autopilot_badge');
         if (badge) {
           badge.textContent = isAp ? 'ON' : 'OFF';
@@ -1365,19 +1340,11 @@ export class TerminalUI {
     const popoverAutopilotLabel = document.getElementById('popover_autopilot_label');
 
     const getPersistedAutoPilotSettings = () => {
-      try {
-        const raw = localStorage.getItem('monday_autopilot_settings');
-        if (raw) {
-          const s = JSON.parse(raw);
-          return {
-            marginUSD: Math.max(5, Math.min(500, parseFloat(s.marginUSD) || 20)),
-            leverage: Math.max(1, Math.min(50, parseInt(s.leverage, 10) || 20)),
-            maxTrades: Math.max(1, Math.min(100, parseInt(s.maxTrades, 10) || 2)),
-            minRR: Math.max(1.5, Math.min(5.0, parseFloat(s.minRR) || 2.0))
-          };
-        }
-      } catch (e) {}
-      return { marginUSD: 20, leverage: 20, maxTrades: 2, minRR: 2.0 };
+      if (this._autoPilotSettings) return this._autoPilotSettings;
+      if (typeof window !== 'undefined' && window.__AI_COPILOT_APP__ && typeof window.__AI_COPILOT_APP__.getAutoPilotSettings === 'function') {
+        return window.__AI_COPILOT_APP__.getAutoPilotSettings();
+      }
+      return { marginUSD: 100, leverage: 20, maxTrades: 10, minRR: 2.0 };
     };
 
     const getPersistedMaxTrades = () => getPersistedAutoPilotSettings().maxTrades;
@@ -1414,9 +1381,7 @@ export class TerminalUI {
 
     const toggleAutoPilot = () => {
       const next = !this.autoPilotEnabled;
-      try {
-        localStorage.setItem('monday_auto_pilot', String(next));
-      } catch (e) {}
+      this.autoPilotEnabled = next;
       updateAutoPilotUI(next);
       if (this.callbacks.onToggleAutoPilot) {
         this.callbacks.onToggleAutoPilot(next);
@@ -1463,10 +1428,7 @@ export class TerminalUI {
     };
 
     const getSavedSettings = () => {
-      try {
-        const raw = localStorage.getItem('monday_autopilot_settings');
-        if (raw) return { ...RECOMMENDED_SETTINGS, ...JSON.parse(raw) };
-      } catch (e) {}
+      if (this._autoPilotSettings) return { ...RECOMMENDED_SETTINGS, ...this._autoPilotSettings };
       return { ...RECOMMENDED_SETTINGS };
     };
 
@@ -1538,10 +1500,8 @@ export class TerminalUI {
 
     if (btnResetAutopilotSettings) {
       btnResetAutopilotSettings.addEventListener('click', () => {
+        this._autoPilotSettings = { ...RECOMMENDED_SETTINGS };
         populateForm(RECOMMENDED_SETTINGS);
-        try {
-          localStorage.removeItem('monday_autopilot_settings');
-        } catch (e) {}
         this.showToast('Defaults Restored', 'Auto-Pilot standards reset to MONDAY recommended configuration.', 'info');
       });
     }
@@ -1564,10 +1524,7 @@ export class TerminalUI {
           eventShieldEnabled
         };
 
-        try {
-          localStorage.setItem('monday_autopilot_settings', JSON.stringify(newSettings));
-        } catch (e) {}
-
+        this._autoPilotSettings = newSettings;
         closeAutopilotSettings();
         updateAutoPilotUI(this.autoPilotEnabled);
         if (this.callbacks.onSaveAutoPilotSettings) {
@@ -2660,18 +2617,6 @@ export class TerminalUI {
       }
     }
 
-    // Persist latest price for instant zero-lag boot on future reloads
-    if (price && (!asset || asset === this.currentAsset)) {
-      try {
-        localStorage.setItem('monday_last_known_ticker', JSON.stringify({
-          asset: asset || this.currentAsset,
-          price,
-          formattedPrice: this.formatPrice(price),
-          changePercent: changePercent !== undefined ? changePercent : 0,
-          timestamp: Date.now()
-        }));
-      } catch (e) {}
-    }
   }
 
   loadSetupIntoOrderDesk(levels, direction = 'LONG') {
@@ -2792,13 +2737,7 @@ export class TerminalUI {
     const tpFormatted = `${currSym}${Number(decision.target || 0).toLocaleString()}`;
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    const maxTrades = decision.maxTrades || (() => {
-      try {
-        const raw = localStorage.getItem('monday_autopilot_settings');
-        if (raw) return JSON.parse(raw).maxTrades || 2;
-      } catch (e) {}
-      return 2;
-    })();
+    const maxTrades = decision.maxTrades || this._autoPilotSettings?.maxTrades || 10;
 
     let actionBannerHtml = '';
     let validationStepsHtml = '';
@@ -3698,17 +3637,7 @@ export class TerminalUI {
   }
 
   updateRExplainerModal(margin = null) {
-    let marginUSD = margin !== null ? Number(margin) : null;
-    if (!marginUSD || isNaN(marginUSD)) {
-      try {
-        const raw = localStorage.getItem('monday_autopilot_settings');
-        if (raw) {
-          const s = JSON.parse(raw);
-          if (s && s.marginUSD) marginUSD = parseFloat(s.marginUSD);
-        }
-      } catch (e) {}
-    }
-    if (!marginUSD || isNaN(marginUSD)) marginUSD = 20;
+    let marginUSD = margin !== null ? Number(margin) : (Number(this._autoPilotSettings?.marginUSD) || 100);
 
     const rCallout = document.getElementById('r_explainer_callout');
     const rHeadingVal = document.getElementById('r_explainer_header_val');

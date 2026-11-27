@@ -17,9 +17,8 @@ import { SignalEngine } from './engine/signalEngine.js';
  * Connects Crypto Perpetual Market adapters, strategy engines, AI reasoning, voice synthesis, and UI terminal.
  */
 
-// Immediate Hard Dark Cockpit Lock: Purge any legacy light mode flag from client storage
+// Immediate Hard Dark Cockpit Lock
 try {
-  localStorage.setItem('monday_theme', 'dark');
   document.documentElement.setAttribute('data-theme', 'dark');
   if (document.body) document.body.setAttribute('data-theme', 'dark');
 } catch (e) { }
@@ -32,11 +31,16 @@ class App {
     this.lastKnownState = null;
     this._isSyncingCloud = false;
     this._boundOnMarketDataTick = (data) => this.onMarketDataTick(data);
-    try {
-      this.autoPilotEnabled = localStorage.getItem('monday_auto_pilot') === 'true';
-    } catch (e) {
-      this.autoPilotEnabled = false;
-    }
+    this.autoPilotEnabled = true;
+    this._autoPilotSettings = {
+      marginUSD: 100,
+      leverage: 20,
+      maxTrades: 10,
+      minConfluence: 75,
+      minRR: 2.0,
+      eventShieldEnabled: true
+    };
+    this._userWatchlist = ['BTC', 'ETH', 'SOL', 'OP', 'DOGE', 'SUI', 'ALGO', 'ARB', 'INJ', 'UNI'];
 
     // Instantiate market adapters
     this.cryptoAdapter = new CryptoAdapter();
@@ -72,9 +76,6 @@ class App {
       onTestVoice: () => this.voiceAssistant.testVoice(),
       onToggleAutoPilot: async (enabled) => {
         this.autoPilotEnabled = enabled;
-        try {
-          localStorage.setItem('monday_auto_pilot', String(enabled));
-        } catch (e) { }
         if (this.ui && typeof this.ui.updateAutoPilotUI === 'function') {
           this.ui.updateAutoPilotUI(enabled);
         }
@@ -273,25 +274,27 @@ class App {
   async init() {
     console.log('[App] Initializing AI Trading Co-Pilot for Crypto Perpetual Markets...');
 
-    // Eradicate all browser localStorage trading state on startup (100% Cloud-First Architecture)
+    // Eradicate all browser localStorage state except active auth session token (100% Cloud-First Architecture)
     try {
       if (typeof localStorage !== 'undefined') {
+        const preserveKeys = new Set(['monday_active_session_v1', 'monday_guest_uuid']);
         const keysToRemove = [];
         for (let i = 0; i < localStorage.length; i++) {
           const k = localStorage.key(i);
-          if (k && (
-            k.startsWith('ai_copilot_paper_') || 
-            k.startsWith('monday_paper_trades') || 
-            k.startsWith('monday_paper_balance') || 
-            k.startsWith('monday_paper_positions') || 
-            k.startsWith('monday_open_positions')
-          )) {
+          if (k && !preserveKeys.has(k)) {
             keysToRemove.push(k);
           }
         }
         keysToRemove.forEach(k => localStorage.removeItem(k));
       }
     } catch (e) { }
+
+    // Purge browser Service Worker CacheStorage
+    try {
+      if (typeof caches !== 'undefined') {
+        caches.keys().then(keys => keys.forEach(k => caches.delete(k))).catch(() => {});
+      }
+    } catch (e) {}
 
     // 0. Verify Auth Session & update UI state (Seamless instant-cockpit entry)
     await this.authManager.ready();
@@ -725,18 +728,21 @@ class App {
                 // 1. Auto-Pilot Risk Settings
                 const apSettings = cloudSet.autopilotSettings || (cloudSet.riskPerTradePercent !== undefined ? cloudSet : null);
                 if (apSettings) {
-                  const localRaw = localStorage.getItem('monday_autopilot_settings');
-                  const localSet = localRaw ? JSON.parse(localRaw) : null;
-                  const cloudTime = apSettings.updatedAt ? new Date(apSettings.updatedAt).getTime() : 0;
-                  const localTime = localSet?.updatedAt ? new Date(localSet.updatedAt).getTime() : 0;
-                  if (!localSet || cloudTime >= localTime) {
-                    localStorage.setItem('monday_autopilot_settings', JSON.stringify(apSettings));
+                  this._autoPilotSettings = {
+                    marginUSD: Math.max(5, Math.min(500, parseFloat(apSettings.marginUSD) || 100)),
+                    leverage: Math.max(1, Math.min(50, parseInt(apSettings.leverage, 10) || 20)),
+                    maxTrades: Math.max(1, Math.min(100, parseInt(apSettings.maxTrades, 10) || 10)),
+                    minConfluence: Math.max(50, Math.min(95, parseInt(apSettings.minConfluence, 10) || 75)),
+                    minRR: Math.max(1.5, Math.min(5.0, parseFloat(apSettings.minRR) || 2.0)),
+                    eventShieldEnabled: apSettings.eventShieldEnabled !== false
+                  };
+                  if (this.copilotBrain && typeof this.copilotBrain.setAutoPilotConfig === 'function') {
+                    this.copilotBrain.setAutoPilotConfig(this._autoPilotSettings);
                   }
                 }
                 // 2. Master Auto-Pilot Toggle
                 if (cloudSet.autoPilotEnabled !== undefined) {
                   this.autoPilotEnabled = !!cloudSet.autoPilotEnabled;
-                  localStorage.setItem('monday_auto_pilot', String(this.autoPilotEnabled));
                   if (this.ui) {
                     this.ui.autoPilotEnabled = this.autoPilotEnabled;
                     if (typeof this.ui.updateAutoPilotUI === 'function') {
@@ -746,31 +752,26 @@ class App {
                 }
                 // 3. Pinned User Watchlist
                 if (Array.isArray(cloudSet.watchlist) && cloudSet.watchlist.length > 0) {
-                  localStorage.setItem('monday_user_watchlist', JSON.stringify(cloudSet.watchlist));
+                  this._userWatchlist = cloudSet.watchlist;
                   if (this.ui) this.ui.userWatchlist = cloudSet.watchlist;
                 }
                 // 4. Multi-Chart Layout
-                if (cloudSet.multiLayout) {
-                  localStorage.setItem('monday_multi_layout', cloudSet.multiLayout);
+                if (cloudSet.multiLayout && this.chartManager?.applyLayout) {
+                  this.chartManager.applyLayout(cloudSet.multiLayout);
                 }
                 // 5. Preferred Market Focus
                 if (cloudSet.preferredMarket && cloudSet.preferredMarket !== this.currentMarket) {
-                  localStorage.setItem('monday_preferred_market', cloudSet.preferredMarket);
+                  this.currentMarket = cloudSet.preferredMarket;
                 }
                 // 6. Voice Assistant Mute
                 if (cloudSet.voiceMuted !== undefined) {
-                  localStorage.setItem('monday_voice_muted', String(cloudSet.voiceMuted));
                   if (this.voiceAssistant) this.voiceAssistant.voiceMuted = !!cloudSet.voiceMuted;
                 }
                 // 7. Signals Archived Cleared Watermark
                 if (cloudSet.signalsArchivedClearedAt) {
                   const cloudT = Number(cloudSet.signalsArchivedClearedAt) || 0;
-                  const localT = Number(localStorage.getItem('monday_signals_cleared_at') || 0);
-                  if (cloudT > localT) {
-                    localStorage.setItem('monday_signals_cleared_at', String(cloudT));
-                    if (this.signalEngine) {
-                      this.signalEngine.setArchivedClearedAt(cloudT);
-                    }
+                  if (this.signalEngine) {
+                    this.signalEngine.setArchivedClearedAt(cloudT);
                   }
                 }
               }
@@ -1626,11 +1627,11 @@ class App {
         userId: effectiveUserId,
         autopilotSettings: apSettings,
         autoPilotEnabled: this.autoPilotEnabled,
-        watchlist: this.ui?.userWatchlist || JSON.parse(localStorage.getItem('monday_user_watchlist') || '[]'),
-        multiLayout: localStorage.getItem('monday_multi_layout') || '1',
+        watchlist: this.ui?.userWatchlist || this._userWatchlist || ['BTC', 'ETH', 'SOL', 'OP', 'DOGE', 'SUI', 'ALGO', 'ARB', 'INJ', 'UNI'],
+        multiLayout: this.chartManager?.activeLayoutId || '1',
         preferredMarket: 'Crypto',
         voiceMuted: this.voiceAssistant?.voiceMuted || false,
-        signalsArchivedClearedAt: Number(localStorage.getItem('monday_signals_cleared_at') || 0),
+        signalsArchivedClearedAt: Number(this.signalEngine?.archivedClearedAt || 0),
         updatedAt: new Date().toISOString()
       };
       const configId = effectiveUserId === 'guest_autopilot' ? 'CONFIG_AUTOPILOT_GUEST' : `CONFIG_AUTOPILOT_${effectiveUserId}`;
@@ -1677,24 +1678,20 @@ class App {
   }
 
   getAutoPilotSettings() {
-    try {
-      const raw = localStorage.getItem('monday_autopilot_settings');
-      if (raw) {
-        const s = JSON.parse(raw);
-        return {
-          marginUSD: Math.max(5, Math.min(500, parseFloat(s.marginUSD) || 100)),
-          leverage: Math.max(1, Math.min(50, parseInt(s.leverage, 10) || 20)),
-          maxTrades: Math.max(1, Math.min(100, parseInt(s.maxTrades, 10) || 5)),
-          minConfluence: Math.max(50, Math.min(95, parseInt(s.minConfluence, 10) || 75)),
-          minRR: Math.max(1.5, Math.min(5.0, parseFloat(s.minRR) || 2.0)),
-          eventShieldEnabled: s.eventShieldEnabled !== false
-        };
-      }
-    } catch (e) { }
+    if (this._autoPilotSettings) {
+      return {
+        marginUSD: Math.max(5, Math.min(500, parseFloat(this._autoPilotSettings.marginUSD) || 100)),
+        leverage: Math.max(1, Math.min(50, parseInt(this._autoPilotSettings.leverage, 10) || 20)),
+        maxTrades: Math.max(1, Math.min(100, parseInt(this._autoPilotSettings.maxTrades, 10) || 10)),
+        minConfluence: Math.max(50, Math.min(95, parseInt(this._autoPilotSettings.minConfluence, 10) || 75)),
+        minRR: Math.max(1.5, Math.min(5.0, parseFloat(this._autoPilotSettings.minRR) || 2.0)),
+        eventShieldEnabled: this._autoPilotSettings.eventShieldEnabled !== false
+      };
+    }
     return {
       marginUSD: 100,
       leverage: 20,
-      maxTrades: 5,
+      maxTrades: 10,
       minConfluence: 75,
       minRR: 2.0,
       eventShieldEnabled: true

@@ -16,10 +16,8 @@ export class CryptoAdapter extends MarketAdapter {
 
     let lastBtc = 86500.0;
     try {
-      const cached = localStorage.getItem('monday_last_known_ticker');
-      if (cached) {
-        const d = JSON.parse(cached);
-        if (d && d.price && !isNaN(d.price)) lastBtc = Number(d.price);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('monday_last_known_ticker');
       }
     } catch (e) { }
 

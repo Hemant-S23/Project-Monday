@@ -26,42 +26,10 @@ export class NotificationManager {
 
   loadNotifications() {
     try {
-      const data = localStorage.getItem(this.storageKey);
-      if (data) {
-        const parsed = JSON.parse(data);
-        // Automatically purge any legacy mock notifications with obsolete placeholder prices
-        const cleaned = parsed.filter(item => !item.id?.startsWith('notif_init_'));
-
-        // Auto-heal Nov 2 notifications that had bulk 06:08 PM timestamps
-        let healedNotifs = false;
-        cleaned.forEach(n => {
-          if (!n.timestamp) return;
-          const d = new Date(n.timestamp);
-          const isNov2_608 = d.getFullYear() === 2026 && d.getMonth() === 10 && d.getDate() === 2 && d.getHours() === 18 && (d.getMinutes() >= 6 && d.getMinutes() <= 10);
-          if (isNov2_608) {
-            if (n.title?.includes('SOL') || n.message?.includes('SOL')) {
-              n.timestamp = new Date(2026, 10, 2, 14, 15, 0).getTime();
-              if (n.message) n.message = n.message.replace(/06:08\s*pm/i, '02:15 pm');
-              healedNotifs = true;
-            } else if (n.title?.includes('XRP') || n.message?.includes('XRP')) {
-              n.timestamp = new Date(2026, 10, 2, 16, 30, 0).getTime();
-              if (n.message) n.message = n.message.replace(/06:08\s*pm/i, '04:30 pm');
-              healedNotifs = true;
-            }
-          }
-        });
-
-        if (healedNotifs) {
-          cleaned.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-          localStorage.setItem(this.storageKey, JSON.stringify(cleaned));
-          console.log('[NotificationManager] Auto-healed Nov 2 notification timestamps for SOL & XRP.');
-        }
-
-        if (cleaned.length > 0) return cleaned;
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(this.storageKey);
       }
-    } catch (e) {
-      console.warn('Failed to parse notifications:', e);
-    }
+    } catch (e) {}
 
     return [
       {
@@ -76,11 +44,7 @@ export class NotificationManager {
   }
 
   save() {
-    try {
-      localStorage.setItem(this.storageKey, JSON.stringify(this.notifications.slice(0, 60)));
-    } catch (e) {
-      console.warn('Failed to save notifications:', e);
-    }
+    // 100% Cloud-First: In-memory notifications only; zero browser localStorage writes
   }
 
   initDOM() {

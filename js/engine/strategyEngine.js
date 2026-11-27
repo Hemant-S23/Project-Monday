@@ -56,18 +56,7 @@ export class StrategyEngine {
     const smtAnalysis = this.calculateSMTDivergence(targetCandles5M, relatedCandles5M, htfTrend.direction);
 
     // Extract user-configured target RR from telemetry / settings
-    let targetRR = externalTelemetry?.userStandards?.minRR || externalTelemetry?.minRR || null;
-    if (!targetRR) {
-      try {
-        if (typeof localStorage !== 'undefined') {
-          const raw = localStorage.getItem('monday_autopilot_settings');
-          if (raw) {
-            const s = JSON.parse(raw);
-            if (s && s.minRR) targetRR = parseFloat(s.minRR);
-          }
-        }
-      } catch (e) {}
-    }
+    let targetRR = externalTelemetry?.userStandards?.minRR || externalTelemetry?.minRR || 2.0;
 
     // --- STEP 4 & 5: Targets, Stop Loss, and Risk:Reward ---
     const levels = this.calculateLevelsAndRR(targetCandles5M, htfTrend.direction, currentPrice, targetRR);

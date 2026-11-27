@@ -207,13 +207,13 @@ export class MultiChartManager {
     this.currentTheme = 'dark';
 
     // Layout State
-    this.activeLayoutId = localStorage.getItem('monday_multi_layout') || '1';
+    this.activeLayoutId = '1';
     this.activeCellIndex = 0;
     this.maximizedCellIndex = null;
 
     // TradingView Pro Tool State
     this.activeDrawingTool = 'cursor';
-    this.instantOrdersEnabled = localStorage.getItem('monday_instant_orders') === 'true';
+    this.instantOrdersEnabled = false;
     this.activeChartStyle = 'candles';
     this.indicatorsPopoverOpen = false;
     this.drawingHistory = [];
@@ -221,10 +221,10 @@ export class MultiChartManager {
 
     // Sync Preferences (TradingView Pro standard)
     this.syncSettings = {
-      symbol: localStorage.getItem('monday_sync_symbol') === 'true',
-      interval: localStorage.getItem('monday_sync_interval') === 'true',
-      crosshair: localStorage.getItem('monday_sync_crosshair') !== 'false', // Default ON
-      time: localStorage.getItem('monday_sync_time') === 'true'
+      symbol: false,
+      interval: false,
+      crosshair: true, // Default ON
+      time: false
     };
 
     // Sub-Charts State Registry
@@ -453,7 +453,6 @@ export class MultiChartManager {
     if (symToggle) {
       symToggle.onchange = (e) => {
         this.syncSettings.symbol = e.target.checked;
-        localStorage.setItem('monday_sync_symbol', String(e.target.checked));
       };
     }
 
@@ -461,7 +460,6 @@ export class MultiChartManager {
     if (intToggle) {
       intToggle.onchange = (e) => {
         this.syncSettings.interval = e.target.checked;
-        localStorage.setItem('monday_sync_interval', String(e.target.checked));
       };
     }
 
@@ -469,7 +467,6 @@ export class MultiChartManager {
     if (crsToggle) {
       crsToggle.onchange = (e) => {
         this.syncSettings.crosshair = e.target.checked;
-        localStorage.setItem('monday_sync_crosshair', String(e.target.checked));
       };
     }
 
@@ -477,7 +474,6 @@ export class MultiChartManager {
     if (timToggle) {
       timToggle.onchange = (e) => {
         this.syncSettings.time = e.target.checked;
-        localStorage.setItem('monday_sync_time', String(e.target.checked));
       };
     }
   }
@@ -507,7 +503,6 @@ export class MultiChartManager {
     const layout = MULTI_CHART_LAYOUTS[layoutId] || MULTI_CHART_LAYOUTS['1'];
     this.activeLayoutId = layout.id;
     this.maximizedCellIndex = null;
-    localStorage.setItem('monday_multi_layout', layout.id);
 
     // Update active highlight in popover
     const popover = document.getElementById('chart_layout_popover');
@@ -819,7 +814,6 @@ export class MultiChartManager {
     if (instantToggle) {
       instantToggle.onchange = (e) => {
         this.instantOrdersEnabled = e.target.checked;
-        localStorage.setItem('monday_instant_orders', String(this.instantOrdersEnabled));
         document.querySelectorAll('.subchart-instant-orders-box').forEach(box => {
           box.classList.toggle('hidden', !this.instantOrdersEnabled);
         });

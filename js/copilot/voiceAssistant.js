@@ -16,8 +16,7 @@ export class VoiceAssistant {
 
     this.isListening = false;
     this.isSpeaking = false;
-    const savedMute = localStorage.getItem('monday_voice_muted');
-    this.voiceMuted = savedMute !== null ? (savedMute === 'true') : true; // Default to muted
+    this.voiceMuted = true; // Default to muted
     this.recognition = null;
     this.synthesis = window.speechSynthesis || null;
 
@@ -379,9 +378,6 @@ export class VoiceAssistant {
 
   toggleMute() {
     this.voiceMuted = !this.voiceMuted;
-    try {
-      localStorage.setItem('monday_voice_muted', this.voiceMuted ? 'true' : 'false');
-    } catch (e) {}
     if (this.voiceMuted && this.synthesis) {
       this.synthesis.cancel();
       this.isSpeaking = false;

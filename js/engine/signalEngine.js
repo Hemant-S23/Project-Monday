@@ -20,10 +20,14 @@ export class SignalEngine {
   constructor() {
     this.storageKey = 'monday_alpha_signals';
     this.archivedClearedAt = 0;
-    if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem('monday_signals_cleared_at');
-    }
-    this.signals = this.loadSignals();
+    // Eradicate browser localStorage signals on boot (100% Cloud-First)
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('monday_signals_cleared_at');
+        localStorage.removeItem('monday_alpha_signals');
+      }
+    } catch (e) {}
+    this.signals = [];
     this.listeners = new Set();
     this.lastScannedPrices = new Map();
     this.onSignalFillCallback = null;
@@ -34,9 +38,6 @@ export class SignalEngine {
     const t = Number(timestamp) || 0;
     if (t > this.archivedClearedAt) {
       this.archivedClearedAt = t;
-      if (typeof localStorage !== 'undefined') {
-        localStorage.setItem('monday_signals_cleared_at', String(t));
-      }
       this.notify();
     }
   }
@@ -95,81 +96,14 @@ export class SignalEngine {
   }
 
   loadSignals() {
-    try {
-      if (typeof localStorage !== 'undefined') {
-        const raw = localStorage.getItem(this.storageKey);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) {
-            let sanitized = parsed.filter(s => {
-              // 1. Asset Guard: Purge corrupted or test setups
-              if (!s.asset || typeof s.asset !== 'string' || s.asset.toLowerCase().includes('test')) {
-                return false;
-              }
-
-              // 2. Stale Zombie Signal Purger: ONLY purge PENDING unfilled limit orders older than 24 hours
-              const issuedTime = Number(s.issuedAt) || 0;
-              if (issuedTime > 0 && (Date.now() - issuedTime > 24 * 60 * 60 * 1000) && s.status === 'PENDING') {
-                return false;
-              }
-
-              // Purge legacy hardcoded mock/duplicate BTC $60k setups and test signals
-              if (s.asset === 'BTC' && Number(s.entryPrice) === 60000) {
-                return false;
-              }
-              if (s.id && (s.id.toLowerCase().includes('test') || s.id.toLowerCase().includes('bat'))) {
-                return false;
-              }
-              if (s.tradeId && (s.tradeId.toLowerCase().includes('test') || s.tradeId.toLowerCase().includes('bat'))) {
-                return false;
-              }
-              const entry = Number(s.entryPrice);
-              const sl = Number(s.stopLossPrice);
-              const tp = Number(s.takeProfitPrice);
-              if (isNaN(entry) || isNaN(sl) || isNaN(tp)) return false;
-              if (entry <= 0 || sl <= 0 || tp <= 0) return false;
-              if (entry === sl || entry === tp || sl === tp) return false;
-              if (s.direction === 'LONG' && (tp <= entry || sl >= entry)) return false;
-              if (s.direction === 'SHORT' && (tp >= entry || sl <= entry)) return false;
-              return true;
-            });
-
-            // User-Level Watermark Filter: Only purge unexecuted expired or invalidated setups
-            if (this.archivedClearedAt > 0) {
-              sanitized = sanitized.filter(s => {
-                const isArchived = s.status === 'EXPIRED' || s.status === 'INVALIDATED';
-                if (!isArchived) return true;
-                const t = s.closedAt || s.issuedAt || 0;
-                return t > this.archivedClearedAt;
-              });
-            }
-
-            // Universal Same-Day Setup Deduplicator: purge phantom clone loops
-            const clean = this.deduplicateSignals(sanitized);
-            if (clean.length !== parsed.length) {
-              localStorage.setItem(this.storageKey, JSON.stringify(clean));
-            }
-            return clean;
-          }
-        }
-      }
-    } catch (e) {
-      console.warn('[SignalEngine] Failed to load persisted signals:', e);
-    }
+    // 100% Cloud-First Architecture:
+    // Browser storage eradicated. Signals are synchronized purely from Supabase Cloud.
     return [];
   }
 
   saveSignals() {
-    try {
-      this.deduplicateSignals();
-      if (typeof localStorage !== 'undefined') {
-        // Keep up to 500 signals locally
-        const toSave = this.signals.slice(0, 500);
-        localStorage.setItem(this.storageKey, JSON.stringify(toSave));
-      }
-    } catch (e) {
-      console.warn('[SignalEngine] Failed to persist signals:', e);
-    }
+    // In-memory update; zero browser localStorage writes
+    this.deduplicateSignals();
     this.notify();
     if (typeof this.onSignalChangeCallback === 'function' && this.signals.length > 0) {
       try {

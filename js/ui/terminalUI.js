@@ -4591,21 +4591,53 @@ export class TerminalUI {
       const typeClass = isNetProfit ? 'profit' : isLoss ? 'loss' : 'breakeven';
       const icon = typeClass === 'profit' ? 'ph-arrow-down-left' : typeClass === 'loss' ? 'ph-arrow-up-right' : 'ph-arrows-left-right';
       
-      const dateObj = new Date(trade.closedAt || trade.openedAt || Date.now());
-      const dateFormatted = dateObj.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
-      const timeFormatted = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const tradeDateKey = `${dateObj.getFullYear()}-${dateObj.getMonth()}-${dateObj.getDate()}`;
+      // 1. Dual Timestamps (Entry and Exit) & Duration
+      const entryRaw = trade.openedAt || (trade.created_at ? new Date(trade.created_at).getTime() : (trade.timestamp || null));
+      const exitRaw = trade.closedAt ? (typeof trade.closedAt === 'number' ? trade.closedAt : new Date(trade.closedAt).getTime()) : (trade.exitTimestamp || Date.now());
+
+      const exitObj = new Date(exitRaw);
+      const exitDateFormatted = exitObj.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+      const exitTimeFormatted = exitObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const exitFullStr = `${exitDateFormatted}, ${exitObj.getFullYear()} • ${exitTimeFormatted}`;
+      const tradeDateKey = `${exitObj.getFullYear()}-${exitObj.getMonth()}-${exitObj.getDate()}`;
+
+      let entryDateFormatted = '';
+      let entryTimeFormatted = '';
+      let entryFullStr = '';
+      let durationFormatted = '';
+
+      if (entryRaw) {
+        const entryObj = new Date(entryRaw);
+        entryDateFormatted = entryObj.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+        entryTimeFormatted = entryObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        entryFullStr = `${entryDateFormatted}, ${entryObj.getFullYear()} • ${entryTimeFormatted}`;
+
+        const diffMs = exitRaw - entryRaw;
+        if (diffMs > 0) {
+          const totalMins = Math.floor(diffMs / 60000);
+          const days = Math.floor(totalMins / (60 * 24));
+          const hours = Math.floor((totalMins % (60 * 24)) / 60);
+          const mins = totalMins % 60;
+          if (days > 0) {
+            durationFormatted = `${days}d ${hours}h`;
+          } else if (hours > 0) {
+            durationFormatted = `${hours}h ${mins}m`;
+          } else {
+            durationFormatted = `${Math.max(1, mins)}m`;
+          }
+        }
+      }
 
       let dividerHtml = '';
       if (tradeDateKey !== lastDateKey) {
         lastDateKey = tradeDateKey;
-        let dayTitle = dateObj.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+        let dayTitle = exitObj.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
         if (tradeDateKey === todayDateKey) {
           dayTitle = `Today • ${dayTitle}`;
         } else if (tradeDateKey === yesterdayDateKey) {
           dayTitle = `Yesterday • ${dayTitle}`;
         } else {
-          dayTitle = dateObj.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+          dayTitle = exitObj.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
         }
 
         const dayStat = dayTotals[tradeDateKey];
@@ -4675,7 +4707,19 @@ export class TerminalUI {
                   <span class="txn-direction-badge ${dirClass}">${trade.direction}</span>
                   <span class="pos-lev-pill">${trade.leverage || 20}x</span>
                 </div>
-                <span class="txn-timestamp">${dateFormatted} • ${timeFormatted} • <span class="txn-reason-tag ${isNetProfit ? 'tp' : isLoss ? 'sl' : 'manual'}">${reasonLabel}</span></span>
+                <span class="txn-timestamp">
+                  ${entryDateFormatted ? `
+                    <span class="txn-time-pill in" title="Entry Executed: ${entryFullStr}">
+                      <span class="time-lbl">In:</span> ${entryDateFormatted} • ${entryTimeFormatted}
+                    </span>
+                    <span class="txn-time-arrow">→</span>
+                  ` : ''}
+                  <span class="txn-time-pill out" title="Exit Settlement: ${exitFullStr}">
+                    <span class="time-lbl">Out:</span> ${exitDateFormatted} • ${exitTimeFormatted}
+                  </span>
+                  ${durationFormatted ? `<span class="txn-duration-pill" title="Holding Period"><i class="ph-bold ph-timer"></i> ${durationFormatted}</span>` : ''}
+                  <span class="txn-reason-tag ${isNetProfit ? 'tp' : isLoss ? 'sl' : 'manual'}">${reasonLabel}</span>
+                </span>
               </div>
             </div>
 
@@ -4696,6 +4740,24 @@ export class TerminalUI {
               <span>Perpetual Settlement Statement</span>
               <span>Ref: #${(trade.id || '').substring(0, 8).toUpperCase()}</span>
             </div>
+
+            <!-- Visual Execution Timeline Banner -->
+            <div class="receipt-timeline-banner">
+              <div class="timeline-banner-item">
+                <span class="timeline-lbl">Entry Timestamp</span>
+                <span class="timeline-val">${entryFullStr || 'Market Execution'}</span>
+              </div>
+              <div class="timeline-banner-arrow"><i class="ph-bold ph-arrow-right"></i></div>
+              <div class="timeline-banner-item">
+                <span class="timeline-lbl">Exit Settlement</span>
+                <span class="timeline-val">${exitFullStr}</span>
+              </div>
+              ${durationFormatted ? `
+              <div class="timeline-banner-item duration">
+                <span class="timeline-lbl">Holding Period</span>
+                <span class="timeline-val duration-highlight">⏱️ ${durationFormatted}</span>
+              </div>` : ''}
+            </div>
             <div class="receipt-itemized-list">
               <div class="receipt-line">
                 <span>Gross Trading PnL (E: $${Number(trade.entry).toLocaleString()} → M: $${Number(trade.exitPrice || trade.entry).toLocaleString()})</span>
@@ -4713,8 +4775,10 @@ export class TerminalUI {
                 <span>• Total Exchange Brokerage</span>
                 <span class="val">-$${brokerage.toFixed(2)}</span>
               </div>
-              <div class="receipt-line tax-line">
-                </div>
+              <div class="receipt-line sub-fee">
+                <span>• Holding Duration</span>
+                <span class="val text-cyan">${durationFormatted ? `⏱️ ${durationFormatted}` : 'Intraday Settlement'}</span>
+              </div>
               <div class="receipt-divider"></div>
               <div class="receipt-line total-line">
                 <span>Total Deductions Settled</span>

@@ -6990,6 +6990,86 @@ html, body {
   color: #38bdf8 !important;
 }
 
+/* Passbook Timeline and Duration Badges */
+.txn-time-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  color: #94a3b8 !important;
+  font-size: 0.72rem !important;
+}
+
+.txn-time-pill .time-lbl {
+  color: #64748b !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  font-size: 0.62rem !important;
+}
+
+.txn-time-pill.out {
+  color: #cbd5e1 !important;
+}
+
+.txn-time-arrow {
+  color: #475569 !important;
+  font-size: 0.72rem !important;
+}
+
+.txn-duration-pill {
+  background: rgba(56, 189, 248, 0.08) !important;
+  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+  color: #38bdf8 !important;
+  padding: 1px 6px !important;
+  border-radius: 4px !important;
+  font-size: 0.65rem !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+}
+
+.receipt-timeline-banner {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  margin-bottom: 12px !important;
+  font-family: var(--font-mono) !important;
+}
+
+.timeline-banner-item {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+.timeline-lbl {
+  font-size: 0.62rem !important;
+  color: #64748b !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  font-weight: 600 !important;
+}
+
+.timeline-val {
+  font-size: 0.75rem !important;
+  color: #cbd5e1 !important;
+  font-weight: 600 !important;
+}
+
+.timeline-banner-arrow {
+  color: #475569 !important;
+  font-size: 0.85rem !important;
+}
+
+.timeline-banner-item.duration .timeline-val {
+  color: #38bdf8 !important;
+  font-weight: 700 !important;
+}
+
 /* Expandable Itemized Tax & Charges Receipt Drawer */
 .passbook-receipt-drawer {
   display: none !important;

@@ -273,6 +273,26 @@ class App {
   async init() {
     console.log('[App] Initializing AI Trading Co-Pilot for Crypto Perpetual Markets...');
 
+    // Eradicate all browser localStorage trading state on startup (100% Cloud-First Architecture)
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && (
+            k.startsWith('ai_copilot_paper_') || 
+            k.startsWith('monday_paper_trades') || 
+            k.startsWith('monday_paper_balance') || 
+            k.startsWith('monday_paper_positions') || 
+            k.startsWith('monday_open_positions')
+          )) {
+            keysToRemove.push(k);
+          }
+        }
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+      }
+    } catch (e) { }
+
     // 0. Verify Auth Session & update UI state (Seamless instant-cockpit entry)
     await this.authManager.ready();
     let currentUser = this.authManager.getUser();
@@ -774,69 +794,63 @@ class App {
         }
       }
 
-      // 1. Reconcile existing local open positions:
-      // Remove any position that cloud has marked CLOSED or purged
-      const reconciledOpen = [];
-      for (const pos of this.paperTrader.openPositions) {
-        if (cloudClosedMap.has(pos.id)) {
-          // Closed in cloud! Prune from local open
-          changed = true;
-        } else if (isFullSync && pos.id && pos.id.startsWith('TRADE-') && !cloudOpenMap.has(pos.id) && cloudClosedMap.size > 0) {
-          // Ghost position from earlier session that is no longer in cloud (only check on full sync)
-          changed = true;
-        } else {
-          reconciledOpen.push(pos);
-        }
-      }
-      this.paperTrader.openPositions = reconciledOpen;
+      // 1. Authoritative Cloud-First Hydration for Open Positions
+      // Discard all local ghost positions. Supabase Cloud is Single Source of Truth.
+      const settings = this.getAutoPilotSettings ? this.getAutoPilotSettings() : {};
+      const maxAllowed = Number(settings.maxTrades) || 10;
+      const newOpenPositions = [];
+      const seenOpenAssets = new Set();
 
-      // 2. Add any active cloud OPEN positions not yet tracked locally (strictly enforcing 1 position per asset)
       for (const [id, ct] of cloudOpenMap.entries()) {
-        const exists = this.paperTrader.openPositions.find(p => p.id === id);
-        const assetAlreadyOpen = this.paperTrader.openPositions.some(p => p.asset === ct.asset);
-        if (!exists && !assetAlreadyOpen) {
-          const entryP = Number(ct.entry_price) || 0;
-          const posSz = Number(ct.position_size || 0);
-          const notional = +(entryP * posSz).toFixed(2);
-          const entryFee = +(notional * 0.0005).toFixed(2);
-          this.paperTrader.openPositions.push({
-            id: ct.id,
-            market: ct.market || 'Crypto',
-            asset: ct.asset,
-            direction: ct.direction,
-            entry: entryP,
-            stopLoss: Number(ct.stop_loss),
-            target: Number(ct.target_price),
-            positionSize: posSz,
-            riskUSD: Number(ct.risk_usd || 20),
-            rewardUSD: Number(ct.reward_usd || 60),
-            rrRatio: Number(ct.rr_ratio || 3.0),
-            leverage: 20,
-            marginUSD: Number(ct.risk_usd || 20),
-            notionalUSD: notional,
-            entryFeeUSD: entryFee,
-            estExitFeeUSD: entryFee,
-            status: 'OPEN',
-            currentPrice: entryP,
-            unrealizedPnlUSD: 0,
-            unrealizedGrossPnlUSD: 0,
-            unrealizedR: 0,
-            roePercent: 0,
-            feesUSD: +(entryFee * 2 * 1.18).toFixed(2),
-            openedAt: new Date(ct.created_at).getTime()
-          });
-          changed = true;
-        }
-      }
+        if (newOpenPositions.length >= maxAllowed) break;
+        if (!ct.asset || seenOpenAssets.has(ct.asset)) continue;
+        if (ct.id && (ct.id.toLowerCase().includes('test') || ct.id.toLowerCase().includes('bat'))) continue;
+        if (ct.asset === 'BTC' && Number(ct.entry_price) === 60000) continue;
 
-      // 3. Add any cloud CLOSED trades into local trades ledger
+        seenOpenAssets.add(ct.asset);
+        const entryP = Number(ct.entry_price) || 0;
+        const posSz = Number(ct.position_size || 0);
+        const notional = +(entryP * posSz).toFixed(2);
+        const entryFee = +(notional * 0.0005).toFixed(2);
+
+        newOpenPositions.push({
+          id: ct.id,
+          market: ct.market || 'Crypto',
+          asset: ct.asset,
+          direction: ct.direction,
+          entry: entryP,
+          stopLoss: Number(ct.stop_loss),
+          target: Number(ct.target_price),
+          positionSize: posSz,
+          riskUSD: Number(ct.risk_usd || 20),
+          rewardUSD: Number(ct.reward_usd || 60),
+          rrRatio: Number(ct.rr_ratio || 3.0),
+          leverage: 20,
+          marginUSD: Number(ct.risk_usd || 20),
+          notionalUSD: notional,
+          entryFeeUSD: entryFee,
+          estExitFeeUSD: entryFee,
+          status: 'OPEN',
+          currentPrice: entryP,
+          unrealizedPnlUSD: 0,
+          unrealizedGrossPnlUSD: 0,
+          unrealizedR: 0,
+          roePercent: 0,
+          feesUSD: +(entryFee * 2 * 1.18).toFixed(2),
+          openedAt: new Date(ct.created_at).getTime()
+        });
+      }
+      this.paperTrader.openPositions = newOpenPositions;
+
+      // 2. Authoritative Cloud-First Hydration for Closed Trades Ledger
+      const newClosedTrades = [];
+      const seenClosedSignatures = new Set();
+
       for (const [id, ct] of cloudClosedMap.entries()) {
-        // Discard any test or dummy rows
         if (ct.id && (ct.id.toLowerCase().includes('test') || ct.id.toLowerCase().includes('bat'))) continue;
         if (ct.asset === 'BTC' && Number(ct.entry_price) === 60000) continue;
         if (ct.asset === 'ETH' && Number(ct.entry_price) === 3000 && Math.abs(Number(ct.pnl_usd || 0)) < 0.01) continue;
 
-        const existsClosed = this.paperTrader.trades.find(t => t.id === id);
         let parsedMeta = {};
         if (ct.strategy) {
           try { parsedMeta = JSON.parse(ct.strategy); } catch (e) { }
@@ -844,96 +858,66 @@ class App {
         const openedAtTime = parsedMeta.openedAt || (ct.created_at ? new Date(ct.created_at).getTime() : Date.now());
         const closedAtTime = parsedMeta.closedAt || (ct.created_at ? new Date(ct.created_at).getTime() : Date.now());
 
-        // Discard if an identical setup has already been recorded for this asset on this date (Anti-Duplicate Guard)
         const cloudDateStr = new Date(closedAtTime).toDateString();
-        const duplicateSetup = !existsClosed && this.paperTrader.trades.some(t => {
-          const tDateStr = new Date(t.closedAt || t.openedAt || Date.now()).toDateString();
-          return t.asset === ct.asset &&
-            t.direction === ct.direction &&
-            tDateStr === cloudDateStr &&
-            Math.abs(Number(t.entry) - Number(ct.entry_price)) < 0.001;
-        });
-        if (duplicateSetup) continue;
+        const sig = `${ct.asset}_${ct.direction}_${Number(ct.entry_price)}_${cloudDateStr}`;
+        if (seenClosedSignatures.has(sig)) continue;
+        seenClosedSignatures.add(sig);
 
-        if (!existsClosed) {
-          this.paperTrader.trades.unshift({
-            id: ct.id,
-            market: ct.market || 'Crypto',
-            asset: ct.asset,
-            direction: ct.direction,
-            entry: Number(ct.entry_price),
-            stopLoss: Number(ct.stop_loss),
-            target: Number(ct.target_price),
-            positionSize: Number(ct.position_size || 0),
-            riskUSD: Number(ct.risk_usd || 20),
-            rewardUSD: Number(ct.reward_usd || 60),
-            rrRatio: Number(ct.rr_ratio || 3.0),
-            status: 'CLOSED',
-            result: ct.result || (Number(ct.pnl_usd || 0) >= 0 ? 'WIN' : 'LOSS'),
-            pnlUSD: Number(ct.pnl_usd || 0),
-            rMultiple: Number(ct.r_multiple || 0),
-            exitPrice: ct.exit_price ? Number(ct.exit_price) : null,
-            exitReason: parsedMeta.exitReason || (ct.result === 'WIN' ? 'TAKE_PROFIT' : 'STOP_LOSS'),
-            feesUSD: Number(parsedMeta.feesUSD || parsedMeta.totalFeesUSD || 0),
-            totalFeesUSD: Number(parsedMeta.feesUSD || parsedMeta.totalFeesUSD || 0),
-            brokerageFeeUSD: Number(parsedMeta.brokerageFeeUSD !== undefined ? parsedMeta.brokerageFeeUSD : (Number(parsedMeta.feesUSD || 0) > 0 ? +(Number(parsedMeta.feesUSD) / 1.18).toFixed(2) : 0)),
-            gstUSD: Number(parsedMeta.gstUSD !== undefined ? parsedMeta.gstUSD : (Number(parsedMeta.feesUSD || 0) > 0 ? +(Number(parsedMeta.feesUSD) - Number(parsedMeta.feesUSD) / 1.18).toFixed(2) : 0)),
-            grossPnLUSD: Number(parsedMeta.grossPnLUSD !== undefined ? parsedMeta.grossPnLUSD : (Number(ct.pnl_usd || 0) + Number(parsedMeta.feesUSD || 0))),
-            openedAt: openedAtTime,
-            closedAt: closedAtTime
-          });
-          changed = true;
-        } else {
-          // If already exists locally, update with the immutable Cloud truth so all browsers match 1:1!
-          if (parsedMeta.closedAt && existsClosed.closedAt !== parsedMeta.closedAt) {
-            existsClosed.closedAt = parsedMeta.closedAt;
-            changed = true;
-          }
-          if (ct.exit_price && existsClosed.exitPrice !== Number(ct.exit_price)) {
-            existsClosed.exitPrice = Number(ct.exit_price);
-            changed = true;
-          }
-          if (parsedMeta.exitReason && existsClosed.exitReason !== parsedMeta.exitReason) {
-            existsClosed.exitReason = parsedMeta.exitReason;
-            changed = true;
-          }
-          if (parsedMeta.feesUSD !== undefined && (!existsClosed.feesUSD || existsClosed.feesUSD !== Number(parsedMeta.feesUSD))) {
-            existsClosed.feesUSD = Number(parsedMeta.feesUSD);
-            existsClosed.totalFeesUSD = Number(parsedMeta.feesUSD);
-            existsClosed.brokerageFeeUSD = Number(parsedMeta.brokerageFeeUSD || (existsClosed.feesUSD > 0 ? +(existsClosed.feesUSD / 1.18).toFixed(2) : 0));
-            existsClosed.gstUSD = Number(parsedMeta.gstUSD || (existsClosed.feesUSD > 0 ? +(existsClosed.feesUSD - existsClosed.brokerageFeeUSD).toFixed(2) : 0));
-            existsClosed.grossPnLUSD = Number(parsedMeta.grossPnLUSD || (Number(ct.pnl_usd || 0) + existsClosed.feesUSD));
-            changed = true;
-          }
-        }
+        const fee = Number(parsedMeta.feesUSD || parsedMeta.totalFeesUSD || 0);
+        newClosedTrades.push({
+          id: ct.id,
+          market: ct.market || 'Crypto',
+          asset: ct.asset,
+          direction: ct.direction,
+          entry: Number(ct.entry_price),
+          stopLoss: Number(ct.stop_loss),
+          target: Number(ct.target_price),
+          positionSize: Number(ct.position_size || 0),
+          riskUSD: Number(ct.risk_usd || 20),
+          rewardUSD: Number(ct.reward_usd || 60),
+          rrRatio: Number(ct.rr_ratio || 3.0),
+          status: 'CLOSED',
+          result: ct.result || (Number(ct.pnl_usd || 0) >= 0 ? 'WIN' : 'LOSS'),
+          pnlUSD: Number(ct.pnl_usd || 0),
+          rMultiple: Number(ct.r_multiple || 0),
+          exitPrice: ct.exit_price ? Number(ct.exit_price) : null,
+          exitReason: parsedMeta.exitReason || (ct.result === 'WIN' ? 'TAKE_PROFIT' : 'STOP_LOSS'),
+          feesUSD: fee,
+          totalFeesUSD: fee,
+          brokerageFeeUSD: Number(parsedMeta.brokerageFeeUSD !== undefined ? parsedMeta.brokerageFeeUSD : (fee > 0 ? +(fee / 1.18).toFixed(2) : 0)),
+          gstUSD: Number(parsedMeta.gstUSD !== undefined ? parsedMeta.gstUSD : (fee > 0 ? +(fee - fee / 1.18).toFixed(2) : 0)),
+          grossPnLUSD: Number(parsedMeta.grossPnLUSD !== undefined ? parsedMeta.grossPnLUSD : (Number(ct.pnl_usd || 0) + fee)),
+          openedAt: openedAtTime,
+          closedAt: closedAtTime
+        });
       }
 
-      // 4. Update balance & save if any change occurred
-      if (changed) {
-        this.paperTrader.trades.sort((a, b) => (b.closedAt || 0) - (a.closedAt || 0));
-        const totalRealized = this.paperTrader.trades
-          .filter(t => t.status === 'CLOSED')
-          .reduce((sum, t) => sum + (Number(t.pnlUSD) || 0), 0);
-        this.paperTrader.balance = +(this.paperTrader.initialBalance + totalRealized).toFixed(2);
+      newClosedTrades.sort((a, b) => (b.closedAt || 0) - (a.closedAt || 0));
+      this.paperTrader.trades = newClosedTrades;
 
-        this.paperTrader.save();
-        this.updateTradeJournalAndStats();
-        this.ui.updateOpenPositions(this.paperTrader.openPositions);
-        const liveMetrics = this.paperTrader.getLiveEquity();
-        this.ui.updateHeaderAccountHUD(liveMetrics);
-        if (this.ui.orderState) {
-          this.ui.orderState.availableBalance = liveMetrics.availableMargin !== undefined
-            ? liveMetrics.availableMargin
-            : Math.max(0, this.paperTrader.balance - (liveMetrics.usedMargin || 0));
-          this.ui.refreshDerivativesOrderDesk();
-        }
-        if (this.ui.currentSaaSPage === 'passbook' && this.ui.renderFinancialPassbook) {
-          this.ui.renderFinancialPassbook();
-        }
-        const restoredPortfolioCount = cloudOpenMap.size + cloudClosedMap.size;
-        if (restoredPortfolioCount > 0) {
-          this.ui.showToast('⚡ Cloud Synced', `Synchronized ${restoredPortfolioCount} portfolio trade(s) from Cloud.`, 'success');
-        }
+      // 3. Compute Realized PnL & Authoritative Balance from Cloud
+      const totalRealized = this.paperTrader.trades
+        .filter(t => t.status === 'CLOSED')
+        .reduce((sum, t) => sum + (Number(t.pnlUSD) || 0), 0);
+      this.paperTrader.balance = Math.max(2000, +(this.paperTrader.initialBalance + totalRealized).toFixed(2));
+      this.riskEngine.setAccountBalance(this.paperTrader.balance);
+
+      this.updateTradeJournalAndStats();
+      this.ui.updateOpenPositions(this.paperTrader.openPositions);
+      const liveMetrics = this.paperTrader.getLiveEquity();
+      this.ui.updateHeaderAccountHUD(liveMetrics);
+      if (this.ui.orderState) {
+        this.ui.orderState.availableBalance = liveMetrics.availableMargin !== undefined
+          ? liveMetrics.availableMargin
+          : Math.max(0, this.paperTrader.balance - (liveMetrics.usedMargin || 0));
+        this.ui.refreshDerivativesOrderDesk();
+      }
+      if (this.ui.currentSaaSPage === 'passbook' && this.ui.renderFinancialPassbook) {
+        this.ui.renderFinancialPassbook();
+      }
+      const restoredPortfolioCount = cloudOpenMap.size + cloudClosedMap.size;
+      if (restoredPortfolioCount > 0 && isFullSync) {
+        this.ui.showToast('⚡ Cloud Synced', `Synchronized ${restoredPortfolioCount} portfolio trade(s) from Cloud.`, 'success');
       }
 
       // 5. Merge Alpha Signals from Cloud into SignalEngine & Auto-Pilot Desk
@@ -2410,12 +2394,8 @@ class App {
     try {
       const allKeys = Object.keys(localStorage);
       for (const k of allKeys) {
-        if (k.startsWith('ai_copilot_paper_') || k.startsWith('monday_paper_')) {
-          if (k.includes('balance')) {
-            localStorage.setItem(k, '2000.00');
-          } else if (k.includes('trades') || k.includes('positions')) {
-            localStorage.setItem(k, JSON.stringify([]));
-          }
+        if (k.startsWith('ai_copilot_paper_') || k.startsWith('monday_paper_') || k.startsWith('monday_open_')) {
+          localStorage.removeItem(k);
         }
       }
     } catch (e) { }

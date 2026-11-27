@@ -14,50 +14,15 @@ export class PaperTrader {
   constructor(initialBalance = 2000, userId = null) {
     this.initialBalance = initialBalance;
     this.userId = userId || 'default';
-    this.storageKey = `ai_copilot_paper_trades_${this.userId}`;
-    this.balanceStorageKey = `ai_copilot_paper_balance_${this.userId}`;
-    this.positionsStorageKey = `ai_copilot_paper_positions_${this.userId}`;
-
-    this.trades = this.loadTrades();
-    this.openPositions = this.loadOpenPositions();
-
-    const storedBalance = localStorage.getItem(this.balanceStorageKey);
-    const parsedBal = parseFloat(storedBalance);
-    if (storedBalance !== null && !isNaN(parsedBal) && isFinite(parsedBal) && parsedBal > 0) {
-      this.balance = parsedBal;
-    } else {
-      const closedPnL = this.trades
-        .filter(t => t.status === 'CLOSED')
-        .reduce((sum, t) => sum + (Number(t.pnlUSD) || 0), 0);
-      const calcBal = initialBalance + closedPnL;
-      this.balance = (isNaN(calcBal) || !isFinite(calcBal) || calcBal <= 0) ? initialBalance : +calcBal.toFixed(2);
-      this.save();
-    }
+    this.trades = [];
+    this.openPositions = [];
+    this.balance = initialBalance;
+    this.onTradeCloseCallback = null;
   }
 
   setUser(userId) {
     if (this.userId === userId) return;
     this.userId = userId || 'default';
-    this.storageKey = `ai_copilot_paper_trades_${this.userId}`;
-    this.balanceStorageKey = `ai_copilot_paper_balance_${this.userId}`;
-    this.positionsStorageKey = `ai_copilot_paper_positions_${this.userId}`;
-
-    // Load user-scoped trades directly (No ghost copying from other sessions)
-    this.trades = this.loadTrades();
-    this.openPositions = this.loadOpenPositions();
-
-    const storedBalance = localStorage.getItem(this.balanceStorageKey);
-    const parsedBal = parseFloat(storedBalance);
-    if (storedBalance !== null && !isNaN(parsedBal) && isFinite(parsedBal) && parsedBal > 0) {
-      this.balance = parsedBal;
-    } else {
-      const closedPnL = this.trades
-        .filter(t => t.status === 'CLOSED')
-        .reduce((sum, t) => sum + (Number(t.pnlUSD) || 0), 0);
-      const calcBal = this.initialBalance + closedPnL;
-      this.balance = (isNaN(calcBal) || !isFinite(calcBal) || calcBal <= 0) ? this.initialBalance : +calcBal.toFixed(2);
-      this.save();
-    }
   }
 
   setOnTradeClose(callback) {
@@ -65,27 +30,6 @@ export class PaperTrader {
   }
 
   loadOpenPositions() {
-    const raw = localStorage.getItem(this.positionsStorageKey);
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          // Clean Slate Purger: Remove any lingering dummy/test/mock positions
-          const clean = parsed.filter(p => {
-            if (!p || !p.asset) return false;
-            if (p.id && (p.id.toLowerCase().includes('test') || p.id.toLowerCase().includes('bat'))) return false;
-            if (p.asset === 'BTC' && Number(p.entry) === 60000) return false;
-            return true;
-          });
-          if (clean.length !== parsed.length) {
-            localStorage.setItem(this.positionsStorageKey, JSON.stringify(clean));
-          }
-          return clean;
-        }
-      } catch (e) {
-        console.error('Failed to parse stored open positions:', e);
-      }
-    }
     return [];
   }
 
@@ -99,244 +43,16 @@ export class PaperTrader {
   }
 
   loadTrades() {
-    const raw = localStorage.getItem(this.storageKey);
-    if (raw !== null) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          // Retrospectively tag past manual closes that were closed before hitting exact TP or SL
-          parsed.forEach(t => {
-            if (!t.exitReason && !t.closeReason) {
-              const hitExactTP = t.target && Math.abs(Number(t.exitPrice) - Number(t.target)) / Number(t.target) < 0.005;
-              const hitExactSL = t.stopLoss && Math.abs(Number(t.exitPrice) - Number(t.stopLoss)) / Number(t.stopLoss) < 0.005;
-              if (t.result === 'WIN' && !hitExactTP) {
-                t.exitReason = 'MANUAL';
-                t.closeReason = 'MANUAL';
-              } else if (t.result === 'LOSS' && !hitExactSL) {
-                t.exitReason = 'MANUAL';
-                t.closeReason = 'MANUAL';
-              } else if (t.result === 'WIN') {
-                t.exitReason = 'TAKE_PROFIT';
-              } else if (t.result === 'LOSS') {
-                t.exitReason = 'STOP_LOSS';
-              }
-            }
-          });
-
-          // Count occurrences of identical setups using dynamic precision to protect micro & sub-dollar coins
-          const signatureCounts = {};
-          parsed.forEach(t => {
-            const entryStr = this.formatDynamicPrice(t.entry);
-            const exitStr = this.formatDynamicPrice(t.target || t.exitPrice);
-            const sig = `${t.asset}_${t.direction}_${entryStr}_${exitStr}`;
-            signatureCounts[sig] = (signatureCounts[sig] || 0) + 1;
-          });
-
-          const seenSignatures = {};
-          // Identify any rapid glitch loop, dummy test or duplicate trades
-          const isGlitchLoopTrade = (t) => {
-            // 1. Purge any dummy or test rows permanently
-            if (t.id && (t.id.toLowerCase().includes('test') || t.id.toLowerCase().includes('bat'))) return true;
-            if (t.asset === 'BTC' && Number(t.entry) === 60000) return true;
-            if (t.asset === 'ETH' && Number(t.entry) === 3000 && Math.abs(Number(t.pnlUSD || 0)) < 0.01) return true;
-            if (t.result === 'LIQUIDATED' && Number(t.pnlUSD || 0) === 0) return true;
-
-            const duration = (t.closedAt || 0) - (t.openedAt || 0);
-            if ((t.result === 'LOSS' || t.result === 'LIQUIDATED') && duration < 120000 && duration > 0 && Math.abs(Number(t.pnlUSD || 0)) === 0) return true;
-
-            // Specific known runaway glitch loops (XRP, NEAR, DOGE, LINK dummy glitch)
-            if (t.asset === 'XRP' && Math.abs(Number(t.entry) - 1.332) < 0.05) return true;
-            if (t.asset === 'NEAR' && Math.abs(Number(t.entry) - 5.032) < 0.05) return true;
-            if (t.asset === 'DOGE' && Math.abs(Number(t.entry) - 0.0795) < 0.01) return true;
-            if (t.asset === 'LINK' && (Number(t.exitPrice) > 50 || Number(t.pnlUSD) > 500)) return true;
-            if (Number(t.rMultiple) > 30 || (Number(t.riskUSD) > 0 && Number(t.pnlUSD) / Number(t.riskUSD) > 30)) return true;
-
-            // Universal Same-Day Setup Deduplicator:
-            // If the exact same setup (Asset + Direction + Entry + Exit) appears more than once on the same date,
-            // keep the FIRST canonical instance and purge any duplicate re-audit ghosts.
-            const closedDate = t.closedAt ? new Date(t.closedAt).toDateString() : (t.openedAt ? new Date(t.openedAt).toDateString() : '');
-            const entryStr = this.formatDynamicPrice(t.entry);
-            const exitStr = this.formatDynamicPrice(t.target || t.exitPrice);
-            const sig = `${closedDate}_${t.asset}_${t.direction}_${entryStr}_${exitStr}`;
-
-            seenSignatures[sig] = (seenSignatures[sig] || 0) + 1;
-            if (seenSignatures[sig] > 1) {
-              return true; // Duplicate copy of the same trade setup!
-            }
-
-            if (duration < 15000 && Math.abs(Number(t.pnlUSD || 0)) > 0) return true;
-            return false;
-          };
-
-          // If the ledger was corrupted by the runaway 1,000+ trade glitch loop
-          const hasRunawayGlitch = parsed.length > 50 && (parsed.filter(t => t.result === 'LOSS' || t.result === 'LIQUIDATED').length / parsed.length) > 0.8;
-
-          let clean = [];
-          if (hasRunawayGlitch) {
-            // Completely wipe the runaway loop corruption
-            clean = parsed.filter(t => !isGlitchLoopTrade(t) && !t.id?.startsWith('TRADE-'));
-          } else {
-            clean = parsed.filter(t => !isGlitchLoopTrade(t));
-          }
-
-          if (clean.length !== parsed.length) {
-            localStorage.setItem(this.storageKey, JSON.stringify(clean));
-            const netRealized = +clean.reduce((acc, t) => acc + (Number(t.pnlUSD) || 0), 0).toFixed(2);
-            this.balance = Math.max(2000, +(2000 + netRealized).toFixed(2));
-            localStorage.setItem(this.balanceStorageKey, this.balance.toFixed(2));
-            console.log(`[PaperTrader] Auto-purged ${parsed.length - clean.length} glitch loop trades. Balance restored to $${this.balance}`);
-          }
-
-          // AUTO-HEALING MIGRATION: Correct any downtime catchup trades that received bulk 06:08 PM timestamps
-          let healedAny = false;
-          clean.forEach(t => {
-            if (!t.closedAt) return;
-            const d = new Date(t.closedAt);
-            const isNov2_608 = d.getFullYear() === 2026 && d.getMonth() === 10 && d.getDate() === 2 && d.getHours() === 18 && (d.getMinutes() >= 6 && d.getMinutes() <= 10);
-            if (isNov2_608) {
-              if (t.asset === 'SOL') {
-                // Set true historical exit time: 02:15 PM (14:15)
-                t.closedAt = new Date(2026, 10, 2, 14, 15, 0).getTime();
-                healedAny = true;
-              } else if (t.asset === 'XRP') {
-                // Set true historical exit time: 04:30 PM (16:30)
-                t.closedAt = new Date(2026, 10, 2, 16, 30, 0).getTime();
-                healedAny = true;
-              }
-            }
-          });
-
-          if (healedAny) {
-            clean.sort((a, b) => (b.closedAt || 0) - (a.closedAt || 0));
-            localStorage.setItem(this.storageKey, JSON.stringify(clean));
-            console.log('[PaperTrader] Auto-healed Nov 2 downtime timestamps: SOL (02:15 PM) & XRP (04:30 PM).');
-          }
-
-          return clean;
-        }
-      } catch (e) {
-        console.error('Failed to parse stored trades:', e);
-      }
-    }
-    // Only load starter demo trades if explicitly previewing demo account
-    if (this.userId === 'demo_preview') {
-      return this.getStarterTrades();
-    }
     return [];
   }
 
   getStarterTrades() {
-    return [
-      {
-        id: 'TRADE-001',
-        market: 'Crypto',
-        asset: 'BTC',
-        direction: 'LONG',
-        entry: 63850.0,
-        stopLoss: 63200.0,
-        target: 65600.0,
-        positionSize: 0.0308,
-        riskUSD: 20.0,
-        rewardUSD: 53.9,
-        rrRatio: 2.69,
-        status: 'CLOSED',
-        result: 'WIN',
-        pnlUSD: 53.9,
-        rMultiple: 2.69,
-        exitPrice: 65600.0,
-        timeframe: '1H / 5M',
-        strategy: 'HTF-Trend Pullback & SMT Divergence',
-        conditions: [
-          '✓ 1H Trend Bullish',
-          '✓ 5M Pullback into Discount Zone',
-          '✓ Bullish SMT Divergence vs ETH',
-          '✓ Price Confirmation Reversal Wick',
-          '✓ RR >= 1:2 Passed'
-        ],
-        historicalContext: 'Supportive (Post-sweep continuation regime)',
-        eventRisk: 'Low',
-        aiReasoning: 'BTC swept Asian low while ETH held strong. Clean 1:2.69 R:R setup with disciplined capital allocation.',
-        openedAt: Date.now() - 86400000 * 2,
-        closedAt: Date.now() - 86400000 * 2 + 7200000
-      },
-      {
-        id: 'TRADE-002',
-        market: 'Crypto',
-        asset: 'SOL',
-        direction: 'LONG',
-        entry: 148.2,
-        stopLoss: 144.5,
-        target: 157.5,
-        positionSize: 5.4,
-        riskUSD: 20.0,
-        rewardUSD: 50.22,
-        rrRatio: 2.51,
-        status: 'CLOSED',
-        result: 'WIN',
-        pnlUSD: 50.22,
-        rMultiple: 2.51,
-        exitPrice: 157.5,
-        timeframe: '1H / 5M',
-        strategy: 'HTF-Trend Pullback & SMT Divergence',
-        conditions: [
-          '✓ 1H Bullish Expansion',
-          '✓ 5M Order Block Tap',
-          '✓ Bullish Confirmation Displacement',
-          '✓ RR >= 1:2 Passed'
-        ],
-        historicalContext: 'Supportive',
-        eventRisk: 'Medium (Ecosystem catalysts)',
-        aiReasoning: 'SOL recovered rapidly from local liquidity pocket. Reached Target 1 cleanly with disciplined stop management.',
-        openedAt: Date.now() - 86400000,
-        closedAt: Date.now() - 86400000 + 5400000
-      },
-      {
-        id: 'TRADE-003',
-        market: 'Crypto',
-        asset: 'BTC',
-        direction: 'SHORT',
-        entry: 66200.0,
-        stopLoss: 66700.0,
-        target: 64950.0,
-        positionSize: 0.04,
-        riskUSD: 20.0,
-        rewardUSD: 50.0,
-        rrRatio: 2.5,
-        status: 'CLOSED',
-        result: 'LOSS',
-        pnlUSD: -20.0,
-        rMultiple: -1.0,
-        exitPrice: 66700.0,
-        timeframe: '1H / 5M',
-        strategy: 'HTF-Trend Pullback & SMT Divergence',
-        conditions: [
-          '✓ 1H Bearish Trend',
-          '✓ 5M Premium Retest',
-          '✓ Confirmation Rejection Candle'
-        ],
-        historicalContext: 'Mixed',
-        eventRisk: 'High (Pre-CPI positioning)',
-        aiReasoning: 'Pre-CPI volatility spike wicked through stop loss before subsequent drop. Strict stop loss discipline adhered to.',
-        openedAt: Date.now() - 43200000,
-        closedAt: Date.now() - 36000000
-      }
-    ];
-
-    localStorage.setItem(this.storageKey, JSON.stringify(starterTrades));
-    return starterTrades;
+    return [];
   }
 
   save() {
-    try {
-      if (isNaN(this.balance) || !isFinite(this.balance) || this.balance <= 0) {
-        this.balance = this.initialBalance || 2000;
-      }
-      localStorage.setItem(this.storageKey, JSON.stringify(this.trades));
-      localStorage.setItem(this.balanceStorageKey, Number(this.balance).toFixed(2));
-      localStorage.setItem(this.positionsStorageKey, JSON.stringify(this.openPositions));
-    } catch (e) {
-      console.error('Failed to save paper trading state:', e);
-    }
+    // 100% Cloud-First Architecture:
+    // Browser localStorage completely eradicated. Supabase Cloud is Single Source of Truth.
   }
 
   executePaperTrade(tradeData = {}) {
@@ -1070,42 +786,23 @@ export class PaperTrader {
     this.openPositions = [];
     if (clearTrades) {
       this.trades = [];
-      try {
-        if (typeof localStorage !== 'undefined') {
-          // Purge all trade and position keys across all accounts and legacy stores
-          const keysToRemove = [];
-          for (let i = 0; i < localStorage.length; i++) {
-            const k = localStorage.key(i);
-            if (k && (
-              k.startsWith('ai_copilot_paper_trades') || 
-              k.startsWith('ai_copilot_paper_positions') || 
-              k.startsWith('monday_paper_trades') || 
-              k.startsWith('monday_open_positions')
-            )) {
-              keysToRemove.push(k);
-            }
-          }
-          keysToRemove.forEach(k => localStorage.removeItem(k));
-          localStorage.setItem(this.storageKey, JSON.stringify([]));
-        }
-      } catch (e) {}
     }
 
     try {
       if (typeof localStorage !== 'undefined') {
-        const balKeys = [];
+        const keysToRemove = [];
         for (let i = 0; i < localStorage.length; i++) {
           const k = localStorage.key(i);
-          if (k && (k.startsWith('ai_copilot_paper_balance') || k.startsWith('monday_paper_balance'))) {
-            balKeys.push(k);
+          if (k && (
+            k.startsWith('ai_copilot_paper_') || 
+            k.startsWith('monday_paper_') || 
+            k.startsWith('monday_open_')
+          )) {
+            keysToRemove.push(k);
           }
         }
-        balKeys.forEach(k => localStorage.setItem(k, this.initialBalance.toFixed(2)));
-        localStorage.setItem(this.balanceStorageKey, this.initialBalance.toFixed(2));
-        localStorage.setItem(this.positionsStorageKey, JSON.stringify([]));
+        keysToRemove.forEach(k => localStorage.removeItem(k));
       }
     } catch (e) {}
-
-    this.save();
   }
 }

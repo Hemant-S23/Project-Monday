@@ -779,6 +779,11 @@ export class SignalEngine {
 
     if (hasChanged) {
       this.saveSignals();
+      resolved.forEach(sig => {
+        if (typeof this.onSignalChangeCallback === 'function') {
+          try { this.onSignalChangeCallback(sig); } catch (e) {}
+        }
+      });
     }
     return resolved;
   }

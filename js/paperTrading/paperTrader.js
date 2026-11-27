@@ -60,6 +60,10 @@ export class PaperTrader {
     }
   }
 
+  setOnTradeClose(callback) {
+    this.onTradeCloseCallback = callback;
+  }
+
   loadOpenPositions() {
     const raw = localStorage.getItem(this.positionsStorageKey);
     if (raw) {
@@ -641,6 +645,9 @@ export class PaperTrader {
     this.trades.unshift(closedTrade);
     this.trades.sort((a, b) => (b.closedAt || 0) - (a.closedAt || 0));
     this.save();
+    if (typeof this.onTradeCloseCallback === 'function') {
+      try { this.onTradeCloseCallback(closedTrade); } catch (e) {}
+    }
     return closedTrade;
   }
 

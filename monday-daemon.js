@@ -75,7 +75,9 @@ class MondayAutoPilotDaemon {
     this.candidateAssets = [
       'BTC', 'ETH', 'SOL', 'AVAX', 'LINK',
       'DOGE', 'NEAR', 'SUI', 'XRP', 'ADA',
-      'DOT', 'INJ', 'OP', 'STRK', 'LTC', 'UNI'
+      'DOT', 'INJ', 'OP', 'STRK', 'LTC', 'UNI',
+      'AAVE', 'GRT', 'W', 'BCH', 'ICP', 'ALGO',
+      'AXS', 'FIL', 'ARB', 'PEPE', 'FET'
     ];
 
     this.livePrices = {};
@@ -428,9 +430,21 @@ class MondayAutoPilotDaemon {
     }
   }
 
+  getDynamicSubscriptionProducts() {
+    const assets = new Set(this.candidateAssets);
+    if (Array.isArray(this.activeRadarSignals)) {
+      this.activeRadarSignals.forEach(s => {
+        if (s.asset && (s.status === 'SIGNAL_PENDING' || s.status === 'SIGNAL_ACTIVE')) {
+          assets.add(s.asset.toUpperCase().replace('/USD', '').replace('-USD', ''));
+        }
+      });
+    }
+    return Array.from(assets).map(a => `${a}-USD`);
+  }
+
   startWebSocketFeed() {
     const wsUrl = 'wss://ws-feed.exchange.coinbase.com';
-    const productIds = this.candidateAssets.map(a => `${a}-USD`);
+    const productIds = this.getDynamicSubscriptionProducts();
 
     try {
       this.ws = new WebSocket(wsUrl);

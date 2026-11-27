@@ -203,6 +203,28 @@ class App {
         await this.handleAutoPilotSignalFill(signal);
       }
     });
+
+    // Two-Way Sync Bridge: When a Paper Trade hits TP or SL on the desk, immediately update its linked Alpha Signal
+    this.paperTrader.setOnTradeClose((closedTrade) => {
+      if (this.signalEngine && closedTrade) {
+        const sig = this.signalEngine.signals.find(s => 
+          (closedTrade.signalId && s.id === closedTrade.signalId) ||
+          (closedTrade.strategy && s.tradeId === closedTrade.id) ||
+          (s.asset === closedTrade.asset && (s.status === 'PENDING' || s.status === 'ACTIVE'))
+        );
+        if (sig) {
+          const isWin = closedTrade.result === 'WIN';
+          sig.status = isWin ? 'TP_HIT' : 'SL_HIT';
+          sig.closedAt = closedTrade.closedAt || Date.now();
+          sig.realizedR = closedTrade.rMultiple || (isWin ? (sig.riskReward || 2.0) : -1.0);
+          this.signalEngine.saveSignals();
+          this.syncSignalToSupabase(sig).catch(() => {});
+          if (this.ui && this.ui.currentSaaSPage === 'signals') {
+            this.ui.renderSignalsPage();
+          }
+        }
+      }
+    });
     this.ui.updateSignalsBadge(this.signalEngine.getActiveCount());
 
     // Voice Assistant with natural Indian and English profiles

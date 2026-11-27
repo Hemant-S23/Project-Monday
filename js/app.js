@@ -1,5 +1,4 @@
 import { CryptoAdapter } from './adapters/cryptoAdapter.js';
-import { IndiaAdapter } from './adapters/indiaAdapter.js';
 import { StrategyEngine } from './engine/strategyEngine.js';
 import { HistoricalContextEngine } from './engine/historicalEngine.js';
 import { NewsContextEngine } from './engine/newsContextEngine.js';
@@ -15,7 +14,7 @@ import { SignalEngine } from './engine/signalEngine.js';
 
 /**
  * Main Application Orchestrator
- * Connects Crypto & Indian Market adapters, strategy engines, AI reasoning, voice synthesis, and UI terminal.
+ * Connects Crypto Perpetual Market adapters, strategy engines, AI reasoning, voice synthesis, and UI terminal.
  */
 
 // Immediate Hard Dark Cockpit Lock: Purge any legacy light mode flag from client storage
@@ -41,7 +40,6 @@ class App {
 
     // Instantiate market adapters
     this.cryptoAdapter = new CryptoAdapter();
-    this.indiaAdapter = new IndiaAdapter();
 
     // User Authentication & Session Management
     this.authManager = new AuthManager();
@@ -269,11 +267,11 @@ class App {
   }
 
   getActiveAdapter() {
-    return this.currentMarket === 'India' ? this.indiaAdapter : this.cryptoAdapter;
+    return this.cryptoAdapter;
   }
 
   async init() {
-    console.log('[App] Initializing AI Trading Co-Pilot for Crypto and Indian Markets...');
+    console.log('[App] Initializing AI Trading Co-Pilot for Crypto Perpetual Markets...');
 
     // 0. Verify Auth Session & update UI state (Seamless instant-cockpit entry)
     await this.authManager.ready();
@@ -320,10 +318,10 @@ class App {
 
     // 1. Initialize TradingView chart with saved theme and active adapter (Frame 0)
     const activeTheme = localStorage.getItem('monday_theme') || 'dark';
-    this.chartManager.setAdapter(this.getActiveAdapter());
-    this.chartManager.setAdapters({ crypto: this.cryptoAdapter, india: this.indiaAdapter });
-    this.chartManager.init(this.currentAsset, '60', this.currentMarket, activeTheme, this.getActiveAdapter());
-    this.ui.renderWatchlistTray(this.currentMarket);
+    this.chartManager.setAdapter(this.cryptoAdapter);
+    this.chartManager.setAdapters({ crypto: this.cryptoAdapter });
+    this.chartManager.init(this.currentAsset, '60', 'Crypto', activeTheme, this.cryptoAdapter);
+    this.ui.renderWatchlistTray('Crypto');
 
     // Set up network online reconnect listener for automatic cloud sync
     this.setupNetworkReconciliation();
@@ -351,28 +349,20 @@ class App {
           console.warn('[App] Background cloud sync timeout/err:', e);
         }
 
-        // Initialize Market Feeds in parallel
-        await Promise.all([
-          this.cryptoAdapter.init(),
-          this.indiaAdapter.init()
-        ]);
+        // Initialize Crypto Market Feeds
+        await this.cryptoAdapter.init();
 
         // Subscribe to ALL assets in the market universe simultaneously (Zero-Delay Full Coverage)
         const cryptoAssets = this.cryptoAdapter.allMarkets.map(m => m.baseAsset);
         cryptoAssets.forEach(asset => {
           this.cryptoAdapter.subscribe(asset, this._boundOnMarketDataTick);
         });
-        const indiaAssets = ['NIFTY', 'BANKNIFTY', 'SENSEX', 'FINNIFTY', 'MIDCPNIFTY', 'RELIANCE', 'TCS', 'HDFCBANK', 'SWIGGY', 'HYUNDAI', 'TATAMOTORS', 'HAL', 'ZOMATO', 'INFY', 'ICICIBANK', 'SBIN', 'BHARTIARTL', 'BAJAJHFL', 'WAREE', 'NTPCGREEN'];
-        indiaAssets.forEach(asset => {
-          this.indiaAdapter.subscribe(asset, this._boundOnMarketDataTick);
-        });
 
         // Restore and subscribe to any active open positions in parallel
         if (this.paperTrader.openPositions.length > 0) {
           await Promise.all(this.paperTrader.openPositions.map(pos => {
-            const adapter = pos.market === 'India' ? this.indiaAdapter : this.cryptoAdapter;
-            return adapter.ensureAssetInitialized(pos.asset).then(() => {
-              adapter.subscribe(pos.asset, this._boundOnMarketDataTick);
+            return this.cryptoAdapter.ensureAssetInitialized(pos.asset).then(() => {
+              this.cryptoAdapter.subscribe(pos.asset, this._boundOnMarketDataTick);
             }).catch(err => console.warn('[App] Position restore warmup error:', err));
           }));
         }
@@ -397,7 +387,7 @@ class App {
             downtimeResolved.forEach(trade => {
               const isWin = trade.result === 'WIN';
               const exitTimeStr = new Date(trade.closedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-              const formattedPrice = this.ui.formatPrice(trade.exitPrice, trade.market === 'India' ? '₹' : '$');
+              const formattedPrice = this.ui.formatPrice(trade.exitPrice, '$');
               const pnlSign = (trade.pnlUSD || 0) >= 0 ? '+' : '';
               const isLiq = trade.result === 'LIQUIDATED';
 
@@ -459,14 +449,14 @@ class App {
       const salutation = firstName ? `Namaste ${firstName} bhai!` : `Namaste!`;
 
       const initialGreeting = `${salutation} Main hoon **MONDAY** (**M**arket-**O**riented **N**eural **D**ecision **A**ssistant for **Y**ou). 🧠✨\n\n` +
-        `Main continuously market observe kar rahi hoon — ab **Crypto** ke sath-sath **Full Indian Market (NSE/BSE)** bhi fully active hai! ` +
+        `Main continuously market observe kar rahi hoon — **24/7 Global Crypto Perpetual Markets** fully active hain! ` +
         `1H aur 5M structure analyze kar rahi hoon aur strict 1% risk calculate kar rahi hoon.\n\n` +
         `Tum mujhse text ya voice ke through freely koi bhi market scenario discuss kar sakte ho!`;
       this.ui.appendChatMessage('copilot', initialGreeting);
 
       const voiceGreeting = firstName
-        ? `Namaste ${firstName} bhai! Main hoon Monday. Crypto aur Indian Market dono active hain. Market analysis ready hai.`
-        : `Namaste! Main hoon Monday. Crypto aur Indian Market dono active hain. Market analysis ready hai.`;
+        ? `Namaste ${firstName} bhai! Main hoon Monday. 24/7 Global Crypto Perpetual Markets active hain. Market analysis ready hai.`
+        : `Namaste! Main hoon Monday. 24/7 Global Crypto Perpetual Markets active hain. Market analysis ready hai.`;
       this.voiceAssistant.speak(voiceGreeting);
     }, 1200);
 
@@ -863,12 +853,10 @@ class App {
       }
     }
 
-    // Check open positions for target or stop hit dynamically across all traded assets & markets
+    // Check open positions for target or stop hit dynamically across all traded assets
     const currentPrices = {};
     this.paperTrader.openPositions.forEach(pos => {
-      const price = pos.market === 'India'
-        ? this.indiaAdapter.getCurrentPrice(pos.asset)
-        : this.cryptoAdapter.getCurrentPrice(pos.asset);
+      const price = this.cryptoAdapter.getCurrentPrice(pos.asset);
       if (price) currentPrices[pos.asset] = price;
     });
 
@@ -893,7 +881,7 @@ class App {
 
         const isLiq = result === 'LIQUIDATED';
         const title = isWin ? '🎯 TARGET HIT!' : isLiq ? '⚠️ LIQUIDATION EXIT!' : '🛑 STOP LOSS HIT!';
-        const formattedPrice = this.ui.formatPrice(price, pos.market === 'India' ? '₹' : '$');
+        const formattedPrice = this.ui.formatPrice(price, '$');
         const pnlSign = pos.unrealizedPnlUSD >= 0 ? '+' : '';
         const msg = `${pos.asset} paper trade closed at ${formattedPrice} (${result}). PnL: ${pnlSign}$${pos.unrealizedPnlUSD}`;
         this.ui.showToast(title, msg, isWin ? 'success' : 'danger');
@@ -940,26 +928,20 @@ class App {
     const currentPrice = adapter.getCurrentPrice(targetAsset);
     if (!currentPrice || currentPrice <= 0) return null;
 
-    // SMT Divergence Related Asset:
-    // For India: NIFTY vs BANKNIFTY (or Stock vs NIFTY)
-    // For Crypto: BTC vs ETH (or ETH/SOL vs BTC)
-    const relatedAsset = this.currentMarket === 'India'
-      ? (targetAsset === 'NIFTY' ? 'BANKNIFTY' : 'NIFTY')
-      : (targetAsset === 'BTC' ? 'ETH' : 'BTC');
+    // SMT Divergence Related Asset for Crypto: BTC vs ETH
+    const relatedAsset = targetAsset === 'BTC' ? 'ETH' : 'BTC';
 
     // Parallel async data pipeline for sub-second evaluation
     const [candles1H, candles5M, relatedCandles5M, sentiment, fundingData] = await Promise.all([
       adapter.getHistoricalCandles(targetAsset, '1H'),
       adapter.getHistoricalCandles(targetAsset, '5M'),
       adapter.getHistoricalCandles(relatedAsset, '5M'),
-      this.currentMarket === 'India'
-        ? Promise.resolve(this.newsEngine.getMarketSentiment('India'))
-        : this.newsEngine.fetchFearAndGreed(),
-      this.derivativesEngine.fetchLiveFundingRate(targetAsset, this.currentMarket)
+      this.newsEngine.fetchFearAndGreed(),
+      this.derivativesEngine.fetchLiveFundingRate(targetAsset, 'Crypto')
     ]);
 
-    const currencySymbol = this.currentMarket === 'India' ? '₹' : '$';
-    const eventRisk = this.newsEngine.getOverallEventRisk(targetAsset, this.currentMarket);
+    const currencySymbol = '$';
+    const eventRisk = this.newsEngine.getOverallEventRisk(targetAsset, 'Crypto');
     const settings = this.getAutoPilotSettings();
 
     // Strategy Evaluation with Multi-Factor Confluence & Event Shield
@@ -992,7 +974,7 @@ class App {
     };
 
     // Feed strategy evaluation to Alpha Signals Engine (Auto-Pilot setup unification across genuine market assets)
-    if (this.signalEngine && !isSynthetic && (assetVolume === undefined || assetVolume > 10000 || this.currentMarket === 'India')) {
+    if (this.signalEngine && !isSynthetic && (assetVolume === undefined || assetVolume > 10000 )) {
       this.signalEngine.processStrategyResult(targetAsset, evalData);
     }
 
@@ -1019,7 +1001,7 @@ class App {
       strategyResult.direction,
       strategyResult.htfTrend,
       strategyResult.volatility || 'NORMAL',
-      this.currentMarket,
+      'Crypto',
       candles5M,
       currentPrice,
       strategyResult
@@ -1058,7 +1040,7 @@ class App {
       riskParams,
       openPositions: this.paperTrader.openPositions,
       analytics: this.paperTrader.getAnalytics(),
-      market: this.currentMarket
+      market: 'Crypto'
     });
 
     // 7. Check for State Transitions on current screen asset
@@ -1139,12 +1121,7 @@ class App {
       if (openPositions.length >= settings.maxTrades) return;
 
       // 🛡️ FULL-MARKET PARALLEL SCANNER (All coins evaluated simultaneously)
-      let baseCandidates;
-      if (this.currentMarket === 'India') {
-        baseCandidates = ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATAMOTORS', 'HDFCBANK', 'HAL', 'ZOMATO', 'INFY', 'TCS', 'ICICIBANK', 'SBIN', 'BHARTIARTL', 'KOTAKBANK', 'LT', 'AXISBANK', 'SWIGGY', 'HYUNDAI', 'BAJAJHFL', 'WAREE', 'NTPCGREEN'];
-      } else {
-        baseCandidates = this.cryptoAdapter?.allMarkets ? this.cryptoAdapter.allMarkets.map(m => m.baseAsset) : ['BTC', 'ETH', 'SOL'];
-      }
+      const baseCandidates = this.cryptoAdapter?.allMarkets ? this.cryptoAdapter.allMarkets.map(m => m.baseAsset) : ['BTC', 'ETH', 'SOL'];
       const candidateAssets = this.currentAsset
         ? [this.currentAsset, ...baseCandidates.filter(a => a !== this.currentAsset)]
         : baseCandidates;
@@ -1162,7 +1139,7 @@ class App {
 
             // 0. Asset-Specific Event Risk Shield Gatekeeper (Capital Preservation Armor)
             if (settings.eventShieldEnabled) {
-              const assetRisk = this.newsEngine.getOverallEventRisk(asset, this.currentMarket);
+              const assetRisk = this.newsEngine.getOverallEventRisk(asset, 'Crypto');
               if (assetRisk && assetRisk.isShieldTriggered) {
                 console.log(`[Auto-Pilot Swarm] Skipping ${asset}: Event Risk Shield active (${assetRisk.summary || 'Shock Catalyst'}).`);
                 return null;
@@ -1236,7 +1213,7 @@ class App {
 
   handleStateTransition(oldState, newState, strategyResult) {
     const asset = this.currentAsset;
-    const currSym = this.currentMarket === 'India' ? '₹' : '$';
+    const currSym = '$';
 
     if (newState === 'CONFIRMED') {
       const dir = strategyResult.direction || 'LONG';
@@ -1244,7 +1221,7 @@ class App {
       const entry = strategyResult.levels ? Number(strategyResult.levels.entry).toLocaleString() : '';
       const sl = strategyResult.levels ? Number(strategyResult.levels.stopLoss).toLocaleString() : '';
       const tp = strategyResult.levels ? Number(strategyResult.levels.target).toLocaleString() : '';
-      const lev = this.currentMarket === 'India' ? '5x Intraday' : '15x-20x Isolated';
+      const lev = '15x-20x Isolated';
 
       if (!this.isBooting) {
         this.ui.showToast(`🟢 ${asset} Setup CONFIRMED`, `Grade A confluence satisfied. 1:${rr} RR ready to execute.`, 'success');
@@ -1319,7 +1296,7 @@ class App {
         autoPilotEnabled: this.autoPilotEnabled,
         watchlist: this.ui?.userWatchlist || JSON.parse(localStorage.getItem('monday_user_watchlist') || '[]'),
         multiLayout: localStorage.getItem('monday_multi_layout') || '1',
-        preferredMarket: this.currentMarket || 'Crypto',
+        preferredMarket: 'Crypto',
         voiceMuted: this.voiceAssistant?.voiceMuted || false,
         signalsArchivedClearedAt: Number(localStorage.getItem('monday_signals_cleared_at') || 0),
         updatedAt: new Date().toISOString()
@@ -1328,7 +1305,7 @@ class App {
       const payload = {
         id: configId,
         user_id: effectiveUserId,
-        market: this.currentMarket || 'Crypto',
+        market: 'Crypto' || 'Crypto',
         asset: 'SETTINGS',
         direction: 'CONFIG',
         entry_price: 0,
@@ -1374,7 +1351,7 @@ class App {
         const s = JSON.parse(raw);
         return {
           marginUSD: Math.max(5, Math.min(500, parseFloat(s.marginUSD) || 100)),
-          leverage: Math.max(1, Math.min(50, parseInt(s.leverage, 10) || (this.currentMarket === 'India' ? 5 : 20))),
+          leverage: Math.max(1, Math.min(50, parseInt(s.leverage, 10) || 20)),
           maxTrades: Math.max(1, Math.min(100, parseInt(s.maxTrades, 10) || 5)),
           minConfluence: Math.max(50, Math.min(95, parseInt(s.minConfluence, 10) || 75)),
           minRR: Math.max(1.5, Math.min(5.0, parseFloat(s.minRR) || 2.0)),
@@ -1384,7 +1361,7 @@ class App {
     } catch (e) { }
     return {
       marginUSD: 100,
-      leverage: this.currentMarket === 'India' ? 5 : 20,
+      leverage: 20,
       maxTrades: 5,
       minConfluence: 75,
       minRR: 2.0,
@@ -1407,7 +1384,7 @@ class App {
       return;
     }
 
-    const lev = settings.leverage || (this.currentMarket === 'India' ? 5 : 20);
+    const lev = settings.leverage || 20;
     const marginUSD = settings.marginUSD || 100;
     const notional = +(marginUSD * lev).toFixed(2);
     const rawPos = notional / signal.entryPrice;
@@ -1418,7 +1395,7 @@ class App {
 
     const trade = this.paperTrader.executePaperTrade({
       asset: signal.asset,
-      market: this.currentMarket || 'Crypto',
+      market: 'Crypto' || 'Crypto',
       direction: signal.direction,
       entry: signal.entryPrice,
       stopLoss: signal.stopLossPrice,
@@ -1454,10 +1431,10 @@ class App {
     const settings = this.getAutoPilotSettings();
     const openPositions = this.paperTrader.openPositions;
     const currentOpenCount = openPositions.length;
-    const currSym = this.currentMarket === 'India' ? '₹' : '$';
+    const currSym = '$';
 
     // 0. Hyper-Sensitive Event Risk Shield Gatekeeper (Safety First)
-    const eventRisk = this.newsEngine.getOverallEventRisk(asset, this.currentMarket);
+    const eventRisk = this.newsEngine.getOverallEventRisk(asset, 'Crypto');
     const isShieldActive = settings.eventShieldEnabled && eventRisk.isShieldTriggered;
     if (isShieldActive) {
       const now = Date.now();
@@ -1617,7 +1594,7 @@ class App {
     const entry = livePrice;
 
     // 4. Autonomous Execution (Configured Margin & Leverage)
-    const leverage = this.currentMarket === 'India' ? Math.min(5, settings.leverage) : settings.leverage;
+    const leverage = settings.leverage;
     const marginUSD = settings.marginUSD;
     const notionalUSD = +(marginUSD * leverage).toFixed(2);
     const rawPosSize = notionalUSD / entry;
@@ -1635,7 +1612,7 @@ class App {
 
     const orderPacket = {
       asset,
-      market: this.currentMarket,
+      market: 'Crypto',
       direction,
       entry,
       stopLoss,
@@ -1711,13 +1688,13 @@ class App {
   async executeCurrentTrade(customOrder = null) {
     const ctx = this.copilotBrain.currentContext;
     const adapter = this.getActiveAdapter();
-    const currency = this.currentMarket === 'India' ? '₹' : '$';
+    const currency = '$';
 
     let orderParams;
     if (customOrder && customOrder.entry) {
       orderParams = {
         asset: customOrder.asset || this.currentAsset,
-        market: this.currentMarket,
+        market: 'Crypto',
         direction: customOrder.direction || 'LONG',
         entry: customOrder.entry,
         stopLoss: customOrder.stopLoss,
@@ -1743,7 +1720,7 @@ class App {
       const { targetAsset, strategyState, historicalContext, eventRisk, riskParams } = ctx;
       orderParams = {
         asset: targetAsset,
-        market: this.currentMarket,
+        market: 'Crypto',
         direction: strategyState.direction || 'LONG',
         entry: riskParams.entry,
         stopLoss: riskParams.stopLoss,
@@ -1936,7 +1913,7 @@ class App {
     return {
       id: signal.id,
       user_id: 'guest_autopilot',
-      market: signal.currencySymbol === '₹' ? 'India' : 'Crypto',
+      market: 'Crypto',
       asset: signal.asset,
       direction: signal.direction,
       entry_price: signal.entryPrice,
@@ -2185,7 +2162,7 @@ class App {
     this.ui.refreshDerivativesOrderDesk();
 
     const fundingEl = document.getElementById('meta_funding_rate');
-    if (fundingEl && this.currentMarket !== 'India') {
+    if (fundingEl && true) {
       fundingEl.textContent = 'Syncing Delta...';
       fundingEl.className = 'meta-val neutral';
     }
@@ -2195,41 +2172,23 @@ class App {
     this.voiceAssistant.speak(`Switched to ${asset}. Loading analysis.`);
   }
 
-  async switchMarket(market) {
-    if (this.currentMarket === market) return;
-    this.currentMarket = market;
-    this.lastKnownState = null;
-
+  async switchMarket(market = 'Crypto') {
+    this.currentMarket = 'Crypto';
+    this.ui.currentMarket = 'Crypto';
     const adapter = this.getActiveAdapter();
-    const defaultAsset = market === 'India' ? 'NIFTY' : 'BTC';
+    const defaultAsset = 'BTC';
     this.currentAsset = defaultAsset;
-
-    const defaultPills = market === 'India'
-      ? ['NIFTY', 'BANKNIFTY', 'RELIANCE']
-      : ['BTC', 'ETH', 'SOL'];
-
-    this.ui.setMarket(market, defaultPills);
-
+    const defaultPills = ['BTC', 'ETH', 'SOL'];
+    this.ui.setMarket('Crypto', defaultPills);
     await adapter.ensureAssetInitialized(defaultAsset);
     adapter.subscribe(defaultAsset, this._boundOnMarketDataTick);
-
     const snapshot = adapter.getSnapshot(defaultAsset);
     this.ui.updateTicker(snapshot);
-
     this.chartManager.setAdapter(adapter);
-    this.chartManager.setMarket(market, defaultAsset);
-    this.ui.currentMarket = market;
+    this.chartManager.setMarket('Crypto', defaultAsset);
     this.ui.currentAsset = defaultAsset;
     this.ui.refreshDerivativesOrderDesk();
     await this.runFullEvaluation();
-
-    const marketTitle = market === 'India' ? 'Indian Market (NSE/BSE)' : 'Crypto Market';
-    this.ui.showToast(`🇮🇳 ${marketTitle} Active`, `Monitoring ${defaultAsset} with real-time Indian feeds.`, 'success');
-    this.voiceAssistant.speak(
-      market === 'India'
-        ? 'Indian Market active ho gaya hai. Ab NIFTY 50 aur Bank Nifty ka live analysis load ho raha hai.'
-        : 'Crypto Market active ho gaya hai. Bitcoin aur Ethereum ka analysis load ho raha hai.'
-    );
   }
 
   switchTimeframe(tf) {

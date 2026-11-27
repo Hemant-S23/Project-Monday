@@ -235,8 +235,7 @@ export class MultiChartManager {
     // Default asset pool
     this.defaultAssetUniverse = [
       'BTC', 'ETH', 'SOL', 'AVAX', 'LINK',
-      'DOGE', 'NEAR', 'SUI', 'XRP', 'ADA',
-      'NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATASTEEL', 'HDFCBANK'
+      'DOGE', 'NEAR', 'SUI', 'XRP', 'ADA'
     ];
   }
 
@@ -249,11 +248,7 @@ export class MultiChartManager {
   }
 
   getAdapterForCell(sc) {
-    const isIndian = sc.market === 'India' || ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATASTEEL', 'HDFCBANK', 'HAL', 'ZOMATO', 'TATAMOTORS'].includes(sc.asset);
-    if (this.adapters) {
-      return isIndian ? this.adapters.india : this.adapters.crypto;
-    }
-    return this.adapter;
+    return this.adapters?.crypto || this.adapter;
   }
 
   setTheme(_theme) {
@@ -548,7 +543,7 @@ export class MultiChartManager {
       const prev = this.subCharts[i];
       const asset = prev ? prev.asset : (this.defaultAssetUniverse[i % this.defaultAssetUniverse.length] || 'BTC');
       const tf = prev ? prev.timeframe : (i === 1 ? '5M' : (i === 0 ? (this.initialTimeframe || '1H') : '15M'));
-      const market = ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATASTEEL', 'HDFCBANK'].includes(asset) ? 'India' : 'Crypto';
+      const market = 'Crypto';
 
       newSubCharts.push({
         id: `subchart_${i}`,
@@ -719,13 +714,7 @@ export class MultiChartManager {
                 <option value="XRP" ${sc.asset === 'XRP' ? 'selected' : ''}>XRP</option>
                 <option value="ADA" ${sc.asset === 'ADA' ? 'selected' : ''}>ADA</option>
               </optgroup>
-              <optgroup label="Indian Market (NSE)">
-                <option value="NIFTY" ${sc.asset === 'NIFTY' ? 'selected' : ''}>NIFTY 50</option>
-                <option value="BANKNIFTY" ${sc.asset === 'BANKNIFTY' ? 'selected' : ''}>BANK NIFTY</option>
-                <option value="RELIANCE" ${sc.asset === 'RELIANCE' ? 'selected' : ''}>RELIANCE</option>
-                <option value="TATASTEEL" ${sc.asset === 'TATASTEEL' ? 'selected' : ''}>TATASTEEL</option>
-                <option value="HDFCBANK" ${sc.asset === 'HDFCBANK' ? 'selected' : ''}>HDFCBANK</option>
-              </optgroup>
+              
             </select>
             <select class="subchart-tf-select" id="tf_select_${idx}" data-cell-idx="${idx}">
               <option value="1M" ${sc.timeframe.toUpperCase() === '1M' ? 'selected' : ''}>1m</option>
@@ -1530,7 +1519,7 @@ export class MultiChartManager {
     if (!sc.currentBar) return;
 
     const isCrypto = sc.market === 'Crypto';
-    const prefix = isCrypto ? '$' : '₹';
+    const prefix = '$';
     const p = sc.currentBar.close;
     const formattedPrice = p < 0.1 ? p.toFixed(4) : p < 10 ? p.toFixed(3) : p.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     
@@ -1614,14 +1603,14 @@ export class MultiChartManager {
     if (this.syncSettings.symbol) {
       this.subCharts.forEach(s => {
         s.asset = newAsset;
-        s.market = ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATASTEEL', 'HDFCBANK'].includes(newAsset) ? 'India' : 'Crypto';
+        s.market = 'Crypto';
         const sel = document.getElementById(`asset_select_${s.cellIndex}`);
         if (sel) sel.value = newAsset;
         this.loadCandlesForCell(s);
       });
     } else {
       sc.asset = newAsset;
-      sc.market = ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TATASTEEL', 'HDFCBANK'].includes(newAsset) ? 'India' : 'Crypto';
+      sc.market = 'Crypto';
       this.loadCandlesForCell(sc);
     }
 

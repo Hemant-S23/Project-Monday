@@ -92,13 +92,7 @@ export class NewsContextEngine {
   }
 
   getMarketSentiment(market = 'Crypto') {
-    if (market === 'India') {
-      return {
-        score: 62,
-        classification: 'Mild Bullish (DII Net Inflows)',
-        source: 'NSE / Domestic Mutual Funds Baseline'
-      };
-    }
+    
     return this._cachedFng || {
       score: 64,
       classification: 'Greed',
@@ -287,67 +281,12 @@ export class NewsContextEngine {
         details: 'Rate path expectations steady. Macro positioning cautious ahead of release.'
       },
 
-      // --- INDIAN MACROECONOMIC & F&O REALTIME EVENTS ---
-      {
-        id: 'IND-01',
-        title: 'RBI Monetary Policy Committee (MPC) Rate Decision',
-        category: 'Monetary Policy',
-        impact: 'Market Moving',
-        riskLevel: 'High',
-        timestamp: rbiTargetTime,
-        timeWindow: `Session Window (${this.formatRelativeTime(rbiTargetTime)})`,
-        affectedAssets: ['NIFTY', 'BANKNIFTY', 'FINNIFTY', 'HDFCBANK', 'SBIN', 'ICICIBANK', 'India'],
-        details: 'Repo rate steady at 6.50%. RBI neutral stance maintaining headline inflation target. High volatility in Bank Nifty.'
-      },
-      {
-        id: 'IND-02',
-        title: 'India CPI Inflation Prints at 3.65% (Within RBI Band)',
-        category: 'Macroeconomic',
-        impact: 'Relevant',
-        riskLevel: 'Low',
-        timestamp: now - 45 * 60 * 1000,
-        timeWindow: this.formatRelativeTime(now - 45 * 60 * 1000),
-        affectedAssets: ['NIFTY', 'BANKNIFTY', 'SENSEX', 'India'],
-        details: 'Retail inflation comfortably within RBI 4% tolerance band. Solid baseline supporting Indian corporate capex.'
-      },
-      {
-        id: 'IND-03',
-        title: 'FII/DII Net Flow: Domestic DIIs Absorb +₹3,450 Cr',
-        category: 'Institutional Flows',
-        impact: 'Relevant',
-        riskLevel: 'Low',
-        timestamp: diiFlowTime,
-        timeWindow: isMarketHours ? `Live Cash Market (${this.formatRelativeTime(diiFlowTime)})` : `Post-Market (${this.formatRelativeTime(diiFlowTime)})`,
-        affectedAssets: ['NIFTY', 'RELIANCE', 'TCS', 'HDFCBANK', 'India'],
-        details: 'Robust domestic mutual fund SIPs provide steady bids defending 20 EMA pullbacks across Nifty heavyweights.'
-      },
-      {
-        id: 'IND-04',
-        title: 'Nifty 50 & Bank Nifty Weekly Expiry Concentration',
-        category: 'Derivatives / F&O',
-        impact: 'Market Moving',
-        riskLevel: 'Medium',
-        timestamp: expiryCountdownTime,
-        timeWindow: `Expiry Window (${this.formatRelativeTime(expiryCountdownTime)})`,
-        affectedAssets: ['NIFTY', 'BANKNIFTY', 'India'],
-        details: 'Heavy call writing open interest at key resistance. Expect tight compression before 2 PM expansion.'
-      },
-      {
-        id: 'IND-05',
-        title: 'Corporate Earnings Preview: Reliance & TCS Q-Results',
-        category: 'Corporate Earnings',
-        impact: 'Market Moving',
-        riskLevel: 'Medium',
-        timestamp: now - 90 * 60 * 1000,
-        timeWindow: this.formatRelativeTime(now - 90 * 60 * 1000),
-        affectedAssets: ['RELIANCE', 'TCS', 'INFY', 'NIFTY', 'India'],
-        details: 'Focus on Jio ARPU & Retail expansion for Reliance; BFSI deal ramp-ups for TCS. High sectoral beta impact.'
-      }
+      
     ];
   }
 
   getEventsForAsset(asset, market = 'Crypto') {
-    const isIndian = market === 'India' || ['NIFTY', 'BANKNIFTY', 'SENSEX', 'FINNIFTY', 'RELIANCE', 'TCS', 'HDFCBANK'].includes(asset);
+    const isIndian = false;
     const dynamicBase = this.getDynamicEvents();
 
     let baseEvents = [];
@@ -437,9 +376,7 @@ export class NewsContextEngine {
         level: 'Medium',
         badge: 'Medium Event Risk',
         isShieldTriggered: false,
-        summary: market === 'India' 
-          ? 'F&O expiry & earnings catalyst active. Normal disciplined 1% risk allocation.' 
-          : 'Moderate ecosystem/macro catalyst active. Normal disciplined 1:3 RR execution.',
+        summary: 'Moderate ecosystem/macro catalyst active. Normal disciplined 1:3 RR execution.',
         activeEvents: relevant,
         lastUpdated: now
       };

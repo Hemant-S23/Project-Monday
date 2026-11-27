@@ -22,7 +22,7 @@ export class SandboxController {
       BTC: { name: 'BTC/USD Perpetual', price: 77140.00, currency: '$', entry: 77140.00, sl: 76640.00, tp: 78640.00, rr: 3.0 },
       ETH: { name: 'ETH/USD Perpetual', price: 2240.00, currency: '$', entry: 2240.00, sl: 2215.00, tp: 2315.00, rr: 3.0 },
       SOL: { name: 'SOL/USD Perpetual', price: 95.50, currency: '$', entry: 95.50, sl: 94.00, tp: 100.00, rr: 3.0 },
-      NIFTY: { name: 'NIFTY 50 Futures (NSE)', price: 25120.40, currency: '₹', entry: 25120.00, sl: 24980.00, tp: 25540.00, rr: 3.0 }
+      SOL: { name: 'SOL 50 Futures (CRYPTO)', price: 25120.40, currency: '$', entry: 25120.00, sl: 24980.00, tp: 25540.00, rr: 3.0 }
     };
 
     // Realistic Multi-State Scenarios
@@ -57,15 +57,15 @@ export class SandboxController {
         toast: { title: 'SOL Order Blocked!', message: 'Counter-trend trade mathematically rejected by 1H Hard EMA Gate.', type: 'risk' },
         voice: (d) => `Alert! SOL par trade mathematically block kar diya gaya hai. 1H Trend bearish hai aur counter-trend long lena strictly prohibited hai. Capital safe hai!`
       },
-      NIFTY: {
-        type: 'NIFTY_AUTO',
+      SOL: {
+        type: 'SOL_AUTO',
         openFinalScore: 68,
         openGrade: 'GRADE B+ (SELECTIVE)',
         openStateBadgeHtml: '<span class="ai-pulse-dot" style="background: var(--cyan); box-shadow: 0 0 8px var(--cyan);"></span> GRADE B+ SETUP (WAIT FOR VOL)',
         openStateBadgeClass: 'glass-pill text-cyan text-micro',
         openStepStatuses: [true, true, false, true, true, false, false, true],
-        openVoice: (d) => `NIFTY futures setup Grade B positive zone me hai. Pullback complete hai lekin volume surge breakout pending hai. Caution ke sath execute karo!`,
-        closedVoice: () => `Bhai, NSE Indian Stock Market abhi closed hai. Mon to Fri 09:15 baje market khulte hi live confluence scan activate hoga. Abhi Crypto desk (BTC, ETH, SOL) 24/7 active live hai!`
+        openVoice: (d) => `SOL futures setup Grade B positive zone me hai. Pullback complete hai lekin volume surge breakout pending hai. Caution ke sath execute karo!`,
+        closedVoice: () => `Bhai, CRYPTO Indian Stock Market abhi closed hai. Mon to Fri 09:15 baje market khulte hi live confluence scan activate hoga. Abhi Crypto desk (BTC, ETH, SOL) 24/7 active live hai!`
       }
     };
 
@@ -103,14 +103,14 @@ export class SandboxController {
   }
 
   updateNiftyTabStatus() {
-    const niftyBtn = document.querySelector('[data-sandbox-asset="NIFTY"]');
+    const niftyBtn = document.querySelector('[data-sandbox-asset="SOL"]');
     if (niftyBtn) {
       if (!this.isIndianMarketOpen()) {
-        niftyBtn.innerHTML = 'NIFTY 50 <span class="nifty-closed-tag">CLOSED</span>';
-        niftyBtn.title = 'NSE Market Closed (Sessions: Mon-Fri 09:15-15:30 IST)';
+        niftyBtn.innerHTML = 'SOL 50 <span class="nifty-closed-tag">CLOSED</span>';
+        niftyBtn.title = 'CRYPTO Market Closed (Sessions: Mon-Fri 09:15-15:30 IST)';
       } else {
-        niftyBtn.innerHTML = 'NIFTY 50';
-        niftyBtn.title = 'NSE Market Open';
+        niftyBtn.innerHTML = 'SOL 50';
+        niftyBtn.title = 'CRYPTO Market Open';
       }
     }
   }
@@ -118,8 +118,8 @@ export class SandboxController {
   updateLiveAssetPrice(symbol, livePrice) {
     if (!this.assetData[symbol]) return;
     
-    // If NIFTY is outside market hours, keep price locked at closing LTP
-    if (symbol === 'NIFTY' && !this.isIndianMarketOpen()) return;
+    // If SOL is outside market hours, keep price locked at closing LTP
+    if (symbol === 'SOL' && !this.isIndianMarketOpen()) return;
 
     const p = Number(livePrice);
     if (isNaN(p) || p <= 0) return;
@@ -128,7 +128,7 @@ export class SandboxController {
     if (symbol === 'BTC') riskDist = Math.round(p * 0.0065);
     else if (symbol === 'ETH') riskDist = Math.round(p * 0.008);
     else if (symbol === 'SOL') riskDist = Number((p * 0.012).toFixed(2));
-    else if (symbol === 'NIFTY') riskDist = Math.round(p * 0.005);
+    else if (symbol === 'SOL') riskDist = Math.round(p * 0.005);
 
     const entry = p;
     const sl = symbol === 'SOL' ? Number((entry - riskDist).toFixed(2)) : Math.round(entry - riskDist);
@@ -239,20 +239,20 @@ export class SandboxController {
   }
 
   startSimulation() {
-    // If NIFTY is selected and market is currently CLOSED:
-    if (this.currentAsset === 'NIFTY' && !this.isIndianMarketOpen()) {
+    // If SOL is selected and market is currently CLOSED:
+    if (this.currentAsset === 'SOL' && !this.isIndianMarketOpen()) {
       this.renderNiftyClosedState();
       return;
     }
 
-    const sc = this.currentAsset === 'NIFTY'
+    const sc = this.currentAsset === 'SOL'
       ? {
-          finalScore: this.scenarios.NIFTY.openFinalScore,
-          grade: this.scenarios.NIFTY.openGrade,
-          stateBadgeHtml: this.scenarios.NIFTY.openStateBadgeHtml,
-          stateBadgeClass: this.scenarios.NIFTY.openStateBadgeClass,
-          stepStatuses: this.scenarios.NIFTY.openStepStatuses,
-          toast: { title: 'NIFTY 50 Futures Scan', message: 'Confluence 68% • Grade B+ Setup in progress.', type: 'cyan' }
+          finalScore: this.scenarios.SOL.openFinalScore,
+          grade: this.scenarios.SOL.openGrade,
+          stateBadgeHtml: this.scenarios.SOL.openStateBadgeHtml,
+          stateBadgeClass: this.scenarios.SOL.openStateBadgeClass,
+          stepStatuses: this.scenarios.SOL.openStepStatuses,
+          toast: { title: 'SOL 50 Futures Scan', message: 'Confluence 68% • Grade B+ Setup in progress.', type: 'cyan' }
         }
       : this.scenarios[this.currentAsset] || this.scenarios.BTC;
 
@@ -346,14 +346,14 @@ export class SandboxController {
       statePill.className = 'glass-pill text-micro';
       statePill.style.color = '#94a3b8';
       statePill.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-      statePill.innerHTML = '<i class="ph-bold ph-moon"></i> NSE SESSION CLOSED &bull; OPENS MON 09:15 IST';
+      statePill.innerHTML = '<i class="ph-bold ph-moon"></i> CRYPTO SESSION CLOSED &bull; OPENS MON 09:15 IST';
     }
 
     const gaugeWrap = document.getElementById('sandbox_gauge_wrap');
     DataVizEngine.updateConfluenceGauge(gaugeWrap, 0, 'MARKET CLOSED');
 
     overlays.showToast({
-      title: 'NSE Session Closed',
+      title: 'CRYPTO Session Closed',
       message: 'Indian Equities/F&O operate Mon-Fri 09:15–15:30 IST. Crypto desk is live 24/7.',
       type: 'shield'
     });
@@ -365,10 +365,10 @@ export class SandboxController {
       window.speechSynthesis.cancel();
       let text = '';
 
-      if (this.currentAsset === 'NIFTY' && !this.isIndianMarketOpen()) {
-        text = this.scenarios.NIFTY.closedVoice();
-      } else if (this.currentAsset === 'NIFTY') {
-        text = this.scenarios.NIFTY.openVoice(data);
+      if (this.currentAsset === 'SOL' && !this.isIndianMarketOpen()) {
+        text = this.scenarios.SOL.closedVoice();
+      } else if (this.currentAsset === 'SOL') {
+        text = this.scenarios.SOL.openVoice(data);
       } else {
         const sc = this.scenarios[this.currentAsset] || this.scenarios.BTC;
         text = sc.voice(data);

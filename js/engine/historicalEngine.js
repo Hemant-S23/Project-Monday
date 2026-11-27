@@ -12,7 +12,7 @@ export class HistoricalContextEngine {
 
   /**
    * Evaluates historical regime context in real-time.
-   * @param {string} asset - e.g. 'BTC', 'ETH', 'NIFTY'
+   * @param {string} asset - e.g. 'BTC', 'ETH', 'SOL'
    * @param {string} direction - 'LONG' or 'SHORT'
    * @param {object} htfTrend - { direction, emaFast, emaSlow, lastClose }
    * @param {string} volatilityParam - 'NORMAL', 'HIGH', etc.
@@ -23,7 +23,7 @@ export class HistoricalContextEngine {
    */
   evaluate(asset, direction, htfTrend = { direction: 'BULLISH' }, volatilityParam = 'NORMAL', market = 'Crypto', candles = [], currentPrice = 0, strategyResult = null) {
     const now = Date.now();
-    const isIndia = market === 'India' || ['NIFTY', 'BANKNIFTY', 'SENSEX', 'FINNIFTY', 'RELIANCE', 'TCS', 'HDFCBANK'].includes(asset);
+    const isIndia = false;
 
     // 1. Calculate Real-Time ATR and Volatility State from Live Candles
     let calculatedVolatility = volatilityParam;
@@ -57,8 +57,8 @@ export class HistoricalContextEngine {
         avgCandleRange = atrValue;
         rangeExpansionRatio = avgCandleRange > 0 ? (currentCandleRange / avgCandleRange) : 1.0;
 
-        const highThreshold = isIndia ? 0.65 : 1.15;
-        const lowThreshold = isIndia ? 0.20 : 0.35;
+        const highThreshold = 1.15;
+        const lowThreshold = 0.35;
 
         if (atrPct >= highThreshold || rangeExpansionRatio >= 1.75) {
           calculatedVolatility = 'HIGH';
@@ -118,9 +118,7 @@ export class HistoricalContextEngine {
 
     if (calculatedVolatility === 'HIGH' || volatilityParam === 'EXTREME') {
       patternId = 'REGIME_HIGH_VOL_PULLBACK';
-      patternName = isIndia
-        ? 'High Beta Macro Volatility Spike & Option Greeks Expansion'
-        : 'Pullback during Macro Volatility Spike';
+      patternName = 'Pullback during Macro Volatility Spike';
       explanation = isIndia
         ? `Elevated India VIX & ATR expansion (${atrPct.toFixed(2)}%). Wider intraday spreads detected; disciplined stop placement recommended.`
         : `Large ATR expansion (${atrPct.toFixed(2)}%) preceding setup. Elevated slippage and wider wicks increase stop-out risk prior to expansion.`;
@@ -131,21 +129,15 @@ export class HistoricalContextEngine {
     } else if (trendDir === 'BULLISH') {
       if (isWickSweep) {
         patternId = 'REGIME_BULL_SWEEP';
-        patternName = isIndia
-          ? 'NSE Opening Liquidity Sweep & Value Area Reclaim'
-          : 'Asian Session Liquidity Sweep in Bullish Expansion';
-        explanation = isIndia
-          ? `Price swept intraday swing low and reclaimed dynamic 20 EMA on ${asset}. Institutional bid absorption detected at discount.`
-          : `Price sweeps previous structural low with descending volume and recovers above EMA20. Historically shows reliable trend continuation.`;
+        patternName = 'Session Liquidity Sweep in Bullish Expansion';
+        explanation = `Price sweeps previous structural low with descending volume and recovers above EMA20. Historically shows reliable trend continuation.`;
         contextTag = 'Supportive';
         baseWinRate = 65.2;
         baseRR = 2.65;
         baseOccurrences = 88;
       } else if (isEmaPullback) {
         patternId = 'REGIME_BULL_EMA_CONTINUATION';
-        patternName = isIndia
-          ? 'Dynamic 20 EMA Institutional Dip-Buying Defense'
-          : 'Bullish 20 EMA Trend Continuation Pullback';
+        patternName = 'Bullish 20 EMA Trend Continuation Pullback';
         explanation = `Price holding 20 EMA pullback with structural higher-lows. Momentum remains aligned with higher-timeframe trend.`;
         contextTag = 'Supportive';
         baseWinRate = 63.8;
@@ -153,9 +145,7 @@ export class HistoricalContextEngine {
         baseOccurrences = 94;
       } else {
         patternId = 'REGIME_BULL_EXPANSION';
-        patternName = isIndia
-          ? 'Nifty Trend Continuation & Call Unwinding Drive'
-          : 'Order Block Demand Expansion & Retest';
+        patternName = 'Order Block Demand Expansion & Retest';
         explanation = `Order flow shows clear buyer control above key demand zones with steady volume progression.`;
         contextTag = 'Supportive';
         baseWinRate = 61.5;
@@ -165,21 +155,15 @@ export class HistoricalContextEngine {
     } else if (trendDir === 'BEARISH') {
       if (isWickSweep) {
         patternId = 'REGIME_BEAR_SUPPLY_REJECTION';
-        patternName = isIndia
-          ? 'Bearish Resistance Rejection at Call Writing Wall'
-          : 'Bearish Supply Order Block Retest & Wick Rejection';
-        explanation = isIndia
-          ? `Price tested heavy call open interest wall on ${asset} and got rejected with upper shadow. Bears defending overhead supply.`
-          : `Price tests breakdown origin with descending volume and upper wick exhaustion. High probability rejection toward previous structural swing lows.`;
+        patternName = 'Bearish Supply Order Block Retest & Wick Rejection';
+        explanation = `Price tests breakdown origin with descending volume and upper wick exhaustion. High probability rejection toward previous structural swing lows.`;
         contextTag = 'Supportive';
         baseWinRate = 63.4;
         baseRR = 2.45;
         baseOccurrences = 79;
       } else {
         patternId = 'REGIME_BEAR_BREAKDOWN';
-        patternName = isIndia
-          ? 'Structural Market Shift (MSS) & Breakdown Retest'
-          : 'Bearish Supply Order Block Retest';
+        patternName = 'Bearish Supply Order Block Retest';
         explanation = `Price tests breakdown origin with descending volume. High probability rejection toward previous structural swing lows.`;
         contextTag = 'Supportive';
         baseWinRate = 60.8;
@@ -188,9 +172,7 @@ export class HistoricalContextEngine {
       }
     } else {
       patternId = 'REGIME_CHOP_DIVERGENCE';
-      patternName = isIndia
-        ? 'Nifty/BankNifty SMT Divergence inside Range Bracket'
-        : 'SMT Divergence inside Consolidating Range';
+      patternName = 'SMT Divergence inside Consolidating Range';
       explanation = `Price bounded inside consolidation bracket. Higher frequency of false breakouts and stop hunts; wait for structural clarity.`;
       contextTag = 'Mixed';
       baseWinRate = 47.5;

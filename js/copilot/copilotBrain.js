@@ -24,8 +24,8 @@ const ASSET_ALIASES = {
   'cardano': 'ADA',
   'btc': 'BTC',
   'bitcoin': 'BTC',
-  'nifty': 'NIFTY',
-  'banknifty': 'BANKNIFTY',
+  
+  
   'reliance': 'RELIANCE',
   'tatamotors': 'TATAMOTORS',
   'tata': 'TATAMOTORS',
@@ -63,10 +63,10 @@ export class CopilotBrain {
   }
 
   formatPrice(p, currencySymbol = null) {
-    const symbol = currencySymbol !== null ? currencySymbol : (this.currentContext?.market === 'India' ? '₹' : '$');
+    const symbol = currencySymbol !== null ? currencySymbol : ('$');
     if (p === undefined || p === null || isNaN(p)) return `${symbol}0.00`;
     const num = Number(p);
-    const locale = this.currentContext?.market === 'India' ? 'en-IN' : 'en-US';
+    const locale = 'en-US';
     if (num >= 1000) return `${symbol}${num.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     if (num >= 1) return `${symbol}${num.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: (this.currentContext?.market === 'India' ? 2 : 4) })}`;
     if (num >= 0.01) return `${symbol}${num.toFixed(6)}`;
@@ -395,33 +395,6 @@ export class CopilotBrain {
     else if (this.matchesAny(clean, ['news', 'event', 'cpi', 'fomc', 'fed', 'macro'])) {
       response = `Macro radar par event risk abhi **${events.level || 'Low'}** hai. ${events.summary || 'Normal macroeconomic conditions.'}\n\n` +
         `MONDAY Tip: Key economic news ke time volatility wicks aati hain jo stops ko trigger kar sakti hain, isliye key data release se pehle safe risk management rakhna zaroori hai.`;
-    }
-
-    // 10.5. Indian Market Specific Queries ("nifty", "banknifty", "indian market", "nse", "bse", "reliance", "timing", "expiry")
-    else if (this.matchesAny(clean, [
-      'nifty', 'banknifty', 'bank nifty', 'sensex', 'indian market', 'nse', 'bse',
-      'reliance', 'tcs', 'hdfc', 'market timing', 'expiry', 'fii', 'dii'
-    ])) {
-      response = `Indian Market (NSE/BSE) me main fully active hoon! 🇮🇳✨\n\n` +
-        `• **Current Instrument:** **${asset}** (${fmtPrice})\n` +
-        `• **Key Correlation:** NIFTY aur BANK NIFTY ke beech institutional SMT divergence continuously monitor kar rahi hoon.\n` +
-        `• **Market Timings:** 09:15 AM se 03:30 PM IST (09:00 - 09:08 AM Pre-Market).\n` +
-        `• **Expiry & FII Dynamics:** Weekly expiry par key strikes par Open Interest concentration track hota hai, aur DIIs ka continuous domestic support pullbacks ko sustain karta hai.\n\n` +
-        `Aap kisi bhi specific Indian stock ya index ka structure freely poochh sakte ho!`;
-    }
-
-    // 10.6. Recent Indian IPOs & New Listings ("ipo", "new ipo", "hyundai", "swiggy", "bajaj", "waree", "ola")
-    else if (this.matchesAny(clean, [
-      'ipo', 'new ipo', 'ipos', 'hyundai', 'swiggy', 'bajaj housing', 'bajajhfl',
-      'waree', 'waaree', 'ola', 'ola electric', 'premier', 'firstcry', 'afcons', 'ireda', 'tatatech'
-    ])) {
-      response = `Indian Market ke recent landmark IPOs aur fresh listings par mera radar fully updated hai! 🇮🇳🚀\n\n` +
-        `• **Hyundai Motor India (HYUNDAI):** India ke history ka sabse bada IPO (~₹27,870 Cr). Live NSE chart aur order flow active hai.\n` +
-        `• **Swiggy (SWIGGY):** Quick Commerce aur Food Delivery giant ki listing.\n` +
-        `• **Bajaj Housing Finance (BAJAJHFL):** Record subscription wala high-demand housing finance leader.\n` +
-        `• **Waaree Energies (WAREE) & Premier Energies:** Solar module aur green energy capex boom ke top leaders.\n` +
-        `• **NTPC Green, Ola Electric, FirstCry, Afcons, IREDA:** Sabhi terminal me 150+ stocks ke sath fully searchable aur tradeable hain.\n\n` +
-        `Search bar me koi bhi company name ya ticker type kijiye — direct TradingView chart aur disciplined risk-reward calculation ready hai!`;
     }
 
     // 11. Who are you / Identity ("who are you", "naam kya hai", "fullform", "monday kya hai")

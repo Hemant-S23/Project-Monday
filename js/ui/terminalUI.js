@@ -52,13 +52,11 @@ export class TerminalUI {
     try {
       const savedWatchlist = localStorage.getItem('monday_user_watchlist');
       this.userWatchlist = savedWatchlist ? JSON.parse(savedWatchlist) : {
-        Crypto: ['BTC', 'ETH', 'SOL'],
-        India: ['NIFTY', 'RELIANCE', 'SWIGGY']
+        Crypto: ['BTC', 'ETH', 'SOL']
       };
     } catch (e) {
       this.userWatchlist = {
-        Crypto: ['BTC', 'ETH', 'SOL'],
-        India: ['NIFTY', 'RELIANCE', 'SWIGGY']
+        Crypto: ['BTC', 'ETH', 'SOL']
       };
     }
 
@@ -83,7 +81,7 @@ export class TerminalUI {
   getStarredAssets(market = this.currentMarket) {
     if (!this.userWatchlist) this.userWatchlist = {};
     if (!this.userWatchlist[market]) {
-      this.userWatchlist[market] = market === 'India' ? ['NIFTY', 'RELIANCE', 'SWIGGY'] : ['BTC', 'ETH', 'SOL'];
+      this.userWatchlist[market] = ['BTC', 'ETH', 'SOL'];
     }
     return this.userWatchlist[market];
   }
@@ -146,11 +144,8 @@ export class TerminalUI {
       searchResults.innerHTML = items.map(m => {
         const isPos = m.changePercent >= 0;
         const assetSymbol = m.baseAsset || (m.symbol ? m.symbol.replace(/(\/USD|USDT|USD)$/, '') : 'BTC');
-        const isIndia = this.currentMarket === 'India' || m.exchange === 'NSE' || m.exchange === 'BSE';
-        const pairSub = m.name ? `${m.name} • ${m.exchange || 'NSE'}` : (isIndia ? m.symbol : `${assetSymbol}/USD`);
-        const formattedPrice = isIndia
-          ? `₹${m.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-          : (m.price >= 1 ? `$${m.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `$${m.price.toFixed(6)}`);
+        const pairSub = m.name ? `${m.name}` : `${assetSymbol}/USD`;
+        const formattedPrice = m.price >= 1 ? `$${m.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `$${m.price.toFixed(6)}`;
         const isStarred = this.isStarred(assetSymbol);
 
         return `
@@ -2187,7 +2182,7 @@ export class TerminalUI {
     const slRoeEl = document.getElementById('order_sl_roe');
     const execLabel = document.getElementById('exec_btn_label');
 
-    const curr = this.currentMarket === 'India' ? '₹' : '$';
+    const curr = '$';
 
     if (costEl) costEl.textContent = `${curr}${Number(telemetry.marginUSD).toFixed(2)}`;
     if (notionalEl) notionalEl.textContent = `${curr}${Number(telemetry.notionalUSD).toFixed(2)}`;
@@ -2419,10 +2414,10 @@ export class TerminalUI {
     const triggerLabel = document.getElementById('market_trigger_label');
     const triggerIcon = document.getElementById('market_trigger_icon');
     if (triggerLabel) {
-      triggerLabel.textContent = market === 'India' ? 'India (NSE)' : 'Crypto';
+      triggerLabel.textContent = 'Crypto';
     }
     if (triggerIcon) {
-      triggerIcon.className = market === 'India' ? 'ph ph-buildings' : 'ph ph-currency-btc';
+      triggerIcon.className = 'ph ph-currency-btc';
     }
     document.querySelectorAll('.market-menu-item').forEach(b => {
       b.classList.toggle('active', b.dataset.market === market);
@@ -2436,14 +2431,14 @@ export class TerminalUI {
     const searchInput = document.getElementById('crypto_search_input');
     if (searchInput) {
       searchInput.placeholder = market === 'India'
-        ? 'Search 150+ Indian stocks & IPOs (NIFTY, RELIANCE, SWIGGY)...'
+        ? 'Search 100+ Crypto Perpetuals (BTC, ETH, SOL, AVAX...)...'
         : 'Search 700+ cryptos (ETH, DOGE, SOL, BNB)...';
       searchInput.value = '';
     }
 
     const sourceBadge = document.getElementById('feed_source_badge');
     if (sourceBadge) {
-      sourceBadge.textContent = market === 'India' ? 'NSE-Live Feed' : 'Live WebSocket';
+      sourceBadge.textContent = 'Live WebSocket';
     }
 
     this.renderWatchlistTray(market);
@@ -2456,43 +2451,7 @@ export class TerminalUI {
     const starred = this.getStarredAssets(market);
 
     let sections = [];
-    if (market === 'India') {
-      sections = [
-        {
-          title: '🚀 Mega IPOs & New Leaders',
-          assets: [
-            { sym: 'HYUNDAI', name: 'Hyundai Auto' },
-            { sym: 'SWIGGY', name: 'Swiggy Quick' },
-            { sym: 'BAJAJHFL', name: 'Bajaj Housing' },
-            { sym: 'WAREE', name: 'Waaree Solar' },
-            { sym: 'ZOMATO', name: 'Zomato Blinkit' },
-            { sym: 'NTPCGREEN', name: 'NTPC Green' }
-          ]
-        },
-        {
-          title: '🏛️ Core Heavyweights',
-          assets: [
-            { sym: 'NIFTY', name: 'Nifty 50' },
-            { sym: 'BANKNIFTY', name: 'Bank Nifty' },
-            { sym: 'RELIANCE', name: 'Reliance Ind' },
-            { sym: 'TCS', name: 'Tata Consultancy' },
-            { sym: 'HDFCBANK', name: 'HDFC Bank' },
-            { sym: 'TATAMOTORS', name: 'Tata Motors' }
-          ]
-        },
-        {
-          title: '🛡️ Defense, Rail & Energy',
-          assets: [
-            { sym: 'HAL', name: 'Hindustan Aero' },
-            { sym: 'BEL', name: 'Bharat Elec' },
-            { sym: 'RVNL', name: 'Rail Vikas' },
-            { sym: 'IRFC', name: 'Indian Rail Fin' },
-            { sym: 'SUZLON', name: 'Suzlon Wind' },
-            { sym: 'BSE', name: 'BSE Exchange' }
-          ]
-        }
-      ];
-    } else {
+    if (true) {
       sections = [
         {
           title: '💎 Major Cryptos',
@@ -2631,10 +2590,10 @@ export class TerminalUI {
   }
 
   formatPrice(price, currencySymbol = null) {
-    const symbol = currencySymbol !== null ? currencySymbol : (this.currentMarket === 'India' ? '₹' : '$');
+    const symbol = currencySymbol !== null ? currencySymbol : ('$');
     if (price === undefined || price === null || isNaN(price)) return `${symbol}0.00`;
     const num = Number(price);
-    const locale = this.currentMarket === 'India' ? 'en-IN' : 'en-US';
+    const locale = 'en-US';
     if (num >= 1000) {
       return `${symbol}${num.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     } else if (num >= 1) {
@@ -2762,7 +2721,7 @@ export class TerminalUI {
     card.className = 'trade-blueprint-card';
 
     const dirClass = (setup.direction || 'LONG').toLowerCase();
-    const currSym = setup.currencySymbol || (this.currentMarket === 'India' ? '₹' : '$');
+    const currSym = setup.currencySymbol || ('$');
     const rawGrade = setup.confluenceGrade || (setup.confluenceScore >= 75 ? 'GRADE A' : 'GRADE B');
     const grade = rawGrade.includes('GRADE A+') ? 'GRADE A+' : (rawGrade.includes('GRADE A') ? 'GRADE A' : rawGrade);
     const score = Math.round(setup.confluenceScore || 85);
@@ -3048,7 +3007,7 @@ export class TerminalUI {
             assetEl.textContent = `${currentTargetAsset} ${strategyState.direction || 'LONG'}`;
           }
 
-          const currSym = strategyState.currencySymbol || (this.currentMarket === 'India' ? '₹' : '$');
+          const currSym = strategyState.currencySymbol || ('$');
           const entryEl = document.getElementById('pinned_radar_entry');
           const slEl = document.getElementById('pinned_radar_sl');
           const tpEl = document.getElementById('pinned_radar_tp');
@@ -3266,14 +3225,13 @@ export class TerminalUI {
     const rrEl = document.getElementById('calc_rr');
     const metaRREl = document.getElementById('meta_rr');
 
-    const isIndia = this.currentMarket === 'India' || riskParams.currencySymbol === '₹';
-    const currSym = isIndia ? '₹' : '$';
+    const isIndia = false;
+    const currSym = '$';
 
     let unit = 'coins';
     if (isIndia) {
       const assetUpper = (riskParams.asset || '').toUpperCase();
-      if (['NIFTY', 'BANKNIFTY', 'FINNIFTY', 'MIDCPNIFTY', 'SENSEX'].includes(assetUpper)) {
-        unit = 'contracts';
+      if (false) {
       } else {
         unit = 'shares';
       }
@@ -3284,9 +3242,7 @@ export class TerminalUI {
     if (tpEl) tpEl.textContent = this.formatPrice(riskParams.target, currSym);
     if (posSizeEl) posSizeEl.textContent = `${riskParams.positionSizeCoins} ${unit}`;
     if (maxRiskEl) {
-      const riskVal = isIndia
-        ? `₹${(riskParams.maxRiskUSD * 83.5).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
-        : `$${riskParams.maxRiskUSD}`;
+      const riskVal = `$${riskParams.maxRiskUSD}`;
       maxRiskEl.textContent = `${riskVal} (1.0%)`;
     }
     if (rrEl) {
@@ -4737,7 +4693,7 @@ export class TerminalUI {
           <!-- Expandable Itemized Tax & Charges Receipt Drawer -->
           <div class="passbook-receipt-drawer">
             <div class="receipt-title-row">
-              <span>Delta Exchange India Tax Invoice</span>
+              <span>Perpetual Settlement Statement</span>
               <span>Ref: #${(trade.id || '').substring(0, 8).toUpperCase()}</span>
             </div>
             <div class="receipt-itemized-list">
@@ -4754,13 +4710,11 @@ export class TerminalUI {
                 <span class="val">-$${exitFee.toFixed(2)}</span>
               </div>
               <div class="receipt-line sub-fee">
-                <span>• Total Delta Brokerage</span>
+                <span>• Total Exchange Brokerage</span>
                 <span class="val">-$${brokerage.toFixed(2)}</span>
               </div>
               <div class="receipt-line tax-line">
-                <span>• 18% GST on Exchange Brokerage (Central + State GST)</span>
-                <span class="val">-$${gst.toFixed(2)}</span>
-              </div>
+                </div>
               <div class="receipt-divider"></div>
               <div class="receipt-line total-line">
                 <span>Total Deductions Settled</span>

@@ -3,7 +3,7 @@
  * Dual-Engine Charting:
  * 1. Indian Market (NSE / BSE): TradingView Lightweight Charts (Canvas Engine)
  *    - 100% reliable local rendering, zero licensing popups, zero fallback to Apple
- *    - Real-time candle ticks from IndiaAdapter
+ *    - Real-time candle ticks from CryptoAdapter
  *    - Native Canvas price lines for Entry, Target, and Stop Loss
  *    - Full Dark/Light mode theme sync
  *    - Quick shortcut button to TradingView Web
@@ -92,12 +92,8 @@ export class ChartManager {
       return;
     }
 
-    if (this.currentMarket === 'India') {
-      this.renderLightweightChart();
-    } else {
-      this.destroyLightweightChart();
-      this.renderTradingViewWidget();
-    }
+    this.destroyLightweightChart();
+    this.renderTradingViewWidget();
   }
 
   setTheme(_theme) {
@@ -156,7 +152,7 @@ export class ChartManager {
       '1w': 'W', '1W': 'W'
     };
     const tvTf = tfMap[tf] || tf;
-    if (this.currentTimeframe === tvTf && this.currentMarket !== 'India') return;
+    if (this.currentTimeframe === tvTf) return;
     this.currentTimeframe = tvTf;
     this.render();
   }
@@ -181,24 +177,6 @@ export class ChartManager {
       : (cleanAsset === 'BNB' ? 'BINANCE:BNBUSD' : `CRYPTO:${cleanAsset}USD`);
     // Default to Indian Standard Time (IST / Asia/Kolkata) matching Delta Exchange and local clock
     let timezone = "Asia/Kolkata";
-
-    if (this.currentMarket === 'India') {
-      timezone = "Asia/Kolkata";
-      const assetUpper = this.currentAsset.toUpperCase();
-      if (assetUpper === 'NIFTY' || assetUpper === 'NIFTY50') {
-        symbol = 'NSE:NIFTY1!';
-      } else if (assetUpper === 'BANKNIFTY' || assetUpper === 'NIFTYBANK') {
-        symbol = 'NSE:BANKNIFTY1!';
-      } else if (assetUpper === 'FINNIFTY') {
-        symbol = 'NSE:FINNIFTY1!';
-      } else if (assetUpper === 'MIDCPNIFTY') {
-        symbol = 'NSE:MIDCPNIFTY1!';
-      } else if (assetUpper === 'SENSEX') {
-        symbol = 'BSE:SENSEX';
-      } else {
-        symbol = `NSE:${assetUpper}`;
-      }
-    }
 
     container.innerHTML = `
       <div class="tradingview-widget-container" style="width: 100%; height: 100%; position: absolute; inset: 0;">
@@ -298,7 +276,7 @@ export class ChartManager {
               <i class="ph ph-buildings"></i> NSE • ${assetUpper}
             </span>
             <span class="lw-live-price" id="lw_header_price">
-              ₹${currentPrice.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}
+              $${currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
             <span class="lw-live-change ${isUp ? 'bullish' : 'bearish'}" id="lw_header_change">
               ${isUp ? '+' : ''}${changePct.toFixed(2)}%
@@ -496,7 +474,7 @@ export class ChartManager {
     // Update header price badge
     const priceEl = document.getElementById('lw_header_price');
     if (priceEl) {
-      priceEl.textContent = `₹${price.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}`;
+      priceEl.textContent = `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
   }
 

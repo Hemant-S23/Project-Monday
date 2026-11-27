@@ -258,7 +258,7 @@ export class SignalEngine {
           rationale: Array.isArray(meta.rationale) && meta.rationale.length > 0 
             ? meta.rationale 
             : ['1H HTF Directional Confluence', 'Institutional Order Flow'],
-          currencySymbol: meta.currencySymbol || (ct.market === 'India' ? '₹' : '$'),
+          currencySymbol: meta.currencySymbol || '$',
           issuedAt: meta.issuedAt || (ct.created_at ? new Date(ct.created_at).getTime() : Date.now()),
           validityMinutes: meta.validityMinutes || 45,
           expiresAt: meta.expiresAt || (Date.now() + 2700000),
@@ -600,7 +600,7 @@ export class SignalEngine {
       rationale: Array.isArray(pos.conditions) && pos.conditions.length > 0
         ? pos.conditions.slice(0, 3)
         : ['Auto-Pilot Neural Execution', 'Institutional Order Flow', 'Asymmetric Risk/Reward Verified'],
-      currencySymbol: pos.market === 'India' ? '₹' : '$',
+      currencySymbol: '$',
       issuedAt: now,
       validityMinutes: 60,
       expiresAt: now + (60 * 60 * 1000),

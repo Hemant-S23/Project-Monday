@@ -1,6 +1,6 @@
 /**
  * Base Market Adapter Interface
- * Normalizes price, OHLC candles, and market events across Crypto, Indian, and US markets.
+ * Normalizes price, OHLC candles, and market events across Crypto Perpetual Markets.
  */
 export class MarketAdapter {
   constructor(marketName) {

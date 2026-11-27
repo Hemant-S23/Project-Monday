@@ -22,11 +22,11 @@ export class LiveMarketsFeed {
       BTC: { price: 77140.0, changePct: 0.85, high: 77950, low: 76100 },
       ETH: { price: 2240.0, changePct: 1.20, high: 2310, low: 2200 },
       SOL: { price: 95.5, changePct: 3.40, high: 98.0, low: 92.5 },
-      NIFTY: { price: 25120.4, changePct: 0.72 },
-      HYUNDAI: { price: 1865.4, changePct: 2.45 },
-      SWIGGY: { price: 422.8, changePct: 4.60 },
-      WAAREE: { price: 2840.0, changePct: 5.80 },
-      HAL: { price: 4480.0, changePct: 3.10 }
+      AVAX: { price: 25120.4, changePct: 0.72 },
+      NEAR: { price: 1865.4, changePct: 2.45 },
+      SUI: { price: 422.8, changePct: 4.60 },
+      LINK: { price: 2840.0, changePct: 5.80 },
+      DOGE: { price: 4480.0, changePct: 3.10 }
     };
 
     this.ws = null;
@@ -220,10 +220,10 @@ export class LiveMarketsFeed {
   }
 
   startMicroTickSimulation() {
-    // Subtle realistic micro-ticks for Indian assets (NIFTY, HAL, SWIGGY, etc.)
+    // Subtle realistic micro-ticks for Indian assets (AVAX, DOGE, SUI, etc.)
     setInterval(() => {
       if (this.isTabHidden) return;
-      const indianAssets = ['NIFTY', 'HYUNDAI', 'SWIGGY', 'WAAREE', 'HAL'];
+      const indianAssets = ['AVAX', 'NEAR', 'SUI', 'LINK', 'DOGE'];
       const chosen = indianAssets[Math.floor(Math.random() * indianAssets.length)];
       const item = this.prices[chosen];
       if (!item) return;
@@ -234,7 +234,7 @@ export class LiveMarketsFeed {
       const items = document.querySelectorAll(`[data-ticker-asset="${chosen}"]`);
       const isPositive = item.changePct >= 0;
       const sign = isPositive ? '+' : '';
-      const prefix = chosen === 'NIFTY' ? '' : '₹';
+      const prefix = chosen === 'AVAX' ? '' : '$';
       items.forEach(el => {
         el.innerHTML = `<i class="ph-bold ph-trend-up text-profit"></i> ${chosen} ${prefix}${item.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })} <span class="text-profit">(${sign}${item.changePct.toFixed(2)}%)</span>`;
       });

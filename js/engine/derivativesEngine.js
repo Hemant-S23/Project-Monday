@@ -38,17 +38,14 @@ export class DerivativesEngine {
     // Default for any other crypto
     this.defaultCryptoLimit = { maxLeverage: 25, mmr: 0.020 };
 
-    // Indian Equities (Standard SEBI Intraday MIS Limits)
-    this.indianEquityLimit = { maxLeverage: 5, mmr: 0.200 };
+
   }
 
   /**
    * Get maximum allowed leverage and maintenance margin rate for an asset
    */
   getAssetSpec(asset, market = 'Crypto') {
-    if (market === 'India') {
-      return this.indianEquityLimit;
-    }
+    
     const clean = (asset || '').toUpperCase().replace(/(\/USD|-USD|USDT|USD)$/, '');
     return this.leverageLimits[clean] || this.defaultCryptoLimit;
   }
@@ -247,22 +244,11 @@ export class DerivativesEngine {
   }
 
   /**
-   * Fetch Live Perpetual Funding Rate (Official Delta Exchange India API)
+   * Fetch Live Perpetual Funding Rate (Official Delta Exchange API)
    * Non-blocking with 60-second cache, multi-mirror fallback, and exact 8h/4h/1h interval mapping
    */
   async fetchLiveFundingRate(asset, market = 'Crypto') {
-    if (market === 'India') {
-      return {
-        rate: 0,
-        rateFormatted: 'N/A (Cash/MIS)',
-        interval: 'N/A',
-        annualized: '0%',
-        sentiment: 'BALANCED',
-        predictedSqueeze: 'NEUTRAL',
-        crowdPosition: 'Neutral Institutional Delivery',
-        source: 'NSE/BSE Spot & Cash'
-      };
-    }
+
 
     const clean = (asset || 'BTC').toUpperCase().replace(/(\/USD|-USD|USDT|USD)$/, '');
     const cacheKey = clean;
@@ -297,9 +283,9 @@ export class DerivativesEngine {
 
     const deltaSymbol = `${clean}USD`;
 
-    // 1. Try Delta Exchange India Official Public Ticker API
+    // 1. Try Delta Exchange Official Public Ticker API
     const endpoints = [
-      `https://api.india.delta.exchange/v2/tickers/${deltaSymbol}`,
+      `https://api.delta.exchange/v2/tickers/${deltaSymbol}`,
       `https://api.delta.exchange/v2/tickers/${deltaSymbol}`
     ];
 
@@ -350,7 +336,7 @@ export class DerivativesEngine {
               markPrice: parseFloat(json.result.mark_price || 0),
               openInterestUSD: json.result.oi_value_usd,
               nextCountdown,
-              source: 'Delta Exchange India'
+              source: 'Delta Exchange'
             };
 
             if (!this._fundingCache) this._fundingCache = {};

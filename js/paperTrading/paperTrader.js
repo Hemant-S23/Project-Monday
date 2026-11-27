@@ -7,7 +7,7 @@
 export const DELTA_FEE_RATES = {
   TAKER: 0.0005, // 0.05% for Market / Taker orders
   MAKER: 0.0002, // 0.02% for Limit / Maker orders
-  GST_RATE: 0.18 // 18% GST on Delta Exchange Brokerage (Delta India compliance)
+  GST_RATE: 0.00 // Institutional Tier-1 Perpetual Fee (0% local tax)
 };
 
 export class PaperTrader {
@@ -439,7 +439,7 @@ export class PaperTrader {
       entryFeeUSD,
       estExitFeeUSD,
       feesUSD: estTotalFeesUSD,
-      feeModel: 'Delta Exchange (0.05% Taker / 0.02% Maker)',
+      feeModel: 'Institutional Derivatives (0.05% Taker / 0.02% Maker)',
       liquidationPrice: liquidationPrice !== null ? Number(liquidationPrice) : null,
       riskUSD: +safeRiskUSD.toFixed(2),
       rewardUSD: +safeRewardUSD.toFixed(2),
@@ -579,7 +579,7 @@ export class PaperTrader {
     const isLong = pos.direction === 'LONG';
     const priceDelta = isLong ? (actualExit - pos.entry) : (pos.entry - actualExit);
     
-    // Delta Exchange Execution Fees + 18% GST (Delta Exchange India Standard)
+    // Tier-1 Institutional Perpetual Execution Fees
     const posSize = Number(pos.positionSize) || 0;
     const notional = Number(pos.notionalUSD) || +(Number(pos.entry || actualExit) * posSize).toFixed(2) || 0;
     const entryFee = Number(pos.entryFeeUSD) || +(notional * DELTA_FEE_RATES.TAKER).toFixed(2) || 0;
@@ -588,7 +588,7 @@ export class PaperTrader {
     const exitNotional = +(actualExit * posSize).toFixed(2) || 0;
     const exitFee = +(exitNotional * exitRate).toFixed(2) || 0;
     const brokerageFee = +(entryFee + exitFee).toFixed(2);
-    const gstFee = +(brokerageFee * DELTA_FEE_RATES.GST_RATE).toFixed(2); // 18% GST on Delta Exchange Brokerage
+    const gstFee = +(brokerageFee * DELTA_FEE_RATES.GST_RATE).toFixed(2); // Clean institutional settlement
     const totalCharges = +(brokerageFee + gstFee).toFixed(2);
 
     let grossPnlUSD;
@@ -634,7 +634,7 @@ export class PaperTrader {
       totalFeesUSD: totalCharges,
       totalChargesUSD: totalCharges,
       feesUSD: totalCharges,
-      feeModel: 'Delta Exchange India (0.05% Taker / 0.02% Maker + 18% GST)',
+      feeModel: 'Institutional Derivatives (0.05% Taker / 0.02% Maker)',
       pnlUSD, // Net Realized Settled PnL
       postTradeBalance,
       rMultiple,

@@ -909,6 +909,13 @@ class App {
       this.updateTradeJournalAndStats();
     }
 
+    // Active Risk Radar & Circuit Breaker: Rapid tick-level threat audit (throttled to 2.5s)
+    const now = Date.now();
+    if (this.paperTrader.openPositions.length > 0 && (!this._lastThreatAuditTick || (now - this._lastThreatAuditTick > 2500))) {
+      this._lastThreatAuditTick = now;
+      this.auditOpenPositionThreats().catch(e => console.warn('[App] Threat audit tick warning:', e));
+    }
+
     // Batched 60 FPS UI DOM Pipeline (Keeps main thread silky smooth during 35+ coin tick torrent)
     if (!this._hudRenderScheduled) {
       this._hudRenderScheduled = true;
@@ -1049,6 +1056,11 @@ class App {
     }
     this.lastKnownState = strategyResult.state;
 
+    // 7.5. Risk Radar & Emergency Circuit Breaker: Proactively audit active positions for acute shocks
+    if (this.paperTrader.openPositions.length > 0) {
+      await this.auditOpenPositionThreats();
+    }
+
     // 8. Auto-Pilot Multi-Asset Scanner (Fills open positions up to maxTrades across watchlist)
     if (this.autoPilotEnabled) {
       if (isBoot) {
@@ -1109,6 +1121,155 @@ class App {
       return false;
     }
     return true;
+  }
+
+  /**
+   * Risk Radar & Emergency Circuit Breaker: Proactively audit active open positions.
+   * If an acute market reversal or shock occurs, cuts the trade early (e.g. at -0.35R to -0.5R)
+   * saving substantial capital before the full -1.0R Stop Loss is hit.
+   */
+  async auditOpenPositionThreats() {
+    if (!this.paperTrader || !this.paperTrader.openPositions || this.paperTrader.openPositions.length === 0) {
+      return;
+    }
+
+    const adapter = this.getActiveAdapter();
+    const openPositionsCopy = [...this.paperTrader.openPositions];
+
+    // 1. Pre-fetch BTC 5M candles for benchmark dump/pump detection
+    let btcCandles5M = null;
+    let btc5mDropPercent = 0;
+    let btc5mPumpPercent = 0;
+    try {
+      btcCandles5M = await adapter.getHistoricalCandles('BTC', '5M');
+      if (btcCandles5M && btcCandles5M.length >= 3) {
+        const lastCandle = btcCandles5M[btcCandles5M.length - 1];
+        const prevCandle = btcCandles5M[btcCandles5M.length - 2];
+        const prev2Candle = btcCandles5M[btcCandles5M.length - 3];
+        const openRef = prevCandle.open || prev2Candle.open;
+        const currentRef = lastCandle.close;
+        const pctMove = ((currentRef - openRef) / openRef) * 100;
+        if (pctMove <= -1.8) {
+          btc5mDropPercent = Math.abs(pctMove);
+        } else if (pctMove >= 2.0) {
+          btc5mPumpPercent = pctMove;
+        }
+      }
+    } catch (e) {
+      // Non-blocking BTC check
+    }
+
+    for (const pos of openPositionsCopy) {
+      // Ensure position is still open
+      const stillOpen = this.paperTrader.openPositions.some(p => p.id === pos.id);
+      if (!stillOpen) continue;
+
+      const livePrice = adapter.getCurrentPrice(pos.asset) || pos.currentPrice || pos.entry;
+      if (!livePrice || livePrice <= 0) continue;
+
+      const isLong = pos.direction === 'LONG';
+      const posRiskUSD = Number(pos.riskUSD) || 1;
+      const priceDelta = isLong ? (livePrice - pos.entry) : (pos.entry - livePrice);
+      const grossPnl = priceDelta * (Number(pos.positionSize) || 0);
+      const currentR = grossPnl / posRiskUSD;
+
+      let triggerReason = null;
+      let triggerTitle = '';
+      let triggerDetail = '';
+
+      // -------------------------------------------------------------
+      // TRIGGER 1: Breaking Shock Catalyst / Event Risk Shield
+      // -------------------------------------------------------------
+      const eventRisk = this.newsEngine.getOverallEventRisk(pos.asset, 'Crypto');
+      if (eventRisk && eventRisk.isShieldTriggered) {
+        if (currentR < 0.5) {
+          triggerReason = 'SHIELD_EMERGENCY';
+          triggerTitle = '🛡️ Shield Circuit Breaker Activated';
+          triggerDetail = `High-impact news shock detected for ${pos.asset}. Cut early at ${currentR.toFixed(2)}R.`;
+        }
+      }
+
+      // -------------------------------------------------------------
+      // TRIGGER 2: Benchmark BTC Cascade (Systemic Flash Shock)
+      // -------------------------------------------------------------
+      if (!triggerReason && pos.asset !== 'BTC') {
+        if (isLong && btc5mDropPercent >= 1.8 && currentR < 0) {
+          triggerReason = 'BENCHMARK_COLLAPSE';
+          triggerTitle = '⚡ BTC Cascade Circuit Breaker';
+          triggerDetail = `BTC sudden flash dump (-${btc5mDropPercent.toFixed(1)}% in 5m). Altcoin Long cut early at ${currentR.toFixed(2)}R.`;
+        } else if (!isLong && btc5mPumpPercent >= 2.0 && currentR < 0) {
+          triggerReason = 'BENCHMARK_COLLAPSE';
+          triggerTitle = '⚡ BTC Short-Squeeze Surge';
+          triggerDetail = `BTC vertical short squeeze (+${btc5mPumpPercent.toFixed(1)}% in 5m). Altcoin Short cut early at ${currentR.toFixed(2)}R.`;
+        }
+      }
+
+      // -------------------------------------------------------------
+      // TRIGGER 3: Confirmed Structural Shift (MSS Invalidation)
+      // Only triggered when trade is down between -0.35R and -0.90R
+      // -------------------------------------------------------------
+      if (!triggerReason && currentR <= -0.35 && currentR >= -0.90) {
+        try {
+          const candles5M = await adapter.getHistoricalCandles(pos.asset, '5M');
+          if (candles5M && candles5M.length >= 20) {
+            const closes = candles5M.map(c => c.close);
+            const ema20 = this.strategyEngine.calculateEMA(closes, 20);
+            const lastCandle = candles5M[candles5M.length - 1];
+
+            if (isLong && lastCandle.close < ema20 && livePrice < ema20) {
+              const swingLow3 = Math.min(...candles5M.slice(-4, -1).map(c => c.low));
+              if (livePrice < swingLow3) {
+                triggerReason = 'STRUCTURAL_INVALIDATION';
+                triggerTitle = '📉 Structural Invalidation Cut';
+                triggerDetail = `5M Market Structure Shifted Bearish (broke below EMA20 & swing low). Cut at ${currentR.toFixed(2)}R.`;
+              }
+            } else if (!isLong && lastCandle.close > ema20 && livePrice > ema20) {
+              const swingHigh3 = Math.max(...candles5M.slice(-4, -1).map(c => c.high));
+              if (livePrice > swingHigh3) {
+                triggerReason = 'STRUCTURAL_INVALIDATION';
+                triggerTitle = '📈 Structural Invalidation Cut';
+                triggerDetail = `5M Market Structure Shifted Bullish (broke above EMA20 & swing high). Cut at ${currentR.toFixed(2)}R.`;
+              }
+            }
+          }
+        } catch (err) {
+          // Non-blocking
+        }
+      }
+
+      // If any trigger fired, execute early exit
+      if (triggerReason) {
+        const exitTime = Date.now();
+        const closed = this.paperTrader.closePosition(pos.id, triggerReason, livePrice, exitTime);
+        if (closed) {
+          this.setAssetCooldown(pos.asset, pos.direction, 3 * 60 * 1000);
+          this.markSetupExhausted(pos.asset, pos.direction, pos.entry, pos.target, 30 * 60 * 1000);
+
+          const savedR = Math.max(0, 1.0 - Math.abs(closed.rMultiple || 0)).toFixed(2);
+          const savedUSD = Math.max(0, (pos.riskUSD || 0) - Math.abs(closed.pnlUSD || 0)).toFixed(2);
+
+          const toastMessage = `${triggerDetail} Capital saved: ~${savedR}R ($${savedUSD}) vs full Stop Loss!`;
+          this.ui.showToast(triggerTitle, toastMessage, 'warning');
+          this.voiceAssistant.speak(`Circuit breaker activated for ${pos.asset}. Position closed early.`);
+
+          const formattedPrice = this.ui.formatPrice(livePrice, '$');
+          const pnlSign = closed.pnlUSD >= 0 ? '+' : '';
+          this.ui.addNotification({
+            type: 'stop',
+            title: `${triggerTitle} • ${pos.asset} ${pos.direction}`,
+            message: `${pnlSign}$${closed.pnlUSD} (${closed.rMultiple}R) at ${formattedPrice}. Preserved +$${savedUSD} (${savedR}R).`,
+            tradeId: closed.id,
+            timestamp: exitTime
+          });
+
+          if (this.signalEngine) {
+            this.signalEngine.onPositionClosed(pos, closed.result, livePrice);
+          }
+          this.syncTradeToSupabase(closed).catch(() => {});
+          this.updateTradeJournalAndStats();
+        }
+      }
+    }
   }
 
   async scanAndExecuteAutoPilot() {

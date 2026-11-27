@@ -547,6 +547,9 @@ export class PaperTrader {
     } else if (resultType === 'LIQUIDATED' || resultType === 'LIQUIDATION') {
       canonicalReason = 'LIQUIDATED';
       baseResult = 'LIQUIDATED';
+    } else if (['SHIELD_EMERGENCY', 'BENCHMARK_COLLAPSE', 'STRUCTURAL_INVALIDATION', 'CIRCUIT_BREAKER'].includes(resultType)) {
+      canonicalReason = resultType;
+      baseResult = 'CIRCUIT_BREAKER';
     } else {
       canonicalReason = 'MANUAL';
       baseResult = 'MANUAL';
@@ -607,7 +610,7 @@ export class PaperTrader {
       pnlUSD = +(grossPnlUSD - totalCharges).toFixed(2) || 0; // Net Realized Settled to Wallet
       const risk = Number(pos.riskUSD) || 0;
       rMultiple = risk > 0 ? +(pnlUSD / risk).toFixed(2) : 0;
-      if (baseResult === 'MANUAL') {
+      if (baseResult === 'MANUAL' || baseResult === 'CIRCUIT_BREAKER') {
         result = pnlUSD > 0 ? 'WIN' : pnlUSD < 0 ? 'LOSS' : 'BREAKEVEN';
       }
     }
@@ -615,6 +618,9 @@ export class PaperTrader {
     if (isNaN(pnlUSD) || !isFinite(pnlUSD)) pnlUSD = 0;
     if (isNaN(grossPnlUSD) || !isFinite(grossPnlUSD)) grossPnlUSD = 0;
     if (isNaN(rMultiple) || !isFinite(rMultiple)) rMultiple = 0;
+
+    const savedRiskR = pnlUSD < 0 ? +(Math.max(0, 1.0 - Math.abs(rMultiple))).toFixed(2) : 0;
+    const savedRiskUSD = pnlUSD < 0 ? +(Math.max(0, (pos.riskUSD || 0) - Math.abs(pnlUSD))).toFixed(2) : 0;
 
     const baseBal = (isNaN(this.balance) || !isFinite(this.balance) || this.balance <= 0) ? this.initialBalance : this.balance;
     const postTradeBalance = +(baseBal + pnlUSD).toFixed(2);
@@ -638,6 +644,8 @@ export class PaperTrader {
       pnlUSD, // Net Realized Settled PnL
       postTradeBalance,
       rMultiple,
+      savedRiskR,
+      savedRiskUSD,
       closedAt: exitTimestamp !== null ? exitTimestamp : Date.now()
     };
 

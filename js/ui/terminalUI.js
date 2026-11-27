@@ -4670,11 +4670,25 @@ export class TerminalUI {
       
       const isManual = trade.exitReason === 'MANUAL' || trade.closeReason === 'MANUAL';
       const isLiquidated = trade.result === 'LIQUIDATED' || trade.exitReason === 'LIQUIDATION' || trade.closeReason === 'LIQUIDATION' || trade.exitReason === 'LIQUIDATED';
-      const isSL = trade.result === 'LOSS' || trade.exitReason === 'STOP_LOSS' || trade.closeReason === 'STOP_LOSS' || trade.exitReason === 'LOSS' || trade.closeReason === 'LOSS';
-      const isTP = trade.result === 'WIN' || trade.exitReason === 'TAKE_PROFIT' || trade.closeReason === 'TAKE_PROFIT' || trade.exitReason === 'WIN' || trade.closeReason === 'WIN';
+      const isShieldExit = trade.exitReason === 'SHIELD_EMERGENCY' || trade.closeReason === 'SHIELD_EMERGENCY';
+      const isBtcCascade = trade.exitReason === 'BENCHMARK_COLLAPSE' || trade.closeReason === 'BENCHMARK_COLLAPSE';
+      const isStructuralCut = trade.exitReason === 'STRUCTURAL_INVALIDATION' || trade.closeReason === 'STRUCTURAL_INVALIDATION';
+      const isCircuitBreaker = isShieldExit || isBtcCascade || isStructuralCut;
+      const isSL = !isCircuitBreaker && (trade.result === 'LOSS' || trade.exitReason === 'STOP_LOSS' || trade.closeReason === 'STOP_LOSS' || trade.exitReason === 'LOSS' || trade.closeReason === 'LOSS');
+      const isTP = !isCircuitBreaker && (trade.result === 'WIN' || trade.exitReason === 'TAKE_PROFIT' || trade.closeReason === 'TAKE_PROFIT' || trade.exitReason === 'WIN' || trade.closeReason === 'WIN');
 
       let reasonLabel;
-      if (isManual) {
+      let reasonTagClass = isNetProfit ? 'tp' : isLoss ? 'sl' : 'manual';
+      if (isShieldExit) {
+        reasonLabel = '🛡️ Shield Cut (Saved Risk)';
+        reasonTagClass = 'shield';
+      } else if (isBtcCascade) {
+        reasonLabel = '⚡ BTC Cascade Circuit Breaker';
+        reasonTagClass = 'shield';
+      } else if (isStructuralCut) {
+        reasonLabel = '📉 Structural Invalidation Cut';
+        reasonTagClass = 'shield';
+      } else if (isManual) {
         reasonLabel = isNetProfit ? '✋ Manual Close (Profit)' : isLoss ? '✋ Manual Close (Loss)' : '✋ Manual Close';
       } else if (isLiquidated) {
         reasonLabel = '⚠️ Liquidation Exit';
@@ -4718,7 +4732,7 @@ export class TerminalUI {
                     <span class="time-lbl">Out:</span> ${exitDateFormatted} • ${exitTimeFormatted}
                   </span>
                   ${durationFormatted ? `<span class="txn-duration-pill" title="Holding Period"><i class="ph-bold ph-timer"></i> ${durationFormatted}</span>` : ''}
-                  <span class="txn-reason-tag ${isNetProfit ? 'tp' : isLoss ? 'sl' : 'manual'}">${reasonLabel}</span>
+                  <span class="txn-reason-tag ${reasonTagClass}">${reasonLabel}</span>
                 </span>
               </div>
             </div>
@@ -4779,6 +4793,11 @@ export class TerminalUI {
                 <span>• Holding Duration</span>
                 <span class="val text-cyan">${durationFormatted ? `⏱️ ${durationFormatted}` : 'Intraday Settlement'}</span>
               </div>
+              ${(trade.savedRiskR > 0 || isCircuitBreaker) ? `
+              <div class="receipt-line saved-risk-line">
+                <span>🛡️ Capital Preserved (vs Full -1.0R Stop Loss)</span>
+                <span class="val text-cyan">+${(trade.savedRiskR || 0.60).toFixed(2)}R Saved (~$${(trade.savedRiskUSD || (trade.riskUSD ? Math.max(0, trade.riskUSD - Math.abs(netPnl)).toFixed(2) : '12.00'))})</span>
+              </div>` : ''}
               <div class="receipt-divider"></div>
               <div class="receipt-line total-line">
                 <span>Total Deductions Settled</span>

@@ -8162,12 +8162,338 @@ html, body {
   .concept-grid {
     grid-template-columns: 1fr !important;
   }
+
+  /* Passbook Tablet & Mobile Base Enhancements (<= 900px) */
+  #view_passbook .passbook-page-container {
+    padding: 14px 12px 92px 12px !important;
+    gap: 14px !important;
+  }
+
+  #view_passbook .positions-header-banner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 14px !important;
+    padding: 16px 14px !important;
+    border-radius: 16px !important;
+  }
+
+  #view_passbook .positions-banner-title-group {
+    gap: 12px !important;
+  }
+
+  #view_passbook .positions-banner-icon {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 11px !important;
+    font-size: 1.2rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  #view_passbook .positions-banner-title {
+    font-size: 1.15rem !important;
+    line-height: 1.25 !important;
+  }
+
+  #view_passbook .positions-banner-sub {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  #view_passbook .positions-header-banner > div:last-child {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  #view_passbook .btn-sync-cloud-ledger,
+  #view_passbook .btn-purge-ledger {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 9px 10px !important;
+    font-size: 0.72rem !important;
+    white-space: nowrap !important;
+  }
+
+  .yearbook-heatmap-card,
+  .passbook-monthly-card {
+    padding: 16px 14px !important;
+    border-radius: 16px !important;
+  }
+
+  .yearbook-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .yearbook-title {
+    font-size: 1rem !important;
+  }
+
+  .yearbook-day-inspector {
+    position: sticky !important;
+    left: 0 !important;
+    width: calc(100vw - 56px) !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 10px 12px !important;
+    gap: 10px !important;
+  }
+
+  .inspector-date-box {
+    width: 100% !important;
+    gap: 10px !important;
+  }
+
+  .inspector-texts {
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+
+  .inspector-details {
+    font-size: 0.7rem !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    line-height: 1.35 !important;
+  }
+
+  .inspector-metrics-strip {
+    width: 100% !important;
+    gap: 6px !important;
+  }
+
+  .ins-metric-chip {
+    font-size: 0.68rem !important;
+    padding: 4px 8px !important;
+  }
+
+  .yearbook-radar-widget {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 14px !important;
+    border-radius: 14px !important;
+    box-sizing: border-box !important;
+  }
+
+  .passbook-daily-ribbon {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 12px 14px !important;
+    border-radius: 14px !important;
+  }
+
+  .daily-ribbon-left {
+    flex-wrap: wrap !important;
+    gap: 6px 10px !important;
+    font-size: 0.76rem !important;
+  }
+
+  .daily-ribbon-right {
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    padding-top: 8px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .daily-net-val {
+    font-size: 0.92rem !important;
+  }
 }
 
 @media (max-width: 640px) {
-  .positions-stats-strip,
-  .passbook-audit-grid {
+  .positions-stats-strip {
     grid-template-columns: 1fr !important;
+  }
+
+  /* Keep Passbook 4-Pillar Audit Grid as a sleek Angel One / Delta 2x2 Bento Grid on Mobile */
+  .passbook-audit-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    margin-top: 14px !important;
+  }
+
+  .audit-stat-box {
+    padding: 12px 12px !important;
+    border-radius: 12px !important;
+  }
+
+  .audit-lbl {
+    font-size: 0.62rem !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  .audit-val {
+    font-size: 1.12rem !important;
+    margin: 4px 0 2px 0 !important;
+  }
+
+  .audit-sub {
+    font-size: 0.65rem !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Yearbook 2x2 Stats Grid on Mobile */
+  .yearbook-stats-row {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .yearbook-stat-item {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+    padding: 8px 10px !important;
+    font-size: 0.68rem !important;
+    border-radius: 10px !important;
+  }
+
+  .yearbook-stat-item b {
+    margin-left: 0 !important;
+    font-size: 0.86rem !important;
+  }
+
+  /* Passbook Filter Bar & Calendar Popover on Mobile */
+  .passbook-filter-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .passbook-select-group {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+
+  .passbook-period-trigger {
+    width: 100% !important;
+    justify-content: space-between !important;
+    padding: 9px 12px !important;
+    font-size: 0.8rem !important;
+  }
+
+  .passbook-calendar-popover {
+    width: min(320px, calc(100vw - 44px)) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .passbook-type-filters {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+
+  .passbook-filter-chip {
+    text-align: center !important;
+    padding: 7px 6px !important;
+    font-size: 0.72rem !important;
+  }
+
+  /* Passbook Transaction Feed & Receipt Drawer on Mobile */
+  .passbook-day-divider {
+    gap: 8px !important;
+    margin: 16px 0 10px 0 !important;
+  }
+
+  .day-divider-badge {
+    padding: 4px 12px !important;
+    font-size: 0.68rem !important;
+    gap: 6px !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+  }
+
+  .passbook-txn-header {
+    padding: 12px 12px !important;
+    gap: 8px !important;
+    align-items: flex-start !important;
+  }
+
+  .txn-left-col {
+    gap: 8px !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+
+  .txn-seq-badge {
+    padding: 2px 5px !important;
+    font-size: 0.6rem !important;
+    min-width: 22px !important;
+  }
+
+  .txn-type-avatar {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 0.95rem !important;
+  }
+
+  .txn-asset-row {
+    gap: 6px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .txn-asset-name {
+    font-size: 0.82rem !important;
+  }
+
+  .txn-timestamp {
+    font-size: 0.66rem !important;
+    gap: 4px 6px !important;
+  }
+
+  .txn-right-col {
+    gap: 8px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .txn-net-amount {
+    font-size: 0.94rem !important;
+  }
+
+  .txn-post-balance {
+    font-size: 0.65rem !important;
+  }
+
+  .passbook-receipt-drawer {
+    padding: 12px 12px 14px 12px !important;
+  }
+
+  .receipt-timeline-banner {
+    padding: 8px 10px !important;
+    gap: 4px !important;
+  }
+
+  .timeline-val {
+    font-size: 0.68rem !important;
+  }
+
+  .receipt-line {
+    font-size: 0.72rem !important;
+  }
+
+  .radar-body {
+    gap: 10px !important;
+  }
+
+  .radar-donut-wrap,
+  .radar-donut-svg {
+    width: 72px !important;
+    height: 72px !important;
+  }
+
+  .pod-val {
+    font-size: 0.76rem !important;
   }
 
   .header-ticker-strip {

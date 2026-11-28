@@ -953,6 +953,293 @@
       box-shadow: 0 8px 26px rgba(16, 185, 129, 0.6);
       filter: brightness(1.08);
     }
+
+    /* =========================================================================
+       SUPERIOR SAAS MOBILE & TABLET RESPONSIVE ENGINE (PROJECT MONDAY)
+       ========================================================================= */
+
+    /* Navbar Actions & Mobile Hamburger */
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mobile-nav-toggle {
+      display: none;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .mobile-nav-toggle:active {
+      transform: scale(0.92);
+      background: rgba(6, 182, 212, 0.15);
+      border-color: rgba(6, 182, 212, 0.35);
+      color: var(--cyan);
+    }
+
+    /* Mobile Glossomorphic Navigation Drawer */
+    .mobile-nav-drawer {
+      position: fixed;
+      top: 74px;
+      left: 12px;
+      right: 12px;
+      z-index: 890;
+      background: rgba(10, 14, 24, 0.95);
+      backdrop-filter: blur(32px) saturate(190%);
+      -webkit-backdrop-filter: blur(32px) saturate(190%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(6, 182, 212, 0.2);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-12px);
+      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+      max-height: calc(100dvh - 90px);
+      overflow-y: auto;
+    }
+
+    .mobile-nav-drawer.open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .mobile-drawer-links {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 14px;
+    }
+
+    .mobile-nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      color: #e2e8f0;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid transparent;
+    }
+
+    .mobile-nav-link:active, .mobile-nav-link:hover {
+      background: rgba(6, 182, 212, 0.1);
+      border-color: rgba(6, 182, 212, 0.25);
+      color: #38bdf8;
+    }
+
+    .mobile-drawer-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .mobile-search-trigger {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #94a3b8;
+      font-size: 0.88rem;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    /* Comparison Table Mobile Enhancements */
+    .mobile-table-hint {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: var(--cyan);
+      margin-bottom: 10px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .comparison-table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 16px;
+    }
+
+    .comp-table {
+      min-width: 680px;
+    }
+
+    /* Sticky First Column for Comparison Table on Mobile */
+    @media (max-width: 820px) {
+      .comp-table th:first-child,
+      .comp-table td:first-child {
+        position: sticky;
+        left: 0;
+        background: rgba(10, 14, 24, 0.96) !important;
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        z-index: 5;
+        box-shadow: 4px 0 12px rgba(0, 0, 0, 0.6);
+      }
+      .mobile-table-hint {
+        display: flex;
+      }
+    }
+
+    /* Responsive Breakpoints */
+    @media (max-width: 820px) {
+      .nav-links {
+        display: none !important;
+      }
+      .cmd-k-chip {
+        display: none !important;
+      }
+      .mobile-nav-toggle {
+        display: inline-flex !important;
+      }
+      .nav-floating {
+        width: calc(100% - 20px) !important;
+        height: 54px !important;
+        padding: 0 12px !important;
+        top: 10px !important;
+      }
+      .nav-brand {
+        font-size: 1rem !important;
+      }
+      .nav-auth-link {
+        padding: 6px 12px !important;
+        font-size: 0.8rem !important;
+        white-space: nowrap !important;
+      }
+      .nav-terminal-btn {
+        padding: 6px 14px !important;
+        font-size: 0.82rem !important;
+        white-space: nowrap !important;
+      }
+      .btn-terminal-text {
+        display: inline;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .btn-terminal-text {
+        display: none;
+      }
+      .nav-terminal-btn::before {
+        content: 'Launch ';
+      }
+      .nav-floating {
+        width: calc(100% - 14px) !important;
+        padding: 0 10px !important;
+      }
+    }
+
+    /* General Mobile Layout Tuning */
+    @media (max-width: 768px) {
+      .hero-content {
+        padding-top: 90px !important;
+        padding-bottom: 40px !important;
+        min-height: auto !important;
+      }
+      .text-display-hero {
+        font-size: clamp(2rem, 7.5vw, 2.75rem) !important;
+        line-height: 1.15 !important;
+      }
+      .section {
+        padding-top: 50px !important;
+        padding-bottom: 50px !important;
+      }
+      .section-header {
+        margin-bottom: 28px !important;
+      }
+      .text-display-1 {
+        font-size: 1.75rem !important;
+      }
+      .bento-grid {
+        grid-template-columns: 1fr !important;
+        gap: 14px !important;
+      }
+      .bento-col-3, .bento-col-4, .bento-col-5, .bento-col-6, .bento-col-7, .bento-col-8, .bento-col-9, .bento-col-12 {
+        grid-column: span 1 !important;
+      }
+      .pricing-luxury-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+        margin: 20px 0 40px 0 !important;
+      }
+      .pricing-luxury-card {
+        padding: 24px 20px !important;
+      }
+      .engine-luxury-card {
+        padding: 20px 18px !important;
+      }
+      .copilot-luxury-cockpit {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+      }
+      .copilot-chat-card {
+        padding: 20px 16px !important;
+      }
+      .copilot-msg-bubble-user,
+      .copilot-msg-bubble-ai {
+        max-width: 100% !important;
+      }
+      .sandbox-conversion-strip {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+      }
+      .sandbox-terminal-link {
+        width: 100% !important;
+        justify-content: center !important;
+        text-align: center !important;
+      }
+      #landing_heatmap_grid {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+
+    /* Tablet Tuning (769px to 1024px) */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .hero-content {
+        padding-top: 110px !important;
+      }
+      .bento-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+      .pricing-luxury-grid {
+        grid-template-columns: 1fr !important;
+        max-width: 520px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .engines-luxury-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -976,8 +1263,8 @@
       <span class="code-badge" style="margin-left: 4px;">v2.5</span>
     </div>
 
-    <!-- Center Nav Links -->
-    <nav class="nav-links" style="display: none; @media(min-width: 820px){ display: flex; }">
+    <!-- Center Nav Links (Desktop) -->
+    <nav class="nav-links">
       <a href="pages/engines.html" class="nav-link">Engines</a>
       <a href="pages/markets.html" class="nav-link">Markets</a>
       <a href="pages/pricing.html" class="nav-link">Pricing</a>
@@ -986,16 +1273,63 @@
     </nav>
 
     <!-- Right Actions -->
-    <div class="flex items-center gap-2">
-      <a href="pages/auth.html" class="btn-ghost" id="nav_auth_btn" style="font-size: 0.85rem;">Sign In</a>
+    <div class="nav-actions">
+      <a href="pages/auth.html" class="btn-ghost nav-auth-link" id="nav_auth_btn">Sign In</a>
       <button type="button" class="cmd-k-chip" id="nav_btn_cmdk" title="Press Ctrl+K to search">
         <i class="ph-bold ph-command"></i> Ctrl+K
       </button>
-      <a href="terminal.html#terminal" class="btn-primary" id="nav_btn_terminal">
-        Launch Terminal <i class="ph-bold ph-arrow-up-right"></i>
+      <a href="terminal.html#terminal" class="btn-primary nav-terminal-btn" id="nav_btn_terminal">
+        <span class="btn-terminal-text">Launch Terminal</span> <i class="ph-bold ph-arrow-up-right"></i>
       </a>
+      <!-- Mobile Hamburger Toggle -->
+      <button type="button" class="mobile-nav-toggle" id="mobile_nav_toggle" aria-label="Toggle Navigation Menu">
+        <i class="ph-bold ph-list" id="mobile_nav_icon"></i>
+      </button>
     </div>
   </header>
+
+  <!-- Mobile Glossomorphic Navigation Dropdown Drawer -->
+  <div class="mobile-nav-drawer" id="mobile_nav_drawer">
+    <div class="mobile-drawer-inner">
+      <div class="mobile-drawer-links">
+        <a href="pages/engines.html" class="mobile-nav-link">
+          <i class="ph-bold ph-cpu text-cyan"></i>
+          <span>Engines</span>
+          <i class="ph-bold ph-caret-right text-low" style="margin-left: auto;"></i>
+        </a>
+        <a href="pages/markets.html" class="mobile-nav-link">
+          <i class="ph-bold ph-chart-line-up text-profit"></i>
+          <span>Markets</span>
+          <i class="ph-bold ph-caret-right text-low" style="margin-left: auto;"></i>
+        </a>
+        <a href="pages/pricing.html" class="mobile-nav-link">
+          <i class="ph-bold ph-tag text-cyan"></i>
+          <span>Pricing</span>
+          <i class="ph-bold ph-caret-right text-low" style="margin-left: auto;"></i>
+        </a>
+        <a href="pages/learn.html" class="mobile-nav-link">
+          <i class="ph-bold ph-book-open text-violet"></i>
+          <span>Academy</span>
+          <i class="ph-bold ph-caret-right text-low" style="margin-left: auto;"></i>
+        </a>
+        <a href="pages/about.html" class="mobile-nav-link">
+          <i class="ph-bold ph-info text-mid"></i>
+          <span>About</span>
+          <i class="ph-bold ph-caret-right text-low" style="margin-left: auto;"></i>
+        </a>
+      </div>
+      <div class="mobile-drawer-footer">
+        <button type="button" class="mobile-search-trigger" id="mobile_drawer_cmdk">
+          <i class="ph-bold ph-magnifying-glass text-cyan"></i>
+          <span>Search Terminal Features...</span>
+          <span class="code-badge" style="margin-left: auto;">Search</span>
+        </button>
+        <a href="terminal.html#terminal" class="btn-primary" style="width: 100%; justify-content: center; min-height: 46px; font-weight: 700; font-size: 0.95rem;">
+          Launch Trading Terminal <i class="ph-bold ph-arrow-up-right"></i>
+        </a>
+      </div>
+    </div>
+  </div>
 
   <!-- =========================================================================
        S1: HERO VIEWPORT & 3D TERRAIN
@@ -1209,7 +1543,6 @@
             <button type="button" class="segment-btn active" data-sandbox-asset="BTC">BTC/USD</button>
             <button type="button" class="segment-btn" data-sandbox-asset="ETH">ETH/USD</button>
             <button type="button" class="segment-btn" data-sandbox-asset="SOL">SOL/USD</button>
-            <button type="button" class="segment-btn" data-sandbox-asset="SOL">SOL</button>
           </div>
 
           <!-- Live State Pill -->
@@ -1928,6 +2261,12 @@
         </h2>
       </div>
 
+      <!-- Mobile Swipe Hint -->
+      <div class="mobile-table-hint">
+        <i class="ph-bold ph-arrows-left-right text-cyan"></i>
+        <span>Swipe horizontally to compare platforms</span>
+      </div>
+
       <div class="comparison-table-wrap">
         <table class="comp-table">
           <thead>
@@ -2584,7 +2923,48 @@
       }).catch(()=>{});
     } catch(e) {}
 
-    // 13. Register PWA Offline Service Worker
+    // 13. Mobile Navigation Drawer Controller
+    const mobileToggle = document.getElementById('mobile_nav_toggle');
+    const mobileDrawer = document.getElementById('mobile_nav_drawer');
+    const mobileIcon = document.getElementById('mobile_nav_icon');
+    const mobileCmdk = document.getElementById('mobile_drawer_cmdk');
+
+    if (mobileToggle && mobileDrawer) {
+      const toggleDrawer = (open) => {
+        const isOpen = open !== undefined ? open : !mobileDrawer.classList.contains('open');
+        mobileDrawer.classList.toggle('open', isOpen);
+        if (mobileIcon) {
+          mobileIcon.className = isOpen ? 'ph-bold ph-x' : 'ph-bold ph-list';
+        }
+        if (window.sfx && typeof window.sfx.playClick === 'function') window.sfx.playClick();
+      };
+
+      mobileToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleDrawer();
+      });
+
+      // Close when clicking any link inside drawer
+      mobileDrawer.querySelectorAll('a').forEach(a => {
+        a.addEventListener('click', () => toggleDrawer(false));
+      });
+
+      // Close when clicking outside drawer
+      document.addEventListener('click', (e) => {
+        if (!mobileDrawer.contains(e.target) && e.target !== mobileToggle && !mobileToggle.contains(e.target)) {
+          toggleDrawer(false);
+        }
+      });
+
+      if (mobileCmdk) {
+        mobileCmdk.addEventListener('click', () => {
+          toggleDrawer(false);
+          if (typeof openCmdPalette === 'function') openCmdPalette();
+        });
+      }
+    }
+
+    // 14. Register PWA Offline Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').then(r => { r.update().catch(()=>{}); if(r.waiting) r.waiting.postMessage({type:'SKIP_WAITING'}); }).catch(()=>{});

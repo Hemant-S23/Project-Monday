@@ -1341,10 +1341,11 @@ export class TerminalUI {
 
     const getPersistedAutoPilotSettings = () => {
       if (this._autoPilotSettings) return this._autoPilotSettings;
-      if (typeof window !== 'undefined' && window.__AI_COPILOT_APP__ && typeof window.__AI_COPILOT_APP__.getAutoPilotSettings === 'function') {
-        return window.__AI_COPILOT_APP__.getAutoPilotSettings();
+      const app = (typeof window !== 'undefined') ? (window.__AI_COPILOT_APP__ || window.mondayApp) : null;
+      if (app && typeof app.getAutoPilotSettings === 'function') {
+        return app.getAutoPilotSettings();
       }
-      return { marginUSD: 100, leverage: 20, maxTrades: 10, minRR: 2.0 };
+      return { marginUSD: 20, leverage: 20, maxTrades: 2, minRR: 2.0 };
     };
 
     const getPersistedMaxTrades = () => getPersistedAutoPilotSettings().maxTrades;
@@ -1429,6 +1430,11 @@ export class TerminalUI {
 
     const getSavedSettings = () => {
       if (this._autoPilotSettings) return { ...RECOMMENDED_SETTINGS, ...this._autoPilotSettings };
+      const app = (typeof window !== 'undefined') ? (window.__AI_COPILOT_APP__ || window.mondayApp) : null;
+      if (app && typeof app.getAutoPilotSettings === 'function') {
+        const appSet = app.getAutoPilotSettings();
+        if (appSet) return { ...RECOMMENDED_SETTINGS, ...appSet };
+      }
       return { ...RECOMMENDED_SETTINGS };
     };
 

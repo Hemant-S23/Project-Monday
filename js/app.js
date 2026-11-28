@@ -282,7 +282,6 @@ class App {
     }
     this.syncWithSupabaseCloud();
     this.reconcileOfflineTradesWithSupabase().catch(() => { });
-    this.pushSettingsToCloud(this.getAutoPilotSettings()).catch(() => { });
     this.paperTrader.auditDowntimeTrades(this.cryptoAdapter).then(resolved => {
       if (resolved && resolved.length > 0) {
         this.updateTradeJournalAndStats();
@@ -770,6 +769,9 @@ class App {
                   };
                   if (this.ui) {
                     this.ui._autoPilotSettings = this._autoPilotSettings;
+                    if (typeof this.ui.updateAutoPilotUI === 'function') {
+                      this.ui.updateAutoPilotUI(this.autoPilotEnabled);
+                    }
                   }
                   if (this.copilotBrain && typeof this.copilotBrain.setAutoPilotConfig === 'function') {
                     this.copilotBrain.setAutoPilotConfig(this._autoPilotSettings);
@@ -2370,9 +2372,6 @@ class App {
         ? await this.authManager.getAuthToken()
         : cfg.anonKey;
       const effectiveUserId = (token === cfg.anonKey) ? 'guest_autopilot' : activeUserId;
-
-      // 1. Reconcile user settings & preferences
-      this.pushSettingsToCloud().catch(() => { });
 
       // 2. Reconcile paper trades
       const toSyncTrades = [...(this.paperTrader.openPositions || []), ...(this.paperTrader.trades || [])].filter(t => {

@@ -33,9 +33,9 @@ class App {
     this._boundOnMarketDataTick = (data) => this.onMarketDataTick(data);
     this.autoPilotEnabled = true;
     this._autoPilotSettings = {
-      marginUSD: 100,
+      marginUSD: 20,
       leverage: 20,
-      maxTrades: 10,
+      maxTrades: 2,
       minConfluence: 75,
       minRR: 2.0,
       eventShieldEnabled: true
@@ -90,7 +90,30 @@ class App {
       },
       onSaveAutoPilotSettings: async (newSettings) => {
         if (newSettings) {
-          await this.pushSettingsToCloud(newSettings);
+          this._autoPilotSettings = {
+            marginUSD: Math.max(5, Math.min(500, parseFloat(newSettings.marginUSD) || 20)),
+            leverage: Math.max(1, Math.min(50, parseInt(newSettings.leverage, 10) || 20)),
+            maxTrades: Math.max(1, Math.min(100, parseInt(newSettings.maxTrades, 10) || 2)),
+            minConfluence: Math.max(50, Math.min(95, parseInt(newSettings.minConfluence, 10) || 75)),
+            minRR: Math.max(1.5, Math.min(5.0, parseFloat(newSettings.minRR) || 2.0)),
+            eventShieldEnabled: newSettings.eventShieldEnabled !== false
+          };
+          if (this.copilotBrain && typeof this.copilotBrain.setAutoPilotConfig === 'function') {
+            this.copilotBrain.setAutoPilotConfig(this._autoPilotSettings);
+          }
+          await this.pushSettingsToCloud(this._autoPilotSettings);
+
+          const maxAllowed = this._autoPilotSettings.maxTrades;
+          if (this.paperTrader.openPositions.length > maxAllowed) {
+            const excess = this.paperTrader.openPositions.slice(maxAllowed);
+            this.paperTrader.openPositions = this.paperTrader.openPositions.slice(0, maxAllowed);
+            for (const pos of excess) {
+              this.paperTrader.closePosition(pos.id, pos.currentPrice || pos.entry, 'MAX_TRADES_CAP_REDUCTION');
+            }
+            this.ui.updateOpenPositions(this.paperTrader.openPositions);
+            this.updateTradeJournalAndStats();
+            this.ui.updateHeaderAccountHUD(this.paperTrader.getLiveEquity());
+          }
         }
         await this.runFullEvaluation();
         if (this.autoPilotEnabled) {
@@ -729,13 +752,16 @@ class App {
                 const apSettings = cloudSet.autopilotSettings || (cloudSet.riskPerTradePercent !== undefined ? cloudSet : null);
                 if (apSettings) {
                   this._autoPilotSettings = {
-                    marginUSD: Math.max(5, Math.min(500, parseFloat(apSettings.marginUSD) || 100)),
+                    marginUSD: Math.max(5, Math.min(500, parseFloat(apSettings.marginUSD) || 20)),
                     leverage: Math.max(1, Math.min(50, parseInt(apSettings.leverage, 10) || 20)),
-                    maxTrades: Math.max(1, Math.min(100, parseInt(apSettings.maxTrades, 10) || 10)),
+                    maxTrades: Math.max(1, Math.min(100, parseInt(apSettings.maxTrades, 10) || 2)),
                     minConfluence: Math.max(50, Math.min(95, parseInt(apSettings.minConfluence, 10) || 75)),
                     minRR: Math.max(1.5, Math.min(5.0, parseFloat(apSettings.minRR) || 2.0)),
                     eventShieldEnabled: apSettings.eventShieldEnabled !== false
                   };
+                  if (this.ui) {
+                    this.ui._autoPilotSettings = this._autoPilotSettings;
+                  }
                   if (this.copilotBrain && typeof this.copilotBrain.setAutoPilotConfig === 'function') {
                     this.copilotBrain.setAutoPilotConfig(this._autoPilotSettings);
                   }
@@ -1680,18 +1706,18 @@ class App {
   getAutoPilotSettings() {
     if (this._autoPilotSettings) {
       return {
-        marginUSD: Math.max(5, Math.min(500, parseFloat(this._autoPilotSettings.marginUSD) || 100)),
+        marginUSD: Math.max(5, Math.min(500, parseFloat(this._autoPilotSettings.marginUSD) || 20)),
         leverage: Math.max(1, Math.min(50, parseInt(this._autoPilotSettings.leverage, 10) || 20)),
-        maxTrades: Math.max(1, Math.min(100, parseInt(this._autoPilotSettings.maxTrades, 10) || 10)),
+        maxTrades: Math.max(1, Math.min(100, parseInt(this._autoPilotSettings.maxTrades, 10) || 2)),
         minConfluence: Math.max(50, Math.min(95, parseInt(this._autoPilotSettings.minConfluence, 10) || 75)),
         minRR: Math.max(1.5, Math.min(5.0, parseFloat(this._autoPilotSettings.minRR) || 2.0)),
         eventShieldEnabled: this._autoPilotSettings.eventShieldEnabled !== false
       };
     }
     return {
-      marginUSD: 100,
+      marginUSD: 20,
       leverage: 20,
-      maxTrades: 10,
+      maxTrades: 2,
       minConfluence: 75,
       minRR: 2.0,
       eventShieldEnabled: true
@@ -1714,7 +1740,7 @@ class App {
     }
 
     const lev = settings.leverage || 20;
-    const marginUSD = settings.marginUSD || 100;
+    const marginUSD = settings.marginUSD || 20;
     const notional = +(marginUSD * lev).toFixed(2);
     const rawPos = notional / signal.entryPrice;
     const posSize = signal.entryPrice >= 1000

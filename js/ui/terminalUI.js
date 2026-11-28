@@ -2737,7 +2737,7 @@ export class TerminalUI {
     const tpFormatted = `${currSym}${Number(decision.target || 0).toLocaleString()}`;
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    const maxTrades = decision.maxTrades || this._autoPilotSettings?.maxTrades || 10;
+    const maxTrades = decision.maxTrades || this._autoPilotSettings?.maxTrades || 2;
 
     let actionBannerHtml = '';
     let validationStepsHtml = '';
@@ -3637,7 +3637,7 @@ export class TerminalUI {
   }
 
   updateRExplainerModal(margin = null) {
-    let marginUSD = margin !== null ? Number(margin) : (Number(this._autoPilotSettings?.marginUSD) || 100);
+    let marginUSD = margin !== null ? Number(margin) : (Number(this._autoPilotSettings?.marginUSD) || 20);
 
     const rCallout = document.getElementById('r_explainer_callout');
     const rHeadingVal = document.getElementById('r_explainer_header_val');

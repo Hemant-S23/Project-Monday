@@ -586,8 +586,22 @@ class App {
     const trade = newRow || oldRow;
     if (!trade || !trade.id) return;
 
-    // 1. If it's a configuration row, trigger settings reload
+    // 1. If it's a configuration row, trigger settings reload & instant 2-way toggle sync
     if (trade.id.startsWith('CONFIG_') || trade.status === 'CONFIG') {
+      if (newRow && newRow.strategy) {
+        try {
+          const cloudSet = JSON.parse(newRow.strategy);
+          if (cloudSet && cloudSet.autoPilotEnabled !== undefined) {
+            this.autoPilotEnabled = !!cloudSet.autoPilotEnabled;
+            if (this.ui) {
+              this.ui.autoPilotEnabled = this.autoPilotEnabled;
+              if (typeof this.ui.updateAutoPilotUI === 'function') {
+                this.ui.updateAutoPilotUI(this.autoPilotEnabled);
+              }
+            }
+          }
+        } catch (e) { }
+      }
       this.syncWithSupabaseCloud(false).catch(() => {});
       return;
     }

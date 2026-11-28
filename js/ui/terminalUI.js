@@ -403,20 +403,6 @@ export class TerminalUI {
       });
     }
 
-    const dToggleAutopilot = document.getElementById('d_toggle_autopilot');
-    if (dToggleAutopilot) {
-      dToggleAutopilot.addEventListener('click', () => {
-        const toggle = document.getElementById('popover_autopilot_toggle');
-        if (toggle) toggle.click();
-        const isAp = !!this.autoPilotEnabled;
-        const badge = document.getElementById('d_autopilot_badge');
-        if (badge) {
-          badge.textContent = isAp ? 'ON' : 'OFF';
-          badge.classList.toggle('active', isAp);
-        }
-      });
-    }
-
     const dToggleVoice = document.getElementById('d_toggle_voice');
     if (dToggleVoice) {
       dToggleVoice.addEventListener('click', () => {
@@ -1376,6 +1362,14 @@ export class TerminalUI {
       if (rCallout) {
         rCallout.textContent = `1R = 1 Trade par active risk unit (Configured Margin: $${s.marginUSD})`;
       }
+
+      // Mobile Drawer Auto-Pilot Sync
+      const drawerAutopilotBadge = document.getElementById('d_autopilot_badge');
+      if (drawerAutopilotBadge) {
+        drawerAutopilotBadge.textContent = this.autoPilotEnabled ? 'ON' : 'OFF';
+        drawerAutopilotBadge.classList.toggle('active', this.autoPilotEnabled);
+      }
+
       this.updateRExplainerModal(s.marginUSD);
     };
     this.updateAutoPilotUI = updateAutoPilotUI;
@@ -1397,6 +1391,8 @@ export class TerminalUI {
 
     if (autopilotWrapper) autopilotWrapper.addEventListener('click', toggleAutoPilot);
     if (popoverAutopilotToggle) popoverAutopilotToggle.addEventListener('click', toggleAutoPilot);
+    const dToggleAutopilot = document.getElementById('d_toggle_autopilot');
+    if (dToggleAutopilot) dToggleAutopilot.addEventListener('click', toggleAutoPilot);
 
     // Initialize Auto-Pilot UI from persisted state
     updateAutoPilotUI(this.autoPilotEnabled);

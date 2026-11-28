@@ -1074,22 +1074,48 @@
       display: none;
       align-items: center;
       gap: 6px;
-      font-size: 0.75rem;
+      font-size: 0.78rem;
       color: var(--cyan);
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       font-weight: 600;
       letter-spacing: 0.02em;
+      padding: 6px 14px;
+      background: rgba(6, 182, 212, 0.08);
+      border: 1px solid rgba(6, 182, 212, 0.22);
+      border-radius: 100px;
+      width: fit-content;
     }
 
     .comparison-table-wrap {
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.36);
     }
 
     .comp-table {
-      min-width: 680px;
+      width: 100%;
+      min-width: 650px;
+      table-layout: fixed;
+      border-collapse: separate;
+      border-spacing: 0;
     }
+
+    .comp-table th,
+    .comp-table td {
+      padding: 14px 16px;
+      font-size: 0.82rem;
+      line-height: 1.45;
+      vertical-align: middle;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .comp-table th:nth-child(1), .comp-table td:nth-child(1) { width: 135px; }
+    .comp-table th:nth-child(2), .comp-table td:nth-child(2) { width: 140px; }
+    .comp-table th:nth-child(3), .comp-table td:nth-child(3) { width: 125px; }
+    .comp-table th:nth-child(4), .comp-table td:nth-child(4) { width: 125px; }
+    .comp-table th:nth-child(5), .comp-table td:nth-child(5) { width: 125px; }
 
     /* Sticky First Column for Comparison Table on Mobile */
     @media (max-width: 820px) {
@@ -1097,15 +1123,66 @@
       .comp-table td:first-child {
         position: sticky;
         left: 0;
-        background: rgba(10, 14, 24, 0.96) !important;
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
+        background: rgba(10, 14, 24, 0.98) !important;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
         z-index: 5;
-        box-shadow: 4px 0 12px rgba(0, 0, 0, 0.6);
+        border-right: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 6px 0 16px rgba(0, 0, 0, 0.7);
+      }
+      .comp-table th:nth-child(2),
+      .comp-table td:nth-child(2) {
+        background: rgba(16, 185, 129, 0.06) !important;
       }
       .mobile-table-hint {
-        display: flex;
+        display: inline-flex;
       }
+    }
+
+    /* Liquidation Firewall Mobile Styles */
+    .fw-control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    @media (max-width: 640px) {
+      .fw-control-row {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+      }
+      #fw_select_asset {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 10px 14px !important;
+        font-size: 0.84rem !important;
+      }
+      .calc-stats-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+      }
+    }
+
+    /* Ladder Stage Wrap: centers the ladder + labels as a single unit */
+    .ladder-stage-wrap {
+      position: relative;
+      width: 230px;
+      height: 160px;
+      margin: 0 auto;
+    }
+    .ladder-stage-wrap .ladder-bar-container {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 160px;
+      width: 28px;
+    }
+    .ladder-stage-wrap .ladder-level {
+      left: 36px;
+      white-space: nowrap;
     }
 
     /* Responsive Breakpoints */
@@ -1933,7 +2010,7 @@
           <div class="bento-col-7 flex flex-col justify-between" style="background: rgba(0, 0, 0, 0.4); padding: var(--space-3); border-radius: var(--radius-md); border: 1px solid var(--glass-border);">
             
             <!-- Quick Stat Strip -->
-            <div class="flex items-center justify-between" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; flex-wrap: wrap; gap: 10px;">
+            <div class="flex items-center justify-between calc-stats-grid" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; flex-wrap: wrap; gap: 10px;">
               <div>
                 <span class="text-micro text-low">ENDING EQUITY (100 TRADES)</span>
                 <div class="num-ticker text-h2 text-profit" id="calc_out_ending">$2,960</div>
@@ -2121,7 +2198,7 @@
           <!-- Controls Left -->
           <div class="bento-col-6 flex flex-col gap-4">
             
-            <div class="flex items-center justify-between">
+            <div class="fw-control-row">
               <span class="text-body-sm">Asset Class Specification:</span>
               <select id="fw_select_asset" class="glass-pill" style="background: var(--bg-obsidian); border-color: var(--glass-border-hi); color: var(--text-hi);">
                 <option value="BTC">BTC/USD (Up to 200x • 0.40% MMR)</option>
@@ -2151,11 +2228,11 @@
 
             <!-- Dynamic Status Banner -->
             <div class="glass-card glass-profit-border" id="fw_status_banner" style="padding: 14px;">
-              <div class="flex items-center gap-2 text-profit" style="font-weight: 600;">
-                <i class="ph-bold ph-shield-check" style="font-size: 1.25rem;"></i>
-                <span>FIREWALL ARMORED: STOP LOSS SAFELY PRECEDES LIQUIDATION</span>
+              <div class="flex items-start gap-2 text-profit" style="font-weight: 600; font-size: 0.84rem; line-height: 1.35;">
+                <i class="ph-bold ph-shield-check" style="font-size: 1.25rem; flex-shrink: 0; margin-top: 1px;"></i>
+                <span style="word-break: break-word;">FIREWALL ARMORED: STOP LOSS SAFELY PRECEDES LIQUIDATION</span>
               </div>
-              <p class="text-xs text-mid" style="margin-top: 4px;">
+              <p class="text-xs text-mid" style="margin-top: 4px; padding-left: 26px;">
                 Safety buffer active before exchange margin call can trigger.
               </p>
             </div>
@@ -2165,26 +2242,26 @@
           <!-- Price Ladder Visualizer Right -->
           <div class="bento-col-6 flex items-center justify-center" style="background: rgba(0, 0, 0, 0.35); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--glass-border);">
             
-            <div class="flex items-center gap-6">
+            <div class="ladder-stage-wrap">
               <!-- Vertical Ladder Gauge -->
               <div class="ladder-bar-container">
                 <div class="ladder-point" style="top: 20%; background: var(--cyan); box-shadow: 0 0 10px var(--cyan);" id="ladder_point_entry"></div>
                 <div class="ladder-point" style="top: 50%; background: var(--profit); box-shadow: 0 0 10px var(--profit);" id="ladder_point_sl"></div>
                 <div class="ladder-point" style="top: 85%; background: var(--risk); box-shadow: 0 0 10px var(--risk);" id="ladder_point_liq"></div>
+              </div>
 
-                <!-- Labels -->
-                <div class="ladder-level" style="top: 15%;">
-                  <span class="code-badge text-cyan">ENTRY</span>
-                  <span class="num-ticker">$68,000.00</span>
-                </div>
-                <div class="ladder-level" style="top: 45%;">
-                  <span class="code-badge text-profit">STOP LOSS</span>
-                  <span class="num-ticker" id="fw_out_sl">$67,184.00</span>
-                </div>
-                <div class="ladder-level" style="top: 80%;">
-                  <span class="code-badge text-risk">LIQUIDATION</span>
-                  <span class="num-ticker" id="fw_out_liq">$66,912.00</span>
-                </div>
+              <!-- Labels -->
+              <div class="ladder-level" style="top: 15%;">
+                <span class="code-badge text-cyan">ENTRY</span>
+                <span class="num-ticker">$68,000.00</span>
+              </div>
+              <div class="ladder-level" style="top: 45%;">
+                <span class="code-badge text-profit">STOP LOSS</span>
+                <span class="num-ticker" id="fw_out_sl">$67,184.00</span>
+              </div>
+              <div class="ladder-level" style="top: 80%;">
+                <span class="code-badge text-risk">LIQUIDATION</span>
+                <span class="num-ticker" id="fw_out_liq">$66,912.00</span>
               </div>
             </div>
 
@@ -2233,7 +2310,7 @@
           </div>
         </div>
 
-        <div class="flex justify-between items-center text-micro text-low" style="margin-top: 14px; border-top: 1px solid var(--glass-border); padding-top: 10px;">
+        <div class="flex justify-between items-center text-micro text-low" style="margin-top: 14px; border-top: 1px solid var(--glass-border); padding-top: 10px; flex-wrap: wrap; gap: 8px;">
           <span>Click any block to inspect automated trade journal slips</span>
           <div class="flex items-center gap-1">
             <span>Loss (-1.0R)</span>

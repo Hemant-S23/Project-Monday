@@ -93,11 +93,11 @@ export class FirewallDemoController {
       if (isSafe) {
         statusBox.className = 'glass-card glass-profit-border';
         statusBox.innerHTML = `
-          <div class="flex items-center gap-2 text-profit" style="font-weight: 600;">
-            <i class="ph-bold ph-shield-check" style="font-size: 1.25rem;"></i>
-            <span>FIREWALL ARMORED: STOP LOSS SAFELY PRECEDES LIQUIDATION</span>
+          <div class="flex items-start gap-2 text-profit" style="font-weight: 600; font-size: 0.84rem; line-height: 1.35;">
+            <i class="ph-bold ph-shield-check" style="font-size: 1.25rem; flex-shrink: 0; margin-top: 1px;"></i>
+            <span style="word-break: break-word;">FIREWALL ARMORED: STOP LOSS SAFELY PRECEDES LIQUIDATION</span>
           </div>
-          <p class="text-xs text-mid" style="margin-top: 4px;">
+          <p class="text-xs text-mid" style="margin-top: 4px; padding-left: 26px;">
             Buffer: +$${safetyBufferUSD.toFixed(2)} safety distance before exchange margin call can trigger.
           </p>
         `;
@@ -105,11 +105,11 @@ export class FirewallDemoController {
         sfx.playShieldAlert();
         statusBox.className = 'glass-card glass-risk-border';
         statusBox.innerHTML = `
-          <div class="flex items-center gap-2 text-risk" style="font-weight: 600;">
-            <i class="ph-bold ph-warning-octagon" style="font-size: 1.25rem;"></i>
-            <span>ORDER BLOCKED: SL FALLS BEYOND LIQUIDATION POINT</span>
+          <div class="flex items-start gap-2 text-risk" style="font-weight: 600; font-size: 0.84rem; line-height: 1.35;">
+            <i class="ph-bold ph-warning-octagon" style="font-size: 1.25rem; flex-shrink: 0; margin-top: 1px;"></i>
+            <span style="word-break: break-word;">ORDER BLOCKED: SL FALLS BEYOND LIQUIDATION POINT</span>
           </div>
-          <p class="text-xs text-mid" style="margin-top: 4px;">
+          <p class="text-xs text-mid" style="margin-top: 4px; padding-left: 26px;">
             At ${lev}x leverage, maintenance margin triggers at $${liqPrice.toLocaleString()}. Lower your leverage or tighten your stop loss!
           </p>
         `;

@@ -39,23 +39,27 @@
   <!-- Three.js Native ESM Importmap for Zero-Lag 3D Terrain -->
 
 
-  <!-- Frame-0 Instant Page Router: Eliminates page flicker and restores active tab on reload -->
+  <!-- Frame-0 Security Gate & Router: Redirect unauthenticated visitors to Home, restore active tab on reload -->
   <script>
     (function() {
       try {
-        var gid = localStorage.getItem('monday_guest_uuid');
-        if (!gid || gid !== 'guest_3jrhyri_mvw1hl05') {
-          localStorage.setItem('monday_guest_uuid', 'guest_3jrhyri_mvw1hl05');
-        }
-        var sess = localStorage.getItem('monday_active_session_v1');
-        if (sess) {
+        var hasOAuthTokens = (window.location.hash && (window.location.hash.indexOf('access_token') !== -1 || window.location.hash.indexOf('type=') !== -1)) ||
+                             (window.location.search && window.location.search.indexOf('code=') !== -1);
+        var rawSess = localStorage.getItem('monday_active_session_v1');
+        var isAuth = false;
+        if (rawSess) {
           try {
-            var ps = JSON.parse(sess);
-            if (ps && ps.isGuest && ps.id !== 'guest_3jrhyri_mvw1hl05') {
-              ps.id = 'guest_3jrhyri_mvw1hl05';
-              localStorage.setItem('monday_active_session_v1', JSON.stringify(ps));
+            var sess = JSON.parse(rawSess);
+            if (sess && !sess.isGuest && sess.id && !sess.id.startsWith('guest_') && sess.id !== 'guest_autopilot') {
+              isAuth = true;
             }
           } catch(e) {}
+        }
+
+        // Fresh visitors and unauthenticated users immediately land on the Home page
+        if (!isAuth && !hasOAuthTokens) {
+          window.location.replace('index.html');
+          return;
         }
 
         var rawHash = (window.location.hash || '').replace('#', '').trim().toLowerCase();
@@ -100,8 +104,8 @@
     }
   }
   </script>
-  <script type="module" crossorigin src="/assets/terminal-DIzxkSQA.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/authManager-CCfLVrnX.js">
+  <script type="module" crossorigin src="/assets/terminal-CZEc2k8o.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/authManager-CvhyyjMZ.js">
   <link rel="modulepreload" crossorigin href="/assets/cursorGlow-BDgYLpVY.js">
   <link rel="modulepreload" crossorigin href="/assets/supabaseConfig-D6mQf38Z.js">
   <link rel="modulepreload" crossorigin href="/assets/sfx-MDBYrNh4.js">
@@ -308,7 +312,7 @@
 
           <!-- Social & Guest Buttons -->
           <div class="auth-social-group">
-            <button class="auth-btn-social" id="auth_google_btn" type="button">
+            <button class="auth-btn-social" id="auth_google_btn" type="button" style="width: 100%;">
               <svg class="google-icon" viewBox="0 0 24 24" width="18" height="18">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -316,11 +320,6 @@
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
               </svg>
               <span>Continue with Google</span>
-            </button>
-
-            <button class="auth-btn-guest" id="auth_guest_btn" type="button" title="Start instant trading session">
-              <i class="ph ph-user"></i>
-              <span>Continue as Guest</span>
             </button>
           </div>
         </div>
@@ -337,93 +336,6 @@
         </div>
       </div>
 
-    </div>
-  </div>
-
-  <!-- =========================================================================
-       BILLION-DOLLAR GLOSSOMORPHIC ONBOARDING & RISK DISCLOSURE MODAL
-       ========================================================================= -->
-  <div id="modal_guest_risk" class="guest-risk-overlay" style="display: none;">
-    <div class="guest-risk-modal-wrap">
-      <div class="guest-risk-modal">
-        <!-- Header -->
-        <div class="guest-risk-header">
-          <div style="display: flex; align-items: center; gap: 14px;">
-            <div class="risk-badge-icon">
-              <i class="ph-bold ph-shield-check"></i>
-            </div>
-            <div>
-              <h3 class="guest-risk-title">Trader Setup & Regulatory Risk</h3>
-              <div class="guest-risk-subtitle">Establish your trader identity before entering Project MONDAY Workstation</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Body -->
-        <div class="guest-risk-body">
-          <!-- Trader Name Input -->
-          <div>
-            <div class="field-label-row">
-              <span class="field-label-pill">
-                <span class="dot"></span> TRADER NAME / ALIAS
-              </span>
-              <span style="font-size: 0.68rem; color: rgba(148, 163, 184, 0.6); font-family: 'Space Grotesk', monospace;">MAX 32 CHARS</span>
-            </div>
-            <div class="glass-input-wrapper">
-              <i class="ph ph-user-circle glass-input-icon"></i>
-              <input type="text" id="input_guest_trader_name" class="glass-input-control" placeholder="e.g. Hemant / DeltaTrader" maxlength="32" autocomplete="name">
-            </div>
-            <div style="font-size: 0.7rem; color: rgba(148, 163, 184, 0.65); margin-top: 5px; display: flex; align-items: center; gap: 5px;">
-              <i class="ph ph-sparkle text-cyan" style="font-size: 0.8rem;"></i>
-              <span>Used by MONDAY AI Copilot to personalize voice greetings & workstation telemetry.</span>
-            </div>
-          </div>
-
-          <!-- Statutory Regulatory & Risk Warning -->
-          <div class="risk-disclosure-card">
-            <div class="risk-disclosure-header">
-              <i class="ph-bold ph-warning-octagon"></i>
-              <span>Statutory Risk Warning & Regulatory Disclaimer</span>
-            </div>
-            <div class="risk-scroll-content">
-              <div class="risk-clause-row">
-                <div class="risk-clause-badge">1</div>
-                <div class="risk-clause-text">
-                  <strong>Extreme Capital & Derivatives Risk:</strong> Trading cryptocurrencies, equities, indices, and derivatives (F&O) involves substantial risk of loss. Market volatility can cause rapid liquidation. You may lose all or more than your committed capital.
-                </div>
-              </div>
-              <div class="risk-clause-row">
-                <div class="risk-clause-badge">2</div>
-                <div class="risk-clause-text">
-                  <strong>Non-Advisory Quantitative Tool:</strong> Project MONDAY and its algorithmic decision modules are strictly educational, computational modeling, and paper-trading simulation interfaces. Project MONDAY does <strong>NOT</strong> provide SEBI (India), SEC, or any financial advisory services.
-                </div>
-              </div>
-              <div class="risk-clause-row">
-                <div class="risk-clause-badge">3</div>
-                <div class="risk-clause-text">
-                  <strong>Assumption of Personal Responsibility:</strong> All algorithmic triggers, order executions, and leverage multipliers are executed at your sole discretion. You accept 100% personal liability for all paper and live execution outcomes.
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Mandatory Agreement Checkbox -->
-          <label class="risk-checkbox-card" for="chk_guest_risk_agree">
-            <input type="checkbox" id="chk_guest_risk_agree" class="custom-glass-checkbox">
-            <span class="risk-checkbox-desc">
-              I confirm that I am at least 18 years of age, acknowledge the severe financial risks of market trading, and agree to the <strong>Terms of Service</strong> & <strong>Regulatory Risk Disclosures</strong>.
-            </span>
-          </label>
-        </div>
-
-        <!-- Footer -->
-        <div class="guest-risk-footer">
-          <a href="index.html" class="btn-glass-dismiss" id="btn_cancel_guest_risk">Return to Home</a>
-          <button type="button" class="btn-billion-launch" id="btn_confirm_guest_launch" disabled>
-            <span>Agree & Launch Workstation</span> <i class="ph-bold ph-arrow-right"></i>
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -2578,8 +2490,6 @@
   <!-- Supabase Config (Reads from config file or localStorage) -->
 
   <!-- App Script Entrypoint -->
-
-  <!-- Terminal Gatekeeper: Mandatory Onboarding & Risk Disclosure -->
 
   <!-- Specular Cursor Glow & Procedural Audio Feedback -->
 

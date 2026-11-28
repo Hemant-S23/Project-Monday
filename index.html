@@ -2525,10 +2525,25 @@
       });
     });
 
-    // 11. Workstation Navigation Helper (Always route directly to Trading Cockpit)
+    // 11. Workstation Navigation Helper (Enforce Google Auth: unauthenticated users route to auth)
     document.addEventListener('click', (e) => {
       const link = e.target.closest('a[href*="terminal.html"]');
       if (link) {
+        const raw = localStorage.getItem('monday_active_session_v1');
+        let isAuth = false;
+        if (raw) {
+          try {
+            const sess = JSON.parse(raw);
+            if (sess && !sess.isGuest && sess.id && !sess.id.startsWith('guest_') && sess.id !== 'guest_autopilot') {
+              isAuth = true;
+            }
+          } catch(err) {}
+        }
+        if (!isAuth) {
+          e.preventDefault();
+          window.location.href = 'pages/auth.html';
+          return;
+        }
         localStorage.setItem('monday_risk_accepted', 'true');
         localStorage.setItem('monday_active_page', 'terminal');
       }

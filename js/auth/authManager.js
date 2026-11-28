@@ -181,7 +181,7 @@ export class AuthManager {
   }
 
   isUserAuthenticated() {
-    return !!(this.currentUser && !this.currentUser.isGuest && this.currentUser.id && this.currentUser.id !== 'guest_autopilot');
+    return !!(this.currentUser && !this.currentUser.isGuest && this.currentUser.id && !this.currentUser.id.startsWith('guest_') && this.currentUser.id !== 'guest_autopilot');
   }
 
   async getAuthToken() {
@@ -216,24 +216,11 @@ export class AuthManager {
   }
 
   /**
-   * Guest Session: Instant paper trading with a dedicated, isolated clean account
+   * Guest Session: Deprecated in favor of authentic Google OAuth
    */
-  async loginAsGuest(customName = null) {
-    // Persistent master guest ID unified with 24/7 cloud daemon
-    let guestId = 'guest_autopilot';
-    localStorage.setItem('monday_guest_uuid', guestId);
-
-    const user = {
-      id: guestId,
-      email: null,
-      name: customName || 'Guest Trader',
-      isGuest: true,
-      createdAt: new Date().toISOString(),
-      avatar: 'ph-user'
-    };
-
-    this.saveSession(user);
-    return { success: true, user };
+  async loginAsGuest() {
+    console.warn('[AuthManager] Guest mode has been deprecated. Connecting to Google OAuth.');
+    return this.signInWithGoogle();
   }
 
   /**

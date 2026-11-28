@@ -1642,22 +1642,12 @@ export class TerminalUI {
       });
     }
 
-    // Continue as Guest
+    // Continue as Guest (Eradicated - route to Google Sign In)
     if (guestBtn) {
       guestBtn.addEventListener('click', (e) => {
         if (e) e.preventDefault();
-        console.log('[TerminalUI] Guest login button clicked.');
-        const riskAccepted = localStorage.getItem('monday_risk_accepted') === 'true';
-        const guestModal = document.getElementById('modal_guest_risk');
-        if (!riskAccepted && guestModal) {
-          this.hideAuthOverlay();
-          guestModal.style.display = 'flex';
-          return;
-        }
-        if (this.callbacks.onGuestLogin) {
-          this.callbacks.onGuestLogin();
-        } else {
-          console.error('[TerminalUI] onGuestLogin callback missing!');
+        if (this.callbacks.onGoogleSignIn) {
+          this.callbacks.onGoogleSignIn();
         }
       });
     }

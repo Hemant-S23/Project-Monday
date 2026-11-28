@@ -163,14 +163,13 @@ class App {
         }
       },
       onGuestLogin: async () => {
-        const savedName = localStorage.getItem('monday_trader_name');
-        const res = await this.authManager.loginAsGuest(savedName);
-        this.handleAuthSuccess(res.user);
+        // Guest mode eradicated: route strictly to Google Sign-In
+        await this.authManager.signInWithGoogle();
       },
       onSignOut: () => {
         this.authManager.signOut();
         this.ui.updateUserProfile(null);
-        this.ui.showAuthOverlay();
+        window.location.replace('index.html');
       },
       onSaveSupabaseConfig: (url, anonKey) => {
         this.authManager.setSupabaseConfig(url, anonKey);
@@ -327,16 +326,15 @@ class App {
       }
     } catch (e) {}
 
-    // 0. Verify Auth Session & update UI state (Seamless instant-cockpit entry)
+    // 0. Verify Auth Session & update UI state (Strict Google Authentication Gate)
     await this.authManager.ready();
     let currentUser = this.authManager.getUser();
-    if (!currentUser) {
+    if (!currentUser || currentUser.isGuest || !currentUser.id || currentUser.id.startsWith('guest_') || currentUser.id === 'guest_autopilot') {
       const hasOAuthTokens = (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('type='))) ||
         (window.location.search && window.location.search.includes('code='));
       if (!hasOAuthTokens) {
-        // Auto-activate instant Guest Trader account only if user did not initiate an OAuth login
-        const guestRes = await this.authManager.loginAsGuest();
-        currentUser = guestRes.user;
+        window.location.replace('index.html');
+        return;
       }
     }
     if (currentUser) {

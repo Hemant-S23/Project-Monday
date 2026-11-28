@@ -263,6 +263,9 @@ class App {
   }
 
   handleAuthSuccess(user) {
+    localStorage.setItem('monday_risk_accepted', 'true');
+    const guestModal = document.getElementById('modal_guest_risk');
+    if (guestModal) guestModal.style.display = 'none';
     this.ui.updateUserProfile(user);
     this.ui.hideAuthOverlay();
     this.paperTrader.setUser(user.id);
@@ -300,7 +303,13 @@ class App {
     // Eradicate all browser localStorage state except active auth session token (100% Cloud-First Architecture)
     try {
       if (typeof localStorage !== 'undefined') {
-        const preserveKeys = new Set(['monday_active_session_v1', 'monday_guest_uuid']);
+        const preserveKeys = new Set([
+          'monday_active_session_v1',
+          'monday_guest_uuid',
+          'monday_risk_accepted',
+          'monday_trader_name',
+          'monday_theme'
+        ]);
         const keysToRemove = [];
         for (let i = 0; i < localStorage.length; i++) {
           const k = localStorage.key(i);
@@ -799,6 +808,15 @@ class App {
                   if (this.signalEngine) {
                     this.signalEngine.setArchivedClearedAt(cloudT);
                   }
+                }
+                // 8. Regulatory Risk & Trader Name persistence
+                if (cloudSet.riskAccepted || isAuth) {
+                  localStorage.setItem('monday_risk_accepted', 'true');
+                  const guestModal = document.getElementById('modal_guest_risk');
+                  if (guestModal) guestModal.style.display = 'none';
+                }
+                if (cloudSet.traderName && !localStorage.getItem('monday_trader_name')) {
+                  localStorage.setItem('monday_trader_name', cloudSet.traderName);
                 }
               }
             } catch (e) { }
@@ -1658,6 +1676,8 @@ class App {
         preferredMarket: 'Crypto',
         voiceMuted: this.voiceAssistant?.voiceMuted || false,
         signalsArchivedClearedAt: Number(this.signalEngine?.archivedClearedAt || 0),
+        riskAccepted: localStorage.getItem('monday_risk_accepted') === 'true',
+        traderName: localStorage.getItem('monday_trader_name') || '',
         updatedAt: new Date().toISOString()
       };
       const configId = effectiveUserId === 'guest_autopilot' ? 'CONFIG_AUTOPILOT_GUEST' : `CONFIG_AUTOPILOT_${effectiveUserId}`;

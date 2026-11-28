@@ -3024,6 +3024,20 @@
   <!-- Terminal Gatekeeper: Mandatory Onboarding & Risk Disclosure -->
   <script type="module">
     function initTerminalRiskGate() {
+      // 1. Authenticated User Fast-Path: If user is already authenticated via session, bypass risk gate completely
+      try {
+        const rawSession = localStorage.getItem('monday_active_session_v1');
+        if (rawSession) {
+          const sess = JSON.parse(rawSession);
+          if (sess && sess.id) {
+            localStorage.setItem('monday_risk_accepted', 'true');
+            const guestModal = document.getElementById('modal_guest_risk');
+            if (guestModal) guestModal.style.display = 'none';
+            return;
+          }
+        }
+      } catch (e) {}
+
       const riskAccepted = localStorage.getItem('monday_risk_accepted') === 'true';
       const guestModal = document.getElementById('modal_guest_risk');
       const inputName = document.getElementById('input_guest_trader_name');
